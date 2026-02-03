@@ -53,7 +53,8 @@
             "assets": [
               {
                 "glob": "**/*",
-                "input": "projects/shell/public"
+                "input": "projects/shell/public/assets",
+                "output": "assets"
               }
             ],
             "styles": ["projects/shell/src/styles.scss"],

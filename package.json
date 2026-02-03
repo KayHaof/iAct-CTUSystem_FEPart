@@ -35,6 +35,8 @@
     "@angular/router": "^21.1.0",
     "@softarc/native-federation-node": "^3.3.4",
     "es-module-shims": "^1.5.12",
+    "keycloak-angular": "^21.0.0",
+    "keycloak-js": "^26.2.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
