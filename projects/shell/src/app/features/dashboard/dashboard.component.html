@@ -1,0 +1,116 @@
+<div class="dashboard-container">
+  
+  <div class="stats-grid">
+    <div class="card welcome-card">
+      <div class="welcome-text">
+        <h2>Welcome back, {{ userName }}! 👋</h2>
+        <p>You're doing great this semester.</p>
+        
+        <div class="mini-stat">
+          <div class="icon-box">📅</div>
+          <div>
+            <strong>2</strong>
+            <span>ACTIVITIES THIS WEEK</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card score-card">
+      <div class="circle-progress">
+        <div class="inner-circle">
+          <span class="score">85</span>
+          <span class="total">/100</span>
+        </div>
+      </div>
+      <h3>Training Score</h3>
+      <span class="badge">Excellent Rank</span>
+    </div>
+
+    <div class="card goal-card">
+      <div class="header-goal">
+        <small>NEXT TITLE GOAL</small>
+        <i class="star-icon">⭐</i>
+      </div>
+      <h3>Student of 5 Merits</h3>
+      
+      <div class="progress-info">
+        <span>Progress</span>
+        <span class="blue-text">3/5 Completed</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: 60%"></div>
+      </div>
+      
+      <p class="hint">Complete 2 more major activities to unlock.</p>
+    </div>
+  </div>
+
+  <div class="action-grid">
+    <div class="banner checkin-banner">
+      <div class="banner-content">
+        <h3>Check-in</h3>
+        <p>Scan QR code at event location</p>
+        <button class="btn-white">📷 SCAN NOW</button>
+      </div>
+      <div class="qr-icon">🏁</div>
+    </div>
+
+    <div class="banner feedback-banner">
+      <div class="feedback-icon">💬</div>
+      <div class="feedback-content">
+        <h3>Pending Feedback Action</h3>
+        <p>Please submit your feedback for "Green Summer Campaign" to claim your points.</p>
+        <div class="feedback-actions">
+          <span class="tag-points">+5 Points</span>
+          <a href="#" class="link-action">Complete Now →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-split">
+    
+    <div class="activities-section">
+      <div class="section-header">
+        <h3>New Activities</h3>
+        <a href="#">View All</a>
+      </div>
+
+      <div class="activity-card" *ngFor="let item of upcomingActivities">
+        <img [src]="item.image" [alt]="item.title" class="activity-img">
+        <div class="activity-details">
+          <span class="date-badge">{{ item.date }}</span>
+          <h4>{{ item.title }} <span class="points-badge">+{{ item.points }} Pts</span></h4>
+          <p>{{ item.desc }}</p>
+          <div class="activity-footer">
+            <span class="location">📍 {{ item.location }}</span>
+            <button class="btn-blue">Register Now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="news-section">
+      <h3>Campus Highlights</h3>
+      
+      <div class="news-item" *ngFor="let news of newsUpdates">
+        <div class="avatar" [style.background-color]="news.color">{{ news.avatar }}</div>
+        <div class="news-content">
+          <div class="news-meta">
+            <strong>{{ news.author }}</strong> • {{ news.time }}
+          </div>
+          <p>{{ news.title }}</p>
+        </div>
+      </div>
+
+      <div class="promo-box">
+        <div class="promo-icon">🐶</div>
+        <p><strong>Volunteer Squad</strong> • 1d ago</p>
+        <p>Only 5 spots left for the weekend animal shelter visit!</p>
+        <a href="#">View More Updates</a>
+      </div>
+    </div>
+
+  </div>
+</div>
