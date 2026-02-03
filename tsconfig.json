@@ -11,6 +11,12 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "experimentalDecorators": true,
+    "paths": {
+      "shared-ui": [
+        "./dist/shared-ui",
+        "./dist/shared-ui"
+      ]
+    },
     "importHelpers": true,
     "target": "ES2022",
     "module": "preserve"
@@ -52,6 +58,18 @@
     },
     {
       "path": "./projects/mfe-admin/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/shared-ui/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/shared-ui/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/shared-ui/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/shared-ui/tsconfig.spec.json"
     }
   ]
 }
