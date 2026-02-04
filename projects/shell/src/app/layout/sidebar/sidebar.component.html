@@ -1,18 +1,32 @@
-<aside>
-  <div class="logo">iAct CTU</div>
+@if (isOpen) {
+  <div
+    class="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity"
+    (click)="close()"
+  ></div>
+}
 
-  <nav>
+<aside class="sidebar-container" [class.translate-x-0]="isOpen" [class.-translate-x-full]="!isOpen">
+  <div class="sidebar-logo">
+    <span class="logo-text">iAct CTU</span>
+  </div>
+
+  <nav class="flex-grow flex flex-col gap-2">
     @for (item of filteredMenuItems(); track item.label) {
       <a
         [routerLink]="item.link"
         routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: false }"
+        class="nav-item"
+        (click)="close()"
       >
-        <i [class]="item.icon"></i>
-        {{ item.label }}
+        <i [class]="item.icon" class="text-xl w-6 text-center"></i>
+        <span class="nav-text">{{ item.label }}</span>
       </a>
     }
   </nav>
 
-  <div class="logout-btn" (click)="logout()"><i class="bi bi-box-arrow-left"></i> Log Out</div>
+  <div class="logout-btn" (click)="logout()">
+    <i class="bi bi-box-arrow-left text-xl w-6 text-center"></i>
+    <span class="nav-text">Log Out</span>
+  </div>
 </aside>

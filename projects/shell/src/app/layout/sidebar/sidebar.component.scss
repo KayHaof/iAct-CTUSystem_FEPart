@@ -1,145 +1,107 @@
 :host {
   display: block;
-  height: 100%;
-  background: white;
-  border-right: 1px solid #eee;
-  display: flex;
-  flex-direction: column;
+}
+.sidebar-container {
+  @apply bg-white border-r border-gray-200 overflow-hidden flex flex-col;
 
-  width: 80px;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-  z-index: 100;
+  // --- MOBILE ---
+  @apply fixed top-0 left-0 bottom-0 z-50 w-[240px] shadow-2xl transition-transform duration-300 ease-in-out;
+
+  // --- DESKTOP ---
+  @apply md:static md:translate-x-0 md:shadow-none md:w-[80px] md:h-full;
+  transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  will-change: width;
+
+  // --- HOVER DESKTOP ---
+  &:hover {
+    @apply md:w-[240px];
+  }
+}
+
+// --- LOGIC TEXT & LOGO ---
+.nav-text,
+.logo-text {
+  @apply transition-all duration-300 ease-in-out whitespace-nowrap opacity-100 translate-x-0;
+  transition-delay: 0.1s;
+}
+
+.sidebar-logo {
+  @apply transition-all duration-300;
+  background-image: url('https://res.cloudinary.com/dhjamvg6j/image/upload/v1770173915/logo_ycoscg.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 0px;
+}
+
+// --- MEDIA QUERY DESKTOP ---
+@media (min-width: 768px) {
+  .sidebar-container:not(:hover) {
+    .nav-item {
+      @apply justify-center;
+
+      .nav-text {
+        @apply opacity-0 w-0 overflow-hidden translate-x-[-10px];
+        transition-delay: 0s;
+      }
+
+      &.active::before {
+        @apply opacity-100;
+      }
+    }
+
+    .logout-btn {
+      @apply justify-center;
+      .nav-text {
+        @apply opacity-0 w-0 overflow-hidden translate-x-[-10px];
+        transition-delay: 0s;
+      }
+    }
+
+    .sidebar-logo {
+      background-size: 50px;
+      .logo-text {
+        @apply opacity-0 w-0 overflow-hidden;
+        transition-delay: 0s;
+      }
+    }
+  }
+}
+
+.sidebar-logo {
+  @apply flex items-center justify-center h-16 mb-6 text-2xl font-extrabold text-ctu-blue whitespace-nowrap overflow-hidden;
+}
+
+.nav-item {
+  @apply flex items-center gap-4 px-4 py-3 rounded-xl text-gray-500 font-medium whitespace-nowrap overflow-hidden relative min-h-[50px] cursor-pointer transition-colors duration-200;
 
   &:hover {
-    width: 220px;
-    .logout-btn {
-      justify-content: center;
-    }
+    @apply bg-slate-50 text-ctu-blue;
   }
 
-  &:not(:hover) {
-    nav a,
-    .logout-btn {
-      gap: 50px;
-    }
+  &.active {
+    @apply bg-blue-50 text-ctu-blue font-bold;
 
-    nav a.active {
-      background-color: transparent;
-      &::before {
-        opacity: 1;
-      }
-    }
-
-    .logo {
-      font-size: 0;
-      background-image: url('https://res.cloudinary.com/dhjamvg6j/image/upload/v1770173915/logo_ycoscg.png');
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: 100px;
-    }
-  }
-}
-
-aside {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 24px 12px;
-  width: 100%;
-}
-
-.logo {
-  justify-content: center;
-  font-size: 24px;
-  margin-left: -12px;
-  margin-right: -12px;
-  width: calc(100% + 24px);
-  height: 50px;
-  font-weight: 800;
-  color: #003366;
-  margin-bottom: 40px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  white-space: nowrap;
-}
-
-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex-grow: 1;
-
-  a {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 18px;
-    text-decoration: none;
-    color: #64748b;
-    font-weight: 500;
-    border-radius: 12px;
-    transition: all 0.2s;
-    white-space: nowrap;
-
-    &:hover {
-      background-color: #f1f5f9;
-      color: #0066cc;
-    }
-
-    &.active {
-      background-color: #e3f2fd;
-      color: #0066cc;
-      font-weight: 700;
-
-      &::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 4px;
-        height: 24px;
-        background-color: #0066cc;
-        border-radius: 0 4px 4px 0;
-        opacity: 0;
-        transition: opacity 0.2s;
-      }
+    &::before {
+      content: '';
+      @apply absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-ctu-blue rounded-r-md transition-opacity duration-300 opacity-0;
     }
 
     i {
-      font-size: 1.25rem;
-      margin-right: 0;
-      vertical-align: middle;
-
-      color: inherit;
+      @apply text-ctu-blue;
     }
+  }
 
-    &.active i {
-      color: #0066cc;
-    }
+  i {
+    @apply flex-shrink-0 transition-colors duration-200;
   }
 }
 
 .logout-btn {
-  margin-top: auto;
-  padding: 12px 18px;
-  background-color: #eef2ff;
-  color: #e54646;
-  border-radius: 12px;
-  text-align: center;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 16px;
-  transition: 0.2s;
-  white-space: nowrap;
-
+  @apply mt-auto flex items-center gap-4 px-4 py-3 rounded-xl bg-red-50 text-red-500 font-semibold cursor-pointer transition-colors duration-200 whitespace-nowrap overflow-hidden min-h-[50px];
   &:hover {
-    background-color: #e0e7ff;
+    @apply bg-red-100;
+  }
+  i {
+    @apply flex-shrink-0;
   }
 }

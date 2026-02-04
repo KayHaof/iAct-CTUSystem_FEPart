@@ -1,0 +1,20 @@
+.iact-footer {
+  @apply bg-ctu-blue text-white py-8 mt-auto;
+}
+
+.footer-title {
+  @apply text-ctu-gold text-lg font-bold mb-4 uppercase tracking-wide;
+}
+
+.footer-link {
+  @apply text-gray-200 no-underline transition-all duration-300 block;
+
+  &:hover {
+    @apply text-white pl-2;
+    text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+  }
+}
+
+.footer-copyright {
+  @apply border-t border-white/20 mt-8 pt-6 text-center text-sm text-gray-300;
+}

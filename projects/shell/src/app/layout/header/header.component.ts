@@ -2,6 +2,7 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { UserService } from 'shared-ui';
+import { LayoutService } from '../layout.service';
 
 @Component({
   selector: 'app-header',
@@ -13,7 +14,7 @@ import { UserService } from 'shared-ui';
 export class HeaderComponent implements OnInit {
   private userService = inject(UserService);
   private cdr = inject(ChangeDetectorRef);
-
+  private layoutService = inject(LayoutService);
 
   defaultAvatar =
     'https://res.cloudinary.com/dhjamvg6j/image/upload/v1770104643/b8erttd8eughls55igvb.jpg';
@@ -23,6 +24,10 @@ export class HeaderComponent implements OnInit {
 
   ngOnInit() {
     this.fetchUserInfo();
+  }
+
+  toggleMenu() {
+    this.layoutService.toggleMobileMenu();
   }
 
   fetchUserInfo() {

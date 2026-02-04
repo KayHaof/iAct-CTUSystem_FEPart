@@ -1,14 +1,18 @@
-<header>
+<header class="header-wrapper">
+  <button class="md:hidden mr-4 text-2xl text-gray-600 focus:outline-none" (click)="toggleMenu()">
+    <i class="bi bi-list"></i>
+  </button>
   <div class="search-bar">
-    <i class="bi bi-search"></i>
-    <input type="text" placeholder="Search activities, news..." />
+    <i class="bi bi-search search-icon"></i>
+    <input type="text" placeholder="Tìm kiếm hoạt động, tin tức..." class="search-input" />
   </div>
 
-  <div class="user-profile" (click)="navigateToProfile()">
-    <div class="user-info">
-      <span class="name">{{ username || 'Student' }}</span>
-      <span class="role">Computer Science</span>
+  <div class="user-profile group" (click)="navigateToProfile()">
+    <div class="user-info hidden md:flex">
+      <span class="name">{{ username || 'Sinh viên' }}</span>
+      <span class="role">Công nghệ thông tin</span>
     </div>
+
     <img [src]="userAvatar" alt="Avatar" class="avatar-img" />
   </div>
 </header>

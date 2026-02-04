@@ -1,0 +1,37 @@
+.layout-wrapper {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar-area {
+  flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid #eee;
+}
+
+.content-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f5f7fa;
+  min-width: 0;
+}
+
+.header-area {
+  flex-shrink: 0;
+  background: #fff;
+  z-index: 10;
+}
+
+.main-scrollable {
+  flex-grow: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  flex: 1;
+  padding: 12px;
+}

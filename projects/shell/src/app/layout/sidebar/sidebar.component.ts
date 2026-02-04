@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { UserService } from 'shared-ui';
+import { LayoutService } from '../layout.service';
 
 interface MenuItem {
   label: string;
@@ -21,6 +22,15 @@ interface MenuItem {
 export class SidebarComponent {
   private oauthService = inject(OAuthService);
   private userService = inject(UserService);
+  private layoutService = inject(LayoutService);
+
+  get isOpen() {
+    return this.layoutService.isMobileMenuOpen();
+  }
+
+  close() {
+    this.layoutService.closeMobileMenu();
+  }
 
   menuItems: MenuItem[] = [
     // --- COMMON

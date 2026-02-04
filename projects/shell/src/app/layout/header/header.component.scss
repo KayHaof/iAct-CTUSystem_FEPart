@@ -1,115 +1,63 @@
 :host {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 25px;
-  background: transparent;
+  @apply block w-full sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200;
 }
 
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 1600px;
-  margin: 0 auto;
+.header-wrapper {
+  @apply flex justify-between items-center h-[70px] px-6 max-w-[1920px] mx-auto;
 }
 
-// --- THANH TÌM KIẾM ---
 .search-bar {
-  position: relative;
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  align-items: center;
+  @apply relative w-full max-w-[400px];
+}
 
-  input {
-    width: 100%;
-    height: 40px;
-    padding: 0 20px 0 52px;
-    border-radius: 99px;
-    border: 1px solid transparent;
-    background: white;
-    font-size: 0.95rem;
-    color: #334155;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    outline: none;
-    transition: all 0.2s ease;
+.search-icon {
+  @apply absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none;
+}
 
-    &::placeholder {
-      color: #94a3b8;
-    }
+.search-input {
+  @apply w-full h-10 pl-11 pr-5 rounded-full text-sm text-gray-700 bg-gray-100 border border-transparent outline-none transition-all duration-300;
 
-    // Hiệu ứng khi bấm vào ô tìm kiếm
-    &:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-    }
+  &::placeholder {
+    @apply text-gray-400 font-normal;
   }
 
-  &::before,
-  i {
-    content: '';
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 0.5;
-    font-size: 18px;
-    pointer-events: none;
-    z-index: 1;
+  &:focus {
+    @apply bg-white border-ctu-blue ring-4 ring-ctu-blue/10 shadow-lg;
   }
 }
 
-// --- USER PROFILE ---
 .user-profile {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: white;
-  padding: 4px 4px 4px 16px;
-  border-radius: 99px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid transparent;
-  margin-right: 0;
-
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.2s ease;
+  @apply flex items-center gap-3 cursor-pointer py-1.5 pl-4 pr-1.5 rounded-full border border-transparent transition-all duration-200 select-none;
 
   &:hover {
-    background-color: #ffffff;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    border-color: #e2e8f0;
+    @apply bg-gray-50 border-gray-200 shadow-sm;
+
+    .name {
+      @apply text-ctu-blue;
+    }
   }
 
   &:active {
-    transform: translateY(0);
+    @apply bg-gray-100 scale-95;
+  }
+}
+
+.user-info {
+  @apply flex-col items-end text-right leading-tight mr-1;
+
+  .name {
+    @apply font-bold text-sm text-gray-700 transition-colors duration-200;
   }
 
-  .user-info {
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-    line-height: 1.2;
-
-    .name {
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: #1e293b;
-    }
-    .role {
-      font-size: 0.75rem;
-      color: #64748b;
-      margin-top: 2px;
-    }
+  .role {
+    @apply text-xs text-gray-500 font-medium mt-0.5;
   }
+}
 
-  img {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #f1f5f9;
+.avatar-img {
+  @apply w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm;
+
+  .user-profile:hover & {
+    @apply border-ctu-blue/20;
   }
 }
