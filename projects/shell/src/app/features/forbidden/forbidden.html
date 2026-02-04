@@ -1,0 +1,28 @@
+<div class="forbidden-container">
+  <div class="error-watermark">403</div>
+
+  <div class="content-box">
+    <div class="icon-wrapper">
+      <i class="bi bi-shield-lock-fill"></i>
+    </div>
+
+    <h2 class="title">Truy cập bị từ chối!</h2>
+
+    <p class="desc">
+      Xin lỗi, bạn không có quyền truy cập vào khu vực này.<br />
+      Trang này chỉ dành cho <b>Quản trị viên (Admin)</b> hoặc <b>Khoa/Phòng ban</b>.
+    </p>
+
+    <div class="action-buttons">
+      <a routerLink="/dashboard" class="btn-primary">
+        <i class="bi bi-speedometer2"></i>
+        Về Dashboard
+      </a>
+
+      <button (click)="goBack()" class="btn-secondary">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,42 +1,52 @@
 import { Routes } from '@angular/router';
-import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { loadRemoteModule } from '@angular-architects/native-federation';
+
+import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
+
 import { authGuard } from './core/auth/auth.guard';
+import { roleGuard } from './core/auth/role.guard';
 
 export const routes: Routes = [
   {
     path: '',
     component: MainLayoutComponent,
-    canActivate: [authGuard], // Guard bảo vệ cả layout
+    canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
-      // 1. Dashboard (Feature nội bộ)
       {
         path: 'dashboard',
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+        title: 'Dashboard | iAct CTU',
       },
 
-      // 2. REMOTE MFE: Activity Hub
       {
         path: 'activities',
         loadChildren: () => loadRemoteModule('mfe-activity', './routes').then((m) => m.routes),
+        title: 'Quản lý Hoạt động',
       },
 
-      // 3. REMOTE MFE: Admin
       {
         path: 'admin',
         loadChildren: () => loadRemoteModule('mfe-admin', './routes').then((m) => m.routes),
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'MANAGER'] },
+        title: 'Trang Quản trị',
       },
 
-      // 4. Trang 404 (Đặt ở cuối cùng trong children)
-      // Để nó nằm BÊN TRONG layout (có Header/Sidebar)
+      {
+        path: 'forbidden',
+        loadComponent: () =>
+          import('./features/forbidden/forbidden').then((m) => m.ForbiddenComponent),
+        title: '403 - Truy cập bị từ chối',
+      },
+
       {
         path: '**',
         loadComponent: () =>
           import('./features/not-found/not-found').then((m) => m.NotFoundComponent),
-        title: 'Không tìm thấy trang | iAct CTU',
+        title: '404 - Không tìm thấy trang',
       },
     ],
   },
