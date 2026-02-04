@@ -1,0 +1,55 @@
+:host {
+  @apply block h-full;
+}
+
+.not-found-container {
+  @apply relative flex flex-col items-center justify-center min-h-[70vh] text-center px-4 overflow-hidden;
+}
+
+.error-watermark {
+  @apply absolute font-black text-gray-100 select-none -z-10 leading-none;
+  font-size: 15rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.content-box {
+  @apply relative z-10 flex flex-col items-center max-w-lg;
+}
+
+.icon-wrapper {
+  @apply text-6xl text-ctu-gold mb-6;
+  @apply animate-bounce;
+}
+
+.title {
+  @apply text-3xl md:text-4xl font-bold text-ctu-blue mb-3;
+}
+
+.desc {
+  @apply text-gray-500 mb-8 text-lg leading-relaxed;
+}
+
+.action-buttons {
+  @apply flex flex-wrap gap-4 justify-center;
+}
+
+.btn-home {
+  @apply flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 no-underline shadow-lg;
+
+  @apply bg-ctu-blue text-white shadow-blue-900/20;
+
+  &:hover {
+    @apply bg-blue-800 -translate-y-1 shadow-xl;
+  }
+}
+
+.btn-back {
+  @apply flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 cursor-pointer border shadow-sm;
+  @apply bg-white text-gray-600 border-gray-200;
+
+  &:hover {
+    @apply bg-gray-50 text-gray-900 border-gray-300 -translate-y-1;
+  }
+}

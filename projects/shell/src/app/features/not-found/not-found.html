@@ -1,0 +1,26 @@
+<div class="not-found-container">
+  <div class="error-watermark">404</div>
+
+  <div class="content-box">
+    <div class="icon-wrapper">
+      <i class="bi bi-emoji-dizzy"></i>
+    </div>
+
+    <h2 class="title">Oops! Không tìm thấy trang</h2>
+    <p class="desc">
+      Đường dẫn bạn truy cập không tồn tại hoặc đã bị xóa. Vui lòng kiểm tra lại URL.
+    </p>
+
+    <div class="action-buttons">
+      <a routerLink="/" class="btn-home">
+        <i class="bi bi-house-door-fill"></i>
+        Về Trang chủ
+      </a>
+
+      <button (click)="goBack()" class="btn-back">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
+      </button>
+    </div>
+  </div>
+</div>
