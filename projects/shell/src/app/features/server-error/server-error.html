@@ -1,0 +1,29 @@
+<div class="error-container">
+  <div class="error-watermark">500</div>
+
+  <div class="content-box">
+    <div class="icon-wrapper">
+      <i class="bi bi-hdd-network-fill"></i>
+      <i class="bi bi-x-circle-fill sub-icon"></i>
+    </div>
+
+    <h2 class="title">Máy chủ gặp sự cố!</h2>
+
+    <p class="desc">
+      Hệ thống đang gặp lỗi kỹ thuật nội bộ và không thể xử lý yêu cầu của bạn lúc này.
+      <br />Vui lòng thử tải lại trang hoặc quay lại sau ít phút.
+    </p>
+
+    <div class="action-buttons">
+      <button (click)="reloadPage()" class="btn-primary">
+        <i class="bi bi-arrow-clockwise"></i>
+        Tải lại trang
+      </button>
+
+      <a routerLink="/dashboard" class="btn-secondary">
+        <i class="bi bi-house-door-fill"></i>
+        Về Dashboard
+      </a>
+    </div>
+  </div>
+</div>

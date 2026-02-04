@@ -1,0 +1,81 @@
+:host {
+  @apply block h-full;
+}
+
+.error-container {
+  @apply relative flex flex-col items-center justify-center min-h-[70vh] text-center px-4 overflow-hidden;
+}
+
+.error-watermark {
+  @apply absolute font-black text-gray-100 select-none -z-10 leading-none;
+  font-size: 15rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.content-box {
+  @apply relative z-10 flex flex-col items-center max-w-lg;
+}
+
+.icon-wrapper {
+  @apply relative mb-6;
+
+  i.bi-hdd-network-fill {
+    @apply text-7xl text-gray-300 block;
+  }
+
+  .sub-icon {
+    @apply absolute -bottom-2 -right-2 text-4xl text-red-500 bg-white rounded-full border-4 border-white;
+    animation: pulse-red 2s infinite;
+  }
+}
+
+.title {
+  @apply text-3xl md:text-4xl font-bold text-gray-800 mb-3;
+}
+
+.desc {
+  @apply text-gray-500 mb-8 text-lg leading-relaxed;
+}
+
+.action-buttons {
+  @apply flex flex-wrap gap-4 justify-center;
+}
+
+.btn-primary {
+  @apply flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 cursor-pointer border-none shadow-lg shadow-red-900/20;
+  // Màu đỏ/cam chủ đạo cho lỗi server
+  @apply bg-red-500 text-white;
+
+  &:hover {
+    @apply bg-red-600 -translate-y-1 shadow-xl;
+    i {
+      @apply animate-spin;
+    }
+  }
+}
+
+.btn-secondary {
+  @apply flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 cursor-pointer border shadow-sm no-underline;
+  @apply bg-white text-gray-600 border-gray-200;
+
+  &:hover {
+    @apply bg-gray-50 text-gray-900 border-gray-300 -translate-y-1;
+  }
+}
+
+@keyframes pulse-red {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
