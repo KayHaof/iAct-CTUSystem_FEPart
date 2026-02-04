@@ -1,13 +1,14 @@
 <header>
   <div class="search-bar">
+    <i class="bi bi-search"></i>
     <input type="text" placeholder="Search activities, news..." />
   </div>
 
-  <div class="user-profile">
+  <div class="user-profile" (click)="navigateToProfile()">
     <div class="user-info">
       <span class="name">{{ username || 'Student' }}</span>
       <span class="role">Computer Science</span>
     </div>
-    <img [src]="userAvatar" alt="Avatar" />
+    <img [src]="userAvatar" alt="Avatar" class="avatar-img" />
   </div>
 </header>

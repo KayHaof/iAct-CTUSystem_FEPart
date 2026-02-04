@@ -3,18 +3,19 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { authConfig } from './core/auth/auth.config';
-import { HeaderComponent } from './layout/header/header.component';
+import { UserService } from 'shared-ui';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, HeaderComponent],
+  imports: [CommonModule, RouterOutlet],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
   private oauthService = inject(OAuthService);
   private router = inject(Router);
+  private userService = inject(UserService);
 
   ngOnInit() {
     this.configureAuth();
@@ -25,6 +26,8 @@ export class AppComponent implements OnInit {
 
     this.oauthService.loadDiscoveryDocumentAndTryLogin().then(() => {
       if (this.oauthService.hasValidAccessToken()) {
+        this.userService.getMyInfo().subscribe();
+
         this.oauthService.setupAutomaticSilentRefresh();
 
         this.router.navigate([], {

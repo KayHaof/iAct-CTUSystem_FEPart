@@ -22,9 +22,9 @@ import { HeaderComponent } from '../header/header.component';
   `,
   styles: [`
     .layout-wrapper { display: flex; height: 100vh; overflow: hidden; }
-    .sidebar-area { width: 260px; flex-shrink: 0; background: #fff; border-right: 1px solid #eee; }
+    .sidebar-area { flex-shrink: 0; background: #fff; border-right: 1px solid #eee; }
     .content-area { flex-grow: 1; display: flex; flex-direction: column; background: #f5f7fa; }
-    .main-scrollable { flex-grow: 1; overflow-y: auto; padding: 24px; }
+    .main-scrollable { flex-grow: 1; overflow-y: auto; padding: 12px; }
   `]
 })
 export class MainLayoutComponent {}

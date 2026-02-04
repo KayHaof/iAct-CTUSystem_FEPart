@@ -12,10 +12,7 @@
     "isolatedModules": true,
     "experimentalDecorators": true,
     "paths": {
-      "shared-ui": [
-        "./dist/shared-ui",
-        "./dist/shared-ui"
-      ]
+      "shared-ui": ["./projects/shared-ui/src/public-api.ts"]
     },
     "importHelpers": true,
     "target": "ES2022",

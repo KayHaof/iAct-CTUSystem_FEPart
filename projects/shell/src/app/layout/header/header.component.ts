@@ -1,7 +1,7 @@
-// projects/shell/src/app/layout/header/header.component.ts
-import { Component, inject } from '@angular/core'; // 👈 Thêm inject
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OAuthService } from 'angular-oauth2-oidc'; // 👈 Thêm import này
+
+import { UserService } from 'shared-ui';
 
 @Component({
   selector: 'app-header',
@@ -10,25 +10,43 @@ import { OAuthService } from 'angular-oauth2-oidc'; // 👈 Thêm import này
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
 })
-export class HeaderComponent {
-  private oauthService = inject(OAuthService);
+export class HeaderComponent implements OnInit {
+  private userService = inject(UserService);
+  private cdr = inject(ChangeDetectorRef);
 
-  // 🔥 KHAI BÁO CÁC BIẾN MÀ HTML ĐANG ĐÒI
-  username: string = 'Student';
-  userAvatar: string = 'assets/images/default-avatar.png'; // Đường dẫn ảnh mặc định
 
-  constructor() {
-    // Lấy thông tin user từ Token sau khi đăng nhập
-    const claims = this.oauthService.getIdentityClaims() as any;
+  defaultAvatar =
+    'https://res.cloudinary.com/dhjamvg6j/image/upload/v1770104643/b8erttd8eughls55igvb.jpg';
 
-    if (claims) {
-      // Keycloak thường trả về 'name', 'given_name' hoặc 'preferred_username'
-      this.username = claims['name'] || claims['preferred_username'] || 'Student';
+  username: string = '';
+  userAvatar: string = this.defaultAvatar;
 
-      // Nếu Keycloak có config trả về avatar (picture)
-      if (claims['picture']) {
-        this.userAvatar = claims['picture'];
-      }
-    }
+  ngOnInit() {
+    this.fetchUserInfo();
+  }
+
+  fetchUserInfo() {
+    this.userService.getMyInfo().subscribe({
+      next: (response) => {
+        const data = response.result;
+
+        if (data) {
+          this.username = data.fullName || data.username || 'Student Name';
+
+          if (data.avtUrl) {
+            this.userAvatar = data.avtUrl;
+          }
+
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => {
+        console.error('Không lấy được thông tin user:', err);
+      },
+    });
+  }
+
+  navigateToProfile() {
+    // Logic chuyển trang
   }
 }
