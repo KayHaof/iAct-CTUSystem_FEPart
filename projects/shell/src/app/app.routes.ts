@@ -8,6 +8,13 @@ import { roleGuard } from './core/auth/role.guard';
 
 export const routes: Routes = [
   {
+    path: 'server-error',
+    loadComponent: () =>
+      import('./features/server-error/server-error').then((m) => m.ServerErrorComponent),
+    title: '500 - Lỗi hệ thống',
+  },
+
+  {
     path: '',
     component: MainLayoutComponent,
     canActivate: [authGuard],
@@ -43,20 +50,23 @@ export const routes: Routes = [
       },
 
       {
+        path: 'not-found',
+        loadComponent: () =>
+          import('./features/not-found/not-found').then((m) => m.NotFoundComponent),
+        title: '404 - Đường dẫn không tồn tại',
+      },
+
+      {
         path: '**',
         loadComponent: () =>
           import('./features/not-found/not-found').then((m) => m.NotFoundComponent),
         title: '404 - Không tìm thấy trang',
       },
-
-      {
-        path: 'server-error',
-        loadComponent: () =>
-          import('./features/server-error/server-error').then(
-            (m) => m.ServerErrorComponent,
-          ),
-        title: '500 - Lỗi máy chủ',
-      },
     ],
+  },
+
+  {
+    path: '**',
+    redirectTo: 'not-found',
   },
 ];

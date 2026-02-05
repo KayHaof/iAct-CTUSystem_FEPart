@@ -8,8 +8,4 @@ import { RouterModule } from '@angular/router';
   templateUrl: './server-error.html',
   styleUrls: ['./server-error.scss'],
 })
-export class ServerErrorComponent {
-  reloadPage() {
-    window.location.reload();
-  }
-}
+export class ServerErrorComponent {}

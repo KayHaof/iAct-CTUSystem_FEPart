@@ -5,6 +5,7 @@ import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { provideHotToastConfig } from '@ngxpert/hot-toast';
 
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { serverErrorInterceptor } from './core/interceptors/server-error.interceptor';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
 
@@ -12,7 +13,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
 
-    provideHttpClient(withInterceptors([authInterceptor]), withFetch()),
+    provideHttpClient(withInterceptors([authInterceptor, serverErrorInterceptor]), withFetch()),
 
     provideOAuthClient(),
 
