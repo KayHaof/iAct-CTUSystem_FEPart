@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Output, Input } from '@angular/core';
-import { CloudinaryService } from '../cloudinary.service';
+import { CloudinaryService } from '../../services/cloudinary.service';
 
 @Component({
   selector: 'lib-upload-button',

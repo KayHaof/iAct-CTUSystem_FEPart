@@ -4,6 +4,23 @@
   <div class="content-area">
     <app-header class="header-area"></app-header>
 
+    <button
+      (click)="testLoading()"
+      style="
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 10000;
+        background: red;
+        color: white;
+        padding: 10px;
+      "
+    >
+      BẤM ĐỂ TEST LOADING
+    </button>
+
+    <loading-bar></loading-bar>
+
     <main class="main-scrollable">
       <div class="page-content">
         <router-outlet></router-outlet>
