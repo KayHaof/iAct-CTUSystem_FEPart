@@ -35,11 +35,11 @@ export class SidebarComponent {
   menuItems: MenuItem[] = [
     // --- COMMON
     { label: 'Dashboard', link: '/dashboard', icon: 'bi bi-grid-fill' },
-    { label: 'Activity Hub', link: '/activities', icon: 'bi bi-calendar3' },
+    { label: 'Activity Hub', link: '/activity-hub', icon: 'bi bi-calendar3' },
 
     // --- STUDENT (Role 1) ---
-    { label: 'My Records', link: '/records', icon: 'bi bi-person-lines-fill', role: 1 }, // Xem điểm & Lịch sử
-    { label: 'Submit Proof', link: '/proofs', icon: 'bi bi-cloud-arrow-up', role: 1 }, // Nộp minh chứng ngoài
+    { label: 'My Records', link: '/my-records', icon: 'bi bi-person-lines-fill', role: 1 }, // Xem điểm & Lịch sử
+    { label: 'Submit Proof', link: '/submit-proof', icon: 'bi bi-cloud-arrow-up', role: 1 }, // Nộp minh chứng ngoài
 
     // --- DEPARTMENT (Role 2 - Khoa/Viện) ---
     { label: 'Org. Activities', link: '/org/activities', icon: 'bi bi-calendar-plus', role: 2 }, // Tạo/Quản lý hoạt động

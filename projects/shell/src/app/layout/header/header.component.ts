@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { UserService } from 'shared-ui';
@@ -12,9 +13,11 @@ import { LayoutService } from '../layout.service';
   styleUrls: ['./header.component.scss'],
 })
 export class HeaderComponent implements OnInit {
-  private userService = inject(UserService);
+  userService = inject(UserService);
   private cdr = inject(ChangeDetectorRef);
   private layoutService = inject(LayoutService);
+
+  private router = inject(Router);
 
   defaultAvatar =
     'https://res.cloudinary.com/dhjamvg6j/image/upload/v1770104643/b8erttd8eughls55igvb.jpg';
@@ -32,26 +35,29 @@ export class HeaderComponent implements OnInit {
 
   fetchUserInfo() {
     this.userService.getMyInfo().subscribe({
-      next: (response) => {
-        const data = response.result;
+      next: (response: any) => {
+        const data = response?.result;
+
+        console.log('User Info:', data);
 
         if (data) {
-          this.username = data.fullName || data.username || 'Student Name';
+          this.username = data.fullName || data.username || 'Student';
 
           if (data.avtUrl) {
             this.userAvatar = data.avtUrl;
           }
-
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         }
       },
       error: (err) => {
-        console.error('Không lấy được thông tin user:', err);
+        console.error('Lỗi lấy User Info:', err);
       },
     });
   }
 
   navigateToProfile() {
-    // Logic chuyển trang
+    this.layoutService.closeMobileMenu();
+
+    this.router.navigate(['/profile']);
   }
 }

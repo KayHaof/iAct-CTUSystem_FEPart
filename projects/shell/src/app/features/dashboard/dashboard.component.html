@@ -1,116 +1,148 @@
-<div class="dashboard-container">
-  
-  <div class="stats-grid">
-    <div class="card welcome-card">
-      <div class="welcome-text">
-        <h2>Welcome back, {{ userName }}! 👋</h2>
-        <p>You're doing great this semester.</p>
-        
-        <div class="mini-stat">
-          <div class="icon-box">📅</div>
-          <div>
-            <strong>2</strong>
-            <span>ACTIVITIES THIS WEEK</span>
+@if (isLoading) {
+  <div class="p-6 animate-pulse space-y-6">
+    <div class="h-32 bg-gray-200 rounded-2xl"></div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="h-40 bg-gray-200 rounded-2xl"></div>
+      <div class="h-40 bg-gray-200 rounded-2xl"></div>
+      <div class="h-40 bg-gray-200 rounded-2xl"></div>
+    </div>
+  </div>
+} @else {
+  @if (data) {
+    <div class="p-6 min-h-screen bg-gray-50/50">
+      <div class="mb-8">
+        <app-welcome-banner
+          [name]="userService.currentUser()?.fullName || 'Bạn'"
+          [studentCode]="userService.currentUser()?.studentCode || '...'"
+        >
+        </app-welcome-banner>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="cursor-pointer group" routerLink="/my-records">
+          <app-stats-card
+            title="Điểm Rèn Luyện"
+            [value]="data.totalScore + '/100'"
+            [subtext]="'Xếp loại: ' + data.rank"
+            subtextColorClass="text-blue-600 font-bold group-hover:text-blue-700"
+            iconBgClass="bg-blue-100 text-blue-600 group-hover:bg-blue-200 transition-colors"
+            [showProgress]="true"
+            [progress]="data.totalScore"
+          >
+            <i class="bi bi-trophy-fill text-2xl"></i>
+          </app-stats-card>
+        </div>
+
+        <div class="cursor-pointer group" routerLink="/my-records">
+          <app-stats-card
+            title="Tiến độ CTXH"
+            [value]="data.socialDays + ' ngày'"
+            subtext="Mục tiêu: 15 ngày"
+            iconBgClass="bg-green-100 text-green-600 group-hover:bg-green-200 transition-colors"
+            [showProgress]="true"
+            [progress]="(data.socialDays / 15) * 100"
+          >
+            <i class="bi bi-balloon-heart-fill text-2xl"></i>
+          </app-stats-card>
+        </div>
+
+        <div class="cursor-pointer group" routerLink="/activity-hub">
+          <app-stats-card
+            title="Hoạt động tham gia"
+            [value]="data.upcomingCount + data.activities.length"
+            subtext="Xem tất cả lịch sử"
+            subtextColorClass="text-purple-600 underline decoration-dotted"
+            iconBgClass="bg-purple-100 text-purple-600 group-hover:bg-purple-200 transition-colors"
+          >
+            <i class="bi bi-collection-play-fill text-2xl"></i>
+          </app-stats-card>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-8 space-y-6">
+          <app-activity-list [activities]="data.activities" (itemClick)="onActivityClick($event)">
+          </app-activity-list>
+
+          <div
+            class="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden"
+          >
+            <div
+              class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"
+            ></div>
+
+            <div class="flex justify-between items-center mb-4 relative z-10">
+              <h3 class="font-bold text-lg"><i class="bi bi-stars"></i> Gợi ý cho bạn</h3>
+              <a
+                routerLink="/activity-hub"
+                class="text-sm bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg transition-colors"
+              >
+                Khám phá thêm
+              </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+              @for (item of data.featuredActivities; track item.id) {
+                <div
+                  (click)="onActivityClick(item.id)"
+                  class="bg-white/10 hover:bg-white/20 border border-white/10 p-4 rounded-xl cursor-pointer transition-all"
+                >
+                  <div
+                    class="text-xs font-medium bg-amber-400 text-amber-900 inline-block px-2 py-0.5 rounded mb-2"
+                  >
+                    HOT
+                  </div>
+                  <h4 class="font-bold truncate">{{ item.title }}</h4>
+                  <div class="text-sm text-blue-100 mt-1 flex items-center gap-2">
+                    <i class="bi bi-calendar"></i> {{ item.date | date: 'dd/MM' }}
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-6">
+          <app-criteria-chart [scores]="data.criteriaScores"> </app-criteria-chart>
+
+          <div class="bg-white rounded-2xl shadow-sm border border-orange-100 p-5">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                <i class="bi bi-exclamation-circle-fill text-orange-500"></i> Chưa nộp MC
+              </h3>
+              <a
+                routerLink="/submit-proof"
+                class="text-xs text-orange-600 font-medium hover:underline"
+                >Xem tất cả</a
+              >
+            </div>
+
+            <div class="space-y-3">
+              @for (proof of data.pendingProofs; track proof.id) {
+                <div
+                  class="flex items-center justify-between p-3 bg-orange-50 rounded-xl border border-orange-100"
+                >
+                  <div class="overflow-hidden mr-2">
+                    <p class="text-sm font-semibold text-gray-800 truncate">{{ proof.title }}</p>
+                    <p class="text-xs text-gray-500">{{ proof.date | date: 'dd/MM/yyyy' }}</p>
+                  </div>
+                  <button
+                    (click)="onSubmitProof(proof.id)"
+                    class="bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-sm transition-colors whitespace-nowrap"
+                  >
+                    Nộp ngay
+                  </button>
+                </div>
+              } @empty {
+                <div class="text-center py-4 text-gray-400 text-sm">
+                  <i class="bi bi-check-circle text-green-500 text-xl block mb-1"></i>
+                  Bạn đã nộp đủ minh chứng!
+                </div>
+              }
+            </div>
           </div>
         </div>
       </div>
     </div>
-
-    <div class="card score-card">
-      <div class="circle-progress">
-        <div class="inner-circle">
-          <span class="score">85</span>
-          <span class="total">/100</span>
-        </div>
-      </div>
-      <h3>Training Score</h3>
-      <span class="badge">Excellent Rank</span>
-    </div>
-
-    <div class="card goal-card">
-      <div class="header-goal">
-        <small>NEXT TITLE GOAL</small>
-        <i class="star-icon">⭐</i>
-      </div>
-      <h3>Student of 5 Merits</h3>
-      
-      <div class="progress-info">
-        <span>Progress</span>
-        <span class="blue-text">3/5 Completed</span>
-      </div>
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" style="width: 60%"></div>
-      </div>
-      
-      <p class="hint">Complete 2 more major activities to unlock.</p>
-    </div>
-  </div>
-
-  <div class="action-grid">
-    <div class="banner checkin-banner">
-      <div class="banner-content">
-        <h3>Check-in</h3>
-        <p>Scan QR code at event location</p>
-        <button class="btn-white">📷 SCAN NOW</button>
-      </div>
-      <div class="qr-icon">🏁</div>
-    </div>
-
-    <div class="banner feedback-banner">
-      <div class="feedback-icon">💬</div>
-      <div class="feedback-content">
-        <h3>Pending Feedback Action</h3>
-        <p>Please submit your feedback for "Green Summer Campaign" to claim your points.</p>
-        <div class="feedback-actions">
-          <span class="tag-points">+5 Points</span>
-          <a href="#" class="link-action">Complete Now →</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="content-split">
-    
-    <div class="activities-section">
-      <div class="section-header">
-        <h3>New Activities</h3>
-        <a href="#">View All</a>
-      </div>
-
-      <div class="activity-card" *ngFor="let item of upcomingActivities">
-        <img [src]="item.image" [alt]="item.title" class="activity-img">
-        <div class="activity-details">
-          <span class="date-badge">{{ item.date }}</span>
-          <h4>{{ item.title }} <span class="points-badge">+{{ item.points }} Pts</span></h4>
-          <p>{{ item.desc }}</p>
-          <div class="activity-footer">
-            <span class="location">📍 {{ item.location }}</span>
-            <button class="btn-blue">Register Now</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="news-section">
-      <h3>Campus Highlights</h3>
-      
-      <div class="news-item" *ngFor="let news of newsUpdates">
-        <div class="avatar" [style.background-color]="news.color">{{ news.avatar }}</div>
-        <div class="news-content">
-          <div class="news-meta">
-            <strong>{{ news.author }}</strong> • {{ news.time }}
-          </div>
-          <p>{{ news.title }}</p>
-        </div>
-      </div>
-
-      <div class="promo-box">
-        <div class="promo-icon">🐶</div>
-        <p><strong>Volunteer Squad</strong> • 1d ago</p>
-        <p>Only 5 spots left for the weekend animal shelter visit!</p>
-        <a href="#">View More Updates</a>
-      </div>
-    </div>
-
-  </div>
-</div>
+  }
+}

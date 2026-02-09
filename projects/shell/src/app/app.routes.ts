@@ -7,6 +7,7 @@ import { authGuard } from './core/auth/auth.guard';
 import { roleGuard } from './core/auth/role.guard';
 
 export const routes: Routes = [
+  // 1. TRANG LỖI HỆ THỐNG (Nằm ngoài cùng, không dính Layout)
   {
     path: 'server-error',
     loadComponent: () =>
@@ -14,6 +15,7 @@ export const routes: Routes = [
     title: '500 - Lỗi hệ thống',
   },
 
+  // 2. MAIN LAYOUT (Cần đăng nhập)
   {
     path: '',
     component: MainLayoutComponent,
@@ -21,6 +23,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
+      // --- DASHBOARD ---
       {
         path: 'dashboard',
         loadComponent: () =>
@@ -28,10 +31,53 @@ export const routes: Routes = [
         title: 'Dashboard | iAct CTU',
       },
 
+      // --- NEW ROUTES (Bổ sung theo Dashboard) ---
+
+      // 1. Activity Hub (Dành cho sinh viên xem/đăng ký hoạt động)
+      {
+        path: 'activity-hub',
+        loadComponent: () =>
+          import('./features/activity-hub/activity-hub.component').then(
+            (m) => m.ActivityHubComponent,
+          ),
+        title: 'Cổng Hoạt động',
+      },
+      {
+        path: 'activity-hub/:id', // Trang chi tiết hoạt động
+        loadComponent: () =>
+          import('./features/activity-hub/activity-detail/activity-detail.component').then(
+            (m) => m.ActivityDetailComponent,
+          ),
+        title: 'Chi tiết Hoạt động',
+      },
+
+      // 2. My Records (Xem điểm rèn luyện, lịch sử tham gia)
+      {
+        path: 'my-records',
+        loadComponent: () =>
+          import('./features/my-records/my-records.component').then((m) => m.MyRecordsComponent),
+        title: 'Hồ sơ rèn luyện',
+      },
+
+      // 3. Submit Proof (Nộp minh chứng)
+      {
+        path: 'submit-proof',
+        loadComponent: () =>
+          import('./features/submit-proof/submit-proof.component').then(
+            (m) => m.SubmitProofComponent,
+          ),
+        title: 'Nộp minh chứng',
+      },
+
+      // --- EXISTING REMOTE MODULES (MFEs) ---
+      // (Giữ lại cái này cho Admin quản lý)
       {
         path: 'activities',
         loadChildren: () => loadRemoteModule('mfe-activity', './routes').then((m) => m.routes),
-        title: 'Quản lý Hoạt động',
+        title: 'Quản lý Hoạt động (Admin)',
+        // Có thể thêm Role Guard nếu cần
+        // canActivate: [roleGuard],
+        // data: { roles: ['ADMIN', 'MANAGER'] }
       },
 
       {
@@ -42,6 +88,16 @@ export const routes: Routes = [
         title: 'Trang Quản trị',
       },
 
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/user-profile/user-profile.component').then(
+            (m) => m.UserProfileComponent,
+          ),
+        title: 'Thông tin cá nhân',
+      },
+
+      // --- ERROR PAGES ---
       {
         path: 'forbidden',
         loadComponent: () =>
@@ -56,6 +112,7 @@ export const routes: Routes = [
         title: '404 - Đường dẫn không tồn tại',
       },
 
+      // Wildcard con (để bắt lỗi 404 trong nội bộ layout)
       {
         path: '**',
         loadComponent: () =>
@@ -65,6 +122,7 @@ export const routes: Routes = [
     ],
   },
 
+  // 3. WILDCARD NGOÀI CÙNG (Fallback)
   {
     path: '**',
     redirectTo: 'not-found',

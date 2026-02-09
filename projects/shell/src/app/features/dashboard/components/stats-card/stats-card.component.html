@@ -1,0 +1,23 @@
+<div class="card-root">
+  <div class="card-header">
+    <div>
+      <p class="card-title">{{ title }}</p>
+      <h3 class="card-value">{{ value }}</h3>
+    </div>
+    <div class="icon-box" [class]="iconBgClass">
+      <ng-content></ng-content>
+    </div>
+  </div>
+
+  <div class="card-footer">
+    @if (showProgress) {
+      <div class="progress-track">
+        <div class="progress-fill" [style.width.%]="progress"></div>
+      </div>
+    }
+
+    <p class="sub-text" [ngClass]="subtextColorClass">
+      {{ subtext }}
+    </p>
+  </div>
+</div>

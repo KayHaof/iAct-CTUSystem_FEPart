@@ -1,0 +1,35 @@
+.card-root {
+  @apply bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow h-full;
+}
+
+.card-header {
+  @apply flex items-start justify-between;
+
+  .card-title {
+    @apply text-gray-500 text-sm font-medium mb-1;
+  }
+
+  .card-value {
+    @apply text-3xl font-bold text-gray-800;
+  }
+}
+
+.icon-box {
+  @apply p-3 rounded-xl;
+}
+
+.card-footer {
+  @apply mt-4;
+
+  .progress-track {
+    @apply w-full bg-gray-100 rounded-full h-2 mb-2;
+  }
+
+  .progress-fill {
+    @apply bg-blue-600 h-2 rounded-full transition-all duration-500;
+  }
+
+  .sub-text {
+    @apply text-sm;
+  }
+}

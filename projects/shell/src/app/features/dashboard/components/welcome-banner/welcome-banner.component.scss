@@ -1,0 +1,16 @@
+.banner-root {
+  @apply bg-gradient-to-r from-blue-600 to-blue-400 rounded-2xl p-6 text-white shadow-lg flex justify-between items-center;
+}
+
+.info-section {
+  .greeting {
+    @apply text-2xl font-bold mb-1;
+  }
+  .sub-text {
+    @apply opacity-90;
+  }
+}
+
+.avatar-box {
+  @apply hidden md:flex w-16 h-16 bg-white/20 rounded-full items-center justify-center text-2xl font-bold backdrop-blur-sm border-2 border-white/30;
+}

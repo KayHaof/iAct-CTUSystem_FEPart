@@ -38,11 +38,4 @@ export class MainLayoutComponent implements OnInit {
       }
     });
   }
-
-  testLoading() {
-    this.loadingService.show();
-    setTimeout(() => {
-      this.loadingService.hide();
-    }, 2000);
-  }
 }

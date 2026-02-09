@@ -11,5 +11,5 @@
   "include": [
     "src/**/*.d.ts",
     "src/**/*.spec.ts"
-  ]
+, "src/app/features/my-records/my-records.component.spec.ts"  ]
 }
