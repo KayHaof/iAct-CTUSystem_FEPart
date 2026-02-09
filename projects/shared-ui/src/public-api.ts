@@ -11,3 +11,5 @@ export * from './lib/components/loading-bar/loading-bar.component';
 
 export * from './lib/services/alert.service';
 export * from './lib/services/confirm.service';
+
+export * from './lib/services/websocket.service';

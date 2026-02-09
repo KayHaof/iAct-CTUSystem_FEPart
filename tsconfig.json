@@ -33,24 +33,6 @@
       "path": "./projects/shell/tsconfig.spec.json"
     },
     {
-      "path": "./projects/mfe-activity/tsconfig.app.json"
-    },
-    {
-      "path": "./projects/mfe-activity/tsconfig.spec.json"
-    },
-    {
-      "path": "./projects/mfe-registration/tsconfig.app.json"
-    },
-    {
-      "path": "./projects/mfe-registration/tsconfig.spec.json"
-    },
-    {
-      "path": "./projects/mfe-credit/tsconfig.app.json"
-    },
-    {
-      "path": "./projects/mfe-credit/tsconfig.spec.json"
-    },
-    {
       "path": "./projects/mfe-admin/tsconfig.app.json"
     },
     {
