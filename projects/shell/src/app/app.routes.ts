@@ -7,7 +7,6 @@ import { authGuard } from './core/auth/auth.guard';
 import { roleGuard } from './core/auth/role.guard';
 
 export const routes: Routes = [
-  // 1. TRANG LỖI HỆ THỐNG (Nằm ngoài cùng, không dính Layout)
   {
     path: 'server-error',
     loadComponent: () =>
@@ -15,7 +14,7 @@ export const routes: Routes = [
     title: '500 - Lỗi hệ thống',
   },
 
-  // 2. MAIN LAYOUT (Cần đăng nhập)
+  // MAIN LAYOUT (Cần đăng nhập)
   {
     path: '',
     component: MainLayoutComponent,
@@ -30,8 +29,6 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
         title: 'Dashboard | iAct CTU',
       },
-
-      // --- NEW ROUTES (Bổ sung theo Dashboard) ---
 
       // 1. Activity Hub (Dành cho sinh viên xem/đăng ký hoạt động)
       {
@@ -69,32 +66,21 @@ export const routes: Routes = [
         title: 'Nộp minh chứng',
       },
 
-      // --- EXISTING REMOTE MODULES (MFEs) ---
-      // (Giữ lại cái này cho Admin quản lý)
-      {
-        path: 'activities',
-        loadChildren: () => loadRemoteModule('mfe-activity', './routes').then((m) => m.routes),
-        title: 'Quản lý Hoạt động (Admin)',
-        // Có thể thêm Role Guard nếu cần
-        // canActivate: [roleGuard],
-        // data: { roles: ['ADMIN', 'MANAGER'] }
-      },
-
       {
         path: 'admin',
-        loadChildren: () => loadRemoteModule('mfe-admin', './routes').then((m) => m.routes),
+        loadChildren: () =>
+          loadRemoteModule('mfe-admin', './routes').then((m) => {
+            return m.routes;
+          }),
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'MANAGER'] },
+        data: { roles: ['ADMIN'] },
         title: 'Trang Quản trị',
       },
 
       {
         path: 'profile',
-        loadComponent: () =>
-          import('./features/user-profile/user-profile.component').then(
-            (m) => m.UserProfileComponent,
-          ),
-        title: 'Thông tin cá nhân',
+        loadChildren: () =>
+          import('@my-mfe/features/user-profile').then((m) => m.userProfileRoutes),
       },
 
       // --- ERROR PAGES ---

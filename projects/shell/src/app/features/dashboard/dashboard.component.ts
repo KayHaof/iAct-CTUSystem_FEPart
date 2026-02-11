@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 
 // Import UserService từ Shared UI
-import { UserService } from 'shared-ui';
+import { UserService } from '@my-mfe/auth';
 
 import { WelcomeBannerComponent } from './components/welcome-banner/welcome-banner.component';
 import { StatsCardComponent } from './components/stats-card/stats-card.component';

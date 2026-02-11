@@ -2,7 +2,7 @@ import { Component, inject, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { UserService } from 'shared-ui';
+import { UserService } from '@my-mfe/auth';
 import { LayoutService } from '../layout.service';
 
 interface MenuItem {

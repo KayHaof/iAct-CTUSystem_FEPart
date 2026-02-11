@@ -10,7 +10,7 @@ import {
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
 import { FooterComponent } from '../footer/footer.component';
-import { LoadingBarComponent, LoadingService } from 'shared-ui';
+import { LoadingBarComponent, LoadingService } from '@my-mfe/ui';
 
 @Component({
   selector: 'app-main-layout',

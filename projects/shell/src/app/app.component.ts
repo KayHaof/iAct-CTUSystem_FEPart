@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { authConfig } from './core/auth/auth.config';
-import { UserService, WebSocketService } from 'shared-ui';
+import { UserService } from '@my-mfe/auth';
+import { WebSocketService } from '@my-mfe/data-access-realtime';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -67,15 +68,18 @@ export class AppComponent implements OnInit {
 
         this.oauthService.setupAutomaticSilentRefresh();
 
-        this.router.navigate([], {
-          queryParams: {
-            code: null,
-            state: null,
-            session_state: null,
-            iss: null,
-          },
-          queryParamsHandling: 'merge',
-        });
+        const params = this.router.parseUrl(this.router.url).queryParams;
+        if (params['code'] || params['state']) {
+          this.router.navigate([], {
+            queryParams: {
+              code: null,
+              state: null,
+              session_state: null,
+              iss: null,
+            },
+            queryParamsHandling: 'merge',
+          });
+        }
       }
     });
   }

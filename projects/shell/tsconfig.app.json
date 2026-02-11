@@ -8,8 +8,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "../shared-ui/src/lib/services/loading.service.ts",
-    "../shared-ui/src/lib/components/loading-bar/loading.spec.ts"
+    "../../libs/shared/ui/src/lib/services/loading.service.ts",
+    "../../libs/shared/ui/src/lib/components/loading-bar/loading.spec.ts"
   ],
   "exclude": ["src/**/*.spec.ts"]
 }

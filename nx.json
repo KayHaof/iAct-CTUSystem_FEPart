@@ -47,6 +47,13 @@
       "linter": "eslint",
       "unitTestRunner": "vitest-analog",
       "e2eTestRunner": "playwright"
+    },
+    "@nx/angular:library": {
+      "linter": "eslint",
+      "unitTestRunner": "vitest-analog"
+    },
+    "@nx/angular:component": {
+      "style": "css"
     }
   },
   "targetDefaults": {

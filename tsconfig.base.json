@@ -1,0 +1,18 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@my-mfe/auth": ["libs/shared/auth/src/index.ts"],
+      "@my-mfe/data-access-media": ["libs/shared/data-access-media/src/index.ts"],
+      "@my-mfe/data-access-realtime": ["libs/shared/data-access-realtime/src/index.ts"],
+      "@my-mfe/ui": ["libs/shared/ui/src/index.ts"],
+      "@my-mfe/features/user-profile": ["libs/features/src/index.ts"]
+    }
+  }
+}

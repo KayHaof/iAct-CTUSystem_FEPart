@@ -1,0 +1,59 @@
+:host {
+  display: block;
+}
+
+// --- Keyframes Animation ---
+
+// Trượt từ dưới lên + mờ dần ra
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Gạch chân chạy từ 0 -> 100%
+@keyframes expandWidth {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+// Xoay vòng tròn (cho loader)
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// --- Utility Classes ---
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-expand-width {
+  animation: expandWidth 0.3s ease-out forwards;
+}
+
+.loader {
+  width: 1.25rem; /* 20px */
+  height: 1.25rem;
+  border: 2px solid #ffffff;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: rotation 1s linear infinite;
+}

@@ -17,9 +17,21 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return false;
   }
 
-  const claims = oauthService.getIdentityClaims() as any;
-  const userRoles = claims?.realm_access?.roles || [];
-  const hasRole = requiredRoles.some((role) => userRoles.includes(role));
+  let userRoles: string[] = [];
+  try {
+    const token = oauthService.getAccessToken();
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userRoles = payload?.realm_access?.roles || [];
+    }
+  } catch (e) {
+    console.error('Lỗi decode token:', e);
+  }
+
+  const hasRole = requiredRoles.some(
+    (requiredRole) =>
+      userRoles.includes(requiredRole) || userRoles.includes(requiredRole.toLowerCase()),
+  );
 
   if (hasRole) {
     return true;

@@ -9,6 +9,18 @@ module.exports = withNativeFederation({
 
   shared: {
     ...shareAll({ singleton: true, strictVersion: true, requiredVersion: 'auto' }),
+    'keycloak-angular': { singleton: true, strictVersion: true },
+    'keycloak-js': { singleton: true, strictVersion: true },
+    'angular-oauth2-oidc': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: 'auto',
+    },
+
+    '@my-mfe/auth': { singleton: true, strictVersion: true },
+    '@my-mfe/data-access-realtime': { singleton: true, strictVersion: true },
+    '@my-mfe/data-access-media': { singleton: true, strictVersion: true },
+    '@my-mfe/ui': { singleton: true, strictVersion: true },
   },
 
   skip: [
