@@ -63,7 +63,10 @@
             "input": "projects/shell/public"
           }
         ],
-        "styles": ["projects/shell/src/styles.scss"],
+        "styles": [
+          "projects/shell/src/styles.scss",
+          "./node_modules/@ngxpert/hot-toast/fesm2022/ngxpert-hot-toast.mjs"
+        ],
         "polyfills": ["es-module-shims"]
       },
       "configurations": {

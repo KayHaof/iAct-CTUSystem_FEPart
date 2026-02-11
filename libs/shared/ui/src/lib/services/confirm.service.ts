@@ -5,14 +5,11 @@ import Swal from 'sweetalert2';
   providedIn: 'root',
 })
 export class ConfirmService {
-  // Hàm này trả về Promise<boolean>
-  // true: Nếu người dùng bấm "Đồng ý"
-  // false: Nếu bấm "Hủy" hoặc bấm ra ngoài
   async confirm(
-    title: string = 'Bạn có chắc không?',
-    text: string = 'Hành động này không thể hoàn tác!',
-    confirmButtonText: string = 'Xóa luôn',
-    cancelButtonText: string = 'Thôi, hủy',
+    title = 'Bạn có chắc không?',
+    text = 'Hành động này không thể hoàn tác!',
+    confirmButtonText = 'Xóa luôn',
+    cancelButtonText = 'Thôi, hủy',
   ): Promise<boolean> {
     const result = await Swal.fire({
       title: title,

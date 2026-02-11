@@ -37,6 +37,14 @@ module.exports = withNativeFederation({
       version: '0.0.0',
       requiredVersion: '0.0.0',
     },
+
+    '@angular/platform-browser/animations': {
+      singleton: true,
+      strictVersion: true,
+      requiredVersion: 'auto',
+    },
+
+    '@ngxpert/hot-toast': { singleton: true, strictVersion: true },
   },
 
   skip: [

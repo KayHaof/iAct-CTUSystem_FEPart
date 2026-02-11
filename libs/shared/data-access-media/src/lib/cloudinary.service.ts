@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -9,8 +9,7 @@ import { map } from 'rxjs/operators';
 export class CloudinaryService {
   private cloudName = 'dhjamvg6j';
   private uploadPreset = 'upload-iact';
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
 
   uploadImage(file: File): Observable<string> {
     const url = `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`;

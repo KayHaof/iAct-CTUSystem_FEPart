@@ -124,6 +124,10 @@ export class UserService {
     return this.http.put<ApiResponse<UserInfo>>(`${this.baseUrl}/${id}`, data);
   }
 
+  updateProfile(id: number | string, data: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/${id}`, data);
+  }
+
   deleteUser(id: string): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/${id}`);
   }
