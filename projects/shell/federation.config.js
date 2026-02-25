@@ -5,14 +5,13 @@ module.exports = withNativeFederation({
 
   shared: {
     ...shareAll({ singleton: true, strictVersion: true, requiredVersion: 'auto' }),
+
+    // --- AUTHENTICATION ---
     'keycloak-angular': { singleton: true, strictVersion: true, requiredVersion: 'auto' },
     'keycloak-js': { singleton: true, strictVersion: true, requiredVersion: 'auto' },
-    'angular-oauth2-oidc': {
-      singleton: true,
-      strictVersion: true,
-      requiredVersion: 'auto',
-    },
+    'angular-oauth2-oidc': { singleton: true, strictVersion: true, requiredVersion: 'auto' },
 
+    // --- SHARED LIBRARIES (MFE) ---
     '@my-mfe/auth': {
       singleton: true,
       strictVersion: true,
@@ -44,7 +43,8 @@ module.exports = withNativeFederation({
       requiredVersion: 'auto',
     },
 
-    '@ngxpert/hot-toast': { singleton: true, strictVersion: true },
+    '@angular/material': { singleton: true, strictVersion: true, requiredVersion: 'auto' },
+    '@angular/cdk': { singleton: true, strictVersion: true, requiredVersion: 'auto' },
   },
 
   skip: [

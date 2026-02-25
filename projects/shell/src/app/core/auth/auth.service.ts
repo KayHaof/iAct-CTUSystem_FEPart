@@ -24,7 +24,7 @@ export class AuthService {
         if (this.oauthService.hasValidAccessToken()) {
           console.log('[AuthService] Đã khôi phục Token thành công!');
         } else {
-          console.log('ℹ[AuthService] Chưa có Token hợp lệ.');
+          console.log('[AuthService] Chưa có Token hợp lệ.');
         }
       })
       .catch((err) => {

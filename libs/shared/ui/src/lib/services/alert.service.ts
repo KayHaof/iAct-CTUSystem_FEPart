@@ -1,32 +1,57 @@
 import { Injectable, inject } from '@angular/core';
-import { HotToastService } from '@ngxpert/hot-toast';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Observable, tap, catchError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AlertService {
-  private toast = inject(HotToastService);
+  private snackBar = inject(MatSnackBar);
 
   success(message: string) {
-    this.toast.success(message, {
+    this.snackBar.open(message, 'Đóng', {
       duration: 3000,
-      style: { border: '1px solid #713200', padding: '16px', color: '#713200' },
+      horizontalPosition: 'right', // Góc phải
+      verticalPosition: 'top',
+      panelClass: ['success-snackbar'],
     });
   }
 
   error(message: string) {
-    this.toast.error(message, { duration: 4000 });
+    this.snackBar.open(message, 'Đóng', {
+      duration: 4000,
+      horizontalPosition: 'right', // Góc phải
+      verticalPosition: 'top',
+      panelClass: ['error-snackbar'],
+    });
   }
 
   info(message: string) {
-    this.toast.info(message);
+    this.snackBar.open(message, 'Đóng', {
+      duration: 3000,
+      horizontalPosition: 'right', // Góc phải
+      verticalPosition: 'top',
+    });
   }
 
   observe<T>(messageSuccess: string, messageError: string) {
-    return this.toast.observe<T>({
-      loading: 'Đang xử lý...',
-      success: messageSuccess,
-      error: messageError,
-    });
+    return (source: Observable<T>) => {
+      const loadingRef = this.snackBar.open('Đang xử lý...', '', {
+        verticalPosition: 'top',
+        horizontalPosition: 'right', // 🔥 Sửa chỗ này thành right luôn để khỏi bị lú
+      });
+
+      return source.pipe(
+        tap(() => {
+          loadingRef.dismiss();
+          this.success(messageSuccess);
+        }),
+        catchError((err) => {
+          loadingRef.dismiss();
+          this.error(messageError);
+          throw err;
+        }),
+      );
+    };
   }
 }

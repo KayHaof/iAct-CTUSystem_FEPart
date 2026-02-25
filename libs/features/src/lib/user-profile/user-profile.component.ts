@@ -1,27 +1,14 @@
 import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-  AbstractControl,
-  ValidationErrors,
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { UserService } from '@my-mfe/auth';
 import { CloudinaryService } from '@my-mfe/data-access-media';
-// 👇 Import AlertService (kiểm tra lại đường dẫn lib của ní nhé)
-import { AlertService } from '@my-mfe/ui';
+import { AlertService, ConfirmService } from '@my-mfe/ui';
+import { OAuthService } from 'angular-oauth2-oidc';
 
 import { of, Observable } from 'rxjs';
 import { switchMap, finalize } from 'rxjs/operators';
-
-// Validator
-export const passwordMatchValidator = (control: AbstractControl): ValidationErrors | null => {
-  const password = control.get('newPassword');
-  const confirm = control.get('confirmPassword');
-  return password && confirm && password.value !== confirm.value ? { mismatch: true } : null;
-};
 
 @Component({
   selector: 'lib-user-profile',
@@ -34,15 +21,15 @@ export class UserProfileComponent {
   public userService = inject(UserService);
   private fb = inject(FormBuilder);
   private cloudinaryService = inject(CloudinaryService);
-  private alertService = inject(AlertService); // 👈 Inject Service Thông báo
+  private alertService = inject(AlertService);
+  private oauthService = inject(OAuthService);
+  private confirmService = inject(ConfirmService);
 
   defaultAvatar =
     'https://res.cloudinary.com/dhjamvg6j/image/upload/v1770104643/b8erttd8eughls55igvb.jpg';
 
   user = computed(() => this.userService.currentUser());
   isEditing = signal(false);
-  activeTab = signal<'info' | 'password'>('info');
-  showPassword = signal(false);
   isUploading = signal(false);
 
   previewAvatar = signal<string | null>(null);
@@ -54,25 +41,13 @@ export class UserProfileComponent {
     gender: [null as number | null],
     phone: ['', [Validators.pattern(/(84|0[3|5|7|8|9])+([0-9]{8})\b/)]],
     address: [''],
-    avtUrl: [''],
+    avatarUrl: [''],
   });
-
-  passwordForm = this.fb.group(
-    {
-      currentPassword: ['', [Validators.required]],
-      newPassword: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]],
-    },
-    { validators: passwordMatchValidator },
-  );
-
-  // --- ACTIONS ---
 
   enterEditMode() {
     const u = this.user();
     if (u) {
       this.isEditing.set(true);
-      this.activeTab.set('info');
 
       this.profileForm.patchValue({
         fullName: u.fullName,
@@ -80,7 +55,7 @@ export class UserProfileComponent {
         gender: u.gender,
         phone: u.phone,
         address: u.address,
-        avtUrl: u.avtUrl,
+        avatarUrl: u.avatarUrl,
       });
 
       this.previewAvatar.set(null);
@@ -91,20 +66,15 @@ export class UserProfileComponent {
   cancelEdit() {
     this.isEditing.set(false);
     this.profileForm.reset();
-    this.passwordForm.reset();
     this.selectedFile = null;
     this.previewAvatar.set(null);
-  }
-
-  switchTab(tab: 'info' | 'password') {
-    this.activeTab.set(tab);
   }
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        this.alertService.error('Ảnh quá lớn! Vui lòng chọn ảnh dưới 5MB.'); // 👈 Thông báo lỗi đẹp
+        this.alertService.error('Ảnh quá lớn! Vui lòng chọn ảnh dưới 5MB.');
         return;
       }
       this.selectedFile = file;
@@ -114,10 +84,9 @@ export class UserProfileComponent {
     }
   }
 
-  // ================= MAIN LOGIC: SAVE INFO (Dùng Observe) =================
   saveInfo() {
     if (this.profileForm.invalid) {
-      this.alertService.error('Vui lòng kiểm tra lại các trường thông tin!'); // 👈 Thay alert thường
+      this.alertService.error('Vui lòng kiểm tra lại các trường thông tin!');
       return;
     }
 
@@ -132,57 +101,72 @@ export class UserProfileComponent {
     uploadStream$
       .pipe(
         switchMap((newImageUrl) => {
-          if (newImageUrl) {
-            console.log('📸 Đã upload ảnh mới:', newImageUrl);
-            formData.avtUrl = newImageUrl;
-          }
-
           const currentUser = this.user();
           if (!currentUser || !currentUser.id) {
             throw new Error('Không tìm thấy ID người dùng!');
           }
 
+          // 1. Xử lý logic gán URL ảnh
+          if (newImageUrl) {
+            console.log('Đã upload ảnh mới:', newImageUrl);
+            formData.avatarUrl = newImageUrl;
+          } else {
+            // Lấy lại ảnh cũ nếu không đổi ảnh
+            formData.avatarUrl = currentUser.avatarUrl;
+          }
+
+          // 2. Gọi API cập nhật
           return this.userService.updateProfile(currentUser.id, formData);
         }),
-        // 🔥 MAGIC Ở ĐÂY: Tự động hiện Loading -> Success/Error
         this.alertService.observe(
           'Cập nhật hồ sơ thành công!',
           'Cập nhật thất bại, vui lòng thử lại!',
         ),
-
         finalize(() => this.isUploading.set(false)),
       )
       .subscribe({
         next: (res) => {
-          // Không cần alert success nữa vì observe lo rồi
           this.isEditing.set(false);
-          // this.userService.refreshUser();
+
+          // 3. Cập nhật State nội bộ
+          this.userService.currentUser.update((oldUser) => {
+            if (!oldUser) return oldUser;
+            return { ...oldUser, ...formData };
+          });
         },
         error: (err) => {
-          console.error('❌ Chi tiết lỗi:', err);
-          // Không cần alert error nữa vì observe lo rồi
+          console.error('Chi tiết lỗi:', err);
         },
       });
   }
 
-  // ================= PASSWORD LOGIC =================
   changePassword() {
-    if (this.passwordForm.invalid) {
-      this.alertService.error('Mật khẩu nhập chưa đúng quy tắc!');
-      return;
-    }
-
-    // Giả lập gọi API đổi pass
-    console.log('Đổi mật khẩu:', this.passwordForm.value);
-
-    // Thông báo thành công
-    this.alertService.success('Đổi mật khẩu thành công!');
-
-    this.isEditing.set(false);
-    this.passwordForm.reset();
+    this.oauthService.initLoginFlow('', { kc_action: 'UPDATE_PASSWORD', prompt: 'login' });
   }
 
-  toggleShowPassword() {
-    this.showPassword.update((v) => !v);
+  async confirmDeactivate() {
+    const isConfirmed = await this.confirmService.confirm(
+      'Vô hiệu hóa tài khoản?',
+      'Bạn sẽ bị đăng xuất và không thể tự đăng nhập lại cho đến khi Admin mở khóa!',
+      'Vô hiệu hóa ngay',
+      'Để tôi suy nghĩ lại',
+    );
+
+    if (isConfirmed) {
+      const currentUser = this.user();
+      if (!currentUser || !currentUser.id) return;
+
+      this.userService.deactivateAccount(currentUser.id).subscribe({
+        next: (res) => {
+          this.alertService.success(res.message || 'Tài khoản đã được vô hiệu hóa!');
+          this.oauthService.logOut();
+        },
+        error: (err) => {
+          console.error('Lỗi vô hiệu hóa:', err);
+          const msg = err.error?.message || 'Có lỗi xảy ra, không thể thực hiện.';
+          this.alertService.error(msg);
+        },
+      });
+    }
   }
 }

@@ -426,6 +426,14 @@
   optionalDependencies:
     lmdb "3.4.4"
 
+"@angular/cdk@^21.1.5":
+  version "21.1.5"
+  resolved "https://registry.yarnpkg.com/@angular/cdk/-/cdk-21.1.5.tgz#c312f28dadd148b493a6a284ab2f9511d0118ecb"
+  integrity sha512-AlQPgqe3LLwXCyrDwYSX3m/WKnl2ppCMW7Gb+7bJpIcpMdWYEpSOSQF318jXGYIysKg43YbdJ1tWhJWY/cbn3w==
+  dependencies:
+    parse5 "^8.0.0"
+    tslib "^2.3.0"
+
 "@angular/cli@^21.1.0":
   version "21.1.0"
   resolved "https://registry.npmjs.org/@angular/cli/-/cli-21.1.0.tgz"
@@ -492,6 +500,13 @@
   integrity sha512-1Qxsu2cQhraKe2dKzIVm7no1qWi76QsXVwY7+VGKRYG7p+fKaFmnr7oU5EbJL66TsFzCb8mDGxLGikS+YE+X/g==
   dependencies:
     "@standard-schema/spec" "^1.0.0"
+    tslib "^2.3.0"
+
+"@angular/material@^21.1.5":
+  version "21.1.5"
+  resolved "https://registry.yarnpkg.com/@angular/material/-/material-21.1.5.tgz#732aa2375ee7082f7b4740639400906975b5f510"
+  integrity sha512-D6JvFulPvIKhPJ52prMV7DxwYMzcUpHar11ZcMb7r9WQzUfCS3FDPXfMAce5n3h+3kFccfmmGpnyBwqTlLPSig==
+  dependencies:
     tslib "^2.3.0"
 
 "@angular/platform-browser@^21.1.0":

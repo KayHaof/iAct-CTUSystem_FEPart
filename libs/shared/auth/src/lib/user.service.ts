@@ -24,7 +24,7 @@ export interface UserInfo {
   phone?: string;
   address?: string;
 
-  avtUrl?: string;
+  avatarUrl?: string;
   createdAt?: string;
 }
 
@@ -134,5 +134,16 @@ export class UserService {
 
   toggleUserStatus(id: string, status: number): Observable<ApiResponse<void>> {
     return this.http.patch<ApiResponse<void>>(`${this.baseUrl}/${id}/status`, { status });
+  }
+
+  changeMyPassword(data: {
+    currentPassword?: string;
+    newPassword?: string;
+  }): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/my-password`, data);
+  }
+
+  deactivateAccount(id: number | string): Observable<ApiResponse<string>> {
+    return this.http.delete<ApiResponse<string>>(`${this.baseUrl}/${id}`);
   }
 }
