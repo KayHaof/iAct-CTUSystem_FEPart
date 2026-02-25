@@ -4,3 +4,12 @@ export * from './lib/services/confirm.service';
 
 export * from './lib/components/loading-bar/loading-bar.component';
 export * from './lib/components/upload-button/upload-button.component';
+
+export * from './lib/layout/admin-layout/admin-layout.component';
+export * from './lib/layout/student-layout/student-layout.component';
+
+export * from './lib/layout/header/header.component';
+export * from './lib/layout/sidebar/sidebar.component';
+export * from './lib/layout/footer/footer.component';
+export * from './lib/layout/admin-layout/admin-layout.component';
+export * from './lib/layout/student-layout/student-layout.component';

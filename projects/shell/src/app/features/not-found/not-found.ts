@@ -10,7 +10,6 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./not-found.scss'],
 })
 export class NotFoundComponent {
-  // Inject Location để xử lý nút "Quay lại"
   private location = inject(Location);
 
   goBack() {

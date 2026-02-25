@@ -1,8 +1,6 @@
 import { Routes } from '@angular/router';
 import { loadRemoteModule } from '@angular-architects/native-federation';
 
-import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
-
 import { authGuard } from './core/auth/auth.guard';
 import { roleGuard } from './core/auth/role.guard';
 
@@ -17,53 +15,11 @@ export const routes: Routes = [
   // MAIN LAYOUT (Cần đăng nhập)
   {
     path: '',
-    component: MainLayoutComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-
-      // --- DASHBOARD ---
       {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-        title: 'Dashboard | iAct CTU',
-      },
-
-      // 1. Activity Hub (Dành cho sinh viên xem/đăng ký hoạt động)
-      {
-        path: 'activity-hub',
-        loadComponent: () =>
-          import('./features/activity-hub/activity-hub.component').then(
-            (m) => m.ActivityHubComponent,
-          ),
-        title: 'Cổng Hoạt động',
-      },
-      {
-        path: 'activity-hub/:id', // Trang chi tiết hoạt động
-        loadComponent: () =>
-          import('./features/activity-hub/activity-detail/activity-detail.component').then(
-            (m) => m.ActivityDetailComponent,
-          ),
-        title: 'Chi tiết Hoạt động',
-      },
-
-      // 2. My Records (Xem điểm rèn luyện, lịch sử tham gia)
-      {
-        path: 'my-records',
-        loadComponent: () =>
-          import('./features/my-records/my-records.component').then((m) => m.MyRecordsComponent),
-        title: 'Hồ sơ rèn luyện',
-      },
-
-      // 3. Submit Proof (Nộp minh chứng)
-      {
-        path: 'submit-proof',
-        loadComponent: () =>
-          import('./features/submit-proof/submit-proof.component').then(
-            (m) => m.SubmitProofComponent,
-          ),
-        title: 'Nộp minh chứng',
+        path: '',
+        loadChildren: () => loadRemoteModule('mfe-student', './Routes').then((m) => m.appRoutes),
       },
 
       {

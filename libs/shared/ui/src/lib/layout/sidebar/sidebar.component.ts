@@ -13,7 +13,7 @@ interface MenuItem {
 }
 
 @Component({
-  selector: 'app-sidebar',
+  selector: 'lib-sidebar',
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.component.html',

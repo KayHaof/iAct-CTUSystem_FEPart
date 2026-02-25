@@ -6,14 +6,17 @@ import { UserService } from '@my-mfe/auth';
 import { CloudinaryService } from '@my-mfe/data-access-media';
 import { AlertService, ConfirmService } from '@my-mfe/ui';
 import { OAuthService } from 'angular-oauth2-oidc';
+import { Location } from '@angular/common';
 
 import { of, Observable } from 'rxjs';
 import { switchMap, finalize } from 'rxjs/operators';
 
+import { HeaderComponent } from '@my-mfe/ui';
+
 @Component({
   selector: 'lib-user-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HeaderComponent],
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.scss'],
 })
@@ -24,6 +27,7 @@ export class UserProfileComponent {
   private alertService = inject(AlertService);
   private oauthService = inject(OAuthService);
   private confirmService = inject(ConfirmService);
+  private location = inject(Location);
 
   defaultAvatar =
     'https://res.cloudinary.com/dhjamvg6j/image/upload/v1770104643/b8erttd8eughls55igvb.jpg';
@@ -168,5 +172,9 @@ export class UserProfileComponent {
         },
       });
     }
+  }
+
+  goBack() {
+    this.location.back();
   }
 }

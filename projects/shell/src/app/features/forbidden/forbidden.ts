@@ -6,8 +6,8 @@ import { RouterModule } from '@angular/router';
   selector: 'app-forbidden',
   standalone: true,
   imports: [RouterModule],
-  templateUrl: './forbidden.html', // Check lại tên file thật của bạn
-  styleUrls: ['./forbidden.scss'], // Check lại tên file thật của bạn
+  templateUrl: './forbidden.html',
+  styleUrls: ['./forbidden.scss'],
 })
 export class ForbiddenComponent {
   private location = inject(Location);

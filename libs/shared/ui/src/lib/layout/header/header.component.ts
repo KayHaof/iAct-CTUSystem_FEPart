@@ -6,7 +6,7 @@ import { UserService } from '@my-mfe/auth';
 import { LayoutService } from '../layout.service';
 
 @Component({
-  selector: 'app-header',
+  selector: 'lib-header',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './header.component.html',

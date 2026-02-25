@@ -10,16 +10,17 @@ import {
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
 import { FooterComponent } from '../footer/footer.component';
-import { LoadingBarComponent, LoadingService } from '@my-mfe/ui';
+import { LoadingBarComponent } from '../../components/loading-bar/loading-bar.component';
+import { LoadingService } from '../../services/loading.service';
 
 @Component({
-  selector: 'app-main-layout',
+  selector: 'lib-app-admin-layout',
   standalone: true,
   imports: [RouterOutlet, SidebarComponent, HeaderComponent, FooterComponent, LoadingBarComponent],
-  templateUrl: './main-layout.component.html',
-  styleUrls: ['./main-layout.component.scss'],
+  templateUrl: './admin-layout.component.html',
+  styleUrls: ['./admin-layout.component.scss'],
 })
-export class MainLayoutComponent implements OnInit {
+export class AdminLayoutComponent implements OnInit {
   private router = inject(Router);
   private loadingService = inject(LoadingService);
 
