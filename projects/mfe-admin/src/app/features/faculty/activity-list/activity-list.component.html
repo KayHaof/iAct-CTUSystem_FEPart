@@ -1,0 +1,152 @@
+<div class="p-8 bg-gray-50 min-h-screen">
+  <app-admin-stats-grid [items]="activityStats()"></app-admin-stats-grid>
+
+  <app-admin-page-header
+    title="Danh sách Hoạt động"
+    actionLabel="Tạo hoạt động mới"
+    actionLink="create"
+    (searchChange)="onSearch($event)"
+  >
+  </app-admin-page-header>
+
+  <app-admin-table-container>
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr
+          class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100"
+        >
+          <th class="py-4 px-6 font-semibold">Thông tin Hoạt động</th>
+          <th class="py-4 px-6 font-semibold">Số lượng tham gia</th>
+          <th class="py-4 px-6 font-semibold">Trạng thái</th>
+          <th class="py-4 px-6 font-semibold text-center">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        @for (item of paginatedActivities(); track item.id) {
+          <tr class="hover:bg-gray-50 transition">
+            <td class="py-4 px-6">
+              <div class="flex items-center gap-4">
+                <img
+                  [src]="item.thumbnail || 'https://via.placeholder.com/150'"
+                  alt="cover"
+                  class="w-14 h-14 rounded-xl object-cover shadow-sm border border-gray-100 flex-shrink-0"
+                />
+                <div>
+                  <h4
+                    class="font-bold text-gray-800 text-sm mb-1 line-clamp-1"
+                    [title]="item.title"
+                  >
+                    {{ item.title }}
+                  </h4>
+                  <div class="flex flex-col gap-1 text-[11px] text-gray-500">
+                    <span class="flex items-center gap-1.5">
+                      <i class="bi bi-calendar-event text-blue-500"></i>
+                      {{ item.startDate | date: 'dd/MM/yyyy HH:mm' }} -
+                      {{ item.endDate | date: 'HH:mm' }}
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                      <i class="bi bi-geo-alt-fill text-red-400"></i>
+                      {{ item.location || 'Chưa cập nhật địa điểm' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <td class="py-4 px-6">
+              <div class="w-32">
+                <div
+                  class="flex justify-between text-[10px] font-bold mb-1 uppercase text-gray-600"
+                >
+                  <span>{{ item.registeredCount || 0 }} / {{ item.maxParticipants }}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    class="h-1.5 rounded-full transition-all duration-500"
+                    [ngClass]="{
+                      'bg-green-500':
+                        getCapacityPercentage(item.registeredCount || 0, item.maxParticipants) < 80,
+                      'bg-orange-500':
+                        getCapacityPercentage(item.registeredCount || 0, item.maxParticipants) >=
+                          80 &&
+                        getCapacityPercentage(item.registeredCount || 0, item.maxParticipants) <
+                          100,
+                      'bg-red-500':
+                        getCapacityPercentage(item.registeredCount || 0, item.maxParticipants) ===
+                        100,
+                    }"
+                    [style.width.%]="
+                      getCapacityPercentage(item.registeredCount || 0, item.maxParticipants)
+                    "
+                  ></div>
+                </div>
+              </div>
+            </td>
+
+            <td class="py-4 px-6 text-sm">
+              <span
+                class="px-3 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wide flex items-center gap-1.5 w-max"
+                [ngClass]="{
+                  'bg-green-50 text-green-600 border border-green-100': item.status === 2,
+                  'bg-orange-50 text-orange-600 border border-orange-100': item.status === 1,
+                  'bg-gray-100 text-gray-500 border border-gray-200': item.status === 0,
+                }"
+              >
+                <i
+                  class="bi"
+                  [ngClass]="{
+                    'bi-check-circle-fill': item.status === 2,
+                    'bi-hourglass-split': item.status === 1,
+                    'bi-file-earmark-text': item.status === 0,
+                  }"
+                ></i>
+                {{ item.status === 2 ? 'Đã duyệt' : item.status === 1 ? 'Chờ duyệt' : 'Bản nháp' }}
+              </span>
+            </td>
+
+            <td class="py-4 px-6 text-gray-400 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <button
+                  (click)="viewDetails(item.id)"
+                  class="hover:text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition"
+                  title="Xem chi tiết"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button
+                  class="hover:text-green-600 hover:bg-green-50 p-2 rounded-lg transition"
+                  title="Chỉnh sửa"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button
+                  class="hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition"
+                  title="Xóa"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="py-16 text-center">
+              <div class="flex flex-col items-center justify-center text-gray-400">
+                <i class="bi bi-inboxes text-4xl mb-3 text-gray-300"></i>
+                <p class="italic text-sm">Chưa có hoạt động nào trong hệ thống...</p>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <lib-pagination
+      [totalItems]="filteredActivities().length"
+      [pageSize]="pageSize()"
+      [currentPage]="currentPage()"
+      (pageChange)="onPageChange($event)"
+    >
+    </lib-pagination>
+  </app-admin-table-container>
+</div>

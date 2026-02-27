@@ -1,0 +1,252 @@
+<div class="p-6 md:p-8 bg-gray-50 min-h-screen font-sans">
+  <div class="flex justify-between items-center mb-8">
+    <div class="text-sm font-medium text-gray-500">
+      Home <span class="mx-2">/</span>
+      <span class="text-gray-900 font-bold">Manage Activities</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div
+      class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+    >
+      <div class="flex justify-between items-start mb-4">
+        <div
+          class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl"
+        >
+          <i class="bi bi-calendar-event"></i>
+        </div>
+        <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full"
+          >+2 new</span
+        >
+      </div>
+      <p class="text-gray-500 text-sm font-semibold uppercase tracking-wider">Active Events</p>
+      <h3 class="text-4xl font-black text-gray-800 mt-2">12</h3>
+    </div>
+
+    <div
+      class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+    >
+      <div
+        class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-2xl mb-4"
+      >
+        <i class="bi bi-clipboard-check"></i>
+      </div>
+      <p class="text-gray-500 text-sm font-semibold uppercase tracking-wider">Pending Approvals</p>
+      <h3 class="text-4xl font-black text-gray-800 mt-2">3</h3>
+    </div>
+
+    <div
+      class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+    >
+      <div class="flex justify-between items-start mb-4">
+        <div
+          class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl"
+        >
+          <i class="bi bi-people"></i>
+        </div>
+        <span class="bg-green-50 text-green-600 text-xs font-bold px-2.5 py-1 rounded-full"
+          ><i class="bi bi-arrow-up"></i> 12%</span
+        >
+      </div>
+      <p class="text-gray-500 text-sm font-semibold uppercase tracking-wider">Total Registered</p>
+      <h3 class="text-4xl font-black text-gray-800 mt-2">850</h3>
+    </div>
+
+    <div
+      class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+    >
+      <div
+        class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-2xl mb-4"
+      >
+        <i class="bi bi-star"></i>
+      </div>
+      <p class="text-gray-500 text-sm font-semibold uppercase tracking-wider">Points Disbursed</p>
+      <h3 class="text-4xl font-black text-gray-800 mt-2">1,200</h3>
+    </div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row justify-between items-center mb-6 gap-4">
+    <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Activity List</h2>
+    <div class="flex flex-wrap lg:flex-nowrap gap-3 w-full lg:w-auto">
+      <div class="relative flex-1 lg:w-72">
+        <i class="bi bi-search absolute left-4 top-3 text-gray-400"></i>
+        <input
+          type="text"
+          placeholder="Search activity..."
+          class="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium transition-all"
+        />
+      </div>
+      <select
+        class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 hidden md:block"
+      >
+        <option>All Status</option>
+      </select>
+      <select
+        class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 hidden md:block"
+      >
+        <option>Category</option>
+      </select>
+
+      <button
+        (click)="goToCreate()"
+        class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-6 py-2.5 rounded-xl font-bold shadow-md hover:shadow-blue-200 transition-all flex items-center justify-center gap-2 whitespace-nowrap text-sm w-full lg:w-auto"
+      >
+        <i class="bi bi-plus-lg text-lg"></i> Create New Activity
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse min-w-[800px]">
+        <thead>
+          <tr
+            class="bg-gray-50/80 text-gray-500 text-xs uppercase tracking-widest font-bold border-b border-gray-100"
+          >
+            <th class="px-6 py-5">Activity Name</th>
+            <th class="px-6 py-5">Capacity</th>
+            <th class="px-6 py-5">Benefits</th>
+            <th class="px-6 py-5">Status</th>
+            <th class="px-6 py-5 text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr class="hover:bg-blue-50/30 transition-colors group">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-4">
+                <div
+                  class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-900 to-purple-800 flex-shrink-0 shadow-sm"
+                ></div>
+                <div>
+                  <h4 class="font-bold text-gray-900 text-base">Intro to Generative AI</h4>
+                  <p class="text-xs text-gray-500 font-medium mt-1 flex items-center gap-1.5">
+                    <i class="bi bi-calendar3"></i> Oct 24, 2023 • 10:00 AM
+                  </p>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex justify-between text-xs font-bold mb-2">
+                <span class="text-gray-900">120 Reg.</span>
+                <span class="text-gray-400">of 150</span>
+              </div>
+              <div class="w-full bg-gray-100 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full" style="width: 80%"></div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <span
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100"
+              >
+                <i class="bi bi-lightning-charge-fill"></i> +2 Points
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <span
+                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-green-50 text-green-700 text-xs font-bold border border-green-100"
+              >
+                <span class="w-2 h-2 rounded-full bg-green-500"></span> Approved
+              </span>
+            </td>
+            <td class="px-6 py-4 text-center">
+              <div
+                class="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <button
+                  class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center justify-center"
+                >
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button
+                  class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center justify-center"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr class="hover:bg-blue-50/30 transition-colors group">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-4">
+                <div
+                  class="w-14 h-14 rounded-2xl bg-gray-100 flex-shrink-0 flex items-center justify-center text-gray-400 text-xl border border-gray-200"
+                >
+                  <i class="bi bi-image"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900 text-base">Leadership Summit 2023</h4>
+                  <p class="text-xs text-gray-500 font-medium mt-1 flex items-center gap-1.5">
+                    <i class="bi bi-calendar3"></i> Nov 02, 2023 • 09:00 AM
+                  </p>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex justify-between text-xs font-bold mb-2">
+                <span class="text-gray-900">45 Reg.</span>
+                <span class="text-gray-400">of 300</span>
+              </div>
+              <div class="w-full bg-gray-100 rounded-full h-2">
+                <div class="bg-yellow-400 h-2 rounded-full" style="width: 15%"></div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <span
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100"
+              >
+                <i class="bi bi-lightning-charge-fill"></i> +5 Points
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <span
+                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-yellow-50 text-yellow-700 text-xs font-bold border border-yellow-100"
+              >
+                <span class="w-2 h-2 rounded-full bg-yellow-500"></span> Pending
+              </span>
+            </td>
+            <td class="px-6 py-4 text-center">
+              <div
+                class="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <button
+                  class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center justify-center"
+                >
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button
+                  class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center justify-center"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div
+      class="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4"
+    >
+      <span class="text-sm font-medium text-gray-500"
+        >Showing <span class="font-bold text-gray-900">1</span> to
+        <span class="font-bold text-gray-900">4</span> of
+        <span class="font-bold text-gray-900">12</span> results</span
+      >
+      <div class="flex gap-2">
+        <button
+          class="px-4 py-2 border border-gray-200 rounded-xl text-sm font-bold text-gray-400 bg-gray-50 cursor-not-allowed"
+        >
+          Previous
+        </button>
+        <button
+          class="px-4 py-2 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -5,15 +5,19 @@ import { Injectable, signal } from '@angular/core';
 })
 export class LoadingService {
   progress = signal(0);
-  private intervalId: any;
-  private startTime: number = 0;
 
-  show() {
+  private intervalId: ReturnType<typeof setInterval> | null = null;
+  private startTime = 0;
+
+  show(): void {
     if (this.progress() > 0) return;
 
     this.startTime = Date.now();
-
     this.progress.set(10);
+
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
 
     this.intervalId = setInterval(() => {
       this.progress.update((current) => {
@@ -23,7 +27,7 @@ export class LoadingService {
     }, 200);
   }
 
-  hide() {
+  hide(): void {
     const elapsedTime = Date.now() - this.startTime;
     const minDuration = 800;
 
@@ -34,8 +38,11 @@ export class LoadingService {
     }, delay);
   }
 
-  private completeLoading() {
-    if (this.intervalId) clearInterval(this.intervalId);
+  private completeLoading(): void {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
 
     this.progress.set(100);
 

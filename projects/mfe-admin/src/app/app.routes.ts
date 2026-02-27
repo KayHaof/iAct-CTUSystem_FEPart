@@ -1,17 +1,71 @@
 import { Routes } from '@angular/router';
-import { Component } from '@angular/core';
+import { roleGuard } from './core/guards/role.guard';
 
-// Tạo nhanh một component tại chỗ để test
-@Component({
-  standalone: true,
-  template: `<h1 style="color: red; font-size: 50px;">ADMIN ĐÃ HIỆN RỒI NÈ!</h1>`,
-})
-class TestComponent {}
+import { AdminLayoutComponent } from '@my-mfe/ui';
 
 export const routes: Routes = [
   {
     path: '',
-    component: TestComponent, // Dùng component test này
-    pathMatch: 'full',
+    component: AdminLayoutComponent,
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+
+      // VÙNG CHUNG
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/common/dashboard/dashboard.component').then(
+            (m) => m.DashboardComponent,
+          ),
+        canActivate: [roleGuard],
+        data: { roles: ['department', 'admin'] },
+      },
+
+      // --- VÙNG QUẢN LÝ HOẠT ĐỘNG ---
+      {
+        path: 'org/activities',
+        canActivate: [roleGuard],
+        data: { roles: ['department', 'admin'] },
+        children: [
+          {
+            path: '',
+            title: 'Quản lý hoạt động',
+            loadComponent: () =>
+              import('./features/faculty/activity-list/activity-list.component').then(
+                (m) => m.ActivityListComponent,
+              ),
+          },
+          {
+            path: 'create',
+            loadComponent: () =>
+              import('./features/faculty/activity-management/activity-create.component').then(
+                (m) => m.ActivityCreateComponent,
+              ),
+          },
+        ],
+      },
+
+      // VÙNG RIÊNG CỦA KHOA
+      {
+        path: 'approvals',
+        loadComponent: () =>
+          import('./features/faculty/participant-approvals/approvals.component').then(
+            (m) => m.ApprovalsComponent,
+          ),
+        canActivate: [roleGuard],
+        data: { roles: ['department'] },
+      },
+
+      // VÙNG RIÊNG CỦA SUPER ADMIN
+      {
+        path: 'system',
+        loadComponent: () =>
+          import('./features/super-admin/system-settings/system-settings.component').then(
+            (m) => m.SystemSettingsComponent,
+          ),
+        canActivate: [roleGuard],
+        data: { roles: ['admin'] },
+      },
+    ],
   },
 ];

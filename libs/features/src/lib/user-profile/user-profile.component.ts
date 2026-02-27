@@ -1,12 +1,12 @@
 import { Component, inject, computed, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { UserService } from '@my-mfe/auth';
+import { UserService, UserInfo, ApiResponse } from '@my-mfe/auth';
 import { CloudinaryService } from '@my-mfe/data-access-media';
 import { AlertService, ConfirmService } from '@my-mfe/ui';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { Location } from '@angular/common';
 
 import { of, Observable } from 'rxjs';
 import { switchMap, finalize } from 'rxjs/operators';
@@ -74,8 +74,10 @@ export class UserProfileComponent {
     this.previewAvatar.set(null);
   }
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         this.alertService.error('Ảnh quá lớn! Vui lòng chọn ảnh dưới 5MB.');
@@ -83,7 +85,9 @@ export class UserProfileComponent {
       }
       this.selectedFile = file;
       const reader = new FileReader();
-      reader.onload = (e) => this.previewAvatar.set(e.target?.result as string);
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        this.previewAvatar.set(e.target?.result as string);
+      };
       reader.readAsDataURL(file);
     }
   }
@@ -96,30 +100,35 @@ export class UserProfileComponent {
 
     this.isUploading.set(true);
 
-    const formData: any = { ...this.profileForm.value };
+    const formValues = this.profileForm.value;
 
-    const uploadStream$: Observable<any> = this.selectedFile
-      ? this.cloudinaryService.uploadImage(this.selectedFile)
+    const formData: Partial<UserInfo> = {
+      fullName: formValues.fullName || undefined,
+      birthday: formValues.birthday || undefined,
+      gender: formValues.gender ?? undefined,
+      phone: formValues.phone || undefined,
+      address: formValues.address || undefined,
+    };
+
+    const uploadStream$: Observable<string | null> = this.selectedFile
+      ? this.cloudinaryService.uploadImage(this.selectedFile, 'avatar')
       : of(null);
 
     uploadStream$
       .pipe(
-        switchMap((newImageUrl) => {
+        switchMap((newImageUrl: string | null) => {
           const currentUser = this.user();
           if (!currentUser || !currentUser.id) {
             throw new Error('Không tìm thấy ID người dùng!');
           }
 
-          // 1. Xử lý logic gán URL ảnh
           if (newImageUrl) {
             console.log('Đã upload ảnh mới:', newImageUrl);
             formData.avatarUrl = newImageUrl;
           } else {
-            // Lấy lại ảnh cũ nếu không đổi ảnh
             formData.avatarUrl = currentUser.avatarUrl;
           }
 
-          // 2. Gọi API cập nhật
           return this.userService.updateProfile(currentUser.id, formData);
         }),
         this.alertService.observe(
@@ -129,16 +138,15 @@ export class UserProfileComponent {
         finalize(() => this.isUploading.set(false)),
       )
       .subscribe({
-        next: (res) => {
+        next: (res: ApiResponse<UserInfo>) => {
           this.isEditing.set(false);
 
-          // 3. Cập nhật State nội bộ
           this.userService.currentUser.update((oldUser) => {
             if (!oldUser) return oldUser;
-            return { ...oldUser, ...formData };
+            return { ...oldUser, ...formData, ...res.result };
           });
         },
-        error: (err) => {
+        error: (err: HttpErrorResponse) => {
           console.error('Chi tiết lỗi:', err);
         },
       });
@@ -161,11 +169,11 @@ export class UserProfileComponent {
       if (!currentUser || !currentUser.id) return;
 
       this.userService.deactivateAccount(currentUser.id).subscribe({
-        next: (res) => {
+        next: (res: ApiResponse<string>) => {
           this.alertService.success(res.message || 'Tài khoản đã được vô hiệu hóa!');
           this.oauthService.logOut();
         },
-        error: (err) => {
+        error: (err: HttpErrorResponse) => {
           console.error('Lỗi vô hiệu hóa:', err);
           const msg = err.error?.message || 'Có lỗi xảy ra, không thể thực hiện.';
           this.alertService.error(msg);

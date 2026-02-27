@@ -21,8 +21,9 @@ export class HeaderComponent {
   currentUser = computed(() => this.userService.currentUser());
 
   // Check role
-  isAdmin = computed(() => this.userService.isAdmin()); // Cầu nối isAdmin
+  isAdmin = computed(() => this.userService.isAdmin());
   isStudent = computed(() => this.userService.isStudent());
+  isDepartment = computed(() => this.userService.isDepartment());
 
   defaultAvatar =
     'https://res.cloudinary.com/dhjamvg6j/image/upload/v1770104643/b8erttd8eughls55igvb.jpg';

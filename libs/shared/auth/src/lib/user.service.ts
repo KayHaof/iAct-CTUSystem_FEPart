@@ -51,10 +51,16 @@ export interface CreateUserDto extends Partial<UserInfo> {
   password?: string;
 }
 
+export interface ChangePasswordDto {
+  currentPassword?: string;
+  newPassword?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private http = inject(HttpClient);
 
+  // Nhớ kiểm tra lại cổng và đường dẫn API thực tế của ní nhé
   private baseUrl = 'http://localhost:8080/identity/api/v1/users';
   private metaUrl = 'http://localhost:8080/identity/api/v1';
 
@@ -66,7 +72,6 @@ export class UserService {
   isDepartment = computed<boolean>(() => this.currentUser()?.roleType === 2);
 
   // --- 3. API Cá Nhân (Me) ---
-
   getMyInfo(): Observable<ApiResponse<UserInfo>> {
     return this.http.get<ApiResponse<UserInfo>>(`${this.baseUrl}/my-info`).pipe(
       tap((response) => {
@@ -89,14 +94,15 @@ export class UserService {
     );
   }
 
-  // --- 4. API Danh Mục
+  changeMyPassword(data: ChangePasswordDto): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/my-password`, data);
+  }
 
-  // Lấy tất cả khoa
+  // --- 4. API Danh Mục ---
   getAllDepartments(): Observable<ApiResponse<Department[]>> {
     return this.http.get<ApiResponse<Department[]>>(`${this.metaUrl}/departments`);
   }
 
-  // Lấy danh sách lớp (Có thể lọc theo khoa nếu cần)
   getClasses(departmentId?: number): Observable<ApiResponse<ClassInfo[]>> {
     let params = new HttpParams();
     if (departmentId) {
@@ -105,45 +111,43 @@ export class UserService {
     return this.http.get<ApiResponse<ClassInfo[]>>(`${this.metaUrl}/classes`, { params });
   }
 
-  // --- 5. Các API Quản Trị (Admin) ---
-  getUsers(page: number, size: number, keyword?: string): Observable<ApiResponse<any>> {
+  // --- 5. Các API Quản Trị (Admin & Helper) ---
+  getUsers(page: number, size: number, keyword?: string): Observable<ApiResponse<UserInfo[]>> {
     let params = new HttpParams().set('page', page).set('size', size);
     if (keyword) params = params.set('keyword', keyword);
-    return this.http.get<ApiResponse<any>>(this.baseUrl, { params });
+    return this.http.get<ApiResponse<UserInfo[]>>(this.baseUrl, { params });
   }
 
-  getUserById(id: string): Observable<ApiResponse<UserInfo>> {
+  getUserById(id: string | number): Observable<ApiResponse<UserInfo>> {
     return this.http.get<ApiResponse<UserInfo>>(`${this.baseUrl}/${id}`);
+  }
+
+  getUserByEmail(email: string): Observable<ApiResponse<UserInfo>> {
+    const params = new HttpParams().set('email', email);
+    return this.http.get<ApiResponse<UserInfo>>(`${this.baseUrl}/search`, { params });
   }
 
   createUser(user: CreateUserDto): Observable<ApiResponse<UserInfo>> {
     return this.http.post<ApiResponse<UserInfo>>(this.baseUrl, user);
   }
 
-  updateUser(id: string, data: Partial<UserInfo>): Observable<ApiResponse<UserInfo>> {
+  updateProfile(id: number | string, data: Partial<UserInfo>): Observable<ApiResponse<UserInfo>> {
     return this.http.put<ApiResponse<UserInfo>>(`${this.baseUrl}/${id}`, data);
   }
 
-  updateProfile(id: number | string, data: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/${id}`, data);
-  }
-
-  deleteUser(id: string): Observable<ApiResponse<void>> {
+  deleteUser(id: string | number): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/${id}`);
-  }
-
-  toggleUserStatus(id: string, status: number): Observable<ApiResponse<void>> {
-    return this.http.patch<ApiResponse<void>>(`${this.baseUrl}/${id}/status`, { status });
-  }
-
-  changeMyPassword(data: {
-    currentPassword?: string;
-    newPassword?: string;
-  }): Observable<ApiResponse<void>> {
-    return this.http.put<ApiResponse<void>>(`${this.baseUrl}/my-password`, data);
   }
 
   deactivateAccount(id: number | string): Observable<ApiResponse<string>> {
     return this.http.delete<ApiResponse<string>>(`${this.baseUrl}/${id}`);
+  }
+
+  toggleUserStatus(id: string | number, status: number): Observable<ApiResponse<void>> {
+    return this.http.patch<ApiResponse<void>>(`${this.baseUrl}/${id}/status`, { status });
+  }
+
+  syncUser(): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/sync`, {});
   }
 }

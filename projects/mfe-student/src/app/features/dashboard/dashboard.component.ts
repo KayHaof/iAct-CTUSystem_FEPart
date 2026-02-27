@@ -33,10 +33,10 @@ export class DashboardComponent implements OnInit {
 
   // 1. Inject UserService để lấy thông tin User (public để HTML dùng được)
   public userService = inject(UserService);
-
   private cdr = inject(ChangeDetectorRef);
 
-  constructor(private router: Router) {}
+  // SỬA Ở ĐÂY NÈ NÍ: Xóa constructor, thay bằng inject()
+  private router = inject(Router);
 
   ngOnInit(): void {
     console.log('Dashboard Init: Bắt đầu load...');

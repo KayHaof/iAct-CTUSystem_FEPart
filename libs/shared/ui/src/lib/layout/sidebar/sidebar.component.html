@@ -2,6 +2,8 @@
   <div
     class="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity"
     (click)="close()"
+    (keydown.enter)="close()"
+    tabindex="0"
   ></div>
 }
 
@@ -32,8 +34,8 @@
     </a>
   </div>
 
-  <div class="logout-btn" (click)="logout()">
+  <button class="logout-btn w-full text-left" (click)="logout()">
     <i class="bi bi-box-arrow-left text-xl w-6 text-center"></i>
     <span class="nav-text">Log Out</span>
-  </div>
+  </button>
 </aside>

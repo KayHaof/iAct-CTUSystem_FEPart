@@ -38,7 +38,7 @@ export class AlertService {
     return (source: Observable<T>) => {
       const loadingRef = this.snackBar.open('Đang xử lý...', '', {
         verticalPosition: 'top',
-        horizontalPosition: 'right', // 🔥 Sửa chỗ này thành right luôn để khỏi bị lú
+        horizontalPosition: 'right',
       });
 
       return source.pipe(

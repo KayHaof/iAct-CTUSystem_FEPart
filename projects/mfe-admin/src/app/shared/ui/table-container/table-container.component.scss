@@ -1,0 +1,90 @@
+:host {
+  @apply block w-full;
+}
+
+.admin-table-wrapper {
+  @apply bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden transition-all duration-300;
+
+  &:hover {
+    @apply shadow-lg border-blue-100; // Đổi màu border nhẹ khi hover cả container
+  }
+}
+
+.table-scroll-area {
+  @apply overflow-x-auto w-full relative;
+
+  // Custom Scrollbar
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    @apply bg-gray-50;
+  }
+  &::-webkit-scrollbar-thumb {
+    @apply bg-gray-200 rounded-full hover:bg-gray-400;
+  }
+
+  ::ng-deep table {
+    @apply w-full border-collapse text-sm;
+    min-width: 850px; // Ép độ rộng tối thiểu để không bị dồn chữ trên mobile
+
+    // 1. Định dạng Header
+    thead {
+      tr {
+        @apply bg-gray-50/80 backdrop-blur-sm sticky top-0 z-10;
+
+        th {
+          @apply py-4 px-6 text-gray-500 font-bold uppercase tracking-wider text-[11px] border-b border-gray-100;
+          &:first-child {
+            @apply rounded-tl-2xl;
+          }
+          &:last-child {
+            @apply rounded-tr-2xl;
+          }
+        }
+      }
+    }
+
+    // 2. Định dạng Body và phân biệt các dòng
+    tbody {
+      tr {
+        @apply transition-colors duration-200 border-b border-gray-50 last:border-0;
+
+        // Xen kẽ màu dòng (Zebra Striping) - Giúp mắt dễ theo dõi hàng ngang
+        &:nth-child(even) {
+          @apply bg-gray-50/30;
+        }
+
+        // Hiệu ứng khi di chuột vào từng dòng
+        &:hover {
+          @apply bg-blue-50/50 cursor-default;
+
+          td {
+            @apply text-gray-900;
+            // Làm đậm icon hành động khi hover vào dòng
+            .bi {
+              @apply scale-110 transition-transform;
+            }
+          }
+        }
+
+        td {
+          @apply py-4 px-6 align-middle text-gray-600 transition-all;
+
+          // Tạo khoảng cách và font chữ cho các cột cụ thể
+          &:first-child {
+            @apply font-medium text-gray-800;
+          }
+        }
+      }
+    }
+  }
+}
+
+.pagination-area {
+  @apply border-t border-gray-50 bg-white p-3 md:p-4;
+
+  ::ng-deep lib-pagination {
+    @apply block w-full;
+  }
+}

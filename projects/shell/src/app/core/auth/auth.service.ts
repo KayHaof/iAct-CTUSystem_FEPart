@@ -21,9 +21,26 @@ export class AuthService {
 
         this.oauthService.setupAutomaticSilentRefresh();
 
-        this.userService.getMyInfo().subscribe({
-          next: () => console.log('Đã lấy và lưu thông tin User vào Signal!'),
-          error: (err) => console.error('Lỗi lấy User Info:', err),
+        // 1. GỌI API ĐỒNG BỘ TRƯỚC (SYNC)
+        this.userService.syncUser().subscribe({
+          next: (syncRes) => {
+            console.log('[AuthService] Kết quả đồng bộ:', syncRes.message);
+
+            // 2. ĐỒNG BỘ XONG THÌ MỚI LẤY THÔNG TIN VÀ LƯU VÀO SIGNAL
+            this.userService.getMyInfo().subscribe({
+              next: () => console.log('[AuthService] Đã lấy và lưu thông tin User vào Signal!'),
+              error: (err) => console.error('[AuthService] Lỗi lấy User Info:', err),
+            });
+          },
+          error: (syncErr) => {
+            console.error('[AuthService] Lỗi khi đồng bộ User:', syncErr);
+
+            this.userService.getMyInfo().subscribe({
+              next: () => console.log('[AuthService] Đã lấy được User Info dù Sync báo lỗi!'),
+              error: (err) =>
+                console.error('[AuthService] Lỗi lấy User Info (sau khi Sync lỗi):', err),
+            });
+          },
         });
       } else {
         console.log('[AuthService] Chưa đăng nhập.');

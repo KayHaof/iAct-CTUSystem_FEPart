@@ -29,7 +29,7 @@ export const routes: Routes = [
             return m.routes;
           }),
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] },
+        data: { roles: ['admin', 'department'] },
         title: 'Trang Quản trị',
       },
 

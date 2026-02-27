@@ -42,9 +42,14 @@ export class SidebarComponent {
     { label: 'Submit Proof', link: '/submit-proof', icon: 'bi bi-cloud-arrow-up', role: 1 }, // Nộp minh chứng ngoài
 
     // --- DEPARTMENT (Role 2 - Khoa/Viện) ---
-    { label: 'Org. Activities', link: '/org/activities', icon: 'bi bi-calendar-plus', role: 2 }, // Tạo/Quản lý hoạt động
-    { label: 'Approvals', link: '/org/approvals', icon: 'bi bi-check2-square', role: 2 }, // Duyệt minh chứng
-    { label: 'My Students', link: '/org/students', icon: 'bi bi-people', role: 2 }, // Danh sách SV khoa mình
+    {
+      label: 'Org. Activities',
+      link: '/admin/org/activities',
+      icon: 'bi bi-calendar-plus',
+      role: 2,
+    }, // Tạo/Quản lý hoạt động
+    { label: 'Approvals', link: '/admin/org/approvals', icon: 'bi bi-check2-square', role: 2 }, // Duyệt minh chứng
+    { label: 'My Students', link: '/admin/org/students', icon: 'bi bi-people', role: 2 }, // Danh sách SV khoa mình
 
     // --- ADMIN (Role 3 - Quản trị hệ thống) ---
     { label: 'User Manager', link: '/admin/users', icon: 'bi bi-person-video3', role: 3 }, // Quản lý User/Phân quyền
