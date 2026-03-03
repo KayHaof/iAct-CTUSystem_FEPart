@@ -1,17 +1,21 @@
-import { Component, signal, inject, computed } from '@angular/core';
+import { Component, signal, inject, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { finalize } from 'rxjs/operators';
 
 // Imports từ thư viện dùng chung
 import { PaginationComponent } from '@my-mfe/ui';
+import { AlertService, ConfirmService } from '@my-mfe/ui';
 
 // Imports từ Shared UI nội bộ của Admin
 import { StatsGridComponent, AdminStat } from '../../../shared/ui/stats-grid/stats-grid.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header/page-header.component';
 import { TableContainerComponent } from '../../../shared/ui/table-container/table-container.component';
 
-// Model
+// Model & Service
 import { Activity } from '../../../shared/models/activity.model';
+import { ActivityService } from '../services/activity.service';
 
 @Component({
   selector: 'app-activity-list',
@@ -26,19 +30,22 @@ import { Activity } from '../../../shared/models/activity.model';
   ],
   templateUrl: './activity-list.component.html',
 })
-export class ActivityListComponent {
+export class ActivityListComponent implements OnInit {
   private router = inject(Router);
-
+  private activityService = inject(ActivityService);
+  private alertService = inject(AlertService);
+  private confirmService = inject(ConfirmService);
   // 1. Quản lý trạng thái bằng Signals
   searchQuery = signal('');
   currentPage = signal(1);
   pageSize = signal(10);
+  isLoading = signal(false);
 
-  // 2. Mock dữ liệu thống kê cho Admin
+  // 2. Dữ liệu thống kê cho Admin
   activityStats = signal<AdminStat[]>([
     {
       label: 'Active Events',
-      value: 12,
+      value: 12090,
       icon: 'bi bi-calendar-event',
       color: 'blue',
       trend: '+2 new',
@@ -54,41 +61,33 @@ export class ActivityListComponent {
     { label: 'Points Disbursed', value: '1,200', icon: 'bi bi-star', color: 'green' },
   ]);
 
-  // Cập nhật lại mảng allActivities
-  allActivities = signal<Activity[]>([
-    {
-      id: 1, // Đổi từ string sang number
-      title: 'Intro to Generative AI',
-      startDate: '2023-10-24T10:00:00',
-      endDate: '2023-10-24T12:00:00',
-      registeredCount: 120,
-      maxParticipants: 150, // Đổi từ maxCapacity
-      status: 2, // Đổi từ 'Approved' sang số (Giả sử 2 = Approved, 1 = Pending, 0 = Draft)
-      thumbnail: 'https://res.cloudinary.com/dhjamvg6j/image/upload/v1770173915/logo_ycoscg.png', // Đổi từ imageUrl
-    } as Activity, // Dùng 'as Activity' để bỏ qua các trường không cần thiết lúc mock UI
-    {
-      id: 2,
-      title: 'Leadership Summit 2023',
-      startDate: '2023-11-02T09:00:00',
-      endDate: '2023-11-02T16:00:00',
-      registeredCount: 45,
-      maxParticipants: 300,
-      status: 1, // Pending
-      thumbnail: 'https://via.placeholder.com/50',
-    } as Activity,
-    {
-      id: 3,
-      title: 'Faculty Networking',
-      startDate: '2023-12-10T17:30:00',
-      endDate: '2023-12-10T20:00:00',
-      registeredCount: 0,
-      maxParticipants: 50,
-      status: 0, // Draft
-      thumbnail: 'https://via.placeholder.com/50',
-    } as Activity,
-  ]);
+  // 3. Khởi tạo mảng rỗng chứa dữ liệu thật
+  allActivities = signal<Activity[]>([]);
 
-  // 4. Logic tự động lọc và phân trang (Computed)
+  // 4. Lifecycle Hook
+  ngOnInit(): void {
+    this.fetchActivities();
+  }
+
+  // Hàm gọi API lấy danh sách hoạt động
+  fetchActivities(): void {
+    this.isLoading.set(true);
+
+    this.activityService
+      .getAllActivities()
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (data: Activity[]) => {
+          this.allActivities.set(data || []);
+        },
+        error: (err: HttpErrorResponse) => {
+          console.error('Lỗi khi tải danh sách hoạt động:', err);
+          const errMsg = err.error?.message || 'Không thể tải dữ liệu hoạt động!';
+          this.alertService.error(errMsg);
+        },
+      });
+  }
+  // 5. Logic tự động lọc và phân trang (Computed)
   filteredActivities = computed(() => {
     const query = this.searchQuery().toLowerCase();
     return this.allActivities().filter((a) => a.title.toLowerCase().includes(query));
@@ -100,22 +99,58 @@ export class ActivityListComponent {
     return this.filteredActivities().slice(start, end);
   });
 
-  // 5. Các hàm xử lý sự kiện
-  onSearch(keyword: string) {
+  // 6. Các hàm xử lý sự kiện
+  onSearch(keyword: string): void {
     this.searchQuery.set(keyword);
-    this.currentPage.set(1); // Reset về trang 1 khi tìm kiếm
+    this.currentPage.set(1);
   }
 
-  onPageChange(page: number) {
+  onPageChange(page: number): void {
     this.currentPage.set(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   getCapacityPercentage(current: number, max: number): number {
-    return max === 0 ? 0 : (current / max) * 100;
+    if (!max || max === 0) return 0;
+    return (current / max) * 100;
   }
 
-  viewDetails(id: number) {
-    console.log('Xem chi tiết:', id);
+  viewDetails(id: number): void {
+    this.router.navigate(['/admin/org/activities/detail', id]);
+  }
+
+  editActivity(id: number): void {
+    this.router.navigate(['/admin/org/activities/edit', id]);
+  }
+
+  async deleteActivity(id: number): Promise<void> {
+    // 1. Gọi popup xác nhận và chờ người dùng bấm nút
+    const isConfirmed = await this.confirmService.confirm(
+      'Bạn có chắc chắn muốn xóa?',
+      'Dữ liệu của hoạt động này sẽ bị xóa vĩnh viễn và không thể khôi phục!',
+      'Đồng ý, xóa luôn!',
+      'Hủy bỏ',
+    );
+
+    // 2. Nếu người dùng chọn "Đồng ý, xóa luôn!" (trả về true)
+    if (isConfirmed) {
+      this.isLoading.set(true);
+
+      this.activityService
+        .deleteActivity(id)
+        .pipe(finalize(() => this.isLoading.set(false)))
+        .subscribe({
+          next: () => {
+            this.alertService.success('Đã xóa hoạt động thành công!');
+            // Load lại danh sách mới nhất sau khi xóa
+            this.fetchActivities();
+          },
+          error: (err: HttpErrorResponse) => {
+            console.error('Lỗi khi xóa:', err);
+            const errMsg = err.error?.message || 'Không thể xóa hoạt động này. Vui lòng thử lại!';
+            this.alertService.error(errMsg);
+          },
+        });
+    }
   }
 }

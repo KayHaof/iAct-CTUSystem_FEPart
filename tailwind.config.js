@@ -3,6 +3,10 @@ module.exports = {
   content: ['./projects/**/*.{html,ts}', './libs/**/*.{html,ts}'],
   theme: {
     extend: {
+      fontFamily: {
+        serif: ['Lora', 'serif'],
+      },
+
       colors: {
         'ctu-blue': '#004a99',
         'ctu-gold': '#ffcc00',

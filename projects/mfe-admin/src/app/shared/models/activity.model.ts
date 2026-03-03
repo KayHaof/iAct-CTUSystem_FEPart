@@ -11,26 +11,28 @@ export interface UserDto {
   email?: string;
   fullName?: string;
   avatarUrl?: string;
+  departmentName?: string;
+  department?: { id: number; name: string };
 }
 
 export interface ActivityRequest {
   title: string;
-  description: string;
-  content: string;
-  location: string;
-  maxParticipants: number;
-  coverImage: string | null;
-  thumbnail: string | null;
-  sourceLink: string | null;
+  description?: string | null;
+  content?: string | null;
+  location?: string | null;
+  maxParticipants?: number | null;
+  semesterId?: number | null;
+  organizerId?: number | null;
+  sourceLink?: string | null;
   isExternal: boolean;
-  registrationStart: string | Date;
-  registrationEnd: string | Date;
-  startDate: string | Date;
-  endDate: string | Date;
-  semesterId: number;
-  organizerId?: number;
+  registrationStart?: string | null;
+  registrationEnd?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
   status: number;
-  benefits: BenefitDto[];
+  coverImage?: string | null;
+  thumbnail?: string | null;
+  benefits?: BenefitDto[];
 }
 
 export interface Activity {

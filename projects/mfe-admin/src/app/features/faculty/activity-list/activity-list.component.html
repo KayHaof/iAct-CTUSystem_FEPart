@@ -1,4 +1,4 @@
-<div class="p-8 bg-gray-50 min-h-screen">
+<div class="min-h-screen bg-gray-50/50 p-4 sm:p-6 lg:p-8">
   <app-admin-stats-grid [items]="activityStats()"></app-admin-stats-grid>
 
   <app-admin-page-header
@@ -6,61 +6,71 @@
     actionLabel="Tạo hoạt động mới"
     actionLink="create"
     (searchChange)="onSearch($event)"
+    class="mb-6"
   >
   </app-admin-page-header>
 
   <app-admin-table-container>
-    <table class="w-full text-left border-collapse">
+    <table class="w-full text-left border-collapse whitespace-nowrap">
       <thead>
         <tr
-          class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100"
+          class="bg-white text-gray-500 text-[11px] uppercase tracking-wider border-b border-gray-100"
         >
-          <th class="py-4 px-6 font-semibold">Thông tin Hoạt động</th>
-          <th class="py-4 px-6 font-semibold">Số lượng tham gia</th>
-          <th class="py-4 px-6 font-semibold">Trạng thái</th>
-          <th class="py-4 px-6 font-semibold text-center">Thao tác</th>
+          <th class="py-3 px-4 font-semibold">Thông tin Hoạt động</th>
+          <th class="py-3 px-4 font-semibold">Số lượng tham gia</th>
+          <th class="py-3 px-4 font-semibold text-center">Trạng thái</th>
+          <th class="py-3 px-4 font-semibold text-right">Thao tác</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-50">
+      <tbody class="divide-y divide-gray-50 bg-white">
         @for (item of paginatedActivities(); track item.id) {
-          <tr class="hover:bg-gray-50 transition">
-            <td class="py-4 px-6">
-              <div class="flex items-center gap-4">
+          <tr class="hover:bg-blue-50/30 transition duration-200 group">
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-3">
                 <img
-                  [src]="item.thumbnail || 'https://via.placeholder.com/150'"
+                  [src]="
+                    item.thumbnail ||
+                    'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772509074/activity-complex-like-puzzle-pictured-as-word-pieces-to-show-can-be-difficult-needs-cooperating-fit-together-d-164200616_kytemc.jpg'
+                  "
                   alt="cover"
-                  class="w-14 h-14 rounded-xl object-cover shadow-sm border border-gray-100 flex-shrink-0"
+                  class="w-12 h-12 rounded-lg object-cover shadow-sm border border-gray-100 flex-shrink-0"
                 />
-                <div>
+                <div class="min-w-[200px]">
                   <h4
-                    class="font-bold text-gray-800 text-sm mb-1 line-clamp-1"
+                    class="font-bold text-gray-800 text-sm mb-1 hover:text-blue-600 cursor-pointer transition truncate max-w-[300px]"
                     [title]="item.title"
+                    tabindex="0"
+                    (click)="viewDetails(item.id)"
+                    (keydown.enter)="viewDetails(item.id)"
                   >
                     {{ item.title }}
                   </h4>
-                  <div class="flex flex-col gap-1 text-[11px] text-gray-500">
+                  <div class="flex items-center gap-3 text-[11px] text-gray-500">
                     <span class="flex items-center gap-1.5">
                       <i class="bi bi-calendar-event text-blue-500"></i>
-                      {{ item.startDate | date: 'dd/MM/yyyy HH:mm' }} -
-                      {{ item.endDate | date: 'HH:mm' }}
+                      {{ item.startDate | date: 'dd/MM' }} -
+                      {{ item.endDate | date: 'dd/MM/yyyy' }}
                     </span>
-                    <span class="flex items-center gap-1.5">
+                    <span
+                      class="flex items-center gap-1.5 truncate max-w-[150px]"
+                      [title]="item.location"
+                    >
                       <i class="bi bi-geo-alt-fill text-red-400"></i>
-                      {{ item.location || 'Chưa cập nhật địa điểm' }}
+                      {{ item.location || 'Chưa cập nhật' }}
                     </span>
                   </div>
                 </div>
               </div>
             </td>
 
-            <td class="py-4 px-6">
+            <td class="py-3 px-4">
               <div class="w-32">
                 <div
-                  class="flex justify-between text-[10px] font-bold mb-1 uppercase text-gray-600"
+                  class="flex justify-between text-[10px] font-bold mb-1.5 uppercase text-gray-500"
                 >
                   <span>{{ item.registeredCount || 0 }} / {{ item.maxParticipants }}</span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                   <div
                     class="h-1.5 rounded-full transition-all duration-500"
                     [ngClass]="{
@@ -83,48 +93,70 @@
               </div>
             </td>
 
-            <td class="py-4 px-6 text-sm">
+            <td class="py-3 px-4 text-center">
               <span
-                class="px-3 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wide flex items-center gap-1.5 w-max"
+                class="inline-flex px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider items-center gap-1 border"
                 [ngClass]="{
-                  'bg-green-50 text-green-600 border border-green-100': item.status === 2,
-                  'bg-orange-50 text-orange-600 border border-orange-100': item.status === 1,
-                  'bg-gray-100 text-gray-500 border border-gray-200': item.status === 0,
+                  'bg-orange-50 text-orange-600 border-orange-200': item.status === 0,
+                  'bg-green-50 text-green-600 border-green-200': item.status === 1,
+                  'bg-red-50 text-red-600 border-red-200': item.status === 2,
+                  'bg-gray-50 text-gray-600 border-gray-200': item.status === 3,
+                  'bg-stone-50 text-stone-600 border-stone-200': item.status === 4,
                 }"
               >
                 <i
                   class="bi"
                   [ngClass]="{
-                    'bi-check-circle-fill': item.status === 2,
-                    'bi-hourglass-split': item.status === 1,
-                    'bi-file-earmark-text': item.status === 0,
+                    'bi-hourglass-split': item.status === 0,
+                    'bi-check-circle-fill': item.status === 1,
+                    'bi-x-circle-fill': item.status === 2,
+                    'bi-file-earmark-text': item.status === 3,
+                    'bi-slash-circle': item.status === 4,
                   }"
                 ></i>
-                {{ item.status === 2 ? 'Đã duyệt' : item.status === 1 ? 'Chờ duyệt' : 'Bản nháp' }}
+                {{
+                  item.status === 0
+                    ? 'Chờ duyệt'
+                    : item.status === 1
+                      ? 'Đã duyệt'
+                      : item.status === 2
+                        ? 'Từ chối'
+                        : item.status === 3
+                          ? 'Bản nháp'
+                          : 'Đã hủy'
+                }}
               </span>
             </td>
 
-            <td class="py-4 px-6 text-gray-400 text-center">
-              <div class="flex items-center justify-center gap-2">
+            <td class="py-3 px-4">
+              <div
+                class="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity"
+              >
                 <button
                   (click)="viewDetails(item.id)"
-                  class="hover:text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition"
+                  class="text-gray-400 hover:text-blue-600 hover:bg-blue-50 w-8 h-8 rounded-lg transition flex items-center justify-center"
                   title="Xem chi tiết"
                 >
-                  <i class="bi bi-eye"></i>
+                  <i class="bi bi-eye text-[16px]"></i>
                 </button>
-                <button
-                  class="hover:text-green-600 hover:bg-green-50 p-2 rounded-lg transition"
-                  title="Chỉnh sửa"
-                >
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button
-                  class="hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition"
-                  title="Xóa"
-                >
-                  <i class="bi bi-trash"></i>
-                </button>
+
+                @if (item.status === 0 || item.status === 3) {
+                  <button
+                    (click)="editActivity(item.id)"
+                    class="text-gray-400 hover:text-green-600 hover:bg-green-50 w-8 h-8 rounded-lg transition flex items-center justify-center"
+                    title="Chỉnh sửa"
+                  >
+                    <i class="bi bi-pencil text-[15px]"></i>
+                  </button>
+
+                  <button
+                    (click)="deleteActivity(item.id)"
+                    class="text-gray-400 hover:text-red-600 hover:bg-red-50 w-8 h-8 rounded-lg transition flex items-center justify-center"
+                    title="Xóa"
+                  >
+                    <i class="bi bi-trash text-[15px]"></i>
+                  </button>
+                }
               </div>
             </td>
           </tr>

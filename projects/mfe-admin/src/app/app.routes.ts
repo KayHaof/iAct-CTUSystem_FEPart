@@ -38,8 +38,24 @@ export const routes: Routes = [
           {
             path: 'create',
             loadComponent: () =>
-              import('./features/faculty/activity-management/activity-create.component').then(
+              import('./features/faculty/activity-build/activity-create.component').then(
                 (m) => m.ActivityCreateComponent,
+              ),
+          },
+
+          // 2. Route cho Chỉnh sửa (Trỏ VỀ CÙNG 1 COMPONENT với Tạo mới)
+          {
+            path: 'edit/:id',
+            loadComponent: () =>
+              import('./features/faculty/activity-build/activity-create.component').then(
+                (m) => m.ActivityCreateComponent,
+              ),
+          },
+          {
+            path: 'detail/:id',
+            loadComponent: () =>
+              import('./features/faculty/activity-management/activity-management.component').then(
+                (m) => m.ActivityManagementComponent,
               ),
           },
         ],

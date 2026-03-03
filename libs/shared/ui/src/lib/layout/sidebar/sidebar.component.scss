@@ -1,21 +1,17 @@
 :host {
   display: block;
+  @apply relative z-50 md:w-[80px] md:flex-shrink-0 md:h-screen;
 }
 
 .sidebar-container {
-  // --- BASE & MOBILE ---
   @apply bg-white border-r border-gray-200 overflow-hidden flex flex-col;
 
-  // Mobile: Fixed position, trượt ra/vào bằng transform
-  // transition-transform: Bắt buộc phải có để mobile trượt mượt
   @apply fixed top-0 left-0 bottom-0 z-50 w-[240px] shadow-2xl transition-transform duration-300 ease-in-out;
 
-  // --- DESKTOP (MD) ---
-  @apply md:static md:translate-x-0 md:shadow-none md:w-[80px] md:h-full;
+  @apply md:absolute md:translate-x-0 md:shadow-none md:w-[80px] md:h-full;
 
-  // --- HOVER DESKTOP ---
   &:hover {
-    @apply md:w-[240px];
+    @apply md:w-[240px] md:shadow-2xl;
   }
 }
 
@@ -34,16 +30,12 @@
   background-size: 0px;
 }
 
-// --- MEDIA QUERY DESKTOP (Logic riêng cho PC) ---
 @media (min-width: 768px) {
-  // 1. CHUYỂN TRANSITION WIDTH VÀO ĐÂY
-  // Để nó không đè lên transition-transform của mobile
   .sidebar-container {
     transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     will-change: width;
   }
 
-  // 2. Logic thu nhỏ
   .sidebar-container:not(:hover) {
     .nav-item {
       @apply justify-center;
@@ -76,7 +68,6 @@
   }
 }
 
-// ... Các class styles bên dưới giữ nguyên ...
 .sidebar-logo {
   @apply flex items-center justify-center h-16 mb-6 text-2xl font-extrabold text-ctu-blue whitespace-nowrap overflow-hidden;
 }

@@ -10,28 +10,46 @@
         <i class="bi bi-arrow-left text-xl"></i>
       </button>
       <div>
-        <h2 class="text-xl font-bold text-gray-800 leading-tight">Đăng ký Hoạt động mới</h2>
+        <h2 class="text-xl font-bold text-gray-800 leading-tight">
+          {{ isEditMode() ? 'Chỉnh sửa Hoạt động' : 'Đăng ký Hoạt động mới' }}
+        </h2>
       </div>
     </div>
     <div class="flex gap-3">
+      @if (!isEditMode() || currentStatus() === 3) {
+        <button
+          type="button"
+          (click)="onSubmit(3)"
+          class="px-5 py-2.5 font-semibold text-gray-600 hover:text-gray-800 transition"
+        >
+          Lưu nháp
+        </button>
+      }
+
       <button
         type="button"
-        (click)="onSubmit(0)"
-        class="px-5 py-2.5 font-semibold text-gray-600 hover:text-gray-800 transition"
+        (click)="onSubmit(isEditMode() ? currentStatus() : 0)"
+        class="px-6 py-2.5 text-white font-bold rounded-xl shadow-lg transition flex items-center gap-2"
+        [ngClass]="
+          isEditMode() ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'
+        "
       >
-        Lưu nháp
-      </button>
-      <button
-        type="button"
-        (click)="onSubmit(1)"
-        class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition flex items-center gap-2"
-      >
-        <i class="bi bi-send-fill text-sm"></i> Gửi duyệt
+        <i class="bi" [ngClass]="isEditMode() ? 'bi-save-fill' : 'bi-send-fill'"></i>
+        {{ isEditMode() ? 'Cập nhật thay đổi' : 'Gửi duyệt' }}
       </button>
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto py-10 px-6">
+  <div class="max-w-7xl mx-auto py-10 px-6 relative">
+    @if (isLoadingData()) {
+      <div
+        class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm min-h-[50vh]"
+      >
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p class="text-gray-500 font-medium">Đang tải thông tin hoạt động...</p>
+      </div>
+    }
+
     <form [formGroup]="activityForm" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2 space-y-8">
         <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">

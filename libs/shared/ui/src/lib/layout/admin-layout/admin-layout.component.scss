@@ -49,6 +49,6 @@
   padding: 16px; // Mặc định cho mobile
 
   @media (min-width: 768px) {
-    padding: 32px; // Tăng padding lên 8 (32px) cho màn hình lớn như tablet/pc
+    padding: 0px;
   }
 }
