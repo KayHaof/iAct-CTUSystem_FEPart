@@ -1,1 +1,466 @@
-<p>activity-detail works!</p>
+<div class="min-h-screen bg-slate-50/50 pb-20 font-sans text-slate-900">
+  <div
+    class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 transition-all"
+  >
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <button
+        (click)="goBack()"
+        class="flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-bold text-sm transition-all group"
+      >
+        <i class="bi bi-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+        Quay lại
+      </button>
+      <div
+        class="hidden md:flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"
+      >
+        Chi tiết hoạt động <i class="bi bi-chevron-right text-[10px]"></i>
+        {{ activity()?.id || '...' }}
+      </div>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-40">
+      <div
+        class="animate-spin rounded-full h-10 w-10 border-4 border-slate-200 border-t-indigo-600 mb-4"
+      ></div>
+      <p class="text-slate-400 font-bold animate-pulse">Đang lấy dữ liệu hoạt động...</p>
+    </div>
+  } @else if (activity(); as act) {
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
+        <div class="lg:col-span-8 space-y-8">
+          <div
+            class="relative rounded-[2rem] overflow-hidden shadow-2xl shadow-indigo-100/50 bg-slate-200 aspect-[16/9] md:aspect-[21/9]"
+          >
+            <img
+              [src]="
+                act.coverImage ||
+                'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772505926/default_activity_coverImage.jpg'
+              "
+              alt="Cover"
+              class="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+            />
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent pointer-events-none"
+            ></div>
+            <div class="absolute bottom-6 left-6 md:bottom-10 md:left-10 z-10">
+              <span
+                class="px-4 py-1.5 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg transition-colors duration-300"
+                [ngClass]="{
+                  'bg-sky-500 shadow-sky-200': act.isExternal,
+                  'bg-emerald-500 shadow-emerald-200': !act.isExternal && act.isFaculty,
+                  'bg-indigo-600 shadow-indigo-200': !act.isExternal && !act.isFaculty
+                }"
+              >
+                <i class="bi mr-1"
+                   [ngClass]="act.isExternal ? 'bi-globe' : (act.isFaculty ? 'bi-mortarboard-fill' : 'bi-bank')">
+                </i>
+                @if (act.isExternal) {
+                  Ngoài trường
+                } @else {
+                  {{ act.isFaculty ? 'Cấp Khoa' : 'Cấp Trường' }}
+                }
+              </span>
+              <h1 class="text-2xl md:text-4xl font-black text-white mt-4 leading-tight drop-shadow-md pr-4">
+                {{ act.title }}
+              </h1>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div
+              class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center text-center hover:-translate-y-1 transition-transform"
+            >
+              <i class="bi bi-trophy-fill text-amber-500 text-2xl mb-1"></i>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+              >Điểm cộng</span
+              >
+              <span class="font-black text-slate-800">+{{ totalPoints() }} ĐRL</span>
+            </div>
+            <div
+              class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center text-center hover:-translate-y-1 transition-transform"
+            >
+              <i class="bi bi-people-fill text-blue-500 text-2xl mb-1"></i>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+              >Số lượng</span
+              >
+              <span class="font-black text-slate-800">{{ act.maxParticipants }} SV</span>
+            </div>
+            <div
+              class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center text-center hover:-translate-y-1 transition-transform"
+            >
+              <i class="bi bi-calendar-check-fill text-green-500 text-2xl mb-1"></i>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+              >Học kỳ</span
+              >
+              <span class="font-black text-slate-800">HK{{ act.semesterId }}</span>
+            </div>
+            <div
+              class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center text-center hover:-translate-y-1 transition-transform"
+            >
+              <i class="bi bi-building-fill-check text-indigo-500 text-2xl mb-1"></i>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+              >Hình thức</span
+              >
+              <span class="font-black text-slate-800">{{
+                  act.isExternal ? 'Ngoại khóa' : 'Nội bộ'
+                }}</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+            <div
+              class="flex bg-slate-50/80 p-2 border-b border-slate-100 overflow-x-auto hide-scrollbar"
+            >
+              <button
+                (click)="setTab('overview')"
+                [ngClass]="
+                  activeTab() === 'overview'
+                    ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                "
+                class="flex-1 min-w-[120px] py-3 px-4 rounded-2xl font-bold text-sm transition-all whitespace-nowrap"
+              >
+                Tổng quan
+              </button>
+              <button
+                (click)="setTab('content')"
+                [ngClass]="
+                  activeTab() === 'content'
+                    ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                "
+                class="flex-1 min-w-[140px] py-3 px-4 rounded-2xl font-bold text-sm transition-all whitespace-nowrap"
+              >
+                Nội dung chi tiết
+              </button>
+              @if (act.benefits?.length) {
+                <button
+                  (click)="setTab('benefits')"
+                  [ngClass]="
+                    activeTab() === 'benefits'
+                      ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-100'
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                  "
+                  class="flex-1 min-w-[120px] py-3 px-4 rounded-2xl font-bold text-sm transition-all whitespace-nowrap"
+                >
+                  Quyền lợi SV
+                </button>
+              }
+            </div>
+
+            <div class="p-6 md:p-10 min-h-[400px]">
+              @if (activeTab() === 'overview') {
+                <div class="animate-fade-in-up">
+                  <div class="flex items-center gap-3 mb-6">
+                    <div class="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
+                    <h2 class="text-xl font-black text-slate-800 tracking-tight">
+                      Tóm tắt hoạt động
+                    </h2>
+                  </div>
+                  <p
+                    class="text-slate-600 leading-relaxed text-lg italic border-l-4 border-indigo-100 pl-6 py-2 bg-slate-50/50 rounded-r-2xl"
+                  >
+                    "{{ act.description || 'Chưa có mô tả ngắn cho hoạt động này.' }}"
+                  </p>
+
+                  <div
+                    class="mt-8 flex items-center gap-4 p-5 bg-indigo-50/50 rounded-3xl border border-indigo-100/50 hover:bg-indigo-50 transition-colors"
+                  >
+                    <div
+                      class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl shadow-lg shadow-indigo-200 shrink-0"
+                    >
+                      <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div>
+                      <p
+                        class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-0.5"
+                      >
+                        Đơn vị chủ trì
+                      </p>
+                      <p class="font-bold text-indigo-900 line-clamp-2">
+                        {{
+                          act.createdBy?.departmentName ||
+                          act.createdBy?.fullName ||
+                          'Trường Đại học Cần Thơ'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              @if (activeTab() === 'content') {
+                <div class="animate-fade-in-up">
+                  <div
+                    class="custom-prose max-w-none text-slate-700"
+                    [innerHTML]="act.content"
+                  ></div>
+                </div>
+              }
+
+              @if (activeTab() === 'benefits') {
+                <div class="animate-fade-in-up space-y-6">
+                  <div class="flex items-center gap-3">
+                    <div class="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
+                    <h2 class="text-xl font-black text-slate-800 tracking-tight">
+                      Chi tiết quyền lợi & Điểm thưởng
+                    </h2>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @for (benefit of act.benefits; track benefit.id) {
+                      <div
+                        class="group p-5 rounded-[2rem] bg-white border border-slate-100 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50 transition-all duration-300"
+                      >
+                        <div class="flex items-center gap-4 mb-3">
+                          <div
+                            class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold group-hover:bg-amber-500 group-hover:text-white transition-colors shrink-0"
+                          >
+                            <i class="bi bi-star-fill"></i>
+                          </div>
+                          <div>
+                            <h4 class="font-bold text-slate-800 leading-tight">
+                              {{ benefit.name }}
+                            </h4>
+                            <span
+                              class="text-indigo-600 font-black text-xs inline-block mt-1 bg-indigo-50 px-2 py-0.5 rounded-md"
+                            >+{{ benefit.point }} điểm rèn luyện</span
+                            >
+                          </div>
+                        </div>
+                        <p class="text-slate-500 text-sm leading-relaxed">
+                          {{
+                            benefit.description ||
+                            'Hoàn thành hoạt động để nhận điểm thưởng theo tiêu chí.'
+                          }}
+                        </p>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-6">
+          <div class="sticky top-20 space-y-6">
+            <div
+              class="bg-white/90 backdrop-blur-xl rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-6 md:p-8 overflow-hidden relative"
+            >
+              <div
+                class="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"
+              ></div>
+
+              <div class="text-center mb-8 relative">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3">
+                  Bạn sẽ nhận được
+                </p>
+                <div
+                  class="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100/50 rounded-2xl shadow-inner"
+                >
+                  <span class="text-3xl font-black text-amber-600 drop-shadow-sm"
+                  >+{{ totalPoints() }}</span
+                  >
+                  <div class="text-left leading-none">
+                    <p class="text-[10px] font-bold text-amber-700 uppercase">Điểm</p>
+                    <p class="text-[10px] font-bold text-amber-700 uppercase">Rèn luyện</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-5 mb-8">
+                <div class="flex gap-4 group">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors shrink-0"
+                  >
+                    <i class="bi bi-play-circle-fill"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p
+                      class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5"
+                    >
+                      Bắt đầu lúc
+                    </p>
+                    <p class="font-bold text-slate-800 text-sm">
+                      {{ act.startDate | date: 'dd/MM/yyyy, HH:mm' }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex gap-4 group">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-slate-50 text-red-400 flex items-center justify-center group-hover:bg-red-50 group-hover:text-red-600 transition-colors shrink-0"
+                  >
+                    <i class="bi bi-clock-history"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-0.5">
+                      Hạn chót đăng ký
+                    </p>
+                    <p class="font-bold text-slate-800 text-sm">
+                      {{ act.registrationEnd | date: 'dd/MM/yyyy, HH:mm' }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex gap-4 group">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors shrink-0"
+                  >
+                    <i class="bi bi-geo-alt-fill"></i>
+                  </div>
+                  <div class="flex-1 overflow-hidden">
+                    <p
+                      class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5"
+                    >
+                      Địa điểm
+                    </p>
+                    <p
+                      class="font-bold text-slate-800 text-sm truncate w-full"
+                      [title]="act.location"
+                    >
+                      {{ act.location }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              @if (act.schedules && act.schedules.length > 0) {
+                <div class="mb-8 pt-6 border-t border-slate-100/50">
+                  <div class="flex items-center justify-between mb-4">
+                    <p class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">
+                      <i class="bi bi-list-task mr-1"></i> Lịch trình chi tiết ({{act.schedules.length}})
+                    </p>
+                  </div>
+                  <div class="space-y-3 max-h-56 overflow-y-auto custom-scrollbar pr-2">
+                    @for (schedule of act.schedules; track schedule.id) {
+                      <div class="p-3 rounded-xl border transition-colors relative overflow-hidden"
+                           [ngClass]="isRegistered() && userRegistration()?.scheduleIds?.includes(schedule.id!) ? 'bg-emerald-50/30 border-emerald-200' : 'bg-slate-50/80 border-slate-100 hover:border-indigo-200'">
+
+                        <p class="font-bold text-xs text-slate-800 mb-1 line-clamp-1 pr-16" [title]="schedule.title">
+                          {{ schedule.title }}
+                        </p>
+                        <p class="text-[10px] font-medium text-slate-500">
+                          <i class="bi bi-clock mr-1"></i> {{ schedule.startTime | date:'dd/MM HH:mm' }} - {{ schedule.endTime | date:'HH:mm' }}
+                        </p>
+
+                        @if (isRegistered() && userRegistration()?.scheduleIds?.includes(schedule.id!)) {
+                          <div class="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded-bl-xl shadow-sm">
+                            <i class="bi bi-check-circle-fill"></i> Tham gia
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <div class="mb-8 p-5 bg-slate-50/80 rounded-3xl border border-slate-100">
+                <div class="flex justify-between items-end mb-2 text-xs">
+                  <span class="font-bold text-slate-500">Tiến độ ghi danh</span>
+                  <span class="font-black text-indigo-600"
+                  >{{ act.registeredCount || 0 }}/{{ act.maxParticipants }} SV</span
+                  >
+                </div>
+                <div class="w-full bg-slate-200/60 rounded-full h-2.5 mb-2 overflow-hidden">
+                  <div
+                    class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 transition-all duration-1000"
+                    [style.width.%]="capacityPercentage()"
+                  ></div>
+                </div>
+                <p
+                  class="text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-3"
+                >
+                  @if (act.maxParticipants - (act.registeredCount || 0) > 0) {
+                    <i class="bi bi-ticket-detailed"></i> Còn trống
+                    {{ act.maxParticipants - (act.registeredCount || 0) }} suất
+                  } @else {
+                    <i class="bi bi-lock-fill text-red-400"></i> Đã full chỗ
+                  }
+                </p>
+              </div>
+
+              <button
+                (click)="handleRegistration()"
+                [disabled]="(!statusConfig().canRegister && !isRegistered()) || isSubmitting()"
+                class="w-full py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all duration-300 shadow-xl active:scale-95 disabled:scale-100 disabled:opacity-60 disabled:cursor-not-allowed group relative overflow-hidden"
+                [ngClass]="{
+                  'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 hover:shadow-indigo-300':
+                    !isRegistered() && statusConfig().canRegister,
+                  'bg-white text-red-500 border-2 border-red-100 shadow-none hover:bg-red-50 hover:border-red-200':
+                    isRegistered(),
+                  'bg-slate-200 text-slate-400 shadow-none':
+                    !isRegistered() && !statusConfig().canRegister,
+                }"
+              >
+                <div
+                  class="absolute inset-0 w-full h-full bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"
+                ></div>
+
+                <div class="relative z-10 flex items-center gap-2">
+                  @if (isSubmitting()) {
+                    <div
+                      class="animate-spin rounded-full h-5 w-5 border-2 border-current border-t-transparent"
+                    ></div>
+                    <span>Đang xử lý...</span>
+                  } @else {
+                    @if (isRegistered()) {
+                      <i class="bi bi-x-circle-fill"></i> Hủy tham gia
+                    } @else {
+                      <span>{{ statusConfig().label }}</span>
+                      @if (statusConfig().canRegister) {
+                        <i
+                          class="bi bi-arrow-right-short text-2xl -mr-2 group-hover:translate-x-1 transition-transform"
+                        ></i>
+                      }
+                    }
+                  }
+                </div>
+              </button>
+            </div>
+
+            <div
+              class="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-[2rem] p-6 text-white shadow-lg relative overflow-hidden group"
+            >
+              <div
+                class="absolute -bottom-6 -right-6 w-24 h-24 bg-indigo-500/20 rounded-full blur-xl group-hover:scale-150 transition-transform duration-700"
+              ></div>
+              <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-3 text-indigo-200">
+                  <i class="bi bi-headset text-2xl drop-shadow-md"></i>
+                  <h4 class="font-black text-sm tracking-widest uppercase">Cần hỗ trợ?</h4>
+                </div>
+                <p class="text-xs text-indigo-100/70 leading-relaxed mb-4">
+                  Mọi thắc mắc về điểm rèn luyện hoặc quy trình tham gia vui lòng liên hệ Ban Tổ
+                  Chức:
+                </p>
+                <div class="space-y-3 bg-black/20 p-3 rounded-xl backdrop-blur-sm">
+                  <a
+                    href="mailto:support.iact@ctu.edu.vn"
+                    class="flex items-center gap-2 text-[11px] font-bold hover:text-indigo-300 transition-colors"
+                  >
+                    <i class="bi bi-envelope-at-fill text-indigo-400"></i>
+                    activity-support&#64;ctu.edu.vn
+                  </a>
+                  <p class="flex items-center gap-2 text-[11px] font-bold text-slate-200">
+                    <i class="bi bi-geo-alt-fill text-indigo-400"></i> Văn phòng Đoàn Thanh niên
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <app-activity-registration-modal
+    [isOpen]="isRegistrationModalOpen()"
+    [activity]="activity()"
+    [isSubmitting]="isSubmitting()"
+    (modalClosed)="isRegistrationModalOpen.set(false)"
+    (confirm)="submitRegistration($event)"
+  ></app-activity-registration-modal>
+</div>
