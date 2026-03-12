@@ -35,6 +35,12 @@ export class ActivityManagementComponent implements OnInit {
     return ((act.registeredCount || 0) / act.maxParticipants) * 100;
   });
 
+  totalPoints = computed(() => {
+    const act = this.activity();
+    if (!act || !act.benefits) return 0;
+    return act.benefits.reduce((sum, b) => sum + (b.point || 0), 0);
+  });
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -66,11 +72,9 @@ export class ActivityManagementComponent implements OnInit {
     this.location.back();
   }
 
-  // Hàm chuyển sang trang sửa chữa (Edit)
   editActivity(): void {
     const act = this.activity();
     if (act && act.id) {
-      // Điều hướng sang URL edit kèm theo ID của hoạt động
       this.router.navigate(['/admin/org/activities/edit', act.id]);
     }
   }
@@ -95,7 +99,6 @@ export class ActivityManagementComponent implements OnInit {
         .subscribe({
           next: () => {
             this.alertService.success('Đã xóa hoạt động thành công!');
-            // Chuyển hướng về lại trang danh sách hoạt động
             this.router.navigate(['/admin/org/activities']);
           },
           error: (err: HttpErrorResponse) => {
@@ -107,16 +110,13 @@ export class ActivityManagementComponent implements OnInit {
     }
   }
 
-  // Hàm chuyển sang trang Quản lý người tham gia
   manageParticipants(): void {
     const act = this.activity();
     if (act) {
-      // Giả sử URL route của ní là /admin/org/activities/participants/:id
       this.router.navigate(['/admin/org/activities/participants', act.id]);
     }
   }
 
-  // Hàm đóng/mở Modal QR
   toggleQrModal(show: boolean): void {
     this.showQrModal.set(show);
   }

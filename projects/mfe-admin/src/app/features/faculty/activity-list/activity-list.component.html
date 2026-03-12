@@ -1,43 +1,136 @@
-<div class="min-h-screen bg-gray-50/50 p-4 sm:p-6 lg:p-8">
-  <app-admin-stats-grid [items]="activityStats()"></app-admin-stats-grid>
+<div class="min-h-screen bg-slate-50/50 p-4 sm:p-6 lg:p-8 font-sans text-slate-900">
 
   <app-admin-page-header
     title="Danh sách Hoạt động"
     actionLabel="Tạo hoạt động mới"
     actionLink="create"
-    (searchChange)="onSearch($event)"
-    class="mb-6"
-  >
-  </app-admin-page-header>
+    class="mb-6 block"
+  ></app-admin-page-header>
 
-  <app-admin-table-container>
-    <table class="w-full text-left border-collapse whitespace-nowrap">
+  <div class="bg-white p-4 rounded-t-2xl border-x border-t border-slate-200 shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center relative z-10">
+
+    <div class="relative w-full sm:max-w-xs">
+      <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+      <input
+        #searchInput
+        type="text"
+        placeholder="Tìm kiếm hoạt động..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearch($event)"
+        (keydown.enter)="onSearchEnter(searchInput.value)"
+        class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm font-medium text-slate-700"
+      />
+    </div>
+
+    <div class="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto custom-scrollbar">
+      <button
+        (click)="onTabChange('ALL')"
+        [class.bg-white]="currentTab() === 'ALL'"
+        [class.shadow-sm]="currentTab() === 'ALL'"
+        [class.text-indigo-600]="currentTab() === 'ALL'"
+        [class.text-slate-500]="currentTab() !== 'ALL'"
+        class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap"
+      >
+        Tất cả
+      </button>
+      <button
+        (click)="onTabChange('UNIVERSITY')"
+        [class.bg-white]="currentTab() === 'UNIVERSITY'"
+        [class.shadow-sm]="currentTab() === 'UNIVERSITY'"
+        [class.text-indigo-600]="currentTab() === 'UNIVERSITY'"
+        [class.text-slate-500]="currentTab() !== 'UNIVERSITY'"
+        class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap"
+      >
+        Cấp Trường
+      </button>
+      <button
+        (click)="onTabChange('FACULTY')"
+        [class.bg-white]="currentTab() === 'FACULTY'"
+        [class.shadow-sm]="currentTab() === 'FACULTY'"
+        [class.text-indigo-600]="currentTab() === 'FACULTY'"
+        [class.text-slate-500]="currentTab() !== 'FACULTY'"
+        class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap"
+      >
+        Cấp Khoa
+      </button>
+      <button
+        (click)="onTabChange('EXTERNAL')"
+        [class.bg-white]="currentTab() === 'EXTERNAL'"
+        [class.shadow-sm]="currentTab() === 'EXTERNAL'"
+        [class.text-indigo-600]="currentTab() === 'EXTERNAL'"
+        [class.text-slate-500]="currentTab() !== 'EXTERNAL'"
+        class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap"
+      >
+        Ngoài trường
+      </button>
+
+      <button
+        (click)="onTabChange('DRAFT')"
+        [class.bg-white]="currentTab() === 'DRAFT'"
+        [class.shadow-sm]="currentTab() === 'DRAFT'"
+        [class.text-indigo-600]="currentTab() === 'DRAFT'"
+        [class.text-slate-500]="currentTab() !== 'DRAFT'"
+        class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border-l border-slate-200 ml-1 pl-5"
+      >
+        <i class="bi bi-pencil-square mr-1"></i> Bản nháp
+      </button>
+    </div>
+  </div>
+
+  <app-admin-table-container class="block -mt-px relative z-0">
+
+    @if (isLoading()) {
+      <div class="absolute inset-0 bg-white/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-b-2xl">
+        <div class="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-indigo-600 mb-3"></div>
+        <span class="text-sm font-bold text-slate-500 animate-pulse">Đang tải dữ liệu...</span>
+      </div>
+    }
+
+    <table class="w-full text-left border-collapse whitespace-nowrap bg-white border-x border-slate-200">
       <thead>
-        <tr
-          class="bg-white text-gray-500 text-[11px] uppercase tracking-wider border-b border-gray-100"
-        >
-          <th class="py-3 px-4 font-semibold">Thông tin Hoạt động</th>
-          <th class="py-3 px-4 font-semibold">Số lượng tham gia</th>
-          <th class="py-3 px-4 font-semibold text-center">Trạng thái</th>
-          <th class="py-3 px-4 font-semibold text-right">Thao tác</th>
-        </tr>
+      <tr class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest border-y border-slate-200">
+        <th class="py-4 px-5 font-black w-[35%] min-w-[300px]">Thông tin chung</th>
+        <th class="py-4 px-5 font-black w-[25%] min-w-[220px]">Thời gian & Địa điểm</th>
+        <th class="py-4 px-5 font-black w-40">Đăng ký</th>
+        <th class="py-4 px-5 font-black text-center w-36">Trạng thái</th>
+        <th class="py-4 px-5 font-black text-right w-28">Thao tác</th>
+      </tr>
       </thead>
-      <tbody class="divide-y divide-gray-50 bg-white">
-        @for (item of paginatedActivities(); track item.id) {
-          <tr class="hover:bg-blue-50/30 transition duration-200 group">
-            <td class="py-3 px-4">
-              <div class="flex items-center gap-3">
-                <img
-                  [src]="
-                    item.thumbnail ||
-                    'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772509074/activity-complex-like-puzzle-pictured-as-word-pieces-to-show-can-be-difficult-needs-cooperating-fit-together-d-164200616_kytemc.jpg'
-                  "
-                  alt="cover"
-                  class="w-12 h-12 rounded-lg object-cover shadow-sm border border-gray-100 flex-shrink-0"
-                />
-                <div class="min-w-[200px]">
+
+      <tbody class="divide-y divide-slate-100 bg-white">
+        @for (item of activities(); track item.id) {
+          <tr class="hover:bg-indigo-50/40 transition duration-200 group border-b border-slate-100">
+
+            <td class="py-4 px-5 align-top">
+              <div class="flex items-start gap-4">
+                <div class="relative w-14 h-14 flex-shrink-0 mt-1">
+                  <img
+                    [ngSrc]="item.thumbnail | cloudinaryPath"
+                    alt="cover"
+                    class="rounded-xl object-cover shadow-sm border border-slate-200"
+                    fill
+                    priority
+                  />
+
+                  <div class="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm"
+                       [ngClass]="{
+                         'bg-sky-500': item.isExternal,
+                         'bg-emerald-500': !item.isExternal && item.isFaculty === true,
+                         'bg-indigo-500': !item.isExternal && (item.isFaculty === false || item.isFaculty === null)
+                       }"
+                       [title]="item.isExternal ? 'Ngoài trường' : (item.isFaculty === true ? 'Cấp Khoa' : 'Cấp Trường')">
+                    <i class="bi text-white text-[10px]"
+                       [ngClass]="{
+                         'bi-globe': item.isExternal,
+                         'bi-mortarboard-fill': !item.isExternal && item.isFaculty === true,
+                         'bi-bank': !item.isExternal && (item.isFaculty === false || item.isFaculty === null)
+                       }"></i>
+                  </div>
+                </div>
+
+                <div class="whitespace-normal">
                   <h4
-                    class="font-bold text-gray-800 text-sm mb-1 hover:text-blue-600 cursor-pointer transition truncate max-w-[300px]"
+                    class="font-black text-slate-800 text-sm leading-snug mb-2 hover:text-indigo-600 cursor-pointer transition-colors line-clamp-2"
                     [title]="item.title"
                     tabindex="0"
                     (click)="viewDetails(item.id)"
@@ -45,116 +138,119 @@
                   >
                     {{ item.title }}
                   </h4>
-                  <div class="flex items-center gap-3 text-[11px] text-gray-500">
-                    <span class="flex items-center gap-1.5">
-                      <i class="bi bi-calendar-event text-blue-500"></i>
-                      {{ item.startDate | date: 'dd/MM' }} -
-                      {{ item.endDate | date: 'dd/MM/yyyy' }}
-                    </span>
-                    <span
-                      class="flex items-center gap-1.5 truncate max-w-[150px]"
-                      [title]="item.location"
-                    >
-                      <i class="bi bi-geo-alt-fill text-red-400"></i>
-                      {{ item.location || 'Chưa cập nhật' }}
-                    </span>
+                  <div class="flex flex-col gap-1 text-[11px] text-slate-500">
+                    <p class="truncate max-w-[250px]" [title]="item.departmentName">
+                      <span class="font-bold text-slate-600">Đơn vị:</span> {{ item.departmentName || 'Chưa cập nhật' }}
+                    </p>
+                    <p class="truncate max-w-[250px]" [title]="item.organizer?.name || item.createdBy?.fullName">
+                      <span class="font-bold text-slate-600">Phụ trách:</span> {{ item.organizer?.name || item.createdBy?.fullName || 'Chưa phân công' }}
+                    </p>
                   </div>
                 </div>
               </div>
             </td>
 
-            <td class="py-3 px-4">
-              <div class="w-32">
-                <div
-                  class="flex justify-between text-[10px] font-bold mb-1.5 uppercase text-gray-500"
-                >
-                  <span>{{ item.registeredCount || 0 }} / {{ item.maxParticipants }}</span>
+            <td class="py-4 px-5 align-top">
+              <div class="flex flex-col gap-2 text-[11px] text-slate-600 font-medium">
+                <div class="flex items-center gap-2 truncate max-w-[220px]" [title]="item.location">
+                  <i class="bi bi-geo-alt-fill text-rose-400 text-xs"></i>
+                  {{ item.location || 'Chưa cập nhật địa điểm' }}
                 </div>
-                <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                <div class="flex items-center gap-2" [title]="'Mở: ' + (item.registrationStart | date:'dd/MM/yyyy HH:mm') + ' -> Đóng: ' + (item.registrationEnd | date:'dd/MM/yyyy HH:mm')">
+                  <i class="bi bi-pencil-square text-amber-500 text-xs"></i>
+                  <span>
+                    <span class="font-bold text-slate-400">ĐK:</span>
+                    {{ item.registrationStart ? (item.registrationStart | date: 'dd/MM') : '--/--' }}
+                    <i class="bi bi-arrow-right-short text-slate-400"></i>
+                    {{ item.registrationEnd ? (item.registrationEnd | date: 'dd/MM/yy') : '--/--/--' }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2" [title]="'Bắt đầu: ' + (item.startDate | date:'dd/MM/yyyy HH:mm') + ' -> Kết thúc: ' + (item.endDate | date:'dd/MM/yyyy HH:mm')">
+                  <i class="bi bi-play-circle-fill text-indigo-500 text-xs"></i>
+                  <span>
+                    <span class="font-bold text-slate-400">TC:</span>
+                    {{ item.startDate ? (item.startDate | date: 'dd/MM') : '--/--' }}
+                    <i class="bi bi-arrow-right-short text-slate-400"></i>
+                    {{ item.endDate ? (item.endDate | date: 'dd/MM/yy') : '--/--/--' }}
+                  </span>
+                </div>
+              </div>
+            </td>
+
+            <td class="py-4 px-5 align-middle">
+              <div class="w-full">
+                <div class="flex justify-between text-[10px] font-bold mb-2 uppercase text-slate-500">
+                  <span>Đã đăng ký</span>
+                  <span class="text-slate-700">{{ item.registeredCount || 0 }} / {{ item.maxParticipants || '∞' }}</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                   <div
-                    class="h-1.5 rounded-full transition-all duration-500"
+                    class="h-full rounded-full transition-all duration-700 ease-out"
                     [ngClass]="{
-                      'bg-green-500':
-                        getCapacityPercentage(item.registeredCount || 0, item.maxParticipants) < 80,
-                      'bg-orange-500':
-                        getCapacityPercentage(item.registeredCount || 0, item.maxParticipants) >=
-                          80 &&
-                        getCapacityPercentage(item.registeredCount || 0, item.maxParticipants) <
-                          100,
-                      'bg-red-500':
-                        getCapacityPercentage(item.registeredCount || 0, item.maxParticipants) ===
-                        100,
+                      'bg-emerald-500': getCapacityPercentage(item.registeredCount || 0, item.maxParticipants || 1) < 80,
+                      'bg-amber-500': getCapacityPercentage(item.registeredCount || 0, item.maxParticipants || 1) >= 80 && getCapacityPercentage(item.registeredCount || 0, item.maxParticipants || 1) < 100,
+                      'bg-rose-500': getCapacityPercentage(item.registeredCount || 0, item.maxParticipants || 1) === 100
                     }"
-                    [style.width.%]="
-                      getCapacityPercentage(item.registeredCount || 0, item.maxParticipants)
-                    "
+                    [style.width.%]="getCapacityPercentage(item.registeredCount || 0, item.maxParticipants || 1)"
                   ></div>
                 </div>
               </div>
             </td>
 
-            <td class="py-3 px-4 text-center">
+            <td class="py-4 px-5 text-center align-middle">
               <span
-                class="inline-flex px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider items-center gap-1 border"
+                class="inline-flex px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-wider items-center gap-1.5 border shadow-sm"
                 [ngClass]="{
-                  'bg-orange-50 text-orange-600 border-orange-200': item.status === 0,
-                  'bg-green-50 text-green-600 border-green-200': item.status === 1,
-                  'bg-red-50 text-red-600 border-red-200': item.status === 2,
-                  'bg-gray-50 text-gray-600 border-gray-200': item.status === 3,
-                  'bg-stone-50 text-stone-600 border-stone-200': item.status === 4,
+                  'bg-amber-50 text-amber-700 border-amber-200': item.status === 0,
+                  'bg-emerald-50 text-emerald-700 border-emerald-200': item.status === 1,
+                  'bg-rose-50 text-rose-700 border-rose-200': item.status === 2,
+                  'bg-slate-50 text-slate-700 border-slate-200': item.status === 3,
+                  'bg-stone-50 text-stone-700 border-stone-200': item.status === 4,
                 }"
               >
-                <i
-                  class="bi"
-                  [ngClass]="{
+                <i class="bi text-xs"
+                   [ngClass]="{
                     'bi-hourglass-split': item.status === 0,
                     'bi-check-circle-fill': item.status === 1,
                     'bi-x-circle-fill': item.status === 2,
-                    'bi-file-earmark-text': item.status === 3,
+                    'bi-pencil-square': item.status === 3,
                     'bi-slash-circle': item.status === 4,
                   }"
                 ></i>
                 {{
-                  item.status === 0
-                    ? 'Chờ duyệt'
-                    : item.status === 1
-                      ? 'Đã duyệt'
-                      : item.status === 2
-                        ? 'Từ chối'
-                        : item.status === 3
-                          ? 'Bản nháp'
-                          : 'Đã hủy'
+                  item.status === 0 ? 'Chờ duyệt' :
+                    item.status === 1 ? 'Đã duyệt' :
+                      item.status === 2 ? 'Từ chối' :
+                        item.status === 3 ? 'Bản nháp' : 'Đã hủy'
                 }}
               </span>
             </td>
 
-            <td class="py-3 px-4">
-              <div
-                class="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity"
-              >
+            <td class="py-4 px-5 text-right align-middle">
+              <div class="flex items-center justify-end gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
                 <button
                   (click)="viewDetails(item.id)"
-                  class="text-gray-400 hover:text-blue-600 hover:bg-blue-50 w-8 h-8 rounded-lg transition flex items-center justify-center"
+                  class="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 w-9 h-9 rounded-xl transition flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-indigo-100"
                   title="Xem chi tiết"
                 >
-                  <i class="bi bi-eye text-[16px]"></i>
+                  <i class="bi bi-eye text-base"></i>
                 </button>
 
                 @if (item.status === 0 || item.status === 3) {
                   <button
                     (click)="editActivity(item.id)"
-                    class="text-gray-400 hover:text-green-600 hover:bg-green-50 w-8 h-8 rounded-lg transition flex items-center justify-center"
+                    class="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 w-9 h-9 rounded-xl transition flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-100"
                     title="Chỉnh sửa"
                   >
-                    <i class="bi bi-pencil text-[15px]"></i>
+                    <i class="bi bi-pencil-fill text-sm"></i>
                   </button>
 
                   <button
                     (click)="deleteActivity(item.id)"
-                    class="text-gray-400 hover:text-red-600 hover:bg-red-50 w-8 h-8 rounded-lg transition flex items-center justify-center"
+                    class="text-slate-400 hover:text-rose-600 hover:bg-rose-50 w-9 h-9 rounded-xl transition flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-rose-100"
                     title="Xóa"
                   >
-                    <i class="bi bi-trash text-[15px]"></i>
+                    <i class="bi bi-trash3-fill text-sm"></i>
                   </button>
                 }
               </div>
@@ -162,10 +258,13 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="4" class="py-16 text-center">
-              <div class="flex flex-col items-center justify-center text-gray-400">
-                <i class="bi bi-inboxes text-4xl mb-3 text-gray-300"></i>
-                <p class="italic text-sm">Chưa có hoạt động nào trong hệ thống...</p>
+            <td colspan="5" class="py-20 text-center bg-slate-50/50">
+              <div class="flex flex-col items-center justify-center text-slate-400">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 mb-4">
+                  <i class="bi bi-inboxes text-2xl text-slate-300"></i>
+                </div>
+                <h3 class="text-slate-700 font-bold mb-1">Không tìm thấy hoạt động nào</h3>
+                <p class="text-xs font-medium">Vui lòng thử thay đổi từ khóa hoặc bộ lọc</p>
               </div>
             </td>
           </tr>
@@ -174,11 +273,11 @@
     </table>
 
     <lib-pagination
-      [totalItems]="filteredActivities().length"
-      [pageSize]="pageSize()"
       [currentPage]="currentPage()"
+      [totalItems]="totalRows()"
+      [pageSize]="pageSize()"
       (pageChange)="onPageChange($event)"
-    >
-    </lib-pagination>
+    ></lib-pagination>
+
   </app-admin-table-container>
 </div>

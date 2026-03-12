@@ -11,6 +11,8 @@ module.exports = withNativeFederation({
     ...shareAll({ singleton: true, strictVersion: true, requiredVersion: 'auto' }),
     'keycloak-angular': { singleton: true, strictVersion: true, requiredVersion: 'auto' },
     'keycloak-js': { singleton: true, strictVersion: true, requiredVersion: 'auto' },
+    '@angular/core': { singleton: true, strictVersion: true },
+    '@angular/core/rxjs-interop': { singleton: true, strictVersion: true },
     'angular-oauth2-oidc': {
       singleton: true,
       strictVersion: true,

@@ -1,12 +1,7 @@
 <div class="fixed inset-0 bg-gray-50 z-50 overflow-y-auto animate-fade-in-up">
-  <div
-    class="bg-white px-6 py-4 flex justify-between items-center border-b border-gray-100 sticky top-0 z-20 shadow-sm"
-  >
+  <div class="bg-white px-6 py-4 flex justify-between items-center border-b border-gray-100 sticky top-0 z-20 shadow-sm">
     <div class="flex items-center gap-3">
-      <button
-        (click)="goBack()"
-        class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition shadow-sm"
-      >
+      <button (click)="goBack()" class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition shadow-sm">
         <i class="bi bi-arrow-left text-xl"></i>
       </button>
       <div>
@@ -17,34 +12,25 @@
     </div>
     <div class="flex gap-3">
       @if (!isEditMode() || currentStatus() === 3) {
-        <button
-          type="button"
-          (click)="onSubmit(3)"
-          class="px-5 py-2.5 font-semibold text-gray-600 hover:text-gray-800 transition"
-        >
+        <button type="button" (click)="onSubmit(3)" class="px-5 py-2.5 font-semibold text-gray-600 hover:text-gray-800 transition">
           Lưu nháp
         </button>
       }
-
       <button
         type="button"
-        (click)="onSubmit(isEditMode() ? currentStatus() : 0)"
+        (click)="onSubmit(currentStatus() === 3 ? 0 : currentStatus())"
         class="px-6 py-2.5 text-white font-bold rounded-xl shadow-lg transition flex items-center gap-2"
-        [ngClass]="
-          isEditMode() ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'
-        "
+        [ngClass]="isEditMode() && currentStatus() !== 3 ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'"
       >
-        <i class="bi" [ngClass]="isEditMode() ? 'bi-save-fill' : 'bi-send-fill'"></i>
-        {{ isEditMode() ? 'Cập nhật thay đổi' : 'Gửi duyệt' }}
+        <i class="bi" [ngClass]="isEditMode() && currentStatus() !== 3 ? 'bi-save-fill' : 'bi-send-fill'"></i>
+        {{ isEditMode() && currentStatus() !== 3 ? 'Cập nhật thay đổi' : 'Gửi duyệt' }}
       </button>
     </div>
   </div>
 
   <div class="max-w-7xl mx-auto py-10 px-6 relative">
     @if (isLoadingData()) {
-      <div
-        class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm min-h-[50vh]"
-      >
+      <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm min-h-[50vh]">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
         <p class="text-gray-500 font-medium">Đang tải thông tin hoạt động...</p>
       </div>
@@ -52,61 +38,27 @@
 
     <form [formGroup]="activityForm" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2 space-y-8">
+
         <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
           <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-8">
             <i class="bi bi-info-circle-fill text-blue-500"></i> Thông tin tổng quan
           </h3>
           <div class="space-y-6">
             <div>
-              <label for="title" class="block text-sm font-bold text-gray-700 mb-2">
-                Tên hoạt động <span class="text-red-500">*</span>
-              </label>
-              <input
-                id="title"
-                type="text"
-                formControlName="title"
-                placeholder="Ví dụ: Hội thảo Nghiên cứu Khoa học 2026"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition"
-              />
+              <label for="title" class="block text-sm font-bold text-gray-700 mb-2">Tên hoạt động <span class="text-red-500">*</span></label>
+              <input id="title" type="text" formControlName="title" placeholder="Ví dụ: Hội thảo Nghiên cứu Khoa học 2026" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition" />
             </div>
-
             <div>
-              <label for="description" class="block text-sm font-bold text-gray-700 mb-2"
-                >Mô tả ngắn</label
-              >
-              <input
-                id="description"
-                type="text"
-                formControlName="description"
-                placeholder="Tóm tắt ngắn gọn về hoạt động..."
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition"
-              />
+              <label for="description" class="block text-sm font-bold text-gray-700 mb-2">Mô tả ngắn</label>
+              <input id="description" type="text" formControlName="description" placeholder="Tóm tắt ngắn gọn về hoạt động..." class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition" />
             </div>
-
             <div>
-              <label for="content" class="block text-sm font-bold text-gray-700 mb-2"
-                >Nội dung chi tiết</label
-              >
-              <textarea
-                id="content"
-                formControlName="content"
-                rows="8"
-                placeholder="Viết nội dung đầy đủ tại đây..."
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"
-              ></textarea>
+              <label for="content" class="block text-sm font-bold text-gray-700 mb-2">Nội dung chi tiết</label>
+              <textarea id="content" formControlName="content" rows="8" placeholder="Viết nội dung đầy đủ tại đây..." class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"></textarea>
             </div>
-
             <div>
-              <label for="source_link" class="block text-sm font-bold text-gray-700 mb-2"
-                >Link nguồn (nếu có)</label
-              >
-              <input
-                id="source_link"
-                type="url"
-                formControlName="source_link"
-                placeholder="https://..."
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition"
-              />
+              <label for="source_link" class="block text-sm font-bold text-gray-700 mb-2">Link nguồn (nếu có)</label>
+              <input id="source_link" type="url" formControlName="source_link" placeholder="https://..." class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition" />
             </div>
           </div>
         </div>
@@ -115,67 +67,84 @@
           <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-8">
             <i class="bi bi-alarm-fill text-orange-500"></i> Lịch trình Hoạt động
           </h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div class="p-5 bg-orange-50 rounded-2xl border border-orange-100">
-              <div class="flex items-center gap-2 text-orange-700 font-bold text-sm mb-4">
-                <i class="bi bi-pencil-square"></i> Thời gian Đăng ký
-              </div>
+              <div class="flex items-center gap-2 text-orange-700 font-bold text-sm mb-4"><i class="bi bi-pencil-square"></i> Thời gian Đăng ký chung</div>
               <div class="space-y-4">
                 <div>
-                  <label
-                    for="registration_start"
-                    class="block text-xs font-bold text-orange-600 mb-1"
-                    >Mở đăng ký <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    id="registration_start"
-                    type="datetime-local"
-                    formControlName="registration_start"
-                    class="w-full px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-orange-500 outline-none text-sm shadow-sm"
-                  />
+                  <label for="registration_start" class="block text-xs font-bold text-orange-600 mb-1">Mở đăng ký <span class="text-red-500">*</span></label>
+                  <input id="registration_start" type="datetime-local" formControlName="registration_start" class="w-full px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-orange-500 outline-none text-sm shadow-sm" />
                 </div>
                 <div>
-                  <label for="registration_end" class="block text-xs font-bold text-orange-600 mb-1"
-                    >Đóng đăng ký <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    id="registration_end"
-                    type="datetime-local"
-                    formControlName="registration_end"
-                    class="w-full px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-orange-500 outline-none text-sm shadow-sm"
-                  />
+                  <label for="registration_end" class="block text-xs font-bold text-orange-600 mb-1">Đóng đăng ký <span class="text-red-500">*</span></label>
+                  <input id="registration_end" type="datetime-local" formControlName="registration_end" class="w-full px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-orange-500 outline-none text-sm shadow-sm" />
                 </div>
               </div>
             </div>
-
             <div class="p-5 bg-blue-50 rounded-2xl border border-blue-100">
-              <div class="flex items-center gap-2 text-blue-700 font-bold text-sm mb-4">
-                <i class="bi bi-play-circle-fill"></i> Thời gian Tổ chức
-              </div>
+              <div class="flex items-center gap-2 text-blue-700 font-bold text-sm mb-4"><i class="bi bi-play-circle-fill"></i> Thời gian Tổ chức chung</div>
               <div class="space-y-4">
                 <div>
-                  <label for="start_date" class="block text-xs font-bold text-blue-600 mb-1"
-                    >Bắt đầu <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    id="start_date"
-                    type="datetime-local"
-                    formControlName="start_date"
-                    class="w-full px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-blue-500 outline-none text-sm shadow-sm"
-                  />
+                  <label for="start_date" class="block text-xs font-bold text-blue-600 mb-1">Bắt đầu <span class="text-red-500">*</span></label>
+                  <input id="start_date" type="datetime-local" formControlName="start_date" class="w-full px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-blue-500 outline-none text-sm shadow-sm" />
                 </div>
                 <div>
-                  <label for="end_date" class="block text-xs font-bold text-blue-600 mb-1"
-                    >Kết thúc <span class="text-red-500">*</span></label
-                  >
-                  <input
-                    id="end_date"
-                    type="datetime-local"
-                    formControlName="end_date"
-                    class="w-full px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-blue-500 outline-none text-sm shadow-sm"
-                  />
+                  <label for="end_date" class="block text-xs font-bold text-blue-600 mb-1">Kết thúc <span class="text-red-500">*</span></label>
+                  <input id="end_date" type="datetime-local" formControlName="end_date" class="w-full px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-blue-500 outline-none text-sm shadow-sm" />
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div class="border-t border-gray-100 pt-6">
+            <div class="flex justify-between items-center mb-5">
+              <div>
+                <h4 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <i class="bi bi-list-task text-blue-500"></i> Chia nhỏ lịch trình
+                </h4>
+                <p class="text-xs text-gray-500 mt-1">Dành cho các hoạt động có nhiều buổi tổ chức.</p>
+              </div>
+              <button type="button" (click)="addSchedule()" class="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition flex items-center gap-1 shrink-0">
+                <i class="bi bi-plus-circle-fill"></i> Thêm buổi
+              </button>
+            </div>
+
+            <div formArrayName="schedules" class="space-y-4">
+              @for (schedule of schedules.controls; track schedule; let i = $index) {
+                <div [formGroupName]="i" class="p-4 bg-gray-50 rounded-2xl border border-gray-100 relative group transition hover:border-blue-200 hover:shadow-sm">
+                  <button type="button" (click)="removeSchedule(i)" class="absolute -top-2 -right-2 w-6 h-6 bg-white border border-red-200 text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-red-50" title="Xóa buổi này">
+                    <i class="bi bi-x font-bold"></i>
+                  </button>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2 flex gap-4">
+                      <div class="flex-1">
+                        <label [for]="'s_title_' + i" class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Tên buổi <span class="text-red-500">*</span></label>
+                        <input [id]="'s_title_' + i" type="text" formControlName="title" placeholder="VD: Buổi 1: Lễ khai mạc" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm bg-white" />
+                      </div>
+                      <div class="flex-1">
+                        <label [for]="'s_loc_' + i" class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Địa điểm riêng</label>
+                        <input [id]="'s_loc_' + i" type="text" formControlName="location" placeholder="Để trống nếu giống lịch chung..." class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm bg-white" />
+                      </div>
+                    </div>
+                    <div>
+                      <label [for]="'s_start_' + i" class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Bắt đầu <span class="text-red-500">*</span></label>
+                      <input [id]="'s_start_' + i" type="datetime-local" formControlName="start_time" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm bg-white" />
+                    </div>
+                    <div>
+                      <label [for]="'s_end_' + i" class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Kết thúc <span class="text-red-500">*</span></label>
+                      <input [id]="'s_end_' + i" type="datetime-local" formControlName="end_time" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm bg-white" />
+                    </div>
+                  </div>
+                </div>
+              }
+
+              @if (schedules.length === 0) {
+                <div class="text-center py-4 border-2 border-dashed border-gray-200 rounded-xl">
+                  <p class="text-xs text-gray-400 font-medium">Hoạt động này chỉ tổ chức một khung giờ duy nhất.</p>
+                </div>
+              }
             </div>
           </div>
         </div>
@@ -186,44 +155,17 @@
           </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-3">
-              <label for="coverInput" class="block text-sm font-bold text-gray-700">
-                Ảnh Bìa (Cover)
-              </label>
-              <div
-                role="button"
-                tabindex="0"
-                (click)="triggerInput('coverInput')"
-                (keydown.enter)="triggerInput('coverInput')"
-                (drop)="onFileDropped($event, 'cover')"
-                (dragover)="onDragOver($event)"
-                class="group relative border-2 border-dashed border-gray-300 rounded-2xl h-56 flex flex-col items-center justify-center text-center hover:bg-gray-50 hover:border-purple-400 transition cursor-pointer overflow-hidden outline-none focus:ring-2 focus:ring-purple-500"
-              >
-                <input
-                  type="file"
-                  id="coverInput"
-                  class="hidden"
-                  accept="image/*"
-                  (change)="onFileSelected($event, 'cover')"
-                />
+              <label for="coverInput" class="block text-sm font-bold text-gray-700">Ảnh Bìa (Cover)</label>
+              <div role="button" tabindex="0" (click)="triggerInput('coverInput')" (keydown.enter)="triggerInput('coverInput')" (drop)="onFileDropped($event, 'cover')" (dragover)="onDragOver($event)" class="group relative border-2 border-dashed border-gray-300 rounded-2xl h-56 flex flex-col items-center justify-center text-center hover:bg-gray-50 hover:border-purple-400 transition cursor-pointer overflow-hidden outline-none focus:ring-2 focus:ring-purple-500">
+                <input type="file" id="coverInput" class="hidden" accept="image/*" (change)="onFileSelected($event, 'cover')" />
                 @if (coverPreview()) {
-                  <img
-                    [src]="coverPreview()"
-                    alt="Cover"
-                    class="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div
-                    class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition"
-                  >
-                    <span
-                      class="text-white font-bold text-sm bg-purple-600 px-4 py-2 rounded-full shadow-lg"
-                      >Thay đổi ảnh</span
-                    >
+                  <img [src]="coverPreview()" alt="Cover" class="absolute inset-0 w-full h-full object-cover" />
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                    <span class="text-white font-bold text-sm bg-purple-600 px-4 py-2 rounded-full shadow-lg">Thay đổi ảnh</span>
                   </div>
                 } @else {
                   <div class="p-4 flex flex-col items-center">
-                    <i
-                      class="bi bi-cloud-arrow-up text-purple-300 text-4xl mb-3 group-hover:scale-110 transition"
-                    ></i>
+                    <i class="bi bi-cloud-arrow-up text-purple-300 text-4xl mb-3 group-hover:scale-110 transition"></i>
                     <p class="text-sm font-bold text-gray-600">Click hoặc Kéo thả ảnh</p>
                     <p class="text-xs text-gray-400 mt-1">Tỉ lệ 16:9 (Khuyên dùng: 1200x675px)</p>
                   </div>
@@ -232,44 +174,17 @@
             </div>
 
             <div class="space-y-3">
-              <label for="thumbInput" class="block text-sm font-bold text-gray-700">
-                Ảnh Thu nhỏ (Thumbnail)
-              </label>
-              <div
-                role="button"
-                tabindex="0"
-                (click)="triggerInput('thumbInput')"
-                (keydown.enter)="triggerInput('thumbInput')"
-                (drop)="onFileDropped($event, 'thumbnail')"
-                (dragover)="onDragOver($event)"
-                class="group relative border-2 border-dashed border-gray-300 rounded-2xl h-56 flex flex-col items-center justify-center text-center hover:bg-gray-50 hover:border-blue-400 transition cursor-pointer overflow-hidden outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <input
-                  type="file"
-                  id="thumbInput"
-                  class="hidden"
-                  accept="image/*"
-                  (change)="onFileSelected($event, 'thumbnail')"
-                />
+              <label for="thumbInput" class="block text-sm font-bold text-gray-700">Ảnh Thu nhỏ (Thumbnail)</label>
+              <div role="button" tabindex="0" (click)="triggerInput('thumbInput')" (keydown.enter)="triggerInput('thumbInput')" (drop)="onFileDropped($event, 'thumbnail')" (dragover)="onDragOver($event)" class="group relative border-2 border-dashed border-gray-300 rounded-2xl h-56 flex flex-col items-center justify-center text-center hover:bg-gray-50 hover:border-blue-400 transition cursor-pointer overflow-hidden outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="file" id="thumbInput" class="hidden" accept="image/*" (change)="onFileSelected($event, 'thumbnail')" />
                 @if (thumbPreview()) {
-                  <img
-                    [src]="thumbPreview()"
-                    alt="Thumbnail"
-                    class="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div
-                    class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition"
-                  >
-                    <span
-                      class="text-white font-bold text-sm bg-blue-600 px-4 py-2 rounded-full shadow-lg"
-                      >Thay đổi ảnh</span
-                    >
+                  <img [src]="thumbPreview()" alt="Thumbnail" class="absolute inset-0 w-full h-full object-cover" />
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                    <span class="text-white font-bold text-sm bg-blue-600 px-4 py-2 rounded-full shadow-lg">Thay đổi ảnh</span>
                   </div>
                 } @else {
                   <div class="p-4 flex flex-col items-center">
-                    <i
-                      class="bi bi-aspect-ratio text-blue-300 text-4xl mb-3 group-hover:scale-110 transition"
-                    ></i>
+                    <i class="bi bi-aspect-ratio text-blue-300 text-4xl mb-3 group-hover:scale-110 transition"></i>
                     <p class="text-sm font-bold text-gray-600">Click hoặc Kéo thả ảnh</p>
                     <p class="text-xs text-gray-400 mt-1">Tỉ lệ 1:1 (Khuyên dùng: 500x500px)</p>
                   </div>
@@ -287,10 +202,7 @@
           </h3>
           @if (!selectedOrganizer()) {
             <div class="space-y-2">
-              <label
-                for="organizerEmail"
-                class="block text-xs font-bold text-gray-500 uppercase tracking-wider"
-              >
+              <label for="organizerEmail" class="block text-xs font-bold text-gray-500 uppercase tracking-wider">
                 Tìm theo Email <span class="text-red-500">*</span>
               </label>
               <div class="flex gap-2">
@@ -322,29 +234,24 @@
               }
             </div>
           } @else {
-            <div
-              class="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 flex justify-between items-center group transition hover:bg-blue-50"
-            >
+            <div class="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 flex justify-between items-center group transition hover:bg-blue-50">
               <div class="flex items-center gap-3">
                 <img
                   [src]="
                     selectedOrganizer()?.avatarUrl ||
                     'https://ui-avatars.com/api/?name=' +
-                      (selectedOrganizer()?.fullName || 'User') +
+                      (selectedOrganizer()?.name || selectedOrganizer()?.fullName || selectedOrganizer()?.username || 'User') +
                       '&background=0D8ABC&color=fff'
                   "
                   alt="avatar"
                   class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm"
                 />
                 <div class="overflow-hidden">
-                  <p
-                    class="text-sm font-bold text-gray-800 truncate"
-                    [title]="selectedOrganizer()?.fullName || selectedOrganizer()?.username"
-                  >
-                    {{ selectedOrganizer()?.fullName || selectedOrganizer()?.username }}
+                  <p class="text-sm font-bold text-gray-800 truncate" [title]="selectedOrganizer()?.name || selectedOrganizer()?.fullName || selectedOrganizer()?.username">
+                    {{ selectedOrganizer()?.name || selectedOrganizer()?.fullName || selectedOrganizer()?.username }}
                   </p>
-                  <p class="text-xs text-gray-500 truncate" [title]="selectedOrganizer()?.email">
-                    {{ selectedOrganizer()?.email }}
+                  <p class="text-xs text-gray-500 truncate" [title]="selectedOrganizer()?.email || 'Đại diện Tổ chức / Khoa'">
+                    {{ selectedOrganizer()?.email || 'Đại diện Tổ chức / Khoa' }}
                   </p>
                 </div>
               </div>
@@ -366,64 +273,92 @@
           </h3>
           <div class="space-y-5">
             <div>
-              <label for="semester_id" class="block text-sm font-bold text-gray-700 mb-2"
-                >Học kỳ <span class="text-red-500">*</span></label
-              >
-              <select
-                id="semester_id"
-                formControlName="semester_id"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
-              >
-                <option [ngValue]="null" disabled>-- Chọn học kỳ --</option>
-                @for (sem of semesters(); track sem.id) {
-                  <option [ngValue]="sem.id">{{ sem.name }}</option>
-                }
-              </select>
-            </div>
-
-            <div>
-              <label for="location" class="block text-sm font-bold text-gray-700 mb-2"
-                >Địa điểm tổ chức <span class="text-red-500">*</span></label
-              >
+              <label for="location" class="block text-sm font-bold text-gray-700 mb-2">Địa điểm tổ chức <span class="text-red-500">*</span></label>
               <div class="relative">
                 <i class="bi bi-building absolute left-4 top-3.5 text-gray-400"></i>
-                <input
-                  id="location"
-                  type="text"
-                  formControlName="location"
-                  placeholder="Hội trường Rùa..."
-                  class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition"
-                />
+                <input id="location" type="text" formControlName="location" placeholder="Hội trường Rùa..." class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition" />
               </div>
             </div>
 
             <div>
-              <label for="max_participants" class="block text-sm font-bold text-gray-700 mb-2"
-                >Sức chứa (Số người) <span class="text-red-500">*</span></label
-              >
+              <label for="max_participants" class="block text-sm font-bold text-gray-700 mb-2">Sức chứa (Số người) <span class="text-red-500">*</span></label>
               <div class="relative">
                 <i class="bi bi-people absolute left-4 top-3.5 text-gray-400"></i>
-                <input
-                  id="max_participants"
-                  type="number"
-                  formControlName="max_participants"
-                  placeholder="Ví dụ: 200"
-                  class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition"
-                />
+                <input id="max_participants" type="number" formControlName="max_participants" placeholder="Ví dụ: 200" class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition" />
               </div>
             </div>
 
             <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-              <input
-                id="is_external"
-                type="checkbox"
-                formControlName="is_external"
-                class="w-5 h-5 rounded text-blue-600 border-gray-300 focus:ring-blue-500"
-              />
-              <label for="is_external" class="text-sm font-bold text-gray-700 cursor-pointer">
-                Hoạt động ngoài trường
-              </label>
+              <input id="is_external" type="checkbox" formControlName="is_external" class="w-5 h-5 rounded text-blue-600 border-gray-300 focus:ring-blue-500" />
+              <label for="is_external" class="text-sm font-bold text-gray-700 cursor-pointer">Hoạt động ngoài trường</label>
             </div>
+
+            @if (!activityForm.get('is_external')?.value) {
+              <div class="p-5 bg-blue-50/30 rounded-2xl border border-blue-100 space-y-4 animate-fade-in">
+                <p class="block text-xs font-bold text-blue-600 uppercase tracking-wider">Phạm vi tổ chức <span class="text-red-500">*</span></p>
+                <div class="flex gap-4">
+                  <label class="flex-1 flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm">
+                    <input type="radio" formControlName="is_faculty" [value]="0" class="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                    <span class="text-sm font-bold text-gray-700">Cấp Trường</span>
+                  </label>
+                  <label class="flex-1 flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm">
+                    <input type="radio" formControlName="is_faculty" [value]="1" class="w-4 h-4 text-blue-600 focus:ring-blue-500" />
+                    <span class="text-sm font-bold text-gray-700">Cấp Khoa</span>
+                  </label>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+          <div class="flex justify-between items-center mb-5">
+            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i class="bi bi-star-fill text-yellow-400"></i> Điểm rèn luyện</h3>
+            <button type="button" (click)="addBenefit()" class="px-3 py-1.5 bg-yellow-50 text-yellow-700 text-xs font-bold rounded-lg hover:bg-yellow-100 transition flex items-center gap-1">
+              <i class="bi bi-plus-circle-fill"></i> Thêm tiêu chí
+            </button>
+          </div>
+
+          <div formArrayName="benefits" class="space-y-4">
+            @if (benefits.length === 0) {
+              <div class="text-center py-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                <i class="bi bi-emoji-frown text-2xl text-gray-300 mb-2 block"></i>
+                <p class="text-sm text-gray-500 font-medium">Chưa có điểm rèn luyện nào được cấu hình.</p>
+              </div>
+            }
+
+            @for (benefit of benefits.controls; track benefit; let i = $index) {
+              <div [formGroupName]="i" class="p-4 bg-gray-50 rounded-2xl border border-gray-100 relative group transition hover:border-yellow-200 hover:shadow-sm">
+                <button type="button" (click)="removeBenefit(i)" class="absolute -top-2 -right-2 w-6 h-6 bg-white border border-red-200 text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-red-50" title="Xóa tiêu chí này"><i class="bi bi-x font-bold"></i></button>
+
+                <div class="space-y-3">
+                  <div>
+                    <label [for]="'category_id_' + i" class="block text-xs font-bold text-gray-600 mb-1">Thuộc tiêu chí <span class="text-red-500">*</span></label>
+                    <select [id]="'category_id_' + i" formControlName="category_id" class="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none transition bg-white text-sm">
+                      <option [ngValue]="null" disabled>-- Chọn tiêu chí đánh giá --</option>
+                      @for (cat of categories(); track cat.id) {
+                        <option [ngValue]="cat.id">[{{ cat.code }}] {{ cat.name }} (Tối đa: {{ cat.maxPoint }}đ)</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="flex gap-3">
+                    <div class="flex-1">
+                      <label [for]="'point_' + i" class="block text-xs font-bold text-gray-600 mb-1">Số điểm <span class="text-red-500">*</span></label>
+                      <input [id]="'point_' + i" type="number" formControlName="point" placeholder="VD: 5" class="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none transition text-sm" />
+                    </div>
+
+                    <div class="flex-1">
+                      <label [for]="'type_' + i" class="block text-xs font-bold text-gray-600 mb-1">Loại</label>
+                      <select [id]="'type_' + i" formControlName="type" class="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none transition bg-white text-sm">
+                        <option [ngValue]="1">Cộng điểm ĐRL</option>
+                        <option [ngValue]="2">Cấp giấy chứng nhận</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
           </div>
         </div>
       </div>

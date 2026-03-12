@@ -1,29 +1,25 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { forkJoin, of, Observable } from 'rxjs';
 import { switchMap, finalize } from 'rxjs/operators';
 
 import { AlertService } from '@my-mfe/ui';
-import { UserService, ApiResponse, UserInfo } from '@my-mfe/auth';
+import { UserService, UserInfo } from '@my-mfe/auth';
+import { ApiResponse} from 'interface';
 import { CloudinaryService } from '@my-mfe/data-access-media';
 import { ActivityService } from '../services/activity.service';
-import { Activity } from '../../../shared/models/activity.model';
 
-export interface SemesterMock {
-  id: number;
-  name: string;
-}
-
-export interface OrganizerMock {
-  id: number;
-  username: string;
-  email: string;
-  fullName: string;
-  avatarUrl: string | null;
-}
+import { CategoryService } from '../services/category.service';
+import {
+  Activity,
+  BenefitDto,
+  BenefitFormValue,
+  OrganizerMock,
+} from '../../../shared/models/activity.model';
+import { CategoryResponse } from '../../../shared/models/category.model';
 
 @Component({
   selector: 'app-activity-create',
@@ -36,13 +32,12 @@ export class ActivityCreateComponent implements OnInit {
   private fb = inject(FormBuilder);
   private location = inject(Location);
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
   private alertService = inject(AlertService);
   private activityService = inject(ActivityService);
   private cloudinaryService = inject(CloudinaryService);
   private userService = inject(UserService);
+  private categoryService = inject(CategoryService);
 
-  //  CÁC SIGNAL QUẢN LÝ CHẾ ĐỘ SỬA
   isEditMode = signal<boolean>(false);
   activityId = signal<number | null>(null);
   isLoadingData = signal<boolean>(false);
@@ -50,20 +45,21 @@ export class ActivityCreateComponent implements OnInit {
 
   coverPreview = signal<string | null>(null);
   thumbPreview = signal<string | null>(null);
-  semesters = signal<SemesterMock[]>([{ id: 1, name: 'Học kỳ 1 (2025-2026)' }]);
   isUploading = signal<boolean>(false);
 
   selectedOrganizer = signal<OrganizerMock | null>(null);
   isSearchingOrganizer = signal<boolean>(false);
   searchOrganizerError = signal<string | null>(null);
 
+  categories = signal<CategoryResponse[]>([]);
+
   activityForm: FormGroup = this.fb.group({
     title: ['', [Validators.required]],
     description: [''],
     content: [''],
-    semester_id: [null, Validators.required],
     source_link: [''],
     is_external: [false],
+    is_faculty: [false],
     registration_start: ['', Validators.required],
     registration_end: ['', Validators.required],
     start_date: ['', Validators.required],
@@ -72,16 +68,30 @@ export class ActivityCreateComponent implements OnInit {
     max_participants: [null, Validators.required],
     cover_image: [null],
     thumbnail: [null],
+    benefits: this.fb.array([]),
+    schedules: this.fb.array([]),
   });
 
   ngOnInit() {
-    // 1. Kiểm tra URL xem có truyền ID vào không (Chế độ Edit)
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.isEditMode.set(true);
       this.activityId.set(Number(idParam));
       this.loadActivityData(idParam);
     }
+
+    this.fetchCategories();
+  }
+
+  fetchCategories() {
+    this.categoryService.getAllCategoriesFlat().subscribe({
+      next: (res) => {
+        if (res.code === 200 && res.result) {
+          this.categories.set(res.result);
+        }
+      },
+      error: (err) => console.error('Lỗi khi tải danh mục tiêu chí:', err),
+    });
   }
 
   loadActivityData(id: string) {
@@ -94,62 +104,74 @@ export class ActivityCreateComponent implements OnInit {
         next: (act: Activity) => {
           this.currentStatus.set(act.status || 0);
 
-          // Đổ dữ liệu vào Form
           this.activityForm.patchValue({
             title: act.title,
             description: act.description,
             content: act.content,
-            semester_id: act.semesterId,
             source_link: act.sourceLink,
             is_external: act.isExternal,
-            // Format ngày tháng từ DB về chuẩn của thẻ input type="datetime-local"
             registration_start: this.formatDateForInput(act.registrationStart),
             registration_end: this.formatDateForInput(act.registrationEnd),
             start_date: this.formatDateForInput(act.startDate),
             end_date: this.formatDateForInput(act.endDate),
             location: act.location,
             max_participants: act.maxParticipants,
-
-            // Lấy tạm URL ảnh cũ nhét vào form để tí submit biết đường xử lý
             cover_image: act.coverImage,
             thumbnail: act.thumbnail,
           });
 
-          // Hiển thị ảnh cũ
+          if (act.benefits && act.benefits.length > 0) {
+            this.benefits.clear();
+            act.benefits.forEach((benefit: BenefitDto) => {
+              const benefitGroup = this.fb.group({
+                category_id: [benefit.categoryId, Validators.required],
+                point: [benefit.point, [Validators.required, Validators.min(1)]],
+                type: [benefit.type || 1, Validators.required],
+              });
+              this.benefits.push(benefitGroup);
+            });
+          }
+
+          if ((act as any).schedules && (act as any).schedules.length > 0) {
+            this.schedules.clear();
+            (act as any).schedules.forEach((schedule: any) => {
+              const scheduleGroup = this.fb.group({
+                title: [schedule.title, Validators.required],
+                start_time: [this.formatDateForInput(schedule.startTime), Validators.required],
+                end_time: [this.formatDateForInput(schedule.endTime), Validators.required],
+                location: [schedule.location]
+              });
+              this.schedules.push(scheduleGroup);
+            });
+          }
+
           if (act.coverImage) this.coverPreview.set(act.coverImage);
           if (act.thumbnail) this.thumbPreview.set(act.thumbnail);
 
-          //  GỌI API THẬT ĐỂ LẤY THÔNG TIN NGƯỜI PHỤ TRÁCH
-          if (act.organizerId) {
-            // 1. Gắn tạm thông báo đang tải để UX mượt hơn
+          if (act.organizer?.id) {
             this.selectedOrganizer.set({
-              id: act.organizerId,
+              id: act.organizer.id,
+              name: act.organizer.name,
               username: '...',
-              email: 'Đang tải thông tin...',
-              fullName: 'Đang tải...',
+              email: 'Đang lấy thông tin chi tiết...',
+              fullName: act.organizer.name || 'Người phụ trách',
               avatarUrl: null,
             });
 
-            // 2. Gọi API lấy User thật
-            this.userService.getUserById(act.organizerId).subscribe({
+            this.userService.getUserById(act.organizer.id).subscribe({
               next: (response: ApiResponse<UserInfo>) => {
                 const user = response.result;
                 if (user) {
-                  // Đắp dữ liệu thật vào Signal
-                  this.selectedOrganizer.set({
-                    id: user.id,
+                  this.selectedOrganizer.update((prev) => ({
+                    ...(prev || { id: user.id }),
                     username: user.username,
                     email: user.email,
                     fullName: user.fullName || user.username,
                     avatarUrl: user.avatarUrl || null,
-                  });
+                  }));
                 }
               },
-              error: (err: HttpErrorResponse) => {
-                console.error('Không thể tải thông tin người phụ trách:', err);
-                // Nếu lỗi thì xóa trắng để người dùng tự tìm lại
-                this.selectedOrganizer.set(null);
-              },
+              error: (err: HttpErrorResponse) => console.error('Không thể lấy chi tiết User:', err),
             });
           }
         },
@@ -161,27 +183,45 @@ export class ActivityCreateComponent implements OnInit {
       });
   }
 
-  // Helper để chuyển chuỗi ngày từ BE thành format cho thẻ input datetime-local
-  formatDateForInput(dateStr: string): string {
+  formatDateForInput(dateStr: string | null | undefined): string {
     if (!dateStr) return '';
-    // Giả sử dateStr là '2026-02-27T16:40:00'
-    return dateStr.substring(0, 16); // Lấy tới phút 'YYYY-MM-DDTHH:mm'
+    return dateStr.substring(0, 16);
   }
 
-  // Helper để format ngày từ input đẩy lên Backend
+  // --- QUẢN LÝ ĐIỂM RÈN LUYỆN ---
+  get benefits() { return this.activityForm.get('benefits') as FormArray; }
+  addBenefit() {
+    this.benefits.push(this.fb.group({
+      category_id: [null, Validators.required],
+      point: [null, [Validators.required, Validators.min(1)]],
+      type: [1, Validators.required],
+    }));
+  }
+  removeBenefit(index: number) { this.benefits.removeAt(index); }
+
+  // --- QUẢN LÝ LỊCH TRÌNH NHIỀU BUỔI ---
+  get schedules() { return this.activityForm.get('schedules') as FormArray; }
+  addSchedule() {
+    this.schedules.push(this.fb.group({
+      title: ['', Validators.required],
+      start_time: ['', Validators.required],
+      end_time: ['', Validators.required],
+      location: ['']
+    }));
+  }
+  removeSchedule(index: number) { this.schedules.removeAt(index); }
+
+
   formatDateTime = (dtStr: string): string => {
     if (!dtStr) return '';
     const str = String(dtStr);
     return str.length === 16 ? `${str}:00` : str;
   };
 
-  triggerInput(id: string) {
-    document.getElementById(id)?.click();
-  }
+  triggerInput(id: string) { document.getElementById(id)?.click(); }
 
   onFileSelected(event: Event, type: 'cover' | 'thumbnail') {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.item(0);
+    const file = (event.target as HTMLInputElement).files?.item(0);
     if (file) this.handleFile(file, type);
   }
 
@@ -191,9 +231,7 @@ export class ActivityCreateComponent implements OnInit {
     if (file) this.handleFile(file, type);
   }
 
-  onDragOver(event: DragEvent) {
-    event.preventDefault();
-  }
+  onDragOver(event: DragEvent) { event.preventDefault(); }
 
   private handleFile(file: File, type: 'cover' | 'thumbnail') {
     const reader = new FileReader();
@@ -210,9 +248,7 @@ export class ActivityCreateComponent implements OnInit {
     reader.readAsDataURL(file);
   }
 
-  goBack() {
-    this.location.back();
-  }
+  goBack() { this.location.back(); }
 
   searchOrganizer(email: string) {
     if (!email || email.trim() === '') {
@@ -235,14 +271,13 @@ export class ActivityCreateComponent implements OnInit {
       .subscribe({
         next: (response: ApiResponse<UserInfo>) => {
           const user = response.result;
-
           if (!user) {
             this.searchOrganizerError.set('Email này không tồn tại trong hệ thống!');
             return;
           }
-
           this.selectedOrganizer.set({
             id: user.id,
+            name: user.fullName || user.username,
             username: user.username,
             email: user.email,
             fullName: user.fullName || user.username,
@@ -250,30 +285,30 @@ export class ActivityCreateComponent implements OnInit {
           });
         },
         error: (err: HttpErrorResponse) => {
-          console.error('Lỗi tìm kiếm:', err);
-          const errorMessage = err.error?.message || 'Email này không tồn tại trong hệ thống!';
-          this.searchOrganizerError.set(errorMessage);
+          this.searchOrganizerError.set(err.error?.message || 'Email này không tồn tại!');
         },
       });
   }
 
-  removeOrganizer() {
-    this.selectedOrganizer.set(null);
-  }
+  removeOrganizer() { this.selectedOrganizer.set(null); }
 
-  onSubmit(status: number) {
+  onSubmit(requestedStatus: number) {
     const data = this.activityForm.value;
     const currentOrganizer = this.selectedOrganizer();
+    const finalStatus = requestedStatus;
 
-    // 1. KIỂM TRA VALIDATE THEO TRẠNG THÁI
-    if (status !== 3) {
-      if (this.activityForm.invalid) {
+    const isFormValid = this.activityForm.valid;
+    const hasOrganizer = !!currentOrganizer;
+
+    // KIỂM TRA LỖI KHI GỬI DUYỆT
+    if (finalStatus !== 3) {
+      if (!isFormValid) {
         this.activityForm.markAllAsTouched();
-        this.alertService.error('Vui lòng điền đầy đủ các thông tin bắt buộc dshsfh!');
+        this.alertService.error('Vui lòng điền đầy đủ các thông tin bắt buộc để gửi duyệt!');
         return;
       }
 
-      if (!currentOrganizer) {
+      if (!hasOrganizer) {
         this.alertService.error('Vui lòng tìm và chọn người phụ trách hoạt động!');
         return;
       }
@@ -295,6 +330,25 @@ export class ActivityCreateComponent implements OnInit {
         this.alertService.error('Thời gian kết thúc phải sau thời gian bắt đầu!');
         return;
       }
+
+      //  VALIDATION CHO LỊCH TRÌNH CHI TIẾT (SCHEDULES)
+      if (data.schedules && data.schedules.length > 0) {
+        for (let i = 0; i < data.schedules.length; i++) {
+          const s = data.schedules[i];
+          const sStart = new Date(s.start_time);
+          const sEnd = new Date(s.end_time);
+
+          if (sEnd <= sStart) {
+            this.alertService.error(`Lỗi tại [${s.title}]: Thời gian kết thúc phải sau bắt đầu!`);
+            return;
+          }
+          if (sStart < actStart || sEnd > actEnd) {
+            this.alertService.error(`Lỗi tại [${s.title}]: Thời gian buổi này phải nằm trong khung thời gian tổ chức chung của hoạt động!`);
+            return;
+          }
+        }
+      }
+
     } else {
       if (!data.title || data.title.trim() === '') {
         this.activityForm.get('title')?.markAsTouched();
@@ -303,9 +357,6 @@ export class ActivityCreateComponent implements OnInit {
       }
     }
 
-    // ==========================================
-    // 2. XỬ LÝ UPLOAD ẢNH & CHUẨN BỊ DỮ LIỆU
-    // ==========================================
     this.isUploading.set(true);
 
     const coverVal = data.cover_image;
@@ -322,40 +373,46 @@ export class ActivityCreateComponent implements OnInit {
         : of(typeof thumbVal === 'string' ? thumbVal : null);
 
     const successMsg = this.isEditMode()
-      ? 'Cập nhật hoạt động thành công!'
-      : status === 3
-        ? 'Lưu nháp thành công!'
-        : 'Đã gửi yêu cầu tạo hoạt động!';
+      ? (finalStatus === 0 ? 'Đã cập nhật và gửi yêu cầu duyệt!' : 'Cập nhật bản nháp thành công!')
+      : (finalStatus === 0 ? 'Đã gửi yêu cầu tạo hoạt động!' : 'Lưu nháp thành công!');
 
     forkJoin([uploadCover$, uploadThumb$])
       .pipe(
         switchMap(([coverUrl, thumbUrl]) => {
-          // Xử lý null an toàn cho bản nháp
+          const mappedBenefits: BenefitDto[] = (data.benefits as BenefitFormValue[]).map((b) => ({
+            categoryId: b.category_id ?? undefined,
+            point: b.point ?? undefined,
+            type: b.type ?? undefined,
+          }));
+
+          //  MAP LỊCH TRÌNH CHI TIẾT ĐỂ GỬI BE
+          const mappedSchedules = (data.schedules || []).map((s: any) => ({
+            title: s.title,
+            startTime: this.formatDateTime(s.start_time),
+            endTime: this.formatDateTime(s.end_time),
+            location: s.location || null
+          }));
+
           const payload = {
             title: data.title,
             description: data.description || null,
             content: data.content || null,
             location: data.location || null,
             maxParticipants: data.max_participants ? Number(data.max_participants) : null,
-            semesterId: data.semester_id ? Number(data.semester_id) : null,
             organizerId: currentOrganizer ? currentOrganizer.id : null,
             sourceLink: data.source_link || null,
             isExternal: Boolean(data.is_external),
 
-            // Nếu có nhập ngày thì format, không thì ném null xuống DB
-            registrationStart: data.registration_start
-              ? this.formatDateTime(data.registration_start)
-              : null,
-            registrationEnd: data.registration_end
-              ? this.formatDateTime(data.registration_end)
-              : null,
+            registrationStart: data.registration_start ? this.formatDateTime(data.registration_start) : null,
+            registrationEnd: data.registration_end ? this.formatDateTime(data.registration_end) : null,
             startDate: data.start_date ? this.formatDateTime(data.start_date) : null,
             endDate: data.end_date ? this.formatDateTime(data.end_date) : null,
 
-            status: status,
+            status: finalStatus,
             coverImage: coverUrl || null,
             thumbnail: thumbUrl || null,
-            benefits: [],
+            benefits: mappedBenefits,
+            schedules: mappedSchedules
           };
 
           const currentId = this.activityId();
@@ -370,12 +427,8 @@ export class ActivityCreateComponent implements OnInit {
         finalize(() => this.isUploading.set(false)),
       )
       .subscribe({
-        next: () => {
-          setTimeout(() => this.goBack(), 1500);
-        },
-        error: (err) => {
-          console.error('Chi tiết lỗi:', err);
-        },
+        next: () => setTimeout(() => this.goBack(), 1500),
+        error: (err) => console.error('Chi tiết lỗi:', err),
       });
   }
 }

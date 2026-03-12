@@ -8,8 +8,6 @@ export const routes: Routes = [
     path: '',
     component: AdminLayoutComponent,
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-
       // VÙNG CHUNG
       {
         path: 'dashboard',
@@ -37,15 +35,16 @@ export const routes: Routes = [
           },
           {
             path: 'create',
+            title: 'Tạo hoạt động mới',
             loadComponent: () =>
               import('./features/faculty/activity-build/activity-create.component').then(
                 (m) => m.ActivityCreateComponent,
               ),
           },
-
-          // 2. Route cho Chỉnh sửa (Trỏ VỀ CÙNG 1 COMPONENT với Tạo mới)
+          // Route cho Chỉnh sửa (Trỏ VỀ CÙNG 1 COMPONENT với Tạo mới)
           {
             path: 'edit/:id',
+            title: 'Chỉnh sửa hoạt động',
             loadComponent: () =>
               import('./features/faculty/activity-build/activity-create.component').then(
                 (m) => m.ActivityCreateComponent,
@@ -53,10 +52,19 @@ export const routes: Routes = [
           },
           {
             path: 'detail/:id',
+            title: 'Chi tiết hoạt động',
             loadComponent: () =>
               import('./features/faculty/activity-management/activity-management.component').then(
                 (m) => m.ActivityManagementComponent,
               ),
+          },
+          {
+            path: 'participants/:id',
+            title: 'Quản lý sinh viên',
+            loadComponent: () =>
+              import(
+                './features/faculty/participant-management/participant-management.component'
+              ).then((m) => m.ParticipantManagementComponent),
           },
         ],
       },
@@ -82,6 +90,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['admin'] },
       },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },
 ];

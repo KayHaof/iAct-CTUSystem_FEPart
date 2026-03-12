@@ -1,0 +1,138 @@
+<div class="min-h-screen bg-slate-50/50 p-4 sm:p-6 lg:p-8 font-sans text-slate-900">
+
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <button (click)="goBack()" class="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-bold mb-2 transition">
+        <i class="bi bi-arrow-left"></i> Quay lại chi tiết
+      </button>
+      <h1 class="text-2xl font-black text-slate-800">Danh sách Sinh viên Đăng ký</h1>
+    </div>
+    <button
+      (click)="exportToExcel()"
+      class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm transition flex items-center gap-2"
+    >
+      <i class="bi bi-file-earmark-excel-fill"></i> Xuất Excel
+    </button>
+  </div>
+
+  <div class="bg-white p-4 rounded-t-2xl border-x border-t border-slate-200 shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center relative z-10">
+    <div class="relative w-full sm:max-w-xs">
+      <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+      <input type="text" placeholder="Tìm MSSV hoặc Tên..." [ngModel]="searchQuery()" (ngModelChange)="onSearch($event)" class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm font-medium" />
+    </div>
+
+    <div class="flex bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto custom-scrollbar">
+      <button (click)="onTabChange('ALL')" [class.bg-white]="currentTab() === 'ALL'" [class.text-indigo-600]="currentTab() === 'ALL'" [class.text-slate-500]="currentTab() !== 'ALL'" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap">Tất cả</button>
+      <button (click)="onTabChange('0')" [class.bg-white]="currentTab() === '0'" [class.text-sky-600]="currentTab() === '0'" [class.text-slate-500]="currentTab() !== '0'" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap">Đã đăng ký</button>
+      <button (click)="onTabChange('1')" [class.bg-white]="currentTab() === '1'" [class.text-emerald-600]="currentTab() === '1'" [class.text-slate-500]="currentTab() !== '1'" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap">Đã điểm danh</button>
+      <button (click)="onTabChange('2')" [class.bg-white]="currentTab() === '2'" [class.text-rose-600]="currentTab() === '2'" [class.text-slate-500]="currentTab() !== '2'" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border-l border-slate-200 ml-1 pl-5">Đã hủy</button>
+    </div>
+  </div>
+
+  <app-admin-table-container class="block -mt-px relative z-0">
+    @if (isLoading()) {
+      <div class="absolute inset-0 bg-white/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-b-2xl">
+        <div class="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-indigo-600 mb-3"></div>
+        <span class="text-sm font-bold text-slate-500">Đang tải dữ liệu...</span>
+      </div>
+    }
+
+    <table class="w-full text-left border-collapse whitespace-nowrap bg-white border-x border-slate-200">
+      <thead>
+      <tr class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest border-y border-slate-200">
+
+        <th class="py-4 px-5 font-black w-[40%] cursor-pointer hover:bg-slate-100 transition select-none group" (click)="toggleSort('studentName')">
+          <div class="flex items-center gap-1">
+            Thông tin Sinh viên
+            <span class="text-slate-300 group-hover:text-indigo-400" [ngClass]="{'text-indigo-600': sortColumn() === 'studentName'}">
+                <i class="bi" [ngClass]="sortColumn() === 'studentName' && sortDirection() === 'desc' ? 'bi-sort-alpha-up-alt' : 'bi-sort-alpha-down'"></i>
+              </span>
+          </div>
+        </th>
+
+        <th class="py-4 px-5 font-black cursor-pointer hover:bg-slate-100 transition select-none group" (click)="toggleSort('registeredAt')">
+          <div class="flex items-center gap-1">
+            Thời gian
+            <span class="text-slate-300 group-hover:text-indigo-400" [ngClass]="{'text-indigo-600': sortColumn() === 'registeredAt'}">
+                <i class="bi" [ngClass]="sortColumn() === 'registeredAt' && sortDirection() === 'desc' ? 'bi-sort-numeric-up-alt' : 'bi-sort-numeric-down'"></i>
+              </span>
+          </div>
+        </th>
+
+        <th class="py-4 px-5 font-black text-center">Trạng thái</th>
+        <th class="py-4 px-5 font-black text-right">Thao tác</th>
+      </tr>
+      </thead>
+
+      <tbody class="divide-y divide-slate-100 bg-white">
+        @for (item of sortedParticipants(); track item.id) {
+          <tr class="hover:bg-indigo-50/40 transition duration-200 group">
+
+            <td class="py-4 px-5">
+              <div class="flex items-center gap-4">
+
+                <div class="relative w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-lg shadow-sm border border-indigo-200 flex-shrink-0 overflow-hidden">
+                  @if (item.avatarUrl) {
+                    <img [ngSrc]="item.avatarUrl | cloudinaryPath" alt="avatar" fill class="object-cover" />
+                  } @else {
+                    {{ getInitial(item.studentName) }}
+                  }
+                </div>
+
+                <div>
+                  <h4 class="font-black text-slate-800 text-sm">{{ item.studentName || 'Chưa cập nhật' }}</h4>
+                  <p class="text-[11px] text-slate-500 font-medium mt-0.5">
+                    <button (click)="toggleSort('studentCode')" class="text-indigo-600 font-bold bg-indigo-50 hover:bg-indigo-100 px-1.5 py-0.5 rounded mr-2 transition cursor-pointer" title="Bấm để sắp xếp theo MSSV">
+                      {{ item.studentCode || 'N/A' }}
+                      @if (sortColumn() === 'studentCode') {
+                        <i class="bi text-[9px]" [ngClass]="sortDirection() === 'asc' ? 'bi-arrow-down' : 'bi-arrow-up'"></i>
+                      }
+                    </button>
+                  </p>
+                </div>
+              </div>
+            </td>
+
+            <td class="py-4 px-5 align-middle text-[12px] text-slate-600 font-medium">
+              <div><i class="bi bi-calendar-check mr-1 text-slate-400"></i> ĐK: {{ item.registeredAt | date: 'dd/MM/yyyy HH:mm' }}</div>
+              @if (item.isAttended || item.attendedAt) {
+                <div class="mt-1 text-emerald-600"><i class="bi bi-upc-scan mr-1"></i> Tham gia: {{ item.attendedAt | date: 'dd/MM HH:mm' }}</div>
+              }
+            </td>
+
+            <td class="py-4 px-5 text-center align-middle">
+              <span class="inline-flex px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-wider items-center gap-1.5 border shadow-sm" [ngClass]="{'bg-sky-50 text-sky-700 border-sky-200': item.status === 0, 'bg-emerald-50 text-emerald-700 border-emerald-200': item.status === 1, 'bg-rose-50 text-rose-700 border-rose-200': item.status === 2}">
+                <i class="bi text-xs" [ngClass]="{'bi-hourglass-split': item.status === 0, 'bi-check2-circle': item.status === 1, 'bi-x-circle': item.status === 2}"></i>
+                {{ item.status === 0 ? 'Đã đăng ký' : item.status === 1 ? 'Đã tham gia' : 'Đã hủy' }}
+              </span>
+
+              @if (item.status === 2 && item.cancelReason) {
+                <p class="text-[10px] text-rose-500 mt-1 truncate max-w-[120px] mx-auto" [title]="item.cancelReason">
+                  Lý do: {{ item.cancelReason }}
+                </p>
+              }
+            </td>
+
+            <td class="py-4 px-5 text-right align-middle">
+              <div class="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                @if (item.status === 0) {
+                  <button (click)="changeStatus(item.id, 1, 'Điểm danh')" class="text-emerald-600 hover:bg-emerald-100 bg-emerald-50 w-8 h-8 rounded-lg transition" title="Xác nhận tham gia">
+                    <i class="bi bi-upc-scan"></i>
+                  </button>
+                  <button (click)="changeStatus(item.id, 2, 'Hủy đăng ký')" class="text-rose-600 hover:bg-rose-100 bg-rose-50 w-8 h-8 rounded-lg transition" title="Hủy đăng ký">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                }
+              </div>
+            </td>
+
+          </tr>
+        } @empty {
+          <tr><td colspan="4" class="py-16 text-center text-slate-400">Không tìm thấy sinh viên nào</td></tr>
+        }
+      </tbody>
+    </table>
+
+    <lib-pagination [currentPage]="currentPage()" [totalItems]="totalRows()" [pageSize]="pageSize()" (pageChange)="onPageChange($event)"></lib-pagination>
+  </app-admin-table-container>
+</div>

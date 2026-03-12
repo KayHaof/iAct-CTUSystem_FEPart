@@ -1,21 +1,21 @@
-<div class="min-h-screen bg-gray-50/50 pb-12 relative">
+<div class="min-h-screen bg-gray-50/50 pb-12 relative font-sans text-gray-900">
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center min-h-[60vh]">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
       <p class="text-gray-500 font-medium">Đang tải thông tin hoạt động...</p>
     </div>
   } @else if (activity(); as act) {
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 pb-5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-5">
       <button
         (click)="goBack()"
-        class="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold mb-4 transition"
+        class="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold mb-6 transition group"
       >
-        <i class="bi bi-arrow-left"></i> Quay lại
+        <i class="bi bi-arrow-left group-hover:-translate-x-1 transition-transform"></i> Quay lại
       </button>
 
       <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
         <div>
-          <h1 class="text-3xl md:text-4xl font-bold font-sans text-gray-900 mb-4 leading-tight">
+          <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
             {{ act.title }}
           </h1>
           <div class="flex flex-wrap items-center gap-2 md:gap-3">
@@ -25,39 +25,30 @@
                 'bg-orange-50 text-orange-700 border-orange-200': act.status === 0,
                 'bg-green-50 text-green-700 border-green-200': act.status === 1,
                 'bg-red-50 text-red-700 border-red-200': act.status === 2,
-                'bg-gray-100 text-gray-600 border-gray-200':
-                  act.status !== 0 && act.status !== 1 && act.status !== 2,
+                'bg-gray-100 text-gray-600 border-gray-200': act.status === 3,
               }"
             >
-              <i
-                class="bi"
-                [ngClass]="{
+              <i class="bi"
+                 [ngClass]="{
                   'bi-hourglass-split': act.status === 0,
                   'bi-check-circle-fill': act.status === 1,
                   'bi-x-circle-fill': act.status === 2,
-                  'bi-file-earmark-text': act.status !== 0 && act.status !== 1 && act.status !== 2,
+                  'bi-file-earmark-text': act.status === 3,
                 }"
               ></i>
-              {{
-                act.status === 0
-                  ? 'Chờ duyệt'
-                  : act.status === 1
-                    ? 'Đã duyệt'
-                    : act.status === 2
-                      ? 'Từ chối'
-                      : 'Bản nháp'
-              }}
+              {{ act.status === 0 ? 'Chờ duyệt' : act.status === 1 ? 'Đã duyệt' : act.status === 2 ? 'Từ chối' : 'Bản nháp' }}
             </span>
 
             <span
-              class="px-3 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 border"
+              class="px-3 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 border transition-colors"
               [ngClass]="{
-                'bg-purple-50 text-purple-700 border-purple-200': act.isExternal,
-                'bg-blue-50 text-blue-700 border-blue-200': !act.isExternal,
+                'bg-sky-50 text-sky-700 border-sky-200': act.isExternal,
+                'bg-emerald-50 text-emerald-700 border-emerald-200': !act.isExternal && act.isFaculty,
+                'bg-indigo-50 text-indigo-700 border-indigo-200': !act.isExternal && !act.isFaculty
               }"
             >
-              <i class="bi" [ngClass]="act.isExternal ? 'bi-globe' : 'bi-building'"></i>
-              {{ act.isExternal ? 'Hoạt động bên ngoài' : 'Hoạt động trong trường' }}
+              <i class="bi" [ngClass]="act.isExternal ? 'bi-globe' : (act.isFaculty ? 'bi-mortarboard-fill' : 'bi-bank')"></i>
+              {{ act.isExternal ? 'Ngoài trường' : (act.isFaculty ? 'Cấp Khoa' : 'Cấp Trường') }}
             </span>
           </div>
         </div>
@@ -74,10 +65,10 @@
 
           <button
             (click)="toggleQrModal(true)"
-            class="w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-2.5 bg-white text-gray-700 font-bold rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 transition flex items-center justify-center gap-2"
+            class="w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-2.5 bg-white text-gray-700 font-bold text-sm rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 transition flex items-center justify-center gap-2"
             title="Mã QR Điểm danh"
           >
-            <i class="bi bi-qr-code-scan text-base md:text-sm"></i>
+            <i class="bi bi-qr-code-scan text-blue-500 text-base md:text-sm"></i>
             <span class="hidden md:inline whitespace-nowrap">QR Code</span>
           </button>
 
@@ -105,12 +96,9 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-2 space-y-8">
-          <div class="rounded-3xl overflow-hidden shadow-sm bg-white h-[250px] md:h-[400px]">
+          <div class="rounded-3xl overflow-hidden shadow-sm bg-gray-200 h-[250px] md:h-[400px]">
             <img
-              [src]="
-                act.coverImage ||
-                'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772505926/360_F_72985676_cO09AqHv6cK2o8pbNm8tvl3glfzSGgZi_kuvges.jpg'
-              "
+              [src]="act.coverImage || 'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772505926/default_activity_coverImage.jpg'"
               alt="Ảnh bìa hoạt động"
               class="w-full h-full object-cover"
             />
@@ -118,146 +106,193 @@
 
           <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
             @if (act.description) {
-              <p
-                class="text-lg md:text-xl italic text-gray-600 leading-relaxed mb-6 md:mb-8 font-serif"
-              >
+              <p class="text-lg md:text-xl italic text-gray-600 leading-relaxed mb-6 md:mb-8 font-serif border-l-4 border-blue-200 pl-4 bg-blue-50/30 py-2 rounded-r-xl">
                 "{{ act.description }}"
               </p>
             }
-            <div
-              class="prose max-w-none text-gray-700 leading-relaxed"
-              [innerHTML]="act.content"
-            ></div>
+            <div class="custom-prose max-w-none text-gray-700 leading-relaxed" [innerHTML]="act.content"></div>
           </div>
+
+          @if (act.benefits && act.benefits.length > 0) {
+            <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+              <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <i class="bi bi-star-fill text-yellow-400"></i> Quyền lợi sinh viên
+                </h3>
+                <span class="px-3 py-1 bg-yellow-50 text-yellow-700 font-bold text-xs rounded-lg border border-yellow-200">
+                  Tổng: +{{ totalPoints() }} ĐRL
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                @for (benefit of act.benefits; track benefit.id) {
+                  <div class="flex items-start gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-yellow-200 transition-colors">
+                    <div class="w-10 h-10 rounded-xl bg-yellow-100 text-yellow-600 flex items-center justify-center text-lg shrink-0">
+                      <i class="bi bi-award-fill"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-gray-800 text-sm leading-tight mb-1">{{ benefit.name || 'Tiêu chí đánh giá' }}</h4>
+                      <span class="inline-block px-2 py-0.5 bg-yellow-200 text-yellow-800 text-[10px] font-black uppercase tracking-wider rounded-md shadow-sm">
+                        +{{ benefit.point }} điểm
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
         </div>
 
         <div class="space-y-6">
           <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">
-              Thông tin tổ chức
+              Thời gian & Địa điểm
             </h3>
             <div class="space-y-6">
               <div class="flex items-start gap-4">
-                <div
-                  class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0"
-                >
+                <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
                   <i class="bi bi-geo-alt-fill"></i>
                 </div>
                 <div>
-                  <h4 class="font-bold text-gray-900 text-sm">Địa điểm</h4>
+                  <h4 class="font-bold text-gray-900 text-sm">Địa điểm chung</h4>
                   <p class="text-sm text-gray-600 mt-1">{{ act.location }}</p>
-                  <a
-                    href="#"
-                    class="text-xs font-semibold text-blue-600 flex items-center gap-1 mt-1 hover:underline"
-                  >
-                    <i class="bi bi-map-fill"></i> Xem trên bản đồ
-                  </a>
                 </div>
               </div>
 
               <div class="flex items-start gap-4">
-                <div
-                  class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0"
-                >
+                <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
                   <i class="bi bi-pencil-square"></i>
                 </div>
                 <div>
-                  <h4 class="font-bold text-gray-900 text-sm">Thời gian đăng ký</h4>
+                  <h4 class="font-bold text-gray-900 text-sm">Đăng ký tham gia</h4>
                   <p class="text-sm text-gray-600 mt-1">
-                    {{ act.registrationStart | date: 'dd/MM/yyyy' }} -
-                    {{ act.registrationEnd | date: 'dd/MM/yyyy' }}
+                    {{ act.registrationStart | date: 'dd/MM/yyyy HH:mm' }} <br>
+                    <i class="bi bi-arrow-down text-gray-300"></i> <br>
+                    {{ act.registrationEnd | date: 'dd/MM/yyyy HH:mm' }}
                   </p>
                 </div>
               </div>
 
               <div class="flex items-start gap-4">
-                <div
-                  class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0"
-                >
-                  <i class="bi bi-calendar-event-fill"></i>
+                <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
+                  <i class="bi bi-play-circle-fill"></i>
                 </div>
                 <div>
-                  <h4 class="font-bold text-gray-900 text-sm">Thời gian diễn ra</h4>
-                  <ul class="text-sm text-gray-600 mt-1 space-y-1 list-disc list-inside">
-                    <li>Bắt đầu: {{ act.startDate | date: 'dd/MM/yyyy, HH:mm' }}</li>
-                    <li>Kết thúc: {{ act.endDate | date: 'dd/MM/yyyy, HH:mm' }}</li>
-                  </ul>
+                  <h4 class="font-bold text-gray-900 text-sm">Khung thời gian tổ chức</h4>
+                  <p class="text-sm text-gray-600 mt-1">
+                    {{ act.startDate | date: 'dd/MM/yyyy HH:mm' }} <br>
+                    <i class="bi bi-arrow-down text-gray-300"></i> <br>
+                    {{ act.endDate | date: 'dd/MM/yyyy HH:mm' }}
+                  </p>
                 </div>
               </div>
+
+              @if (act.schedules && act.schedules.length > 0) {
+                <div class="mt-6 pt-6 border-t border-gray-100">
+                  <h4 class="font-bold text-gray-900 text-sm mb-3 flex items-center gap-2">
+                    <i class="bi bi-list-task text-blue-500"></i> Lịch trình chia nhỏ ({{act.schedules.length}})
+                  </h4>
+                  <div class="space-y-3 max-h-60 overflow-y-auto custom-scrollbar pr-2">
+                    @for (schedule of act.schedules; track schedule.id) {
+                      <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                        <p class="font-bold text-xs text-gray-800 mb-1" [title]="schedule.title">{{ schedule.title }}</p>
+                        <p class="text-[10px] font-medium text-gray-500">
+                          <i class="bi bi-clock mr-1"></i> {{ schedule.startTime | date:'dd/MM HH:mm' }} - {{ schedule.endTime | date:'HH:mm' }}
+                        </p>
+                        @if (schedule.location) {
+                          <p class="text-[10px] font-medium text-gray-500 mt-0.5 truncate" [title]="schedule.location">
+                            <i class="bi bi-geo-alt-fill mr-1"></i> {{ schedule.location }}
+                          </p>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              @if (act.sourceLink) {
+                <div class="mt-6 pt-6 border-t border-gray-100 flex items-start gap-4">
+                  <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 flex-shrink-0">
+                    <i class="bi bi-link-45deg text-lg"></i>
+                  </div>
+                  <div class="overflow-hidden">
+                    <h4 class="font-bold text-gray-900 text-sm">Nguồn tham khảo</h4>
+                    <a [href]="act.sourceLink" target="_blank" class="text-sm text-blue-600 mt-1 hover:underline truncate block">
+                      Xem bài viết gốc
+                    </a>
+                  </div>
+                </div>
+              }
             </div>
           </div>
 
           <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">
-              Chi tiết hoạt động
+              Ban tổ chức & Quản lý
             </h3>
             <div class="space-y-6">
-              <div>
-                <div class="flex justify-between items-end mb-2">
-                  <span class="font-bold text-gray-900 text-sm">Số lượng tham gia</span>
-                  <span class="text-xs font-bold text-gray-500">
-                    <span class="text-blue-600">{{ act.registeredCount || 0 }}</span> /
-                    {{ act.maxParticipants }} đã đăng ký
+              @if (act.organizer) {
+                <div>
+                  <span class="text-sm text-gray-500 flex items-center gap-2 mb-3">
+                    <i class="bi bi-person-workspace text-gray-400"></i> Người phụ trách
                   </span>
+                  <div class="flex items-center gap-3 p-3 rounded-2xl border border-orange-100 bg-orange-50/30">
+                    <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 font-black flex items-center justify-center text-xs overflow-hidden shrink-0">
+                      <i class="bi bi-person-fill text-lg"></i>
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-gray-800 text-sm line-clamp-1">{{ act.organizer.name || 'Đang cập nhật' }}</span>
+                      <span class="text-xs text-orange-600 font-medium mt-0.5 flex items-center gap-1">
+                        <i class="bi bi-headset"></i> BTC Hoạt động
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                  <div
-                    class="bg-blue-600 h-2 rounded-full transition-all duration-1000"
-                    [style.width.%]="capacityPercentage()"
-                  ></div>
-                </div>
-              </div>
-
-              <hr class="border-gray-100" />
-
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-500 flex items-center gap-2">
-                  <i class="bi bi-journal-bookmark text-gray-400"></i> Học kỳ
-                </span>
-                <span class="text-xs font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-full">
-                  Học kỳ {{ act.semesterId }}
-                </span>
-              </div>
-
-              <hr class="border-gray-100" />
+                <hr class="border-gray-100" />
+              }
 
               <div>
                 <span class="text-sm text-gray-500 flex items-center gap-2 mb-3">
-                  <i class="bi bi-briefcase-fill text-gray-400"></i> Đơn vị tổ chức
+                  <i class="bi bi-briefcase-fill text-gray-400"></i> Đơn vị chủ trì
                 </span>
-                <div
-                  class="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 bg-gray-50/50"
-                >
-                  <div
-                    class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 font-black flex items-center justify-center text-xs overflow-hidden shrink-0"
-                  >
+                <div class="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 bg-gray-50/50">
+                  <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 font-black flex items-center justify-center text-xs overflow-hidden shrink-0">
                     @if (act.createdBy?.avatarUrl) {
-                      <img
-                        [src]="act.createdBy?.avatarUrl"
-                        alt="Avatar"
-                        class="w-full h-full object-cover"
-                      />
+                      <img [src]="act.createdBy?.avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
                     } @else {
                       <i class="bi bi-buildings-fill text-lg"></i>
                     }
                   </div>
                   <div class="flex flex-col">
-                    <span
-                      class="font-bold text-gray-800 text-sm line-clamp-1"
-                      [title]="act.createdBy?.department?.name || act.createdBy?.departmentName"
-                    >
-                      {{
-                        act.createdBy?.department?.name ||
-                          act.createdBy?.departmentName ||
-                          'Cấp Trường / Đang cập nhật'
-                      }}
+                    <span class="font-bold text-gray-800 text-sm line-clamp-1" [title]="act.createdBy?.department?.name || act.departmentName">
+                      {{ act.departmentName || act.createdBy?.departmentName || 'Trường / Chưa xác định' }}
                     </span>
                     <span class="text-xs text-gray-500 mt-0.5 flex items-center gap-1 line-clamp-1">
-                      <i class="bi bi-person-badge"></i>
-                      Đăng bởi: {{ act.createdBy?.fullName || act.createdBy?.username || 'Admin' }}
+                      <i class="bi bi-person-badge"></i> Đăng bởi: {{ act.createdBy?.fullName || act.createdBy?.username || 'Admin' }}
                     </span>
                   </div>
                 </div>
+              </div>
+
+              <hr class="border-gray-100" />
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <span class="text-xs text-gray-500 block mb-1">Học kỳ</span>
+                  <span class="text-xs font-bold text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full inline-block">
+                    HK {{ act.semesterId || '?' }}
+                  </span>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs text-gray-500 block mb-1">Ghi danh</span>
+                  <span class="text-sm font-bold text-blue-600">
+                    {{ act.registeredCount || 0 }}
+                    <span class="text-gray-400 font-normal">/ {{ act.maxParticipants }}</span>
+                  </span>
+                </div>
+              </div>
+              <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-1000" [style.width.%]="capacityPercentage()"></div>
               </div>
             </div>
           </div>
@@ -266,47 +301,20 @@
     </div>
 
     @if (showQrModal()) {
-      <div
-        class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm transition-opacity p-4"
-      >
-        <div
-          class="bg-white p-6 md:p-8 rounded-3xl shadow-2xl max-w-sm w-full relative text-center animate-fade-in-up"
-        >
-          <button
-            (click)="toggleQrModal(false)"
-            class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition"
-          >
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm transition-opacity p-4">
+        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-2xl max-w-sm w-full relative text-center animate-fade-in-up">
+          <button (click)="toggleQrModal(false)" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition">
             <i class="bi bi-x-lg"></i>
           </button>
-
-          <div
-            class="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"
-          >
+          <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
             <i class="bi bi-qr-code-scan"></i>
           </div>
-
           <h3 class="text-xl font-extrabold text-gray-900 mb-2">Mã QR Điểm Danh</h3>
-          <p class="text-sm text-gray-500 mb-6 px-4">
-            Đưa mã này cho sinh viên quét để tự động ghi nhận tham gia hoạt động.
-          </p>
-
-          <div
-            class="bg-white p-4 rounded-2xl border-2 border-dashed border-gray-300 inline-block mb-6 shadow-sm"
-          >
-            <img
-              [src]="
-                'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://yourapp.com/checkin/' +
-                act.id
-              "
-              alt="Mã QR điểm danh"
-              class="w-48 h-48 mx-auto"
-            />
+          <p class="text-sm text-gray-500 mb-6 px-4">Đưa mã này cho sinh viên quét để tự động ghi nhận tham gia hoạt động.</p>
+          <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-gray-300 inline-block mb-6 shadow-sm">
+            <img [src]="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://yourapp.com/checkin/' + (act.qrCodeToken || act.id)" alt="Mã QR điểm danh" class="w-48 h-48 mx-auto" />
           </div>
-
-          <button
-            (click)="toggleQrModal(false)"
-            class="w-full py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition shadow-md"
-          >
+          <button (click)="toggleQrModal(false)" class="w-full py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition shadow-md">
             Đóng cửa sổ
           </button>
         </div>

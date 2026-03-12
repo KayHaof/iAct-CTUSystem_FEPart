@@ -1,21 +1,15 @@
-import { Component, signal, inject, computed, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, inject, OnInit } from '@angular/core';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 
-// Imports từ thư viện dùng chung
-import { PaginationComponent } from '@my-mfe/ui';
-import { AlertService, ConfirmService } from '@my-mfe/ui';
-
-// Imports từ Shared UI nội bộ của Admin
-import { StatsGridComponent, AdminStat } from '../../../shared/ui/stats-grid/stats-grid.component';
-import { PageHeaderComponent } from '../../../shared/ui/page-header/page-header.component';
-import { TableContainerComponent } from '../../../shared/ui/table-container/table-container.component';
-
-// Model & Service
+import { PaginationComponent, AlertService, ConfirmService, TableContainerComponent, PageHeaderComponent } from '@my-mfe/ui';
+import { CloudinaryPathPipe} from '@my-mfe/data-access-media';
 import { Activity } from '../../../shared/models/activity.model';
 import { ActivityService } from '../services/activity.service';
+import { PageDTO } from 'interface';
 
 @Component({
   selector: 'app-activity-list',
@@ -23,10 +17,12 @@ import { ActivityService } from '../services/activity.service';
   imports: [
     CommonModule,
     RouterModule,
+    FormsModule,
     PaginationComponent,
-    StatsGridComponent,
     PageHeaderComponent,
     TableContainerComponent,
+    NgOptimizedImage,
+    CloudinaryPathPipe
   ],
   templateUrl: './activity-list.component.html',
 })
@@ -35,78 +31,96 @@ export class ActivityListComponent implements OnInit {
   private activityService = inject(ActivityService);
   private alertService = inject(AlertService);
   private confirmService = inject(ConfirmService);
-  // 1. Quản lý trạng thái bằng Signals
+
+  // --- QUẢN LÝ TRẠNG THÁI ---
   searchQuery = signal('');
+  currentTab = signal('ALL');
+
   currentPage = signal(1);
-  pageSize = signal(10);
+  pageSize = signal(5);
   isLoading = signal(false);
 
-  // 2. Dữ liệu thống kê cho Admin
-  activityStats = signal<AdminStat[]>([
-    {
-      label: 'Active Events',
-      value: 12090,
-      icon: 'bi bi-calendar-event',
-      color: 'blue',
-      trend: '+2 new',
-    },
-    { label: 'Pending Approvals', value: 3, icon: 'bi bi-clipboard-check', color: 'orange' },
-    {
-      label: 'Total Registered',
-      value: 850,
-      icon: 'bi bi-people',
-      color: 'purple',
-      trend: '↑ 12%',
-    },
-    { label: 'Points Disbursed', value: '1,200', icon: 'bi bi-star', color: 'green' },
-  ]);
+  totalRows = signal(0);
+  totalPage = signal(0);
+  activities = signal<Activity[]>([]);
 
-  // 3. Khởi tạo mảng rỗng chứa dữ liệu thật
-  allActivities = signal<Activity[]>([]);
+  private searchTimeout?: ReturnType<typeof setTimeout>;
 
-  // 4. Lifecycle Hook
   ngOnInit(): void {
     this.fetchActivities();
   }
 
-  // Hàm gọi API lấy danh sách hoạt động
   fetchActivities(): void {
     this.isLoading.set(true);
 
+    let apiLevel = 'ALL';
+    let apiStatus = 'EXCLUDE_DRAFT';
+
+    if (this.currentTab() === 'DRAFT') {
+      apiLevel = 'ALL';
+      apiStatus = '3';
+    } else {
+      apiLevel = this.currentTab();
+    }
+
     this.activityService
-      .getAllActivities()
+      .getAllActivities(
+        this.searchQuery(),
+        apiLevel,
+        apiStatus,
+        this.currentPage(),
+        this.pageSize(),
+      )
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (data: Activity[]) => {
-          this.allActivities.set(data || []);
+        next: (response: PageDTO<Activity>) => {
+          this.activities.set(response.data || []);
+          this.totalRows.set(response.totalRows);
+          this.totalPage.set(response.totalPage);
         },
         error: (err: HttpErrorResponse) => {
-          console.error('Lỗi khi tải danh sách hoạt động:', err);
-          const errMsg = err.error?.message || 'Không thể tải dữ liệu hoạt động!';
-          this.alertService.error(errMsg);
+          this.alertService.error(err.error?.message || 'Lỗi tải dữ liệu!');
         },
       });
   }
-  // 5. Logic tự động lọc và phân trang (Computed)
-  filteredActivities = computed(() => {
-    const query = this.searchQuery().toLowerCase();
-    return this.allActivities().filter((a) => a.title.toLowerCase().includes(query));
-  });
 
-  paginatedActivities = computed(() => {
-    const start = (this.currentPage() - 1) * this.pageSize();
-    const end = start + this.pageSize();
-    return this.filteredActivities().slice(start, end);
-  });
+  // --- ACTIONS ---
 
-  // 6. Các hàm xử lý sự kiện
+  // 1. KHI NGƯỜI DÙNG GÕ PHÍM (Đợi 3s)
   onSearch(keyword: string): void {
     this.searchQuery.set(keyword);
+
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
+    this.searchTimeout = setTimeout(() => {
+      this.currentPage.set(1);
+      this.fetchActivities();
+    }, 3000);
+  }
+
+  // 2. KHI NGƯỜI DÙNG BẤM ENTER (Chạy ngay lập tức)
+  onSearchEnter(keyword: string): void {
+    this.searchQuery.set(keyword);
+
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
     this.currentPage.set(1);
+    this.fetchActivities();
+  }
+
+  onTabChange(tab: string): void {
+    this.currentTab.set(tab);
+    this.currentPage.set(1);
+    this.fetchActivities();
   }
 
   onPageChange(page: number): void {
     this.currentPage.set(page);
+    this.fetchActivities();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -124,32 +138,24 @@ export class ActivityListComponent implements OnInit {
   }
 
   async deleteActivity(id: number): Promise<void> {
-    // 1. Gọi popup xác nhận và chờ người dùng bấm nút
     const isConfirmed = await this.confirmService.confirm(
       'Bạn có chắc chắn muốn xóa?',
-      'Dữ liệu của hoạt động này sẽ bị xóa vĩnh viễn và không thể khôi phục!',
-      'Đồng ý, xóa luôn!',
-      'Hủy bỏ',
+      'Dữ liệu sẽ bị xóa vĩnh viễn!',
+      'Xóa luôn!',
+      'Hủy',
     );
 
-    // 2. Nếu người dùng chọn "Đồng ý, xóa luôn!" (trả về true)
     if (isConfirmed) {
       this.isLoading.set(true);
-
       this.activityService
         .deleteActivity(id)
         .pipe(finalize(() => this.isLoading.set(false)))
         .subscribe({
           next: () => {
-            this.alertService.success('Đã xóa hoạt động thành công!');
-            // Load lại danh sách mới nhất sau khi xóa
+            this.alertService.success('Đã xóa thành công!');
             this.fetchActivities();
           },
-          error: (err: HttpErrorResponse) => {
-            console.error('Lỗi khi xóa:', err);
-            const errMsg = err.error?.message || 'Không thể xóa hoạt động này. Vui lòng thử lại!';
-            this.alertService.error(errMsg);
-          },
+          error: () => this.alertService.error('Lỗi khi xóa!'),
         });
     }
   }
