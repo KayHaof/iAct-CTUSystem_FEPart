@@ -1,6 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { tap, Observable } from 'rxjs';
+import { ApiResponse} from 'interface';
 
 // --- 1. Interface Dữ Liệu
 export interface UserInfo {
@@ -39,12 +40,6 @@ export interface ClassInfo {
   name: string;
   classCode: string;
   departmentId: number;
-}
-
-export interface ApiResponse<T> {
-  code: number;
-  message: string;
-  result: T;
 }
 
 export interface CreateUserDto extends Partial<UserInfo> {

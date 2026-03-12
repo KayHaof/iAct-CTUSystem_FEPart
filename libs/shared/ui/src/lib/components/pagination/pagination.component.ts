@@ -8,33 +8,47 @@ import { CommonModule } from '@angular/common';
   templateUrl: './pagination.component.html',
 })
 export class PaginationComponent {
-  // Inputs dùng Signal
   totalItems = input.required<number>();
   pageSize = input<number>(10);
   currentPage = input<number>(1);
 
-  // Output dùng hàm output() mới
   pageChange = output<number>();
 
-  // Tính toán tổng số trang
   totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
 
-  protected mathMin = Math.min;
-  // Tạo mảng các số trang hiển thị (Logic rút gọn dấu ...)
+  startItem = computed(() =>
+    this.totalItems() === 0 ? 0 : (this.currentPage() - 1) * this.pageSize() + 1,
+  );
+  endItem = computed(() => Math.min(this.currentPage() * this.pageSize(), this.totalItems()));
+
   pages = computed(() => {
     const total = this.totalPages();
     const current = this.currentPage();
-    const range = 2; // Số lượng trang hiển thị quanh trang hiện tại
-    const pages: (number | string)[] = [];
+    const range = 2;
+    const pagesArr: number[] = [];
 
     for (let i = 1; i <= total; i++) {
       if (i === 1 || i === total || (i >= current - range && i <= current + range)) {
-        pages.push(i);
-      } else if (pages[pages.length - 1] !== '...') {
-        pages.push('...');
+        pagesArr.push(i);
       }
     }
-    return pages;
+
+    const result: (number | string)[] = [];
+    let lastPushedPage: number | null = null;
+
+    for (const page of pagesArr) {
+      if (lastPushedPage !== null) {
+        if (page - lastPushedPage === 2) {
+          result.push(lastPushedPage + 1);
+        } else if (page - lastPushedPage !== 1) {
+          result.push('...');
+        }
+      }
+      result.push(page);
+      lastPushedPage = page;
+    }
+
+    return result;
   });
 
   onPageClick(page: number | string) {

@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-admin-table-container',
+  selector: 'lib-admin-table-container',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './table-container.component.html',

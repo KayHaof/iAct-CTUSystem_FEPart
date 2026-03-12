@@ -10,6 +10,8 @@ module.exports = withNativeFederation({
     'keycloak-angular': { singleton: true, strictVersion: true, requiredVersion: 'auto' },
     'keycloak-js': { singleton: true, strictVersion: true, requiredVersion: 'auto' },
     'angular-oauth2-oidc': { singleton: true, strictVersion: true, requiredVersion: 'auto' },
+    '@angular/core': { singleton: true, strictVersion: true },
+    '@angular/core/rxjs-interop': { singleton: true, strictVersion: true },
 
     // --- SHARED LIBRARIES (MFE) ---
     '@my-mfe/auth': {

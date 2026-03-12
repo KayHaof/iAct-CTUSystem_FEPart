@@ -12,7 +12,8 @@
       "@my-mfe/data-access-media": ["libs/shared/data-access-media/src/index.ts"],
       "@my-mfe/data-access-realtime": ["libs/shared/data-access-realtime/src/index.ts"],
       "@my-mfe/ui": ["libs/shared/ui/src/index.ts"],
-      "@my-mfe/features/user-profile": ["libs/features/src/index.ts"]
+      "@my-mfe/features/user-profile": ["libs/features/src/index.ts"],
+      "interface": ["libs/shared/interface/src/index.ts"]
     }
   }
 }

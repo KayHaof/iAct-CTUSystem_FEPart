@@ -11,6 +11,7 @@
     "..\\..\\libs\\shared\\data-access-realtime\\src\\index.ts",
     "..\\..\\libs\\shared\\ui\\src\\index.ts",
     "..\\..\\libs\\features\\src\\index.ts",
+    "..\\..\\libs\\shared\\interface\\src\\index.ts",
     "src\\app\\app.routes.ts"
   ],
   "exclude": [

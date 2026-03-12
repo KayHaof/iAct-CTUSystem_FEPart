@@ -3,7 +3,8 @@ import { CommonModule, Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { UserService, UserInfo, ApiResponse } from '@my-mfe/auth';
+import { UserService, UserInfo } from '@my-mfe/auth';
+import { ApiResponse} from 'interface';
 import { CloudinaryService } from '@my-mfe/data-access-media';
 import { AlertService, ConfirmService } from '@my-mfe/ui';
 import { OAuthService } from 'angular-oauth2-oidc';
@@ -30,7 +31,7 @@ export class UserProfileComponent {
   private location = inject(Location);
 
   defaultAvatar =
-    'https://res.cloudinary.com/dhjamvg6j/image/upload/v1770104643/b8erttd8eughls55igvb.jpg';
+    'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772527220/0305-logo-ctu_vrk0rw.png';
 
   user = computed(() => this.userService.currentUser());
   isEditing = signal(false);

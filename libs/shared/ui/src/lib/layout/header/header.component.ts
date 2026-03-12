@@ -26,7 +26,7 @@ export class HeaderComponent {
   isDepartment = computed(() => this.userService.isDepartment());
 
   defaultAvatar =
-    'https://res.cloudinary.com/dhjamvg6j/image/upload/v1770104643/b8erttd8eughls55igvb.jpg';
+    'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772527220/0305-logo-ctu_vrk0rw.png';
 
   toggleMenu() {
     this.layoutService.toggleMobileMenu();

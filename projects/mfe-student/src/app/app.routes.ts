@@ -26,7 +26,7 @@ export const appRoutes: Routes = [
         title: 'Cổng Hoạt động',
       },
       {
-        path: 'activity-hub/:id', // Trang chi tiết hoạt động
+        path: 'activity-hub/detail/:id', // Trang chi tiết hoạt động
         loadComponent: () =>
           import('./features/activity-hub/activity-detail/activity-detail.component').then(
             (m) => m.ActivityDetailComponent,

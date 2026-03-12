@@ -1,63 +1,63 @@
 :host {
-  @apply block w-full sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200;
+  @apply block w-full sticky top-0 z-50;
+  --ctu-blue: #0065ff; // Màu xanh CTU đặc trưng
+  --ctu-blue-light: rgba(0, 101, 255, 0.1);
+}
+
+.header-container {
+  @apply bg-white/70 backdrop-blur-md border-b border-gray-100 transition-all duration-300;
 }
 
 .header-wrapper {
-  @apply flex justify-between items-center h-[70px] px-6 max-w-[1920px] mx-auto;
+  @apply flex justify-between items-center h-[72px] px-4 md:px-8 max-w-[1920px] mx-auto;
 }
 
-.search-bar {
-  @apply relative w-full max-w-[400px];
+// --- Branding ---
+.system-title {
+  @apply text-xl font-black tracking-tight text-gray-800 leading-none;
 }
 
-.search-icon {
-  @apply absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none;
+.system-subtitle {
+  @apply text-[10px] uppercase tracking-widest text-gray-400 font-bold mt-1;
 }
 
-.search-input {
-  @apply w-full h-10 pl-11 pr-5 rounded-full text-sm text-gray-700 bg-gray-100 border border-transparent outline-none transition-all duration-300;
-
-  &::placeholder {
-    @apply text-gray-400 font-normal;
-  }
-
-  &:focus {
-    @apply bg-white border-ctu-blue ring-4 ring-ctu-blue/10 shadow-lg;
-  }
-}
-
-.user-profile {
-  @apply flex items-center gap-3 cursor-pointer py-1.5 pl-4 pr-1.5 rounded-full border border-transparent transition-all duration-200 select-none;
-
-  &:hover {
-    @apply bg-gray-50 border-gray-200 shadow-sm;
-
-    .name {
-      @apply text-ctu-blue;
-    }
-  }
+// --- User Profile ---
+.user-profile-wrapper {
+  @apply flex items-center gap-3 cursor-pointer py-1.5 pl-4 pr-1.5 rounded-2xl
+         border border-transparent transition-all duration-300 hover:bg-gray-50 hover:border-gray-200;
 
   &:active {
-    @apply bg-gray-100 scale-95;
+    @apply scale-95;
   }
 }
 
 .user-info {
-  @apply flex-col items-end text-right leading-tight mr-1;
+  @apply flex-col items-end leading-tight;
 
-  .name {
-    @apply font-bold text-sm text-gray-700 transition-colors duration-200;
+  .user-name {
+    @apply font-bold text-sm text-gray-700 transition-colors group-hover:text-blue-600;
   }
 
-  .role {
-    @apply text-xs text-gray-500 font-medium mt-0.5;
+  .user-role {
+    @apply text-[11px] text-gray-400 font-semibold;
   }
 }
 
-.avatar-img {
-  @apply w-9 h-9 rounded-full object-cover border-2 border-white shadow-sm;
+.avatar-container {
+  @apply relative;
 
-  .user-profile:hover & {
-    @apply border-ctu-blue/20;
+  .avatar-img {
+    @apply w-10 h-10 rounded-xl object-cover border-2 border-white shadow-sm transition-transform;
+    .user-profile-wrapper:hover & {
+      @apply border-blue-100 scale-105;
+    }
   }
+
+  .status-dot {
+    @apply absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full;
+  }
+}
+
+.menu-mobile-btn {
+  @apply p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors;
 }

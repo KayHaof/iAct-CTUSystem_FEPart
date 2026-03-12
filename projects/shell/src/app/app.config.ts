@@ -9,6 +9,7 @@ import { authInterceptor } from './core/auth/auth.interceptor';
 import { serverErrorInterceptor } from './core/interceptors/server-error.interceptor';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
+import { provideIActCloudinary } from '@my-mfe/data-access-media';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,6 +22,7 @@ export const appConfig: ApplicationConfig = {
       return authService.initLogin();
     }),
     provideAnimations(),
+    provideIActCloudinary(),
 
     provideHotToastConfig({
       position: 'top-right',

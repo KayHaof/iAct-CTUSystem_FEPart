@@ -24,12 +24,18 @@ export class AppComponent implements OnInit {
       const userInfo = this.userService.currentUser();
 
       if (userInfo) {
-        console.log('User Info loaded (Signal):', userInfo.id);
-        const currentPath = this.router.url.split('?')[0];
+        const nativePath = window.location.pathname;
+        console.log('User Info loaded. Native Path:', nativePath);
+
+        const isAtRoot = nativePath === '/' || nativePath === '/admin' || nativePath === '/admin/';
 
         if (userInfo.roleType === 2 || userInfo.roleType === 3) {
-          this.router.navigate(['/admin/dashboard'], { replaceUrl: true });
-        } else if (currentPath === '/') {
+          if (isAtRoot) {
+            console.log('Redirecting Admin to dashboard...');
+            this.router.navigate(['/admin/dashboard'], { replaceUrl: true });
+          }
+        } else if (nativePath === '/') {
+          console.log('Redirecting Student to dashboard...');
           this.router.navigate(['/dashboard'], { replaceUrl: true });
         }
 
