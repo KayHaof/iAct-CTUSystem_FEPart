@@ -65,3 +65,34 @@ export interface Activity {
 
   schedules?: ActivityScheduleDto[];
 }
+
+export interface ActivityRecord {
+  id: number;
+  activityId: number;
+  title: string;
+  points: number;
+  startDate: string;
+  attendedAt?: string;
+  studentCode?: string;
+  location: string;
+  organizer: string;
+  status: number; // 0: Đăng ký, 1: Tham gia, 2: Hủy
+  proofStatus: number; // 0: Chưa nộp, 1: Chờ duyệt, 2: Đã duyệt, 3: Bị từ chối
+  cancelReason?: string;
+  point: number;
+}
+
+export interface RawRegistrationDto {
+  id: number;
+  activityId: number;
+  activityTitle?: string;
+  points?: number;
+  point?: number;
+  registeredAt: string;
+  attendedAt?: string;
+  studentCode?: string;
+  activityLocation?: string;
+  status: number;
+  proofStatus?: number;
+  cancelReason?: string;
+}

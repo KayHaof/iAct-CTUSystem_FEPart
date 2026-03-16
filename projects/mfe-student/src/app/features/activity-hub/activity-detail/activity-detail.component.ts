@@ -1,26 +1,21 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage} from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import Swal from 'sweetalert2';
 
 import { ActivityService } from '../../../shared/services/activity.service';
 import { RegistrationService } from '../../../shared/services/registration.service';
 import { AlertService, ConfirmService } from '@my-mfe/ui';
 import { Activity } from '../../../shared/models/activity.model';
-import { RegistrationResponse } from '../../../shared/models/registration.model';
+import { RegistrationResponse, ApiResponse } from 'interface';
 import { ActivityRegistrationModalComponent } from '../activity-form/activity-registration-modal.component';
-
-interface ApiResponse<T> {
-  code: number;
-  message: string;
-  result: T;
-}
 
 @Component({
   selector: 'app-activity-detail',
   standalone: true,
-  imports: [CommonModule, ActivityRegistrationModalComponent],
+  imports: [CommonModule, ActivityRegistrationModalComponent, NgOptimizedImage],
   templateUrl: './activity-detail.component.html',
   styleUrls: ['./activity-detail.component.scss'],
 })
@@ -76,10 +71,13 @@ export class ActivityDetailComponent implements OnInit {
     return { isOpen: true, label: 'Đang mở đăng ký', canRegister: true };
   });
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
-    if (id) this.fetchActivityDetails(Number(id));
-    else this.goBack();
+    if (id) {
+      this.fetchActivityDetails(Number(id));
+    } else {
+      await this.goBack();
+    }
   }
 
   fetchActivityDetails(id: number): void {
@@ -92,7 +90,7 @@ export class ActivityDetailComponent implements OnInit {
       },
       error: () => {
         this.alertService.error('Không thể tải thông tin hoạt động!');
-        this.goBack();
+        this.goBack().then();
       },
       complete: () => this.isLoading.set(false),
     });
@@ -104,9 +102,10 @@ export class ActivityDetailComponent implements OnInit {
     });
   }
 
-  goBack(): void {
-    this.router.navigate(['/activity-hub']);
+  async goBack(): Promise<void> {
+    await this.router.navigate(['/activity-hub']);
   }
+
   setTab(tab: 'overview' | 'content' | 'benefits'): void {
     this.activeTab.set(tab);
   }
@@ -149,18 +148,17 @@ export class ActivityDetailComponent implements OnInit {
 
     this.isSubmitting.set(true);
 
-    // Gửi list ID các buổi đã chọn xuống Backend
     this.registrationService
       .registerActivity(act.id, selectedScheduleIds)
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: (res: ApiResponse<RegistrationResponse>) => {
           this.alertService.success('Đã ghi nhận đăng ký của bạn!');
-          this.isRegistrationModalOpen.set(false); // Đóng modal
+          this.isRegistrationModalOpen.set(false);
           this.userRegistration.set(res.result || null);
           this.fetchActivityDetails(act.id);
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           const msg = err.error?.message || 'Có lỗi xảy ra, thử lại sau nhé!';
           this.alertService.error(msg);
         },
@@ -176,7 +174,7 @@ export class ActivityDetailComponent implements OnInit {
 
     const request$ =
       action === 'register'
-        ? this.registrationService.registerActivity(id, []) // Truyền mảng rỗng nếu không có buổi
+        ? this.registrationService.registerActivity(id, [])
         : this.registrationService.cancelRegistration(id, reason || '');
 
     request$.pipe(finalize(() => this.isSubmitting.set(false))).subscribe({
@@ -187,7 +185,7 @@ export class ActivityDetailComponent implements OnInit {
         this.userRegistration.set(res.result || null);
         this.fetchActivityDetails(id);
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         const msg = err.error?.message || 'Có lỗi xảy ra, thử lại sau nhé!';
         this.alertService.error(msg);
       },

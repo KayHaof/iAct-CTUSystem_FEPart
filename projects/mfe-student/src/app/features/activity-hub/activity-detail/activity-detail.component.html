@@ -34,12 +34,9 @@
             class="relative rounded-[2rem] overflow-hidden shadow-2xl shadow-indigo-100/50 bg-slate-200 aspect-[16/9] md:aspect-[21/9]"
           >
             <img
-              [src]="
-                act.coverImage ||
-                'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772505926/default_activity_coverImage.jpg'
-              "
+              [src]="act.coverImage || 'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772505926/default_activity_coverImage.jpg'"
               alt="Cover"
-              class="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
             />
             <div
               class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent pointer-events-none"
@@ -337,7 +334,7 @@
                   <div class="space-y-3 max-h-56 overflow-y-auto custom-scrollbar pr-2">
                     @for (schedule of act.schedules; track schedule.id) {
                       <div class="p-3 rounded-xl border transition-colors relative overflow-hidden"
-                           [ngClass]="isRegistered() && userRegistration()?.scheduleIds?.includes(schedule.id!) ? 'bg-emerald-50/30 border-emerald-200' : 'bg-slate-50/80 border-slate-100 hover:border-indigo-200'">
+                           [ngClass]="(isRegistered() && userRegistration()?.scheduleIds?.includes(schedule.id!) === true) ? 'bg-emerald-50/30 border-emerald-200' : 'bg-slate-50/80 border-slate-100 hover:border-indigo-200'">
 
                         <p class="font-bold text-xs text-slate-800 mb-1 line-clamp-1 pr-16" [title]="schedule.title">
                           {{ schedule.title }}
@@ -346,7 +343,7 @@
                           <i class="bi bi-clock mr-1"></i> {{ schedule.startTime | date:'dd/MM HH:mm' }} - {{ schedule.endTime | date:'HH:mm' }}
                         </p>
 
-                        @if (isRegistered() && userRegistration()?.scheduleIds?.includes(schedule.id!)) {
+                        @if (isRegistered() && userRegistration()?.scheduleIds?.includes(schedule.id!) === true) {
                           <div class="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold px-2 py-1 rounded-bl-xl shadow-sm">
                             <i class="bi bi-check-circle-fill"></i> Tham gia
                           </div>
