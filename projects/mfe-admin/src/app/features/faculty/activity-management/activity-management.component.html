@@ -64,7 +64,7 @@
           </button>
 
           <button
-            (click)="toggleQrModal(true)"
+            (click)="openQrModal()"
             class="w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-2.5 bg-white text-gray-700 font-bold text-sm rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 transition flex items-center justify-center gap-2"
             title="Mã QR Điểm danh"
           >
@@ -301,20 +301,38 @@
     </div>
 
     @if (showQrModal()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm transition-opacity p-4">
-        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-2xl max-w-sm w-full relative text-center animate-fade-in-up">
-          <button (click)="toggleQrModal(false)" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" (click)="closeQrModal()"></div>
+
+        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-2xl max-w-sm w-full relative text-center animate-fade-in-up z-10">
+          <button (click)="closeQrModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition">
             <i class="bi bi-x-lg"></i>
           </button>
+
           <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
             <i class="bi bi-qr-code-scan"></i>
           </div>
+
           <h3 class="text-xl font-extrabold text-gray-900 mb-2">Mã QR Điểm Danh</h3>
           <p class="text-sm text-gray-500 mb-6 px-4">Đưa mã này cho sinh viên quét để tự động ghi nhận tham gia hoạt động.</p>
-          <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-gray-300 inline-block mb-6 shadow-sm">
-            <img [src]="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://yourapp.com/checkin/' + (act.qrCodeToken || act.id)" alt="Mã QR điểm danh" class="w-48 h-48 mx-auto" />
+
+          <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-gray-300 inline-flex items-center justify-center mb-6 shadow-sm min-h-[230px] min-w-[230px]">
+            @if (isGeneratingQr()) {
+              <div class="flex flex-col items-center justify-center">
+                <div class="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-3"></div>
+                <p class="text-xs font-medium text-gray-500">Đang khởi tạo mã QR...</p>
+              </div>
+            } @else if (qrCodeImage()) {
+              <img [src]="qrCodeImage()" alt="Mã QR điểm danh" class="w-48 h-48 rounded-lg shadow-sm" />
+            } @else {
+              <div class="flex flex-col items-center justify-center text-red-500">
+                <i class="bi bi-exclamation-triangle text-2xl mb-2"></i>
+                <p class="text-xs">Không thể lấy mã QR!</p>
+              </div>
+            }
           </div>
-          <button (click)="toggleQrModal(false)" class="w-full py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition shadow-md">
+
+          <button (click)="closeQrModal()" class="w-full py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition shadow-md">
             Đóng cửa sổ
           </button>
         </div>

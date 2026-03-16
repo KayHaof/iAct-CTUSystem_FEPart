@@ -16,7 +16,7 @@ export function provideIActCloudinary() {
   return provideCloudinaryLoader(CLOUDINARY_CONFIG.loaderBaseUrl);
 }
 
-export type CloudinaryFolder = 'activity' | 'avatar';
+export type CloudinaryFolder = 'activity' | 'avatar' | 'proof-activity';
 
 export interface CloudinaryUploadResponse {
   asset_id: string;

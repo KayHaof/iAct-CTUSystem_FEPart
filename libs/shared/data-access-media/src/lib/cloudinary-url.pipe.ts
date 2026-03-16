@@ -15,7 +15,7 @@ export class CloudinaryPathPipe implements PipeTransform {
     }
 
     // 3. Nếu là link tuyệt đối thì cắt bỏ phần baseUrl đi
-    if (typeof fullUrl === 'string' && fullUrl.startsWith(baseUrl)) {
+    if (fullUrl.startsWith(baseUrl)) {
       return fullUrl.replace(baseUrl, '');
     }
 

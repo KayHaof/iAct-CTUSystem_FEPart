@@ -29,7 +29,7 @@
     </div>
   </div>
 
-  <app-admin-table-container class="block -mt-px relative z-0">
+  <lib-admin-table-container class="block -mt-px relative z-0">
     @if (isLoading()) {
       <div class="absolute inset-0 bg-white/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-b-2xl">
         <div class="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-indigo-600 mb-3"></div>
@@ -134,5 +134,5 @@
     </table>
 
     <lib-pagination [currentPage]="currentPage()" [totalItems]="totalRows()" [pageSize]="pageSize()" (pageChange)="onPageChange($event)"></lib-pagination>
-  </app-admin-table-container>
+  </lib-admin-table-container>
 </div>

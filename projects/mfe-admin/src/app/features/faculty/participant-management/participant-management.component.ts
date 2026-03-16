@@ -15,7 +15,7 @@ import {
 } from '@my-mfe/ui';
 import { CloudinaryPathPipe } from '@my-mfe/data-access-media';
 import { ParticipantService } from '../services/participant.service';
-import { RegistrationResponse } from '../../../shared/models/registration.model';
+import { RegistrationResponse } from 'interface';
 import { PageDTO } from 'interface';
 
 @Component({

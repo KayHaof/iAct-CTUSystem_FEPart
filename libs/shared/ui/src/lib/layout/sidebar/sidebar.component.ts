@@ -33,10 +33,10 @@ export class SidebarComponent {
   }
 
   menuItems: MenuItem[] = [
-    { label: 'Cổng hoạt động', link: '/activity-hub', icon: 'bi bi-calendar3', role: 1 }, // Cổng thông tin hoạt động chung
     { label: 'Tổng quan', link: '/dashboard', icon: 'bi bi-grid-fill', role: 1 }, // Dashboard của SV
-    { label: 'Kết quả rèn luyện', link: '/my-records', icon: 'bi bi-person-lines-fill', role: 1 }, // Xem điểm & Lịch sử
-    { label: 'Nộp minh chứng', link: '/submit-proof', icon: 'bi bi-cloud-arrow-up', role: 1 }, // Nộp minh chứng ngoài
+    { label: 'Cổng hoạt động', link: '/activity-hub', icon: 'bi bi-calendar3', role: 1 }, // Cổng thông tin hoạt động chung
+    { label: 'Quản lý hoạt động', link: '/my-records', icon: 'bi bi-person-lines-fill', role: 1 }, // Xem điểm & Lịch sử
+    { label: 'Khiếu nại', link: '/submit-proof', icon: 'bi bi-cloud-arrow-up', role: 1 }, // Nộp minh chứng ngoài
 
     // --- DEPARTMENT (Role 2 - Khoa/Viện) ---
     { label: 'Tổng quan', link: '/admin/dashboard', icon: 'bi bi-grid-fill', role: 2 }, // Đã đổi sang /admin/
@@ -46,7 +46,12 @@ export class SidebarComponent {
       icon: 'bi bi-calendar-plus',
       role: 2,
     }, // Tạo/Quản lý hoạt động
-    { label: 'Duyệt minh chứng', link: '/admin/org/approvals', icon: 'bi bi-check2-square', role: 2 }, // Duyệt minh chứng
+    {
+      label: 'Duyệt minh chứng',
+      link: '/admin/org/approvals',
+      icon: 'bi bi-check2-square',
+      role: 2,
+    }, // Duyệt minh chứng
     { label: 'Quản lý sinh viên', link: '/admin/org/students', icon: 'bi bi-people', role: 2 }, // Danh sách SV khoa mình
 
     // --- ADMIN (Role 3 - Quản trị hệ thống) ---

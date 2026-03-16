@@ -26,8 +26,10 @@ export class ActivityManagementComponent implements OnInit {
   activity = signal<Activity | null>(null);
   isLoading = signal<boolean>(true);
 
-  // Thêm Signal để quản lý hiển thị Modal QR
+  // Quản lý hiển thị Modal QR
   showQrModal = signal<boolean>(false);
+  qrCodeImage = signal<string | null>(null);
+  isGeneratingQr = signal<boolean>(false);
 
   capacityPercentage = computed(() => {
     const act = this.activity();
@@ -117,7 +119,31 @@ export class ActivityManagementComponent implements OnInit {
     }
   }
 
-  toggleQrModal(show: boolean): void {
-    this.showQrModal.set(show);
+  openQrModal(): void {
+    const act = this.activity();
+    if (!act || !act.id) return;
+
+    this.showQrModal.set(true);
+
+    if (this.qrCodeImage()) return;
+
+    this.isGeneratingQr.set(true);
+    this.activityService
+      .getQrCode(act.id)
+      .pipe(finalize(() => this.isGeneratingQr.set(false)))
+      .subscribe({
+        next: (res: any) => {
+          this.qrCodeImage.set(res.result);
+        },
+        error: (err: HttpErrorResponse) => {
+          console.error('Lỗi khi tải mã QR:', err);
+          this.alertService.error('Không thể tạo mã QR lúc này!');
+          this.showQrModal.set(false);
+        },
+      });
+  }
+
+  closeQrModal(): void {
+    this.showQrModal.set(false);
   }
 }

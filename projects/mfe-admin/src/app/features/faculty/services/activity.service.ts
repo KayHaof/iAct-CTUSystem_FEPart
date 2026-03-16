@@ -60,4 +60,8 @@ export class ActivityService {
       }),
     );
   }
+
+  getQrCode(id: number | string): Observable<ApiResponse<string>> {
+    return this.http.get<ApiResponse<string>>(`${this.apiUrl}/${id}/qr-code`);
+  }
 }

@@ -1,11 +1,11 @@
 <div class="min-h-screen bg-slate-50/50 p-4 sm:p-6 lg:p-8 font-sans text-slate-900">
 
-  <app-admin-page-header
+  <lib-admin-page-header
     title="Danh sách Hoạt động"
     actionLabel="Tạo hoạt động mới"
     actionLink="create"
     class="mb-6 block"
-  ></app-admin-page-header>
+  ></lib-admin-page-header>
 
   <div class="bg-white p-4 rounded-t-2xl border-x border-t border-slate-200 shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center relative z-10">
 
@@ -77,7 +77,7 @@
     </div>
   </div>
 
-  <app-admin-table-container class="block -mt-px relative z-0">
+  <lib-admin-table-container class="block -mt-px relative z-0">
 
     @if (isLoading()) {
       <div class="absolute inset-0 bg-white/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-b-2xl">
@@ -115,15 +115,15 @@
                   <div class="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm"
                        [ngClass]="{
                          'bg-sky-500': item.isExternal,
-                         'bg-emerald-500': !item.isExternal && item.isFaculty === true,
-                         'bg-indigo-500': !item.isExternal && (item.isFaculty === false || item.isFaculty === null)
+                         'bg-emerald-500': !item.isExternal && item.isFaculty,
+                         'bg-indigo-500': !item.isExternal && (!item.isFaculty || false)
                        }"
-                       [title]="item.isExternal ? 'Ngoài trường' : (item.isFaculty === true ? 'Cấp Khoa' : 'Cấp Trường')">
+                       [title]="item.isExternal ? 'Ngoài trường' : (item.isFaculty ? 'Cấp Khoa' : 'Cấp Trường')">
                     <i class="bi text-white text-[10px]"
                        [ngClass]="{
                          'bi-globe': item.isExternal,
-                         'bi-mortarboard-fill': !item.isExternal && item.isFaculty === true,
-                         'bi-bank': !item.isExternal && (item.isFaculty === false || item.isFaculty === null)
+                         'bi-mortarboard-fill': !item.isExternal && item.isFaculty,
+                         'bi-bank': !item.isExternal && (!item.isFaculty || false)
                        }"></i>
                   </div>
                 </div>
@@ -279,5 +279,5 @@
       (pageChange)="onPageChange($event)"
     ></lib-pagination>
 
-  </app-admin-table-container>
+  </lib-admin-table-container>
 </div>
