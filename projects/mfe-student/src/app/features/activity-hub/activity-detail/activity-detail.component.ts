@@ -15,7 +15,7 @@ import { ActivityRegistrationModalComponent } from '../activity-form/activity-re
 @Component({
   selector: 'app-activity-detail',
   standalone: true,
-  imports: [CommonModule, ActivityRegistrationModalComponent, NgOptimizedImage],
+  imports: [CommonModule, ActivityRegistrationModalComponent],
   templateUrl: './activity-detail.component.html',
   styleUrls: ['./activity-detail.component.scss'],
 })
