@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { loadRemoteModule } from '@angular-architects/native-federation';
 
+import { AdminLayoutComponent } from '@my-mfe/ui';
 import { authGuard } from './core/auth/auth.guard';
 import { roleGuard } from './core/auth/role.guard';
 
@@ -24,13 +25,16 @@ export const routes: Routes = [
 
       {
         path: 'admin',
-        loadChildren: () =>
-          loadRemoteModule('mfe-admin', './routes').then((m) => {
-            return m.routes;
-          }),
+        loadComponent: () => import('@my-mfe/ui').then((m) => m.AdminLayoutComponent),
         canActivate: [roleGuard],
         data: { roles: ['admin', 'department'] },
         title: 'Trang Quản trị',
+        children: [
+          {
+            path: '',
+            loadChildren: () => loadRemoteModule('mfe-admin', './routes').then((m) => m.routes),
+          },
+        ],
       },
 
       {

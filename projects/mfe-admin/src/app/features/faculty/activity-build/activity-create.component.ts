@@ -7,8 +7,8 @@ import { forkJoin, of, Observable } from 'rxjs';
 import { switchMap, finalize } from 'rxjs/operators';
 
 import { AlertService } from '@my-mfe/ui';
-import { UserService, UserInfo } from '@my-mfe/auth';
-import { ApiResponse} from 'interface';
+import { UserService } from '@my-mfe/auth';
+import { ApiResponse, UserInfo} from 'interface';
 import { CloudinaryService } from '@my-mfe/data-access-media';
 import { ActivityService } from '../services/activity.service';
 

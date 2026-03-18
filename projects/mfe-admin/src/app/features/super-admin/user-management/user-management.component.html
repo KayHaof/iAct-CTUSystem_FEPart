@@ -1,0 +1,273 @@
+<div class="p-4 md:p-6 max-w-[1400px] mx-auto space-y-6 animate-fade-in">
+
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Quản lý Người dùng & Tài khoản</h1>
+      <p class="text-slate-500 text-sm mt-1">Quản lý tài khoản, phân quyền và kiểm soát truy cập hệ thống.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button (click)="openImportModal()" class="btn-outline-green tooltip" title="Nhập danh sách từ file Excel">
+        <i class="bi bi-file-earmark-spreadsheet text-lg"></i> Nhập từ Excel
+      </button>
+      <button (click)="openAddModal()" class="btn-primary tooltip" title="Thêm một người dùng mới">
+        <i class="bi bi-person-plus-fill text-lg"></i> Thêm người dùng
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap md:flex-nowrap gap-4 items-end transition-all">
+
+    <div class="w-full md:flex-1">
+      <label for="searchInput" class="input-label">Tìm kiếm người dùng</label>
+      <div class="relative">
+        <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input id="searchInput" type="text" [(ngModel)]="searchTerm" (keyup.enter)="onSearch()"
+               placeholder="Nhập ID, Tên hoặc Email..." class="input-field pl-10 py-2.5">
+      </div>
+    </div>
+
+    @if (activeTab() !== 'ADMIN') {
+      <div class="w-full md:w-1/3 lg:w-1/4 animate-fade-in">
+        <label for="facultySelect" class="input-label">Khoa / Đơn vị</label>
+        <select id="facultySelect" [(ngModel)]="selectedFaculty" (change)="onSearch()" class="input-field py-2.5">
+          <option value="">Tất cả Khoa & Đơn vị</option>
+          @for (dept of departments(); track dept.id) {
+            <option [value]="dept.id">{{ dept.name }}</option>
+          }
+        </select>
+      </div>
+    }
+
+    <div class="w-full md:w-1/4 lg:w-1/5">
+      <label for="statusSelect" class="input-label">Trạng thái</label>
+      <select id="statusSelect" [(ngModel)]="selectedStatus" (change)="onSearch()" class="input-field py-2.5">
+        <option value="">Tất cả trạng thái</option>
+        <option [value]="0">Đã vô hiệu hóa</option>
+        <option [value]="1">Đang hoạt động</option>
+      </select>
+    </div>
+
+    <button (click)="resetFilters()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors tooltip flex-shrink-0" title="Đặt lại bộ lọc">
+      <i class="bi bi-funnel-fill"></i>
+    </button>
+  </div>
+
+  <div class="flex items-center gap-4 md:gap-8 border-b border-slate-200 px-2 mt-8 mb-4 overflow-x-auto custom-scrollbar pb-1">
+    <button (click)="switchTab('STUDENT')" class="tab-btn" [class]="activeTab() === 'STUDENT' ? 'border-blue-600 text-blue-700' : 'border-transparent text-slate-400 hover:text-slate-600'">
+      <i class="bi bi-mortarboard-fill text-lg"></i> Sinh viên
+      <span class="ml-1 px-2 py-0.5 rounded-full text-xs" [class]="activeTab() === 'STUDENT' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'">{{ studentCount() }}</span>
+    </button>
+
+    <button (click)="switchTab('FACULTY')" class="tab-btn" [class]="activeTab() === 'FACULTY' ? 'border-purple-500 text-purple-600' : 'border-transparent text-slate-400 hover:text-slate-600'">
+      <i class="bi bi-building-fill text-lg"></i> Khoa & Đơn vị
+      <span class="ml-1 px-2 py-0.5 rounded-full text-xs" [class]="activeTab() === 'FACULTY' ? 'bg-purple-100 text-purple-600' : 'bg-slate-100 text-slate-500'">{{ facultyCount() }}</span>
+    </button>
+
+    <button (click)="switchTab('ADMIN')" class="tab-btn" [class]="activeTab() === 'ADMIN' ? 'border-rose-500 text-rose-600' : 'border-transparent text-slate-400 hover:text-slate-600'">
+      <i class="bi bi-shield-lock-fill text-lg"></i> Quản trị viên
+      <span class="ml-1 px-2 py-0.5 rounded-full text-xs" [class]="activeTab() === 'ADMIN' ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-500'">{{ adminCount() }}</span>
+    </button>
+  </div>
+
+  <lib-admin-table-container>
+    <table class="w-full text-left border-collapse">
+      <thead>
+      <tr class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 bg-slate-50/50">
+        <th class="py-4 px-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group" tabindex="0" role="button" (click)="onSort('studentCode')" (keydown.enter)="onSort('studentCode')">
+          <div class="flex items-center gap-1.5">
+            MSSV / MĐK
+            @if (sortBy() === 'studentCode') { <i class="bi text-blue-600 text-[14px]" [ngClass]="sortDirection() === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"></i> }
+            @else { <i class="bi bi-arrow-down-up text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"></i> }
+          </div>
+        </th>
+        <th class="py-4 px-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group" tabindex="0" role="button" (click)="onSort('fullName')" (keydown.enter)="onSort('fullName')">
+          <div class="flex items-center gap-1.5">
+            Họ và Tên
+            @if (sortBy() === 'fullName') { <i class="bi text-blue-600 text-[14px]" [ngClass]="sortDirection() === 'asc' ? 'bi-sort-alpha-up' : 'bi-sort-alpha-down'"></i> }
+            @else { <i class="bi bi-arrow-down-up text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"></i> }
+          </div>
+        </th>
+        <th class="py-4 px-4">Email</th>
+        <th class="py-4 px-4">Vai trò</th>
+        <th class="py-4 px-4">Khoa / Lớp</th>
+        <th class="py-4 px-4 text-center">Trạng thái</th>
+        <th class="py-4 px-4 text-center">Thao tác</th>
+      </tr>
+      </thead>
+
+      <tbody class="text-sm">
+        @if (isLoading()) {
+        } @else if (sortedUsers().length === 0) {
+          <tr>
+            <td colspan="7" class="text-center py-16 text-slate-400 bg-slate-50/30">
+              <i class="bi bi-inbox text-4xl inline-block mb-3 text-slate-300"></i>
+              <p class="font-medium text-slate-500">Không tìm thấy người dùng nào phù hợp với bộ lọc.</p>
+            </td>
+          </tr>
+        } @else {
+          @for (user of sortedUsers(); track user.id) {
+            <tr class="border-b border-slate-100 hover:bg-blue-50/30 transition-colors group">
+              <td class="py-3 px-4 font-bold text-slate-700">{{ user.studentCode || user.username }}</td>
+              <td class="py-3 px-4 font-semibold text-slate-800">{{ user.fullName }}</td>
+              <td class="py-3 px-4 text-slate-500">{{ user.email }}</td>
+              <td class="py-3 px-4">
+                @if (user.roleType === 1) { <span class="badge badge-student">Sinh viên</span> }
+                @else if (user.roleType === 2) { <span class="badge badge-organizer">Đơn vị</span> }
+                @else if (user.roleType === 3) { <span class="badge badge-admin">Quản trị</span> }
+              </td>
+              <td class="py-3 px-4 text-slate-500">
+                <span class="block text-xs font-medium text-slate-400 bg-slate-100 px-2 py-1 rounded-md inline-block">{{ user.classCode || 'N/A' }}</span>
+              </td>
+              <td class="py-3 px-4 text-center">
+                <label class="toggle-switch tooltip" title="Bật/tắt trạng thái">
+                  <input type="checkbox" [checked]="user.status === 1" (change)="toggleStatus(user)">
+                  <span class="slider"></span>
+                </label>
+              </td>
+              <td class="py-3 px-4">
+                <div class="flex items-center justify-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                  <button (click)="openViewModal(user)" class="action-btn text-slate-400 hover:text-teal-600 hover:bg-teal-50 tooltip" title="Xem chi tiết">
+                    <i class="bi bi-eye-fill"></i>
+                  </button>
+                  <button (click)="editUser(user)" class="action-btn text-slate-400 hover:text-blue-600 hover:bg-blue-50 tooltip" title="Cập nhật / Phân lớp">
+                    <i class="bi bi-pencil-fill"></i>
+                  </button>
+                  <button (click)="resetPassword(user)" class="action-btn text-slate-400 hover:text-amber-500 hover:bg-amber-50 tooltip" title="Đặt lại mật khẩu">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+
+    <div class="border-t border-slate-200">
+      <lib-pagination [currentPage]="currentPage()" [totalItems]="totalRows()" [pageSize]="pageSize()" (pageChange)="onPageChange($event)"></lib-pagination>
+    </div>
+  </lib-admin-table-container>
+
+  @if (isEditModalOpen()) {
+    <div class="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in p-4">
+      <div class="modal-backdrop" role="button" tabindex="0" aria-label="Đóng" (click)="closeEditModal()" (keydown.enter)="closeEditModal()"></div>
+      <div class="modal-content max-w-md p-6">
+
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+          <div>
+            <h3 class="text-xl font-extrabold text-slate-800">Phân Lớp Sinh Viên</h3>
+            <p class="text-sm text-slate-500 font-medium mt-1">MSSV: <span class="text-blue-600 font-bold">{{ editingUser()?.studentCode || editingUser()?.username }}</span> - {{ editingUser()?.fullName }}</p>
+          </div>
+          <button (click)="closeEditModal()" class="action-btn bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 tooltip" title="Đóng">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="space-y-5">
+          <div>
+            <label for="editDeptSelect" class="input-label">1. Chọn Trường / Khoa</label>
+            <select id="editDeptSelect" [(ngModel)]="editSelectedDept" (change)="onEditDeptChange()" class="input-field py-3">
+              <option value="">-- Vui lòng chọn Trường/Khoa --</option>
+              @for (dept of departments(); track dept.id) { <option [value]="dept.id">{{ dept.name }}</option> }
+            </select>
+          </div>
+          <div>
+            <label for="editMajorSelect" class="input-label" [class.opacity-50]="!editSelectedDept()">2. Chọn Chuyên Ngành</label>
+            <select id="editMajorSelect" [(ngModel)]="editSelectedMajor" (change)="onEditMajorChange()" [disabled]="!editSelectedDept()" class="input-field py-3">
+              <option value="">-- Chọn chuyên ngành --</option>
+              @for (major of majors(); track major.id) { <option [value]="major.id">{{ major.name }}</option> }
+            </select>
+          </div>
+          <div>
+            <label for="editClassSelect" class="input-label" [class.opacity-50]="!editSelectedMajor()">3. Chọn Lớp</label>
+            <select id="editClassSelect" [(ngModel)]="editSelectedClass" [disabled]="!editSelectedMajor()" class="input-field py-3">
+              <option value="">-- Chọn lớp học --</option>
+              @for (cls of classesForEdit(); track cls.id) { <option [value]="cls.id">{{ cls.name }} ({{ cls.classCode }})</option> }
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 mt-8 pt-5 border-t border-slate-100">
+          <button (click)="closeEditModal()" class="btn-secondary">Hủy bỏ</button>
+          <button (click)="saveUserClass()" [disabled]="!editSelectedClass() || isSavingClass()" class="btn-primary">
+            @if (isSavingClass()) { <i class="bi bi-arrow-repeat animate-spin"></i> Đang lưu... }
+            @else { <i class="bi bi-check-circle-fill"></i> Lưu thay đổi }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  @if (isViewModalOpen()) {
+    <div class="fixed inset-0 z-[110] flex items-center justify-center animate-fade-in p-4">
+      <div class="modal-backdrop" role="button" tabindex="0" aria-label="Đóng" (click)="closeViewModal()" (keydown.enter)="closeViewModal()"></div>
+      <div class="modal-content max-w-2xl max-h-[90vh]">
+
+        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-lg shadow-sm">
+              <i class="bi bi-person-vcard-fill"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-extrabold text-slate-800">Hồ sơ chi tiết</h3>
+              <p class="text-xs font-medium text-slate-500 mt-0.5">Thông tin toàn diện của người dùng</p>
+            </div>
+          </div>
+          <button (click)="closeViewModal()" class="action-btn bg-white border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-100 shadow-sm tooltip" title="Đóng">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto custom-scrollbar">
+          <div class="flex flex-col sm:flex-row gap-6 items-center sm:items-start mb-8 pb-8 border-b border-slate-100/80">
+            <img [src]="viewingUser()?.avatarUrl || 'https://ui-avatars.com/api/?name=' + viewingUser()?.fullName + '&background=e2e8f0&color=475569'" [alt]="'Ảnh đại diện của ' + viewingUser()?.fullName" class="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-lg shadow-slate-200/50">
+            <div class="text-center sm:text-left flex-1 mt-2">
+              <h4 class="text-2xl font-extrabold text-slate-800 tracking-tight">{{ viewingUser()?.fullName }}</h4>
+              <p class="text-slate-500 font-medium flex items-center justify-center sm:justify-start gap-2 mt-1">
+                <i class="bi bi-envelope-at-fill text-slate-400"></i> {{ viewingUser()?.email }}
+              </p>
+              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-4">
+                @if (viewingUser()?.roleType === 1) { <span class="badge badge-student"><i class="bi bi-mortarboard-fill"></i> Sinh viên</span> }
+                @else if (viewingUser()?.roleType === 2) { <span class="badge badge-organizer"><i class="bi bi-building-fill"></i> Đơn vị</span> }
+                @else if (viewingUser()?.roleType === 3) { <span class="badge badge-admin"><i class="bi bi-shield-lock-fill"></i> Quản trị</span> }
+
+                @if (viewingUser()?.status === 1) { <span class="badge bg-emerald-50 text-emerald-600 border-emerald-100"><i class="bi bi-check-circle-fill"></i> Hoạt động</span> }
+                @else { <span class="badge bg-slate-100 text-slate-500 border-slate-200"><i class="bi bi-dash-circle-fill"></i> Vô hiệu hóa</span> }
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">MSSV / Mã đăng nhập</span>
+              <p class="font-bold text-slate-800 text-[15px]">{{ viewingUser()?.studentCode || viewingUser()?.username || 'Chưa cập nhật' }}</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Lớp / Chuyên ngành</span>
+              <p class="font-bold text-slate-800 text-[15px]">{{ viewingUser()?.classCode || 'Chưa phân lớp' }}</p>
+            </div>
+            <div>
+              <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-telephone-fill mr-1"></i> Số điện thoại</span>
+              <p class="font-semibold text-slate-700">{{ viewingUser()?.phone || 'Chưa cập nhật' }}</p>
+            </div>
+            <div>
+              <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-calendar-event-fill mr-1"></i> Ngày sinh</span>
+              <p class="font-semibold text-slate-700">{{ viewingUser()?.birthday ? (viewingUser()?.birthday | date:'dd/MM/yyyy') : 'Chưa cập nhật' }}</p>
+            </div>
+            <div>
+              <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-gender-ambiguous mr-1"></i> Giới tính</span>
+              <p class="font-semibold text-slate-700">
+                @if (viewingUser()?.gender === 1) { Nam } @else if (viewingUser()?.gender === 0) { Nữ } @else if (viewingUser()?.gender === 2) { Khác } @else { Chưa cập nhật }
+              </p>
+            </div>
+            <div class="sm:col-span-2">
+              <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-geo-alt-fill mr-1"></i> Địa chỉ</span>
+              <p class="font-semibold text-slate-700">{{ viewingUser()?.address || 'Chưa cập nhật' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

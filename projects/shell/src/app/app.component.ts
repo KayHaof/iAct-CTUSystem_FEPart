@@ -20,27 +20,36 @@ export class AppComponent implements OnInit {
   private oauthService = inject(OAuthService);
 
   constructor() {
-    effect(() => {
+    effect((onCleanup) => {
       const userInfo = this.userService.currentUser();
 
       if (userInfo) {
         const nativePath = window.location.pathname;
-        console.log('User Info loaded. Native Path:', nativePath);
+        console.log('User Info loaded. Native Path:', nativePath, '| RoleType:', userInfo.roleType);
 
-        const isAtRoot = nativePath === '/' || nativePath === '/admin' || nativePath === '/admin/';
+        const isManager = userInfo.roleType === 2 || userInfo.roleType === 3;
 
-        if (userInfo.roleType === 2 || userInfo.roleType === 3) {
-          if (isAtRoot) {
-            console.log('Redirecting Admin to dashboard...');
-            this.router.navigate(['/admin/dashboard'], { replaceUrl: true });
+        if (isManager) {
+          if (
+            nativePath === '/' ||
+            nativePath === '/dashboard' ||
+            nativePath === '/admin' ||
+            nativePath === '/admin/'
+          ) {
+            console.log('Redirecting Admin/Department to dashboard...');
+            this.router.navigate(['/admin/dashboard'], { replaceUrl: true }).then();
           }
-        } else if (nativePath === '/') {
-          console.log('Redirecting Student to dashboard...');
-          this.router.navigate(['/dashboard'], { replaceUrl: true });
+        } else {
+          // Sinh viên
+          if (nativePath === '/') {
+            console.log('Redirecting Student to dashboard...');
+            this.router.navigate(['/dashboard'], { replaceUrl: true }).then();
+          }
         }
 
+        // --- BẬT WEBSOCKET KÈM DỌN DẸP ---
         this.webSocketService.initConnection();
-        this.webSocketService
+        const wsSubscription = this.webSocketService
           .watchUserNotification(userInfo.id)
           .subscribe((notification: AppNotification) => {
             try {
@@ -51,6 +60,11 @@ export class AppComponent implements OnInit {
               console.error('Lỗi xử lý message WebSocket:', e);
             }
           });
+
+        // Hủy luồng cũ khi effect chạy lại -> Chống lag / lặp popup
+        onCleanup(() => {
+          wsSubscription.unsubscribe();
+        });
       }
     });
   }
@@ -63,7 +77,7 @@ export class AppComponent implements OnInit {
           queryParams: { code: null, state: null, session_state: null, iss: null },
           queryParamsHandling: 'merge',
           replaceUrl: true,
-        });
+        }).then();
       }
     }, 100);
   }

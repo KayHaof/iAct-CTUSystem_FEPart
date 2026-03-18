@@ -10,15 +10,10 @@ import { UserService } from '@my-mfe/auth';
 })
 export class App {
   protected title = 'mfe-admin';
-
-  // 1. Ní đã inject ở đây rồi, biến này tên là "this.userService"
   private userService = inject(UserService);
 
-  // 2. Sửa constructor: Bỏ tham số bên trong đi
   constructor() {
-    console.log('🚀 [MFE Admin] Component đã load!');
-
-    // 3. Muốn log ra xem thì dùng "this.userService"
+    console.log('[MFE Admin] Component đã load!');
     console.log('Instance ID:', this.userService);
   }
 }

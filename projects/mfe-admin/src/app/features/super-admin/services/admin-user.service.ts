@@ -1,0 +1,93 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ApiResponse, UserInfo, Department, ClassInfo, PageDTO, MajorInfo } from 'interface';
+
+export interface CreateUserDto extends Partial<UserInfo> {
+  password?: string;
+}
+
+export interface UserCounts {
+  student: number;
+  faculty: number;
+  admin: number;
+}
+
+@Injectable({ providedIn: 'root' })
+export class AdminUserService {
+  private http = inject(HttpClient);
+
+  private baseUrl = 'http://localhost:8080/identity/api/v1/users';
+  private profileUrl = 'http://localhost:8080/profile/api/v1';
+
+  getAllDepartments(): Observable<ApiResponse<Department[]>> {
+    return this.http.get<ApiResponse<Department[]>>(`${this.profileUrl}/departments`);
+  }
+
+  // getClasses(departmentId?: number): Observable<ApiResponse<ClassInfo[]>> {
+  //   let params = new HttpParams();
+  //   if (departmentId) {
+  //     params = params.set('departmentId', departmentId);
+  //   }
+  //   return this.http.get<ApiResponse<ClassInfo[]>>(`${this.profileUrl}/classes`, { params });
+  // }
+
+  // Fetch all users by specification
+  getUsers(
+    page: number,
+    size: number,
+    keyword?: string,
+    roleType?: number,
+    departmentId?: number | string,
+    status?: number | string,
+  ): Observable<ApiResponse<PageDTO<UserInfo>>> {
+    let params = new HttpParams().set('page', page).set('size', size);
+
+    if (keyword) params = params.set('keyword', keyword);
+    if (roleType) params = params.set('roleType', roleType);
+    if (departmentId !== undefined && departmentId !== null && departmentId !== '') {
+      params = params.set('departmentId', departmentId);
+    }
+    if (status !== undefined && status !== null && status !== '') {
+      params = params.set('status', status);
+    }
+
+    return this.http.get<ApiResponse<PageDTO<UserInfo>>>(this.baseUrl, { params });
+  }
+
+  // createUser(user: CreateUserDto): Observable<ApiResponse<UserInfo>> {
+  //   return this.http.post<ApiResponse<UserInfo>>(this.baseUrl, user);
+  // }
+
+  getMajorsByDepartment(departmentId: number | string): Observable<ApiResponse<MajorInfo[]>> {
+    const params = new HttpParams().set('departmentId', departmentId);
+    return this.http.get<ApiResponse<MajorInfo[]>>(`${this.profileUrl}/majors`, { params });
+  }
+
+  getClassesByMajor(majorId: number | string): Observable<ApiResponse<ClassInfo[]>> {
+    const params = new HttpParams().set('majorId', majorId);
+    return this.http.get<ApiResponse<ClassInfo[]>>(`${this.profileUrl}/classes`, { params });
+  }
+
+  toggleUserStatus(id: string | number, status: number): Observable<ApiResponse<string>> {
+    if (status === 1) {
+      return this.http.put<ApiResponse<string>>(`${this.baseUrl}/${id}/active`, {});
+    } else {
+      return this.http.delete<ApiResponse<string>>(`${this.baseUrl}/${id}`);
+    }
+  }
+
+  getUserCounts(keyword?: string): Observable<ApiResponse<UserCounts>> {
+    let params = new HttpParams();
+    if (keyword) params = params.set('keyword', keyword);
+    return this.http.get<ApiResponse<UserCounts>>(`${this.baseUrl}/counts`, { params });
+  }
+
+  updateProfile(id: number | string, data: Partial<UserInfo>): Observable<ApiResponse<UserInfo>> {
+    return this.http.put<ApiResponse<UserInfo>>(`${this.baseUrl}/${id}`, data);
+  }
+
+  resetPassword(id: number | string): Observable<ApiResponse<string>> {
+    return this.http.put<ApiResponse<string>>(`${this.baseUrl}/${id}/reset-password`, {});
+  }
+}
