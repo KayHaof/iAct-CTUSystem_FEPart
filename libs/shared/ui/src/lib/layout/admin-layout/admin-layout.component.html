@@ -1,5 +1,5 @@
 <div class="layout-wrapper">
-  <lib-sidebar class="sidebar-area"></lib-sidebar>
+  <lib-sidebar [menuItems]="adminMenus()" theme="dark" class="sidebar-area"></lib-sidebar>
 
   <div class="content-area">
     <lib-header class="header-area"></lib-header>
@@ -10,8 +10,6 @@
       <div class="page-content">
         <router-outlet></router-outlet>
       </div>
-
-      <lib-footer></lib-footer>
     </main>
   </div>
 </div>

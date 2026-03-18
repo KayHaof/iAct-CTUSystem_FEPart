@@ -34,6 +34,6 @@ export class HeaderComponent {
 
   navigateToProfile() {
     this.layoutService.closeMobileMenu();
-    this.router.navigate(['/profile']);
+    this.router.navigate(['/profile']).then();
   }
 }

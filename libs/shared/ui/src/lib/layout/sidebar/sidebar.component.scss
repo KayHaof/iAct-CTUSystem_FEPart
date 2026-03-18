@@ -5,13 +5,15 @@
 
 .sidebar-container {
   @apply bg-white border-r border-gray-200 overflow-hidden flex flex-col;
-
   @apply fixed top-0 left-0 bottom-0 z-50 w-[240px] shadow-2xl transition-transform duration-300 ease-in-out;
-
   @apply md:absolute md:translate-x-0 md:shadow-none md:w-[80px] md:h-full;
 
   &:hover {
     @apply md:w-[240px] md:shadow-2xl;
+  }
+
+  &.theme-dark {
+    @apply bg-[#111828] border-slate-800 shadow-black/50;
   }
 }
 
@@ -23,11 +25,15 @@
 }
 
 .sidebar-logo {
-  @apply transition-all duration-300;
+  @apply flex items-center justify-center h-16 mb-6 text-2xl font-extrabold text-ctu-blue whitespace-nowrap overflow-hidden transition-all duration-300;
   background-image: url('https://res.cloudinary.com/dhjamvg6j/image/upload/v1770173915/logo_ycoscg.png');
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 0px;
+  background-size: 0;
+
+  .theme-dark & {
+    @apply text-white;
+  }
 }
 
 @media (min-width: 768px) {
@@ -68,10 +74,6 @@
   }
 }
 
-.sidebar-logo {
-  @apply flex items-center justify-center h-16 mb-6 text-2xl font-extrabold text-ctu-blue whitespace-nowrap overflow-hidden;
-}
-
 .nav-item {
   @apply flex items-center gap-4 px-4 py-3 rounded-xl text-gray-500 font-medium whitespace-nowrap overflow-hidden relative min-h-[50px] cursor-pointer transition-colors duration-200;
 
@@ -95,14 +97,44 @@
   i {
     @apply flex-shrink-0 transition-colors duration-200;
   }
+
+  .theme-dark & {
+    @apply text-slate-400;
+
+    &:hover {
+      @apply bg-slate-800/80 text-blue-400;
+    }
+
+    &.active {
+      @apply bg-blue-900/30 text-blue-400;
+
+      &::before {
+        @apply bg-blue-500;
+      }
+
+      i {
+        @apply text-blue-400;
+      }
+    }
+  }
 }
 
 .logout-btn {
   @apply mt-auto flex items-center gap-4 px-4 py-3 rounded-xl bg-red-50 text-red-500 font-semibold cursor-pointer transition-colors duration-200 whitespace-nowrap overflow-hidden min-h-[50px];
+
   &:hover {
     @apply bg-red-100;
   }
+
   i {
     @apply flex-shrink-0;
+  }
+
+  .theme-dark & {
+    @apply bg-rose-500/10 text-rose-500;
+
+    &:hover {
+      @apply bg-rose-500/20;
+    }
   }
 }
