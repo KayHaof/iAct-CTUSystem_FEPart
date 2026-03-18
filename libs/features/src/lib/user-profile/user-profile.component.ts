@@ -3,8 +3,8 @@ import { CommonModule, Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { UserService, UserInfo } from '@my-mfe/auth';
-import { ApiResponse} from 'interface';
+import { UserService } from '@my-mfe/auth';
+import { ApiResponse, UserInfo} from 'interface';
 import { CloudinaryService } from '@my-mfe/data-access-media';
 import { AlertService, ConfirmService } from '@my-mfe/ui';
 import { OAuthService } from 'angular-oauth2-oidc';
