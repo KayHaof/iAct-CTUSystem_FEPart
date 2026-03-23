@@ -1,0 +1,24 @@
+.animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-backdrop { @apply absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity; }
+.modal-content { @apply relative w-full bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all m-4 flex flex-col; }
+
+.input-label { @apply block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider; }
+.input-field {
+  @apply w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50
+  focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500
+  outline-none transition-all text-sm font-bold text-blue-700 shadow-sm
+  disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100;
+}
+
+.btn-primary {
+  @apply bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm
+  flex items-center gap-2 transition-all shadow-sm shadow-blue-600/20
+  hover:bg-blue-700 hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+.btn-secondary { @apply px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors active:scale-95; }
+.action-btn { @apply w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200; }

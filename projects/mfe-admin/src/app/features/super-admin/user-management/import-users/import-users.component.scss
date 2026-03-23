@@ -1,0 +1,55 @@
+/* --- ANIMATIONS --- */
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- BUTTONS --- */
+.btn-primary {
+  @apply bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm
+  flex items-center justify-center gap-2 transition-all shadow-sm shadow-blue-600/20
+  hover:bg-blue-700 hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200
+  rounded-xl hover:bg-slate-50 transition-colors active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-outline-green {
+  @apply bg-white text-emerald-600 border border-emerald-200 px-5 py-2.5
+  rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all
+  hover:bg-emerald-50 hover:border-emerald-300 active:scale-95 disabled:opacity-50;
+}
+
+/* --- TÙY CHỈNH KÉO THẢ FILE --- */
+input[type="file"] {
+  // Ẩn cái chữ "No file chosen" mặc định của trình duyệt cho nó thanh lịch
+  color: transparent;
+
+  &::file-selector-button {
+    @apply transition-all duration-200;
+  }
+}
+
+/* --- CUSTOM SCROLLBAR CHO TABLE PREVIEW --- */
+.custom-scrollbar {
+  &::-webkit-scrollbar {
+    height: 8px; /* Thanh cuộn ngang */
+    width: 6px;  /* Thanh cuộn dọc */
+  }
+  &::-webkit-scrollbar-track {
+    @apply bg-slate-50 rounded-full;
+  }
+  &::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full transition-colors;
+
+    &:hover {
+      @apply bg-slate-400;
+    }
+  }
+}

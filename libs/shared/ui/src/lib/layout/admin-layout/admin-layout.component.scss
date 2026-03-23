@@ -6,7 +6,7 @@
   display: flex;
   height: 100vh;
   width: 100vw;
-  overflow: hidden; // Không cho phép cả trang bị cuộn ngang
+  overflow: hidden;
 }
 
 .sidebar-area {
@@ -14,7 +14,7 @@
   background: #fff;
   border-right: 1px solid #eee;
   z-index: 50;
-  transition: all 0.3s ease; // Thêm để sau này ní làm nút đóng/mở sidebar cho mượt
+  transition: all 0.3s ease;
 }
 
 .content-area {
@@ -22,8 +22,8 @@
   display: flex;
   flex-direction: column;
   background: #f5f7fa;
-  min-width: 0; // "Bùa hộ mệnh" chặn table đẩy vỡ layout
-  max-width: 100%; // Ép tuyệt đối không vượt quá chiều ngang màn hình
+  min-width: 0;
+  max-width: 100%;
   position: relative;
 }
 
@@ -37,7 +37,7 @@
 .main-scrollable {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden; // Cuộn dọc ở đây, nhưng cấm cuộn ngang ở cấp độ này
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -46,9 +46,9 @@
   flex: 1;
   width: 100%;
   max-width: 100%;
-  padding: 16px; // Mặc định cho mobile
+  padding: 16px;
 
   @media (min-width: 768px) {
-    padding: 0px;
+    padding: 0;
   }
 }

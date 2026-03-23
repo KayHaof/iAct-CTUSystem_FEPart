@@ -1,0 +1,168 @@
+@if (isOpen) {
+  <div class="fixed inset-0 z-[120] flex items-start pt-[10vh] justify-center animate-fade-in p-4">
+    <div class="modal-backdrop" role="button" tabindex="0" aria-label="Đóng" (click)="close()" (keydown.enter)="close()"></div>
+
+    <div class="modal-content max-w-3xl max-h-[85vh] bg-white flex flex-col shadow-2xl">
+      <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg shadow-sm">
+            <i class="bi bi-person-plus-fill"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-extrabold text-slate-800">Thêm người dùng mới</h3>
+            <p class="text-xs font-medium text-slate-500 mt-0.5">Khởi tạo tài khoản và phân quyền hệ thống</p>
+          </div>
+        </div>
+        <button (click)="close()" class="action-btn bg-white border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 shadow-sm tooltip transition-all" title="Đóng">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto custom-scrollbar space-y-8 flex-1">
+
+        <div>
+          <h5 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
+            <i class="bi bi-shield-lock-fill text-blue-500"></i> 1. Thông tin đăng nhập
+          </h5>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label for="addUsername" class="input-label">Tên đăng nhập (Username) <span class="text-rose-500">*</span></label>
+              <input id="addUsername" type="text" [(ngModel)]="newUser.username" placeholder="Nhập username..." class="input-field py-2.5">
+            </div>
+
+            <div>
+              <label for="addEmail" class="input-label">Email <span class="text-rose-500">*</span></label>
+              <input id="addEmail" type="email" [(ngModel)]="newUser.email" placeholder="example@ctu.edu.vn" class="input-field py-2.5">
+            </div>
+
+            <div>
+              <label for="addPassword" class="input-label">Mật khẩu <span class="text-rose-500">*</span></label>
+              <div class="relative">
+                <input id="addPassword" [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="newUser.password" placeholder="Nhập mật khẩu..." class="input-field py-2.5 pr-10">
+                <button type="button" (click)="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                  <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()"></i>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="confirmPassword" class="input-label">Xác nhận mật khẩu <span class="text-rose-500">*</span></label>
+              <div class="relative">
+                <input id="confirmPassword" [type]="showConfirmPassword() ? 'text' : 'password'" [(ngModel)]="confirmPassword" placeholder="Nhập lại mật khẩu..."
+                       class="input-field py-2.5 pr-10"
+                       [class.border-rose-400]="confirmPassword && newUser.password !== confirmPassword"
+                       [class.focus:ring-rose-100]="confirmPassword && newUser.password !== confirmPassword"
+                       [class.focus:border-rose-500]="confirmPassword && newUser.password !== confirmPassword">
+                <button type="button" (click)="toggleConfirmPassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                  <i class="bi" [class.bi-eye]="!showConfirmPassword()" [class.bi-eye-slash]="showConfirmPassword()"></i>
+                </button>
+              </div>
+              @if (confirmPassword && newUser.password !== confirmPassword) {
+                <p class="text-[11px] text-rose-500 font-bold mt-1.5 flex items-center gap-1">
+                  <i class="bi bi-exclamation-circle-fill"></i> Mật khẩu không khớp!
+                </p>
+              }
+            </div>
+
+            <div class="sm:col-span-2">
+              <label for="addRole" class="input-label">Vai trò hệ thống <span class="text-rose-500">*</span></label>
+              <div class="relative">
+                <select id="addRole" [(ngModel)]="newUser.roleType" (change)="onRoleChange()" class="input-field py-2.5 font-semibold text-blue-700 bg-blue-50/50 border-blue-200">
+                  <option [ngValue]="0" disabled>-- Chọn vai trò --</option>
+                  <option [ngValue]="1">Sinh viên</option>
+                  <option [ngValue]="2">Khoa & Đơn vị</option>
+                  <option [ngValue]="3">Quản trị viên (Admin)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        @if (newUser.roleType !== 0) {
+          <div class="animate-fade-in">
+            <h5 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
+              <i class="bi bi-person-vcard-fill text-emerald-500"></i> 2. Thông tin hồ sơ định danh
+            </h5>
+
+            @if (newUser.roleType === 1) {
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label for="addStudentCode" class="input-label">Mã số sinh viên <span class="text-rose-500">*</span></label>
+                  <input id="addStudentCode" type="text" [(ngModel)]="newUser.studentCode" placeholder="VD: B2205864" class="input-field py-2.5 uppercase">
+                </div>
+                <div>
+                  <label for="addStudentName" class="input-label">Họ và tên sinh viên <span class="text-rose-500">*</span></label>
+                  <input id="addStudentName" type="text" [(ngModel)]="newUser.fullName" placeholder="Nhập họ và tên..." class="input-field py-2.5">
+                </div>
+                <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 mt-2">
+                  <div>
+                    <label for="addDeptId" class="input-label text-[10px]">Khoa trực thuộc</label>
+                    <select id="addDeptId" [(ngModel)]="newUser.departmentId" (change)="onAddDeptChange()" class="input-field py-2 text-xs">
+                      <option [value]="null">-- Chọn Khoa --</option>
+                      @for (dept of departments; track dept.id) { <option [value]="dept.id">{{ dept.name }}</option> }
+                    </select>
+                  </div>
+                  <div>
+                    <label for="addMajorId" class="input-label text-[10px]" [class.opacity-50]="!newUser.departmentId">Chuyên ngành</label>
+                    <select id="addMajorId" [(ngModel)]="newUser.majorId" (change)="onAddMajorChange()" [disabled]="!newUser.departmentId" class="input-field py-2 text-xs">
+                      <option [value]="null">-- Chọn Ngành --</option>
+                      @for (major of addMajors(); track major.id) { <option [value]="major.id">{{ major.name }}</option> }
+                    </select>
+                  </div>
+                  <div>
+                    <label for="addClassId" class="input-label text-[10px]" [class.opacity-50]="!newUser.majorId">Lớp sinh hoạt</label>
+                    <select id="addClassId" [(ngModel)]="newUser.classId" [disabled]="!newUser.majorId" class="input-field py-2 text-xs font-bold text-blue-700">
+                      <option [value]="null">-- Chọn Lớp --</option>
+                      @for (cls of addClasses(); track cls.id) { <option [value]="cls.id">{{ cls.classCode }}</option> }
+                    </select>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (newUser.roleType === 2) {
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label for="addOrgName" class="input-label">Tên Khoa / Đơn vị <span class="text-rose-500">*</span></label>
+                  <input id="addOrgName" type="text" [(ngModel)]="newUser.fullName" placeholder="VD: Đoàn khoa CNTT&TT" class="input-field py-2.5">
+                </div>
+                <div>
+                  <label for="addOrgDesc" class="input-label">Mô tả chức năng / Nhiệm vụ</label>
+                  <input id="addOrgDesc" type="text" [(ngModel)]="newUser.description" placeholder="Nhập mô tả cho đơn vị..." class="input-field py-2.5">
+                </div>
+              </div>
+            }
+
+            @if (newUser.roleType === 3) {
+              <div class="grid grid-cols-1 gap-5">
+                <div>
+                  <label for="addAdminName" class="input-label">Họ và tên Quản trị viên <span class="text-rose-500">*</span></label>
+                  <input id="addAdminName" type="text" [(ngModel)]="newUser.fullName" placeholder="Nhập tên admin..." class="input-field py-2.5">
+                </div>
+                <div class="bg-rose-50 p-4 rounded-xl border border-rose-100 flex items-start gap-3">
+                  <i class="bi bi-exclamation-triangle-fill text-rose-500 mt-0.5"></i>
+                  <div>
+                    <h6 class="text-sm font-bold text-rose-800">Cấp quyền cao nhất</h6>
+                    <p class="text-xs text-rose-600 mt-1">Tài khoản này sẽ có toàn quyền can thiệp vào hệ thống. Vui lòng kiểm tra kỹ thông tin trước khi tạo.</p>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
+        <button (click)="close()" class="btn-secondary">Hủy bỏ</button>
+        <button (click)="submit()" [disabled]="!isFormValid() || isSaving()" class="btn-primary">
+          @if (isSaving()) {
+            <i class="bi bi-arrow-repeat animate-spin"></i> Đang khởi tạo...
+          } @else {
+            <i class="bi bi-person-check-fill"></i> Hoàn tất thêm mới
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

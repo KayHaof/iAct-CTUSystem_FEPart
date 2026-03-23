@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/guards/role.guard';
+import { ImportUsersComponent } from './features/super-admin/user-management/import-users/import-users.component';
 
 export const routes: Routes = [
   // Tự động chuyển hướng khi vừa vào mfe-admin
@@ -93,6 +94,16 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/super-admin/user-management/user-management.component').then(
         (m) => m.UserManagementComponent,
+      ),
+    canActivate: [roleGuard],
+    data: { roles: ['admin'] },
+  },
+  {
+    path: 'user-management/import-users',
+    title: 'Import Users Data',
+    loadComponent: () =>
+      import('./features/super-admin/user-management/import-users/import-users.component').then(
+        (m) => m.ImportUsersComponent,
       ),
     canActivate: [roleGuard],
     data: { roles: ['admin'] },

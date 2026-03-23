@@ -19,18 +19,11 @@ export class AdminUserService {
 
   private baseUrl = 'http://localhost:8080/identity/api/v1/users';
   private profileUrl = 'http://localhost:8080/profile/api/v1';
+  private authUrl = 'http://localhost:8080/identity/auth';
 
   getAllDepartments(): Observable<ApiResponse<Department[]>> {
     return this.http.get<ApiResponse<Department[]>>(`${this.profileUrl}/departments`);
   }
-
-  // getClasses(departmentId?: number): Observable<ApiResponse<ClassInfo[]>> {
-  //   let params = new HttpParams();
-  //   if (departmentId) {
-  //     params = params.set('departmentId', departmentId);
-  //   }
-  //   return this.http.get<ApiResponse<ClassInfo[]>>(`${this.profileUrl}/classes`, { params });
-  // }
 
   // Fetch all users by specification
   getUsers(
@@ -40,11 +33,13 @@ export class AdminUserService {
     roleType?: number,
     departmentId?: number | string,
     status?: number | string,
+    classId?: number | string,
   ): Observable<ApiResponse<PageDTO<UserInfo>>> {
     let params = new HttpParams().set('page', page).set('size', size);
 
     if (keyword) params = params.set('keyword', keyword);
     if (roleType) params = params.set('roleType', roleType);
+
     if (departmentId !== undefined && departmentId !== null && departmentId !== '') {
       params = params.set('departmentId', departmentId);
     }
@@ -52,20 +47,28 @@ export class AdminUserService {
       params = params.set('status', status);
     }
 
+    if (classId !== undefined && classId !== null && classId !== '') {
+      params = params.set('classId', classId);
+    }
+
     return this.http.get<ApiResponse<PageDTO<UserInfo>>>(this.baseUrl, { params });
   }
-
-  // createUser(user: CreateUserDto): Observable<ApiResponse<UserInfo>> {
-  //   return this.http.post<ApiResponse<UserInfo>>(this.baseUrl, user);
-  // }
 
   getMajorsByDepartment(departmentId: number | string): Observable<ApiResponse<MajorInfo[]>> {
     const params = new HttpParams().set('departmentId', departmentId);
     return this.http.get<ApiResponse<MajorInfo[]>>(`${this.profileUrl}/majors`, { params });
   }
 
-  getClassesByMajor(majorId: number | string): Observable<ApiResponse<ClassInfo[]>> {
-    const params = new HttpParams().set('majorId', majorId);
+  getClassesByMajor(
+    majorId: number | string,
+    academicYear?: string,
+  ): Observable<ApiResponse<ClassInfo[]>> {
+    let params = new HttpParams().set('majorId', majorId);
+
+    if (academicYear) {
+      params = params.set('academicYear', academicYear); // Gửi '48' xuống BE
+    }
+
     return this.http.get<ApiResponse<ClassInfo[]>>(`${this.profileUrl}/classes`, { params });
   }
 
@@ -89,5 +92,13 @@ export class AdminUserService {
 
   resetPassword(id: number | string): Observable<ApiResponse<string>> {
     return this.http.put<ApiResponse<string>>(`${this.baseUrl}/${id}/reset-password`, {});
+  }
+
+  registerUser(payload: any) {
+    return this.http.post(`${this.authUrl}/register`, payload, { responseType: 'text' });
+  }
+
+  importUsersFromExcel(formData: FormData): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.baseUrl}/import`, formData);
   }
 }

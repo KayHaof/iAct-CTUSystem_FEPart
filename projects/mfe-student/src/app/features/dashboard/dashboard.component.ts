@@ -3,7 +3,6 @@ import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 
-// Import UserService từ Shared UI
 import { UserService } from '@my-mfe/auth';
 
 import { WelcomeBannerComponent } from './components/welcome-banner/welcome-banner.component';
@@ -31,11 +30,8 @@ export class DashboardComponent implements OnInit {
   data: DashboardData | null = null;
   isLoading = true;
 
-  // 1. Inject UserService để lấy thông tin User (public để HTML dùng được)
   public userService = inject(UserService);
   private cdr = inject(ChangeDetectorRef);
-
-  // SỬA Ở ĐÂY NÈ NÍ: Xóa constructor, thay bằng inject()
   private router = inject(Router);
 
   ngOnInit(): void {
@@ -57,10 +53,7 @@ export class DashboardComponent implements OnInit {
   }
 }
 
-// DATA MẪU (Chỉ còn giữ lại dữ liệu Dashboard, không còn thông tin cá nhân)
 const MOCK_DATA: DashboardData = {
-  // Đã xóa fullName và studentCode
-
   totalScore: 85,
   rank: 'Tốt',
   socialDays: 12,

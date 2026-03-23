@@ -1,0 +1,165 @@
+<div class="p-4 md:p-6 max-w-5xl mx-auto space-y-6 animate-fade-in">
+
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <button (click)="goBack()" class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm">
+        <i class="bi bi-arrow-left text-lg"></i>
+      </button>
+      <div>
+        <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Nhập Sinh viên hàng loạt</h1>
+        <p class="text-slate-500 text-sm mt-1">Sử dụng file Excel (.xlsx) để thêm mới nhiều tài khoản cùng lúc.</p>
+      </div>
+    </div>
+
+    <a href="/assets/templates/import_students_template.xlsx" download class="btn-outline-green tooltip" title="Tải file Excel mẫu">
+      <i class="bi bi-cloud-arrow-down-fill"></i> Tải file mẫu
+    </a>
+  </div>
+
+  @if (!importResult()) {
+
+    <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-5 mb-6">
+      <h3 class="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2">
+        <i class="bi bi-info-circle-fill"></i> Yêu cầu dữ liệu file Excel (Bắt buộc có dòng tiêu đề ở dòng 1)
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+        <div class="bg-white p-3 rounded-xl border border-blue-50 shadow-sm flex flex-col justify-center">
+          <span class="font-bold text-slate-700">1. Username <span class="text-rose-500">*</span></span>
+          <p class="text-slate-500 text-xs mt-1">Viết liền không dấu, là thông tin duy nhất (Thường dùng luôn MSSV).</p>
+        </div>
+        <div class="bg-white p-3 rounded-xl border border-blue-50 shadow-sm flex flex-col justify-center">
+          <span class="font-bold text-slate-700">2. Email <span class="text-rose-500">*</span></span>
+          <p class="text-slate-500 text-xs mt-1">Định dạng email chuẩn, duy nhất không trùng lặp với user khác.</p>
+        </div>
+        <div class="bg-white p-3 rounded-xl border border-blue-50 shadow-sm flex flex-col justify-center">
+          <span class="font-bold text-slate-700">3. MSSV <span class="text-rose-500">*</span></span>
+          <p class="text-slate-500 text-xs mt-1">Mã số sinh viên (VD: B2205918), bắt buộc phải là duy nhất.</p>
+        </div>
+        <div class="bg-white p-3 rounded-xl border border-blue-50 shadow-sm flex flex-col justify-center">
+          <span class="font-bold text-slate-700">4. Họ và Tên <span class="text-rose-500">*</span></span>
+          <p class="text-slate-500 text-xs mt-1">Điền đầy đủ họ tên sinh viên (Có dấu tiếng Việt).</p>
+        </div>
+        <div class="bg-white p-3 rounded-xl border border-blue-50 shadow-sm flex flex-col justify-center">
+          <span class="font-bold text-slate-700">5. Mã Lớp <span class="text-rose-500">*</span></span>
+          <p class="text-slate-500 text-xs mt-1">Phải trùng khớp chính xác với mã lớp đã tạo trên hệ thống (VD: DI22V7A1).</p>
+        </div>
+        <div class="bg-white p-3 rounded-xl border border-blue-50 shadow-sm flex flex-col justify-center">
+          <span class="font-bold text-slate-700">6. Mật khẩu <span class="text-rose-500">*</span></span>
+          <p class="text-slate-500 text-xs mt-1">Mật khẩu cấp lần đầu cho sinh viên (Khuyến nghị đặt mặc định giống nhau).</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-sm border-2 border-dashed transition-all duration-200 p-8 text-center relative overflow-hidden"
+         [class.border-blue-400]="isDragging()" [class.bg-blue-50]="isDragging()"
+         [class.border-slate-200]="!isDragging() && !selectedFile()"
+         [class.border-emerald-400]="selectedFile() && !isDragging()" [class.bg-emerald-50]="selectedFile() && !isDragging()"
+         (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+
+      <input type="file" id="fileUpload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+             accept=".xlsx, .xls" (change)="onFileSelected($event)" [disabled]="isUploading()">
+
+      @if (!selectedFile()) {
+        <div class="w-16 h-16 mx-auto bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+          <i class="bi bi-file-earmark-spreadsheet"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-700">Kéo thả file Excel vào đây</h3>
+        <p class="text-slate-500 text-sm mt-2">Hoặc click để chọn file từ máy tính của bạn (Tối đa 5MB)</p>
+      } @else {
+        <div class="w-16 h-16 mx-auto bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mb-4 shadow-sm">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <h3 class="text-lg font-bold text-emerald-700">{{ selectedFile()?.name }}</h3>
+        <p class="text-emerald-600 text-sm mt-1 font-medium">{{ (selectedFile()?.size || 0) / 1024 | number:'1.0-0' }} KB</p>
+      }
+    </div>
+
+    @if (selectedFile() && previewHeaders().length > 0) {
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-fade-in mt-6">
+        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+          <h4 class="font-bold text-slate-700 flex items-center gap-2">
+            <i class="bi bi-table text-blue-500"></i> Xem trước dữ liệu (5 dòng đầu)
+          </h4>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse min-w-[800px]">
+            <thead>
+            <tr class="text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50">
+              <th class="py-3 px-4 border-b border-slate-100 w-12 text-center">#</th>
+              @for (header of previewHeaders(); track header) {
+                <th class="py-3 px-4 border-b border-slate-100">{{ header }}</th>
+              }
+            </tr>
+            </thead>
+            <tbody class="text-sm">
+              @for (row of previewRows(); track $index) {
+                <tr class="border-b border-slate-50 hover:bg-slate-50/50">
+                  <td class="py-2.5 px-4 font-medium text-slate-400 text-center">{{ $index + 1 }}</td>
+                  @for (cell of previewHeaders(); track cellIdx; let cellIdx = $index) {
+                    <td class="py-2.5 px-4 text-slate-700">{{ row[cellIdx] || '-' }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-6">
+        <button (click)="cancelSelection()" [disabled]="isUploading()" class="btn-secondary">Hủy bỏ</button>
+        <button (click)="uploadFile()" [disabled]="isUploading()" class="btn-primary px-8">
+          @if (isUploading()) {
+            <i class="bi bi-arrow-repeat animate-spin"></i> Đang xử lý...
+          } @else {
+            <i class="bi bi-cloud-arrow-up-fill"></i> Tiến hành Import
+          }
+        </button>
+      </div>
+    }
+
+  } @else {
+    <div class="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center animate-fade-in mt-6">
+
+      @if (importResult()?.failCount === 0) {
+        <div class="w-20 h-20 mx-auto bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center text-4xl mb-6 shadow-sm">
+          <i class="bi bi-check-lg"></i>
+        </div>
+        <h2 class="text-2xl font-extrabold text-slate-800 mb-2">Tuyệt vời! Hoàn tất 100%</h2>
+        <p class="text-slate-500 font-medium mb-8">Đã thêm thành công <b class="text-emerald-600 text-lg">{{ importResult()?.successCount }}</b> sinh viên vào hệ thống.</p>
+
+        <button (click)="goBack()" class="btn-primary mx-auto">
+          <i class="bi bi-arrow-left"></i> Quay lại Danh sách
+        </button>
+
+      } @else {
+        <div class="w-20 h-20 mx-auto bg-amber-100 text-amber-500 rounded-full flex items-center justify-center text-4xl mb-6 shadow-sm">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <h2 class="text-2xl font-extrabold text-slate-800 mb-2">Import hoàn tất, nhưng có lỗi!</h2>
+
+        <div class="flex justify-center gap-6 mt-6 mb-8">
+          <div class="bg-emerald-50 px-6 py-4 rounded-xl border border-emerald-100 text-center min-w-[140px]">
+            <span class="block text-3xl font-black text-emerald-600 mb-1">{{ importResult()?.successCount }}</span>
+            <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Thành công</span>
+          </div>
+          <div class="bg-rose-50 px-6 py-4 rounded-xl border border-rose-100 text-center min-w-[140px]">
+            <span class="block text-3xl font-black text-rose-600 mb-1">{{ importResult()?.failCount }}</span>
+            <span class="text-xs font-bold text-rose-700 uppercase tracking-wider">Thất bại</span>
+          </div>
+        </div>
+
+        <p class="text-slate-600 font-medium max-w-lg mx-auto mb-8 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          Hệ thống đã bỏ qua các dòng bị lỗi (trùng MSSV, sai định dạng...). Vui lòng tải file chi tiết lỗi dưới đây, chỉnh sửa lại dữ liệu và Import lại file đó.
+        </p>
+
+        <div class="flex items-center justify-center gap-4">
+          <button (click)="cancelSelection()" class="btn-secondary">
+            <i class="bi bi-arrow-clockwise"></i> Import file khác
+          </button>
+          <button (click)="downloadErrorFile()" class="bg-rose-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-rose-700 transition-all shadow-sm shadow-rose-600/20 active:scale-95">
+            <i class="bi bi-file-earmark-excel-fill"></i> Tải File Lỗi (.xlsx)
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -11,7 +11,7 @@ export class AlertService {
   success(message: string) {
     this.snackBar.open(message, 'Đóng', {
       duration: 3000,
-      horizontalPosition: 'right', // Góc phải
+      horizontalPosition: 'right',
       verticalPosition: 'top',
       panelClass: ['success-snackbar'],
     });
@@ -20,16 +20,25 @@ export class AlertService {
   error(message: string) {
     this.snackBar.open(message, 'Đóng', {
       duration: 4000,
-      horizontalPosition: 'right', // Góc phải
+      horizontalPosition: 'right',
       verticalPosition: 'top',
       panelClass: ['error-snackbar'],
+    });
+  }
+
+  warning(message: string) {
+    this.snackBar.open(message, 'Đóng', {
+      duration: 4000,
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+      panelClass: ['warning-snackbar'],
     });
   }
 
   info(message: string) {
     this.snackBar.open(message, 'Đóng', {
       duration: 3000,
-      horizontalPosition: 'right', // Góc phải
+      horizontalPosition: 'right',
       verticalPosition: 'top',
     });
   }

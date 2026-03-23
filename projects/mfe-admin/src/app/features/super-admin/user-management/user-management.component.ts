@@ -1,21 +1,36 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UserInfo, Department, ClassInfo, MajorInfo, ApiResponse, PageDTO } from 'interface';
+import { Router } from '@angular/router';
+import { UserInfo, Department, MajorInfo, ClassInfo, ApiResponse, PageDTO } from 'interface';
 import { TableContainerComponent, PaginationComponent } from '@my-mfe/ui';
+import { AlertService } from '@my-mfe/ui';
 import Swal from 'sweetalert2';
 
 import { AdminUserService } from '../services/admin-user.service';
+import { AddUserModalComponent } from './add-user-modal/add-user-modal.component';
+import { ViewUserModalComponent } from './view-user-modal/view-user-modal.component';
+import { EditUserModalComponent } from './edit-user-modal/edit-user-modal.component';
 
 @Component({
   selector: 'app-user-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, TableContainerComponent, PaginationComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableContainerComponent,
+    PaginationComponent,
+    AddUserModalComponent,
+    ViewUserModalComponent,
+    EditUserModalComponent,
+  ],
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.scss'],
 })
 export class UserManagementComponent implements OnInit {
   private adminUserService = inject(AdminUserService);
+  private alertService = inject(AlertService);
+  private router = inject(Router);
 
   users = signal<UserInfo[]>([]);
   departments = signal<Department[]>([]);
@@ -33,12 +48,44 @@ export class UserManagementComponent implements OnInit {
   editingUser = signal<UserInfo | null>(null);
   isSavingClass = signal<boolean>(false);
 
-  majors = signal<MajorInfo[]>([]);
-  classesForEdit = signal<ClassInfo[]>([]);
+  currentPage = signal<number>(1);
+  pageSize = signal<number>(10);
+  totalRows = signal<number>(0);
 
-  editSelectedDept = signal<number | ''>('');
-  editSelectedMajor = signal<number | ''>('');
-  editSelectedClass = signal<number | ''>('');
+  searchTerm = signal<string>('');
+  selectedFaculty = signal<number | ''>(''); // Dùng cho tab Khoa/Đơn vị
+  selectedStatus = signal<number | ''>('');
+
+  totalPages = computed(() => Math.ceil(this.totalRows() / this.pageSize()));
+
+  isViewModalOpen = signal<boolean>(false);
+  viewingUser = signal<UserInfo | null>(null);
+
+  isAddModalOpen = signal(false);
+
+  // --- BỘ BIẾN LỌC KHOAN SÂU DÀNH CHO TAB SINH VIÊN ---
+  cohorts = [
+    { label: 'K46 (2020)', value: '46' },
+    { label: 'K47 (2021)', value: '47' },
+    { label: 'K48 (2022)', value: '48' },
+    { label: 'K49 (2023)', value: '49' },
+    { label: 'K50 (2024)', value: '50' },
+    { label: 'K51 (2025)', value: '51' },
+    { label: 'K52 (2026)', value: '52' },
+  ];
+  selectedFilterCohort = signal<string>('');
+  selectedFilterDept = signal<number | ''>('');
+  selectedFilterMajor = signal<number | ''>('');
+  selectedFilterClass = signal<number | ''>('');
+
+  filterMajors = signal<MajorInfo[]>([]);
+  filterClasses = signal<ClassInfo[]>([]);
+
+  ngOnInit() {
+    this.loadDepartments();
+    this.loadCounts();
+    this.loadUsers();
+  }
 
   switchTab(tab: 'STUDENT' | 'FACULTY' | 'ADMIN') {
     if (this.activeTab() === tab) return;
@@ -47,24 +94,12 @@ export class UserManagementComponent implements OnInit {
     this.loadUsers();
   }
 
-  currentPage = signal<number>(1);
-  pageSize = signal<number>(10);
-  totalRows = signal<number>(0);
+  openAddModal() {
+    this.isAddModalOpen.set(true);
+  }
 
-  searchTerm = signal<string>('');
-  selectedRole = signal<number | ''>('');
-  selectedFaculty = signal<number | ''>('');
-  selectedStatus = signal<number | ''>('');
-
-  totalPages = computed(() => Math.ceil(this.totalRows() / this.pageSize()));
-
-  isViewModalOpen = signal<boolean>(false);
-  viewingUser = signal<UserInfo | null>(null);
-
-  ngOnInit() {
-    this.loadDepartments();
-    this.loadCounts();
-    this.loadUsers();
+  closeAddModal() {
+    this.isAddModalOpen.set(false);
   }
 
   loadDepartments() {
@@ -83,15 +118,87 @@ export class UserManagementComponent implements OnInit {
     this.adminUserService.getUserCounts(this.searchTerm()).subscribe({
       next: (res) => {
         if (res.result) {
-          this.studentCount.set(res.result.student || 0);
-          this.facultyCount.set(res.result.faculty || 0);
-          this.adminCount.set(res.result.admin || 0);
+          if (this.activeTab() !== 'FACULTY') {
+            this.facultyCount.set(res.result.faculty || 0);
+          }
+          if (this.activeTab() !== 'ADMIN') {
+            this.adminCount.set(res.result.admin || 0);
+          }
+          if (this.activeTab() !== 'STUDENT') {
+            this.studentCount.set(res.result.student || 0);
+          }
         }
       },
     });
   }
 
+  // --- LOGIC CASCADING DROPDOWN TÌM KIẾM SINH VIÊN ---
+  onSearchInputChanged(value: string) {
+    // Nếu xóa sạch ô search VÀ chưa chọn lớp -> Reset mọi thứ, đóng băng bảng
+    if (this.activeTab() === 'STUDENT' && !value.trim() && !this.selectedFilterClass()) {
+      this.users.set([]);
+      this.totalRows.set(0);
+      this.studentCount.set(0); // Reset số đếm luôn
+      this.isLoading.set(false);
+    }
+  }
+
+  onFilterCohortChange() {
+    this.selectedFilterDept.set('');
+    this.selectedFilterMajor.set('');
+    this.selectedFilterClass.set('');
+    this.filterMajors.set([]);
+    this.filterClasses.set([]);
+  }
+
+  onFilterDeptChange() {
+    this.selectedFilterMajor.set('');
+    this.selectedFilterClass.set('');
+    this.filterClasses.set([]);
+
+    const deptId = this.selectedFilterDept();
+    if (!deptId) {
+      this.filterMajors.set([]);
+      return;
+    }
+
+    this.adminUserService.getMajorsByDepartment(Number(deptId)).subscribe({
+      next: (res: ApiResponse<MajorInfo[]>) => {
+        const safeResult = res.result as any;
+        this.filterMajors.set(Array.isArray(safeResult) ? safeResult : safeResult.data || []);
+      },
+    });
+  }
+
+  onFilterMajorChange() {
+    this.selectedFilterClass.set('');
+    const majorId = this.selectedFilterMajor();
+    const academicYear = this.selectedFilterCohort(); // Lấy giá trị '48', '49'
+
+    if (!majorId || !academicYear) {
+      this.filterClasses.set([]);
+      return;
+    }
+    this.adminUserService.getClassesByMajor(Number(majorId), academicYear).subscribe({
+      next: (res: ApiResponse<ClassInfo[]>) => {
+        const safeResult = res.result as any;
+        this.filterClasses.set(Array.isArray(safeResult) ? safeResult : safeResult.data || []);
+      },
+    });
+  }
+
   loadUsers() {
+    if (
+      this.activeTab() === 'STUDENT' &&
+      !this.selectedFilterClass() &&
+      !this.searchTerm().trim()
+    ) {
+      this.users.set([]);
+      this.totalRows.set(0);
+      this.isLoading.set(false);
+      return;
+    }
+
     this.isLoading.set(true);
 
     let currentRole: number;
@@ -99,9 +206,9 @@ export class UserManagementComponent implements OnInit {
     else if (this.activeTab() === 'FACULTY') currentRole = 2;
     else currentRole = 3;
 
-    // FE đếm từ 1, BE đếm từ 0
     const apiPage = this.currentPage() - 1;
 
+    // Truyền classId vào API nếu đang tìm sinh viên
     this.adminUserService
       .getUsers(
         apiPage,
@@ -110,12 +217,12 @@ export class UserManagementComponent implements OnInit {
         currentRole,
         this.selectedFaculty(),
         this.selectedStatus(),
+        this.selectedFilterClass(), // Cần bổ sung tham số này trong file service
       )
       .subscribe({
         next: (res: ApiResponse<PageDTO<UserInfo>>) => {
           let listUsers: UserInfo[] = [];
           let total = 0;
-
           type FlexibleResponse =
             | {
                 result?:
@@ -126,7 +233,6 @@ export class UserManagementComponent implements OnInit {
                 totalElements?: number;
               }
             | UserInfo[];
-
           const safeRes = res as unknown as FlexibleResponse;
 
           if (
@@ -145,18 +251,23 @@ export class UserManagementComponent implements OnInit {
             listUsers = safeRes.result;
             total = safeRes.result.length;
           } else if (Array.isArray(safeRes)) {
-            listUsers = safeRes;
+            listUsers = listUsers = safeRes;
             total = safeRes.length;
           }
 
           this.users.set(listUsers);
           this.totalRows.set(total);
+
+          if (this.activeTab() === 'STUDENT') this.studentCount.set(total);
+          else if (this.activeTab() === 'FACULTY') this.facultyCount.set(total);
+          else if (this.activeTab() === 'ADMIN') this.adminCount.set(total);
+
           this.isLoading.set(false);
         },
-        error: (err) => {
-          console.error('Lỗi khi tải danh sách người dùng:', err);
+        error: () => {
           this.users.set([]);
           this.totalRows.set(0);
+          if (this.activeTab() === 'STUDENT') this.studentCount.set(0);
           this.isLoading.set(false);
         },
       });
@@ -170,9 +281,17 @@ export class UserManagementComponent implements OnInit {
 
   resetFilters() {
     this.searchTerm.set('');
-    this.selectedRole.set('');
     this.selectedFaculty.set('');
     this.selectedStatus.set('');
+
+    // Reset bộ lọc sinh viên
+    this.selectedFilterCohort.set('');
+    this.selectedFilterDept.set('');
+    this.selectedFilterMajor.set('');
+    this.selectedFilterClass.set('');
+    this.filterMajors.set([]);
+    this.filterClasses.set([]);
+
     this.onSearch();
   }
 
@@ -183,7 +302,6 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
-  // Sort functions
   sortedUsers = computed(() => {
     const data = [...this.users()];
     const col = this.sortBy();
@@ -194,7 +312,6 @@ export class UserManagementComponent implements OnInit {
     return data.sort((a, b) => {
       const valA =
         col === 'studentCode' ? a.studentCode || a.username || '' : a[col as keyof UserInfo];
-
       const valB =
         col === 'studentCode' ? b.studentCode || b.username || '' : b[col as keyof UserInfo];
 
@@ -246,22 +363,13 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  openAddModal() {
-    console.log('Mở modal thêm user');
-  }
-
-  openImportModal() {
-    console.log('Mở modal import excel');
+  goToImportPage() {
+    this.router.navigate(['/admin/user-management/import-users']);
   }
 
   editUser(user: UserInfo) {
     this.editingUser.set(user);
     this.isEditModalOpen.set(true);
-    this.editSelectedDept.set('');
-    this.editSelectedMajor.set('');
-    this.editSelectedClass.set('');
-    this.majors.set([]);
-    this.classesForEdit.set([]);
   }
 
   closeEditModal() {
@@ -269,76 +377,22 @@ export class UserManagementComponent implements OnInit {
     this.editingUser.set(null);
   }
 
-  onEditDeptChange() {
-    const deptId = this.editSelectedDept();
-    this.editSelectedMajor.set('');
-    this.editSelectedClass.set('');
-    this.classesForEdit.set([]);
-
-    if (!deptId) {
-      this.majors.set([]);
-      return;
-    }
-
-    this.adminUserService.getMajorsByDepartment(deptId).subscribe({
-      next: (res: ApiResponse<MajorInfo[]>) => {
-        if (res && res.result) {
-          const safeResult = res.result as unknown as MajorInfo[] | { data?: MajorInfo[] };
-          const majorList = Array.isArray(safeResult) ? safeResult : safeResult.data;
-          this.majors.set(majorList || []);
-        }
-      },
-    });
-  }
-
-  onEditMajorChange() {
-    const majorId = this.editSelectedMajor();
-    this.editSelectedClass.set('');
-
-    if (!majorId) {
-      this.classesForEdit.set([]);
-      return;
-    }
-
-    this.adminUserService.getClassesByMajor(majorId).subscribe({
-      next: (res: ApiResponse<ClassInfo[]>) => {
-        if (res && res.result) {
-          const safeResult = res.result as unknown as ClassInfo[] | { data?: ClassInfo[] };
-          const classList = Array.isArray(safeResult) ? safeResult : safeResult.data;
-          this.classesForEdit.set(classList || []);
-        }
-      },
-    });
-  }
-
-  saveUserClass() {
+  handleSaveUserClass(classId: number) {
     const user = this.editingUser();
-    const classId = this.editSelectedClass();
-
-    if (!user || !classId) return;
+    if (!user) return;
 
     this.isSavingClass.set(true);
-    const updatePayload = {
-      classId: classId,
-    };
+    const updatePayload = { classId: classId };
 
     this.adminUserService.updateProfile(user.id, updatePayload).subscribe({
       next: () => {
-        void Swal.fire({
-          icon: 'success',
-          title: 'Thành công',
-          text: 'Đã phân lớp cho sinh viên thành công!',
-          timer: 1500,
-          showConfirmButton: false,
-        });
-
+        this.alertService.success('Đã phân lớp cho sinh viên thành công!');
         this.isSavingClass.set(false);
         this.closeEditModal();
         this.loadUsers();
       },
-      error: (err) => {
-        console.error('Lỗi phân lớp:', err);
-        void Swal.fire('Lỗi', 'Không thể phân lớp, vui lòng kiểm tra lại kết nối.', 'error');
+      error: () => {
+        this.alertService.error('Không thể phân lớp, vui lòng kiểm tra lại kết nối.');
         this.isSavingClass.set(false);
       },
     });
@@ -370,9 +424,7 @@ export class UserManagementComponent implements OnInit {
           title: 'Đang gửi Email...',
           text: 'Vui lòng đợi trong giây lát.',
           allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          },
+          didOpen: () => Swal.showLoading(),
         });
 
         this.adminUserService.resetPassword(user.id).subscribe({
@@ -380,19 +432,64 @@ export class UserManagementComponent implements OnInit {
             void Swal.fire({
               icon: 'success',
               title: 'Đã gửi Email!',
-              html: `Vui lòng thông báo sinh viên <b>${user.fullName}</b> kiểm tra hộp thư đến (hoặc thư rác) tại <b>${user.email}</b> để đặt lại mật khẩu.`,
+              html: `Vui lòng thông báo người dùng kiểm tra hộp thư đến (hoặc thư rác) tại <b>${user.email}</b> để đặt lại mật khẩu.`,
             });
           },
-          error: (err) => {
-            console.error('Lỗi khi gửi mail reset pass:', err);
-            void Swal.fire(
-              'Gửi thất bại',
-              'Hệ thống không thể gửi email lúc này. Vui lòng kiểm tra lại cấu hình Mail Server (SMTP).',
-              'error',
-            );
+          error: () => {
+            void Swal.fire('Gửi thất bại', 'Hệ thống không thể gửi email lúc này.', 'error');
           },
         });
       }
+    });
+  }
+
+  handleSaveNewUser(newUserData: {
+    username: string;
+    email: string;
+    fullName: string;
+    password?: string;
+    roleType: number;
+    studentCode?: string;
+    classId?: number | null;
+    departmentId?: number | null;
+    description?: string;
+  }) {
+    const nameParts = newUserData.fullName.trim().split(' ');
+    const firstNameToSend = nameParts[0];
+    const lastNameToSend = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+    const payload = {
+      username: newUserData.username,
+      email: newUserData.email,
+      firstName: firstNameToSend,
+      lastName: lastNameToSend,
+      password: newUserData.password,
+      roleType: newUserData.roleType,
+      studentCode: newUserData.studentCode,
+      classId: newUserData.classId,
+      departmentId: newUserData.departmentId,
+      description: newUserData.description,
+    };
+
+    this.adminUserService.registerUser(payload).subscribe({
+      next: () => {
+        this.alertService.success(`Tạo tài khoản ${payload.username} thành công!`);
+        this.closeAddModal();
+        this.loadUsers();
+        this.loadCounts();
+      },
+      error: (err) => {
+        let errorMsg = 'Có lỗi xảy ra khi tạo người dùng!';
+        if (err.error) {
+          try {
+            const parsedError = typeof err.error === 'string' ? JSON.parse(err.error) : err.error;
+            errorMsg = parsedError.message || parsedError.error || errorMsg;
+          } catch {
+            errorMsg = err.error;
+          }
+        }
+        this.alertService.error(errorMsg);
+      },
     });
   }
 }
