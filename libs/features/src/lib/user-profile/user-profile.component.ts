@@ -33,6 +33,8 @@ export class UserProfileComponent {
   defaultAvatar =
     'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772527220/0305-logo-ctu_vrk0rw.png';
 
+  adminAvatar = 'https://res.cloudinary.com/dhjamvg6j/image/upload/v1773991699/iact_admin_avt.png';
+
   user = computed(() => this.userService.currentUser());
   isEditing = signal(false);
   isUploading = signal(false);

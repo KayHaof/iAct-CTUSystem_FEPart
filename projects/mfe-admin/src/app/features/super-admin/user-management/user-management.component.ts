@@ -134,11 +134,10 @@ export class UserManagementComponent implements OnInit {
 
   // --- LOGIC CASCADING DROPDOWN TÌM KIẾM SINH VIÊN ---
   onSearchInputChanged(value: string) {
-    // Nếu xóa sạch ô search VÀ chưa chọn lớp -> Reset mọi thứ, đóng băng bảng
-    if (this.activeTab() === 'STUDENT' && !value.trim() && !this.selectedFilterClass()) {
+    if (this.activeTab() === 'STUDENT' && !value.trim() && !this.selectedFilterClass() && this.selectedStatus() === '') {
       this.users.set([]);
       this.totalRows.set(0);
-      this.studentCount.set(0); // Reset số đếm luôn
+      this.studentCount.set(0);
       this.isLoading.set(false);
     }
   }
@@ -191,7 +190,8 @@ export class UserManagementComponent implements OnInit {
     if (
       this.activeTab() === 'STUDENT' &&
       !this.selectedFilterClass() &&
-      !this.searchTerm().trim()
+      !this.searchTerm().trim() &&
+      this.selectedStatus() === ''
     ) {
       this.users.set([]);
       this.totalRows.set(0);
@@ -217,7 +217,7 @@ export class UserManagementComponent implements OnInit {
         currentRole,
         this.selectedFaculty(),
         this.selectedStatus(),
-        this.selectedFilterClass(), // Cần bổ sung tham số này trong file service
+        this.selectedFilterClass(),
       )
       .subscribe({
         next: (res: ApiResponse<PageDTO<UserInfo>>) => {
@@ -364,7 +364,7 @@ export class UserManagementComponent implements OnInit {
   }
 
   goToImportPage() {
-    this.router.navigate(['/admin/user-management/import-users']);
+    this.router.navigate(['/admin/user-management/import-users']).then();
   }
 
   editUser(user: UserInfo) {

@@ -36,7 +36,11 @@
       </div>
 
       <div class="avatar-container">
-        <img [src]="currentUser()?.avatarUrl || defaultAvatar" alt="Avatar" class="avatar-img" />
+        <img
+          [src]="isAdmin() ? adminAvatar : (currentUser()?.avatarUrl || defaultAvatar)"
+          alt="Avatar"
+          class="avatar-img"
+        />
         <div class="status-dot"></div>
       </div>
     </div>

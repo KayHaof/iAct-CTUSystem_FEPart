@@ -66,7 +66,7 @@ export class AdminUserService {
     let params = new HttpParams().set('majorId', majorId);
 
     if (academicYear) {
-      params = params.set('academicYear', academicYear); // Gửi '48' xuống BE
+      params = params.set('academicYear', academicYear);
     }
 
     return this.http.get<ApiResponse<ClassInfo[]>>(`${this.profileUrl}/classes`, { params });

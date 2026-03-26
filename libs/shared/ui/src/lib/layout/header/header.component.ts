@@ -28,6 +28,8 @@ export class HeaderComponent {
   defaultAvatar =
     'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772527220/0305-logo-ctu_vrk0rw.png';
 
+  adminAvatar = 'https://res.cloudinary.com/dhjamvg6j/image/upload/v1773991699/iact_admin_avt.png';
+
   toggleMenu() {
     this.layoutService.toggleMobileMenu();
   }

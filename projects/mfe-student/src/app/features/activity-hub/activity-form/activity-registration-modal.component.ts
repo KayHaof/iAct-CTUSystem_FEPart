@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, computed} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Activity } from '../../../shared/models/activity.model';
 
@@ -49,10 +49,10 @@ import { Activity } from '../../../shared/models/activity.model';
                 </p>
                 <button
                   type="button"
-                  (click)="selectAll()"
+                  (click)="toggleAll()"
                   class="text-xs font-bold text-indigo-600 hover:text-indigo-800"
                 >
-                  Chọn tất cả
+                  {{ isAllSelected() ? 'Bỏ chọn tất cả' : 'Chọn tất cả' }}
                 </button>
               </div>
 
@@ -166,6 +166,12 @@ export class ActivityRegistrationModalComponent {
 
   selectedScheduleIds = signal<Set<number>>(new Set());
 
+  isAllSelected = computed(() => {
+    const schedules = this.activity()?.schedules;
+    if (!schedules || schedules.length === 0) return false;
+    return this.selectedScheduleIds().size === schedules.length;
+  });
+
   toggleSchedule(id: number) {
     const current = new Set(this.selectedScheduleIds());
     if (current.has(id)) {
@@ -176,11 +182,15 @@ export class ActivityRegistrationModalComponent {
     this.selectedScheduleIds.set(current);
   }
 
-  selectAll() {
-    const schedules = this.activity()?.schedules;
-    if (schedules) {
-      const allIds = schedules.map((s) => s.id).filter((id): id is number => id !== undefined);
-      this.selectedScheduleIds.set(new Set(allIds));
+  toggleAll() {
+    if (this.isAllSelected()) {
+      this.selectedScheduleIds.set(new Set()); // Bỏ chọn tất cả
+    } else {
+      const schedules = this.activity()?.schedules;
+      if (schedules) {
+        const allIds = schedules.map((s) => s.id).filter((id): id is number => id !== undefined);
+        this.selectedScheduleIds.set(new Set(allIds)); // Chọn tất cả
+      }
     }
   }
 
