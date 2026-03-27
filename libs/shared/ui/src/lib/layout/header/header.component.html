@@ -20,11 +20,15 @@
     >
       <div class="user-info hidden md:flex">
         <span class="user-name">
-          {{ currentUser()?.fullName || currentUser()?.username || 'Khách' }}
+          @if (isAdmin()) {
+            Quản trị hệ thống
+          } @else {
+            {{ currentUser()?.fullName || currentUser()?.username || 'Khách' }}
+          }
         </span>
         <span class="user-role">
           @if (isAdmin()) {
-            Quản trị viên
+            Đội ngũ quản trị viên của iAct
           } @else if (isDepartment()) {
             Trường/Khoa/Viện
           } @else if (isStudent()) {

@@ -18,3 +18,14 @@ export interface MajorInfo {
   departmentId?: number;
   departmentName?: string;
 }
+
+export interface Semester {
+  id: number;
+  semesterName: string;
+  academicYear: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  isLocked: boolean;
+  createdAt: string;
+}

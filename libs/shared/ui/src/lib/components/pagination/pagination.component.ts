@@ -1,4 +1,4 @@
-import { Component, input, output, computed } from '@angular/core';
+import { Component, input, output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -12,7 +12,12 @@ export class PaginationComponent {
   pageSize = input<number>(10);
   currentPage = input<number>(1);
 
+  pageSizeOptions = input<number[]>([5, 10, 15, 20, 50]);
+
   pageChange = output<number>();
+  pageSizeChange = output<number>();
+
+  isDropdownOpen = signal(false);
 
   totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
 
@@ -67,5 +72,26 @@ export class PaginationComponent {
     if (this.currentPage() > 1) {
       this.pageChange.emit(this.currentPage() - 1);
     }
+  }
+
+  onPageSizeChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    const newSize = Number(target.value);
+    if (!isNaN(newSize)) {
+      this.pageSizeChange.emit(newSize);
+      this.pageChange.emit(1);
+    }
+  }
+
+  selectPageSize(size: number) {
+    this.pageSizeChange.emit(size);
+    this.pageChange.emit(1);
+    this.isDropdownOpen.set(false);
+  }
+
+  onBlur() {
+    setTimeout(() => {
+      this.isDropdownOpen.set(false);
+    }, 150);
   }
 }
