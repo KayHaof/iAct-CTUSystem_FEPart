@@ -133,6 +133,12 @@
       </tbody>
     </table>
 
-    <lib-pagination [currentPage]="currentPage()" [totalItems]="totalRows()" [pageSize]="pageSize()" (pageChange)="onPageChange($event)"></lib-pagination>
+    <lib-pagination
+      [currentPage]="currentPage()"
+      [totalItems]="totalRows()"
+      [pageSize]="pageSize()"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="pageSize.set($event)">
+    </lib-pagination>
   </lib-admin-table-container>
 </div>

@@ -1,0 +1,131 @@
+$color-text-main: #1e293b;
+$color-text-sub: #64748b;
+$color-border: #e2e8f0;
+$color-primary: #4f46e5; // Indigo 600
+$color-primary-hover: #4338ca; // Indigo 700
+$color-bg-input: #f8fafc;
+
+.filter-container-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1.5rem;
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: 1.25rem;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 15px -5px rgba(0, 0, 0, 0.03);
+  margin-bottom: 2rem;
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 220px;
+
+  label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: $color-text-sub;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.6rem;
+  }
+}
+
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .icon-left {
+    position: absolute;
+    left: 1rem;
+    color: #94a3b8;
+    pointer-events: none;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+  }
+
+  .icon-right {
+    position: absolute;
+    right: 1rem;
+    color: #94a3b8;
+    pointer-events: none;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+  }
+
+  &:focus-within .icon-left {
+    color: $color-primary;
+  }
+}
+
+.custom-select {
+  width: 100%;
+  appearance: none;
+  background-color: $color-bg-input;
+  border: 1px solid $color-border;
+  color: $color-text-main;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.65rem 2.5rem 0.65rem 2.5rem;
+  border-radius: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+
+  &:hover {
+    border-color: #cbd5e1;
+    background-color: #f1f5f9;
+  }
+
+  &:focus {
+    background-color: #ffffff;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+}
+
+.action-group {
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 100%; // Nút full width trên mobile
+  }
+}
+
+.btn-filter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: $color-primary;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.65rem 1.5rem;
+  border-radius: 0.85rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 44px; // Cao bằng với ô input
+  box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+
+  &:hover {
+    background-color: $color-primary-hover;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px -1px rgba(79, 70, 229, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+}

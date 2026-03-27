@@ -108,4 +108,14 @@ export const routes: Routes = [
     canActivate: [roleGuard],
     data: { roles: ['admin'] },
   },
+  {
+    path: 'activity-moderation',
+    title: 'Quản lý hoạt động',
+    loadComponent: () =>
+      import('./features/super-admin/activity-moderation/activity-moderation.component').then(
+        (m) => m.ActivityModerationComponent,
+      ),
+    canActivate: [roleGuard],
+    data: { roles: ['admin'] },
+  },
 ];

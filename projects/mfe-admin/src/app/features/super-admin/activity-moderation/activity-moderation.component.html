@@ -1,0 +1,71 @@
+<div class="moderation-dashboard min-h-screen bg-slate-50/50 text-slate-800 p-4 md:p-6 lg:p-8 flex flex-col gap-6 md:gap-8 max-w-[1600px] mx-auto">
+  <header class="moderation-header flex flex-col gap-2">
+    <div class="moderation-header flex flex-col gap-2">
+      <div class="flex items-center gap-3 md:gap-4">
+        <div class="p-3 bg-indigo-100 text-indigo-600 rounded-2xl w-fit flex items-center justify-center shadow-sm">
+          <i class="bi bi-shield-check text-2xl leading-none"></i>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-black tracking-tight text-slate-900">
+          Quản lý hoạt động trong hệ thống
+        </h1>
+      </div>
+      <p class="text-slate-500 font-medium flex items-center gap-3 md:ml-[4.5rem]">
+        <span class="w-8 h-[3px] bg-indigo-500/40 hidden md:block rounded-full"></span>
+        Xem xét và phê duyệt các hoạt động được gửi từ các đơn vị trong toàn hệ thống.
+      </p>
+    </div>
+    <p class="text-slate-500 font-medium flex items-center gap-3 md:ml-[4.5rem]">
+      <span class="w-8 h-[3px] bg-indigo-500/40 hidden md:block rounded-full"></span>
+      Review and approve activities submitted by faculties across the campus ecosystem.
+    </p>
+  </header>
+
+  <!-- Stats Section -->
+  <section class="stats-container">
+    <app-moderation-stats [statsData]="stats()"></app-moderation-stats>
+  </section>
+  <main class="main-content-card flex flex-col bg-white rounded-3xl shadow-sm border border-slate-200/70 overflow-hidden">
+    <div class="filters-wrapper pt-4 md:pt-6 px-4 md:px-6">
+      <app-moderation-filters (filterApplied)="handleFilterApplied($event)"></app-moderation-filters>
+    </div>
+    <div class="table-wrapper custom-scrollbar overflow-x-auto p-4 md:p-6">
+      <app-moderation-table
+        [isLoading]="isLoading()"
+        [data]="activities()"
+        [total]="totalItems()"
+        [currentPage]="currentPage()"
+        [pageSize]="pageSize()"
+        (pageChanged)="handlePageChange($event)"
+        (sizeChanged)="handlePageSizeChange($event)"
+        (approve)="onApproveActivity($event)"
+        (reject)="openRejectModal($event)"
+        (view)="openViewModal($event)"
+        (viewReason)="openViewReasonModal($event)">
+      </app-moderation-table>
+    </div>
+
+  </main>
+</div>
+
+@if (modalStates().view && selectedActivityForAction()) {
+  <app-view-activity-modal
+    [activityId]="selectedActivityForAction()!.id"
+    (modalClosed)="toggleModal('view', false)">
+  </app-view-activity-modal>
+}
+
+@if (modalStates().reject && selectedActivityForAction()) {
+  <app-reject-activity-modal
+    [activityName]="selectedActivityForAction()!.title"
+    (confirm)="onConfirmReject($event)"
+    (modalClosed)="toggleModal('reject', false)">
+  </app-reject-activity-modal>
+}
+
+@if (modalStates().viewReason && selectedActivityForAction()) {
+  <app-view-reject-reason-modal
+    [activityName]="selectedActivityForAction()!.title"
+    [reason]="selectedActivityForAction()!.reason || 'Không có lý do cụ thể được ghi nhận.'"
+    (modalClosed)="toggleModal('viewReason', false)">
+  </app-view-reject-reason-modal>
+}

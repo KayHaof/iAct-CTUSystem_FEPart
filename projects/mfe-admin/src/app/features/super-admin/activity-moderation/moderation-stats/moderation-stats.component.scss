@@ -1,0 +1,115 @@
+.stats-container-card {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 15px -5px rgba(0, 0, 0, 0.03);
+  gap: 2.5rem;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.chart-wrapper {
+  flex: 0 0 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ::ng-deep .apexcharts-canvas {
+    margin: 0 auto;
+  }
+}
+
+.legend-wrapper {
+  flex: 1;
+}
+
+.legend-list {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  flex: 1;
+  min-width: 110px;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  cursor: default;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  }
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    opacity: 0.8;
+  }
+
+  .count {
+    font-size: 1.75rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  &.card-amber {
+    background: #fffbeb; // Amber 50
+    border-color: #fef3c7;
+    .name, .count { color: #b45309; } // Amber 700
+  }
+
+  &.card-blue {
+    background: #eff6ff;
+    border-color: #dbeafe;
+    .name, .count { color: #1d4ed8; }
+  }
+
+  &.card-red {
+    background: #fef2f2;
+    border-color: #fee2e2;
+    .name, .count { color: #b91c1c; }
+  }
+
+  &.card-gray {
+    background: #f8fafc;
+    border-color: #f1f5f9;
+    .name, .count { color: #334155; }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .stats-container-card {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .legend-item {
+    flex: 0 0 calc(50% - 0.5rem);
+  }
+}
+
+// Tooltip của Chart
+::ng-deep {
+  .apexcharts-tooltip {
+    background: #ffffff !important;
+    border: 1px solid #f1f5f9 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  }
+}

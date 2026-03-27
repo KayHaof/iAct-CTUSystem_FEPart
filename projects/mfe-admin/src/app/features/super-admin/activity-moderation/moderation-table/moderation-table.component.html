@@ -1,0 +1,148 @@
+<lib-admin-table-container class="block bg-white shadow-sm border border-slate-100 rounded-2xl overflow-hidden mt-3">
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-20 bg-white">
+      <div class="relative w-12 h-12 mb-4">
+        <div class="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
+        <div class="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+      </div>
+      <p class="text-sm font-bold text-slate-500 animate-pulse">Đang tải dữ liệu, vui lòng đợi...</p>
+    </div>
+  } @else {
+    <table class="w-full text-left border-collapse bg-white table-auto">
+      <thead class="bg-slate-50/80">
+      <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+        <th class="py-4 px-6 min-w-[250px]">Tên hoạt động</th>
+        <th class="py-4 px-6 min-w-[200px]">Đơn vị tổ chức</th>
+        <th
+          role="button"
+          tabindex="0"
+          class="py-4 px-6 cursor-pointer hover:bg-slate-100/80 transition-colors group select-none whitespace-nowrap outline-none focus-visible:bg-slate-200"
+          (click)="onSort('createdAt')"
+          (keydown.enter)="onSort('createdAt')"
+          (keydown.space)="$event.preventDefault(); onSort('createdAt')">
+
+          <div class="flex items-center gap-1.5 text-indigo-600">
+            Ngày gửi
+            <span class="flex flex-col text-[8px] leading-[0.5] opacity-80 group-hover:opacity-100 transition-opacity">
+                <i class="bi bi-caret-up-fill" [class.text-indigo-600]="sortColumn() === 'createdAt' && sortDirection() === 'asc'" [class.text-slate-300]="!(sortColumn() === 'createdAt' && sortDirection() === 'asc')"></i>
+                <i class="bi bi-caret-down-fill mt-0.5" [class.text-indigo-600]="sortColumn() === 'createdAt' && sortDirection() === 'desc'" [class.text-slate-300]="!(sortColumn() === 'createdAt' && sortDirection() === 'desc')"></i>
+              </span>
+          </div>
+        </th>
+        <th class="py-4 px-6 whitespace-nowrap">Trạng thái</th>
+        <th class="py-4 px-6 text-right whitespace-nowrap">Thao tác</th>
+      </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100/80 bg-white">
+        @for (item of sortedData(); track item.id) {
+          <tr class="hover:bg-slate-50/50 transition-colors group">
+            <!-- TÊN HOẠT ĐỘNG -->
+            <td class="py-4 px-6">
+              <div class="flex items-center gap-4">
+                <div class="relative w-10 h-10 shrink-0 rounded-lg overflow-hidden border border-slate-200 shadow-sm transition-all">
+                  @if (item.coverImage) {
+                    <img
+                      [src]="item.coverImage"
+                      [alt]="item.title"
+                      class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
+                      (error)="item.coverImage = ''">
+                  } @else {
+                    <div class="w-full h-full bg-slate-100 text-slate-400 flex items-center justify-center"><i class="bi bi-image"></i></div>
+                  }
+                </div>
+                <div class="min-w-0">
+                  <span
+                    role="button"
+                    tabindex="0"
+                    (click)="view.emit(item)"
+                    (keydown.enter)="view.emit(item)"
+                    (keydown.space)="$event.preventDefault(); view.emit(item)"
+                    class="block text-sm font-bold text-slate-800 line-clamp-1 group-hover:text-indigo-600 transition-colors cursor-pointer outline-none focus-visible:underline focus-visible:text-indigo-600">
+                    {{ item.title }}
+                  </span>
+                  <p class="text-[11px] font-bold text-slate-400 mt-0.5">Mã: <span class="text-slate-500">#ACT-{{ item.id }}</span></p>
+                </div>
+              </div>
+            </td>
+
+            <!-- ĐƠN VỊ -->
+            <td class="py-4 px-6">
+              <p class="text-sm font-semibold text-slate-700 line-clamp-1">{{ item.departmentName || 'Cấp Trường' }}</p>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <i class="bi bi-person text-slate-400 text-[10px]"></i>
+                <p class="text-[11px] font-medium text-slate-500 truncate max-w-[150px]">{{ item.createdBy?.username }}</p>
+              </div>
+            </td>
+
+            <td class="py-4 px-6 whitespace-nowrap">
+              <div class="flex flex-col text-slate-600">
+                <p class="text-sm font-bold">{{ item.createdAt | date:'dd/MM/yyyy' }}</p>
+                <p class="text-[11px] font-medium text-slate-400">{{ item.createdAt | date:'HH:mm' }}</p>
+              </div>
+            </td>
+            <td class="py-4 px-6 whitespace-nowrap">
+              @if (item.status === 0) {
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-[11px] font-bold border border-amber-200/50 shadow-sm">
+                  <span class="flex h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                  Chờ duyệt
+                </span>
+              } @else if (item.status === 1) {
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200/50 shadow-sm">
+                  <span class="flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                  Đã duyệt
+                </span>
+              } @else {
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 text-rose-700 text-[11px] font-bold border border-rose-200/50 shadow-sm">
+                  <span class="flex h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                  Từ chối
+                </span>
+              }
+            </td>
+
+            <!-- THAO TÁC -->
+            <td class="py-4 px-6 text-right whitespace-nowrap">
+              <div class="flex items-center justify-end gap-2">
+                @if (item.status === 0) {
+                  <button (click)="approve.emit(item)" class="p-1.5 rounded-md bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white border border-emerald-100 transition-all shadow-sm" title="Duyệt">
+                    <i class="bi bi-check-lg text-base"></i>
+                  </button>
+                  <button (click)="reject.emit(item)" class="p-1.5 rounded-md bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border border-rose-100 transition-all shadow-sm" title="Từ chối">
+                    <i class="bi bi-x-lg text-base"></i>
+                  </button>
+                } @else if (item.status === 2) {
+                  <button (click)="viewReason.emit(item)" class="px-2.5 py-1.5 rounded-md border border-rose-100 bg-rose-50/30 text-rose-600 hover:bg-rose-50 text-[11px] font-bold transition-colors flex items-center gap-1">
+                    Xem lý do
+                  </button>
+                }
+                <button (click)="view.emit(item)" class="p-1.5 rounded-md border border-slate-200 bg-white text-slate-500 hover:border-indigo-500 hover:text-indigo-600 transition-all shadow-sm" title="Chi tiết">
+                  <i class="bi bi-eye text-base"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+
+        @if (sortedData().length === 0) {
+          <tr>
+            <td colspan="5" class="py-16 text-center">
+              <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center text-3xl mx-auto mb-3 border border-slate-100 shadow-inner">
+                <i class="bi bi-inbox-fill"></i>
+              </div>
+              <h3 class="text-slate-700 font-black text-lg mb-1">Không có dữ liệu</h3>
+              <p class="text-slate-500 font-medium text-sm">Chưa có hoạt động nào trong danh sách này.</p>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  <lib-pagination
+    class="block border-t border-slate-100 bg-slate-50/50"
+    [currentPage]="currentPage()"
+    [totalItems]="total()"
+    [pageSize]="pageSize()"
+    (pageChange)="pageChanged.emit($event)"
+    (pageSizeChange)="sizeChanged.emit($event)">
+  </lib-pagination>
+</lib-admin-table-container>

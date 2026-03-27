@@ -150,6 +150,12 @@ export class ParticipantManagementComponent implements OnInit {
     this.fetchParticipants();
   }
 
+  onSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+    this.fetchParticipants();
+  }
+
   toggleSort(column: keyof RegistrationResponse): void {
     if (this.sortColumn() === column) {
       // Đang sort cột này -> đổi chiều
@@ -216,7 +222,7 @@ export class ParticipantManagementComponent implements OnInit {
         },
         error: () => {
           this.alertService.error('Có lỗi xảy ra khi tải file Excel!');
-        }
+        },
       });
   }
 }

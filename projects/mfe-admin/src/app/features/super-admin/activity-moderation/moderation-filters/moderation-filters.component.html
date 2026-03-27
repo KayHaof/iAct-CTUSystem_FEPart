@@ -1,0 +1,70 @@
+<div class="filter-container-card">
+  <!-- Cột 1: Khoa / Đơn vị -->
+  <div class="filter-group">
+    <label for="department-select">Khoa / Đơn vị</label>
+    <div class="select-wrapper">
+      <div class="icon-left"><i class="bi bi-buildings"></i></div>
+      <select
+        id="department-select"
+        [ngModel]="selectedDepartment()"
+        (ngModelChange)="selectedDepartment.set($event)"
+        class="custom-select"
+      >
+        <option value="">Tất cả Khoa</option>
+        @for (dept of departments(); track dept.id) {
+          <option [value]="dept.id">{{ dept.name }}</option>
+        }
+      </select>
+      <div class="icon-right"><i class="bi bi-chevron-down"></i></div>
+    </div>
+  </div>
+
+  <!-- Cột 2: Học kỳ -->
+  <div class="filter-group">
+    <label for="semester-select">Học kỳ</label>
+    <div class="select-wrapper">
+      <div class="icon-left"><i class="bi bi-calendar3"></i></div>
+      <select
+        id="semester-select"
+        [ngModel]="selectedSemester()"
+        (ngModelChange)="selectedSemester.set($event)"
+        class="custom-select"
+      >
+        <option value="">Tất cả Học kỳ</option>
+        @for (sem of semesters(); track sem.id) {
+          <option [value]="sem.id">{{ sem.semesterName }}</option>
+        }
+      </select>
+      <div class="icon-right"><i class="bi bi-chevron-down"></i></div>
+    </div>
+  </div>
+
+  <!-- Cột 3: Trạng thái -->
+  <div class="filter-group">
+    <label for="status-select">Trạng thái</label>
+    <div class="select-wrapper">
+      <div class="icon-left"><i class="bi bi-ui-radios"></i></div>
+      <select
+        id="status-select"
+        [ngModel]="selectedStatus()"
+        (ngModelChange)="selectedStatus.set($event)"
+        class="custom-select"
+      >
+        <option value="ALL">Tất cả Trạng thái</option>
+        <option value="PENDING">Chờ duyệt</option>
+        <option value="APPROVED">Đã duyệt</option>
+        <option value="REJECTED">Đã từ chối</option>
+      </select>
+      <div class="icon-right"><i class="bi bi-chevron-down"></i></div>
+    </div>
+  </div>
+
+  <!-- Cột 4: Nút Submit -->
+  <div class="action-group">
+    <button (click)="onApplyFilters()" class="btn-filter">
+      <i class="bi bi-funnel-fill"></i>
+      <span>Áp dụng bộ lọc</span>
+    </button>
+  </div>
+
+</div>

@@ -93,6 +93,9 @@ export interface Activity {
   createdBy?: UserDto;
   benefits?: BenefitDto[];
   registeredCount?: number;
+  createdAt?: string;
 
   schedules?: ActivityScheduleDto[];
+
+  reason?: string;
 }

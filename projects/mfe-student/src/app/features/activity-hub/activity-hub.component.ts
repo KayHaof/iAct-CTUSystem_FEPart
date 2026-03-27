@@ -88,8 +88,14 @@ export class ActivityHubComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  onSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+    this.fetchActivities();
+  }
+
   viewDetails(id: number) {
-    this.router.navigate(['/activity-hub/detail', id]);
+    this.router.navigate(['/activity-hub/detail', id]).then();
   }
 
   // --- UI HELPERS ---

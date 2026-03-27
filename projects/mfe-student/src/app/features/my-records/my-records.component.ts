@@ -1,5 +1,5 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
-import { CommonModule, NgOptimizedImage} from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { BarcodeFormat } from '@zxing/library';
@@ -8,11 +8,12 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { AlertService } from '@my-mfe/ui';
 import { CloudinaryService} from '@my-mfe/data-access-media';
 import { ActivityRecord, RawRegistrationDto } from '../../shared/models/activity.model';
+import { Semester} from 'interface';
 
 import { AttendanceService, CheckInRequest } from '../../shared/services/attendance.service';
 import { RegistrationService } from '../../shared/services/registration.service';
 import { ProofService, ProofSubmissionRequest } from '../../shared/services/proof.service';
-import { SemesterService, Semester } from '../../shared/services/semester.service';
+import { SemesterService } from '../../shared/services/semester.service';
 
 @Component({
   selector: 'app-my-records',

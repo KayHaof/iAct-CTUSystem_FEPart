@@ -277,6 +277,7 @@
       [totalItems]="totalRows()"
       [pageSize]="pageSize()"
       (pageChange)="onPageChange($event)"
+      (pageSizeChange)="pageSize.set($event)"
     ></lib-pagination>
 
   </lib-admin-table-container>

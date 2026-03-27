@@ -1,0 +1,23 @@
+.interactive-text {
+  display: inline-block;
+  outline: none;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:focus-visible {
+    color: #4f46e5;
+    text-decoration: underline;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+th, td {
+  word-wrap: break-word;
+}

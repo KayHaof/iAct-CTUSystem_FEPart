@@ -22,7 +22,7 @@ import { PageDTO } from 'interface';
     PageHeaderComponent,
     TableContainerComponent,
     NgOptimizedImage,
-    CloudinaryPathPipe
+    CloudinaryPathPipe,
   ],
   templateUrl: './activity-list.component.html',
 })
@@ -122,6 +122,12 @@ export class ActivityListComponent implements OnInit {
     this.currentPage.set(page);
     this.fetchActivities();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  onSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+    this.fetchActivities();
   }
 
   getCapacityPercentage(current: number, max: number): number {

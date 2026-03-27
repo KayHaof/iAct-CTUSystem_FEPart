@@ -1,0 +1,53 @@
+<div class="stats-container-card">
+  <div class="chart-wrapper">
+    <apx-chart
+      [series]="chartOptions().series"
+      [chart]="chartOptions().chart"
+      [labels]="chartOptions().labels"
+      [colors]="chartOptions().colors"
+      [plotOptions]="chartOptions().plotOptions"
+      [dataLabels]="chartOptions().dataLabels"
+      [legend]="chartOptions().legend"
+      [stroke]="chartOptions().stroke"
+      [tooltip]="chartOptions().tooltip"
+    ></apx-chart>
+  </div>
+
+  <div class="legend-wrapper">
+    <div class="legend-list">
+
+      <!-- Mini Card: Chờ duyệt -->
+      <div class="legend-item card-amber">
+        <div class="info">
+          <span class="name">Chờ duyệt</span>
+          <span class="count">{{ statsData()?.pendingReview || 0 }}</span>
+        </div>
+      </div>
+
+      <!-- Mini Card: Đã duyệt -->
+      <div class="legend-item card-blue">
+        <div class="info">
+          <span class="name">Đã duyệt</span>
+          <span class="count">{{ statsData()?.approvedThisTerm || 0 }}</span>
+        </div>
+      </div>
+
+      <!-- Mini Card: Từ chối -->
+      <div class="legend-item card-red">
+        <div class="info">
+          <span class="name">Từ chối</span>
+          <span class="count">{{ statsData()?.rejected || 0 }}</span>
+        </div>
+      </div>
+
+      <!-- Mini Card: Tổng cộng -->
+      <div class="legend-item card-gray">
+        <div class="info">
+          <span class="name">Tổng cộng</span>
+          <span class="count">{{ totalCount() }}</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
