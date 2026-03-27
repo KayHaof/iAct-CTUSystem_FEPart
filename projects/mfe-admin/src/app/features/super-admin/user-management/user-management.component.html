@@ -230,7 +230,9 @@
         [currentPage]="currentPage()"
         [totalItems]="totalRows()"
         [pageSize]="pageSize()"
-        (pageChange)="onPageChange($event)">
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="pageSize.set($event)"
+      >
       </lib-pagination>
     </div>
 

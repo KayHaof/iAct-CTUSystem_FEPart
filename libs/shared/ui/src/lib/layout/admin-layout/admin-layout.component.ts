@@ -45,8 +45,8 @@ export class AdminLayoutComponent implements OnInit {
         { label: 'Tổng quan', link: '/admin/dashboard', icon: 'bi bi-grid-fill' },
         { label: 'User Management', link: '/admin/user-management', icon: 'bi bi-person-video3' },
         {
-          label: 'Global Activities',
-          link: '/admin/global-activities',
+          label: 'Activity Moderation',
+          link: '/admin/activity-moderation',
           icon: 'bi bi-calendar-event-fill',
         },
         { label: 'Master Data', link: '/admin/master-data', icon: 'bi bi-database-fill' },

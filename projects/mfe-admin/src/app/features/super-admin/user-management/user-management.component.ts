@@ -134,7 +134,12 @@ export class UserManagementComponent implements OnInit {
 
   // --- LOGIC CASCADING DROPDOWN TÌM KIẾM SINH VIÊN ---
   onSearchInputChanged(value: string) {
-    if (this.activeTab() === 'STUDENT' && !value.trim() && !this.selectedFilterClass() && this.selectedStatus() === '') {
+    if (
+      this.activeTab() === 'STUDENT' &&
+      !value.trim() &&
+      !this.selectedFilterClass() &&
+      this.selectedStatus() === ''
+    ) {
       this.users.set([]);
       this.totalRows.set(0);
       this.studentCount.set(0);
@@ -300,6 +305,12 @@ export class UserManagementComponent implements OnInit {
       this.currentPage.set(page);
       this.loadUsers();
     }
+  }
+
+  onSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+    this.loadUsers();
   }
 
   sortedUsers = computed(() => {

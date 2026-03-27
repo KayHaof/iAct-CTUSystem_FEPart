@@ -4,11 +4,11 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 
 import { UserService } from '@my-mfe/auth';
-
-import { WelcomeBannerComponent } from './components/welcome-banner/welcome-banner.component';
-import { StatsCardComponent } from './components/stats-card/stats-card.component';
-import { ActivityListComponent } from './components/activity-list/activity-list.component';
-import { CriteriaChartComponent } from './components/criteria-chart/criteria-chart.component';
+//
+// import { WelcomeBannerComponent } from './components/welcome-banner/welcome-banner.component';
+// import { StatsCardComponent } from './components/stats-card/stats-card.component';
+// import { ActivityListComponent } from './components/activity-list/activity-list.component';
+// import { CriteriaChartComponent } from './components/criteria-chart/criteria-chart.component';
 
 import { DashboardData } from './models/dashboard.model';
 
@@ -17,11 +17,11 @@ import { DashboardData } from './models/dashboard.model';
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
-    WelcomeBannerComponent,
-    StatsCardComponent,
-    ActivityListComponent,
-    CriteriaChartComponent,
+    // RouterLink,
+    // WelcomeBannerComponent,
+    // StatsCardComponent,
+    // ActivityListComponent,
+    // CriteriaChartComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
