@@ -1,7 +1,5 @@
 <div class="min-h-screen bg-slate-50 p-2 sm:p-6 lg:p-5 font-sans text-slate-800 selection:bg-blue-200">
-
   <div class="max-w-7xl mx-auto">
-
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
       <div>
         <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Hoạt động của tôi</h1>
@@ -16,7 +14,6 @@
         </div>
       </div>
     </div>
-
     <div class="flex flex-wrap items-center gap-4 mb-8 relative z-10">
       <div class="relative group">
         <label for="semesterSelect" class="absolute -top-2 left-3 bg-slate-50 px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest z-10">Chọn Học kỳ</label>
@@ -36,20 +33,31 @@
         </div>
       </div>
     </div>
-
     <div class="flex mb-10 overflow-x-auto custom-scrollbar pb-2">
       <div class="inline-flex bg-slate-200/60 p-1.5 rounded-2xl gap-1">
-        <button (click)="changeTab('ACTION_REQUIRED')"
-                [ngClass]="currentTab() === 'ACTION_REQUIRED' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'"
-                class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap">
-          Cần xử lý
-          @if (currentTab() === 'ACTION_REQUIRED') { <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> }
-        </button>
-        <button (click)="changeTab('UPCOMING')"
-                [ngClass]="currentTab() === 'UPCOMING' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'"
+        <!-- Tab 1: Đã đăng ký -->
+        <button (click)="changeTab('REGISTERED')"
+                [ngClass]="currentTab() === 'REGISTERED' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'"
                 class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap">
-          Sắp diễn ra
+          Đã đăng ký
         </button>
+
+        <!-- Tab 2: Đang diễn ra -->
+        <button (click)="changeTab('ONGOING')"
+                [ngClass]="currentTab() === 'ONGOING' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'"
+                class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap">
+          Đang diễn ra
+          @if (currentTab() === 'ONGOING') { <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> }
+        </button>
+
+        <!-- Tab 3: Đã nộp minh chứng -->
+        <button (click)="changeTab('PROOF_SUBMITTED')"
+                [ngClass]="currentTab() === 'PROOF_SUBMITTED' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'"
+                class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap">
+          Đã nộp minh chứng
+        </button>
+
+        <!-- Tab 4: Đã hoàn thành -->
         <button (click)="changeTab('COMPLETED')"
                 [ngClass]="currentTab() === 'COMPLETED' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'"
                 class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap">
@@ -66,93 +74,116 @@
     } @else {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (act of filteredActivities(); track act.id) {
+          <div class="group bg-white rounded-[24px] shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-slate-200/80 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full relative overflow-hidden">
+            <a [href]="'/activity-hub/detail/' + act.activityId" class="absolute inset-0 z-0 cursor-pointer" aria-label="Xem chi tiết hoạt động"></a>
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-2xl group-hover:from-blue-100 transition-colors z-0 pointer-events-none"></div>
+            @if (act.isStartingSoon && currentTab() === 'REGISTERED') {
+              <div class="absolute top-3 left-3 bg-rose-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md flex items-center gap-1.5 z-20 animate-pulse pointer-events-none">
+                <i class="bi bi-alarm-fill"></i> Sắp diễn ra
+              </div>
+            } @else if (act.isMissed) {
+              <div class="absolute top-3 left-3 bg-slate-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md flex items-center gap-1.5 z-20 pointer-events-none">
+                <i class="bi bi-calendar-x-fill"></i> Đã bỏ lỡ
+              </div>
+            }
 
-          <div class="group bg-white rounded-[24px] p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-slate-200/80 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full relative overflow-hidden">
+            <div class="relative z-10 flex flex-col flex-grow p-6 pointer-events-none pt-10">
+              <div class="flex justify-between items-start mb-4 gap-4">
+                <h3 class="font-extrabold text-[17px] leading-snug group-hover:text-blue-700 transition-colors" [ngClass]="act.status === 2 ? 'text-slate-400 line-through decoration-slate-300' : 'text-slate-900'">
+                  {{ act.title }}
+                </h3>
+                <span class="text-xs font-black px-2.5 py-1 rounded-lg whitespace-nowrap"
+                      [ngClass]="act.status === 2 ? 'bg-slate-100 text-slate-400' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-700/10'">
+                  +{{ act.point || 0 }} điểm
+                </span>
+              </div>
+              <div class="space-y-2 mb-5" [ngClass]="{'opacity-50 grayscale': act.status === 2}">
+                <div class="flex items-center gap-2.5 text-sm text-slate-600 font-medium">
+                  <i class="bi bi-clock text-blue-500 opacity-80"></i>
+                  <span class="truncate">{{ (act.realStartDate || act.startDate) | date:'dd/MM/yyyy • HH:mm' }}</span>
+                </div>
+                <div class="flex items-center gap-2.5 text-sm text-slate-600 font-medium" [title]="act.location">
+                  <i class="bi bi-geo-alt text-rose-500 opacity-80"></i>
+                  <span class="truncate">{{ act.location }}</span>
+                </div>
+              </div>
+              <div class="bg-slate-50/80 rounded-2xl p-3.5 mb-6" [ngClass]="{'opacity-50 grayscale': act.status === 2}">
+                <div class="flex flex-col gap-2">
+                  <div class="flex justify-between items-center text-xs font-bold text-slate-500 border-b border-slate-200/60 pb-2">
+                    <span>Lịch sử điểm danh</span>
+                    @if (act.status === 1) {
+                      <span class="text-emerald-600 flex items-center gap-1"><i class="bi bi-check-circle-fill"></i> Thành công</span>
+                    } @else if (act.status === 0) {
+                      <span class="text-amber-600 flex items-center gap-1"><i class="bi bi-dash-circle-fill"></i> Chưa điểm danh</span>
+                    } @else {
+                      <span class="text-slate-400">Đã hủy</span>
+                    }
+                  </div>
 
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-2xl group-hover:from-blue-100 transition-colors z-0"></div>
-
-            <div class="relative z-10 flex justify-between items-start mb-5 gap-4">
-              <h3 class="font-extrabold text-[17px] leading-snug group-hover:text-blue-700 transition-colors" [ngClass]="act.status === 2 ? 'text-slate-400 line-through decoration-slate-300' : 'text-slate-900'">
-                {{ act.title }}
-              </h3>
-              <span class="text-xs font-black px-2.5 py-1 rounded-lg whitespace-nowrap"
-                    [ngClass]="act.status === 2 ? 'bg-slate-100 text-slate-400' : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-700/10'">
-                +{{ act.point || 0 }} điểm
-              </span>
-            </div>
-
-            <div class="relative z-10 bg-slate-50/50 rounded-2xl p-4 mb-6 space-y-3" [ngClass]="{'opacity-50 grayscale': act.status === 2}">
-              <div class="flex items-start gap-3 text-[13px] text-slate-600 font-medium">
-                <div class="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0"><i class="bi bi-calendar-event text-blue-500"></i></div>
-                <div>
-                  <p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Đăng ký</p>
-                  <p>{{ act.startDate | date:'dd/MM/yyyy • HH:mm' }}</p>
+                  @if (act.status === 1) {
+                    <div class="flex justify-between items-center text-[13px] font-medium text-slate-700 pt-1">
+                      <span>Thời gian:</span>
+                      <span class="font-bold text-slate-900">{{ act.attendedAt | date:'dd/MM/yyyy • HH:mm' }}</span>
+                    </div>
+                  }
                 </div>
               </div>
 
-              @if (act.status === 1) {
-                <div class="flex items-start gap-3 text-[13px] text-slate-600 font-medium pt-1">
-                  <div class="w-6 h-6 rounded-full bg-emerald-50 shadow-sm flex items-center justify-center shrink-0"><i class="bi bi-check2-circle text-emerald-500"></i></div>
-                  <div>
-                    <p class="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Điểm danh</p>
-                    <p class="text-emerald-700">{{ act.attendedAt | date:'dd/MM/yyyy • HH:mm' }}</p>
+              <div class="mt-auto mb-5">
+                @if (act.status === 2) {
+                  <div class="bg-slate-50 text-slate-500 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-slate-200" [title]="act.cancelReason ? 'Lý do: ' + act.cancelReason : ''">
+                    <span class="w-2 h-2 rounded-full bg-slate-400"></span> ĐÃ HỦY ({{ act.cancelReason }})
                   </div>
-                </div>
-              }
+                } @else if (act.status === 1 && act.proofStatus === 0) {
+                  <div class="bg-amber-50 text-amber-700 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-amber-600/20">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> THIẾU MINH CHỨNG
+                  </div>
+                } @else if (act.status === 1 && act.proofStatus === 1) {
+                  <div class="bg-blue-50 text-blue-600 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-blue-600/20">
+                    <i class="bi bi-hourglass-split animate-spin-slow"></i> CHỜ DUYỆT MINH CHỨNG
+                  </div>
+                } @else if (act.status === 1 && act.proofStatus === 2) {
+                  <div class="bg-emerald-50 text-emerald-700 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-emerald-600/20">
+                    <i class="bi bi-shield-check text-sm"></i> ĐÃ HOÀN THÀNH
+                  </div>
+                } @else if (act.status === 1 && act.proofStatus === 3) {
+                  <div class="bg-rose-50 text-rose-700 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-rose-600/20">
+                    <i class="bi bi-exclamation-triangle-fill"></i> BỊ TỪ CHỐI (CẦN NỘP LẠI)
+                  </div>
+                }
+              </div>
+
             </div>
 
-            <div class="relative z-10 mt-auto mb-5">
-              @if (act.status === 2) {
-                <div class="bg-slate-50 text-slate-500 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-slate-200" [title]="act.cancelReason ? 'Lý do: ' + act.cancelReason : ''">
-                  <span class="w-2 h-2 rounded-full bg-slate-400"></span> ĐÃ HỦY ({{ act.cancelReason }})
-                </div>
-              } @else if (act.status === 1 && act.proofStatus === 0) {
-                <div class="bg-amber-50 text-amber-700 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-amber-600/20">
-                  <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> THIẾU MINH CHỨNG
-                </div>
-              } @else if (act.status === 1 && act.proofStatus === 1) {
-                <div class="bg-blue-50 text-blue-600 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-blue-600/20">
-                  <i class="bi bi-hourglass-split animate-spin-slow"></i> CHỜ DUYỆT MINH CHỨNG
-                </div>
-              } @else if (act.status === 1 && act.proofStatus === 2) {
-                <div class="bg-emerald-50 text-emerald-700 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-emerald-600/20">
-                  <i class="bi bi-shield-check text-sm"></i> ĐÃ HOÀN THÀNH
-                </div>
-              } @else if (act.status === 1 && act.proofStatus === 3) {
-                <div class="bg-rose-50 text-rose-700 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-rose-600/20">
-                  <i class="bi bi-exclamation-triangle-fill"></i> BỊ TỪ CHỐI (CẦN NỘP LẠI)
-                </div>
-              }
-            </div>
-
-            <div class="relative z-10">
-              @if (act.status === 2) {
-                <button disabled class="w-full bg-slate-50 text-slate-400 font-bold py-3.5 rounded-[14px] text-sm cursor-not-allowed border border-slate-200">
-                  Đã khóa
+            <div class="relative z-20 px-6 pb-6 mt-auto border-t border-slate-100 pt-4 bg-slate-50/30">
+              @if (act.status === 2 || act.isMissed) {
+                <button disabled class="w-full bg-slate-100 text-slate-400 font-bold py-3 rounded-xl text-[13px] cursor-not-allowed border border-slate-200">
+                  <i class="bi bi-lock-fill mr-1"></i> Đã khóa
                 </button>
-              } @else if (act.status === 0) {
+              } @else if (act.status === 0 && currentTab() === 'ONGOING') {
                 <button (click)="openModal(act, 'SCAN')"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 font-bold py-3.5 rounded-[14px] text-sm transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md hover:shadow-blue-500/20 font-bold py-3 rounded-xl text-[13px] transition-all flex items-center justify-center gap-2">
                   <i class="bi bi-qr-code-scan"></i> Check-in Sự kiện
                 </button>
               } @else if (act.status === 1 && (act.proofStatus === 0 || act.proofStatus === 3)) {
                 <div class="flex gap-2">
                   <button (click)="openModal(act, 'SCAN')"
-                          class="flex-1 bg-teal-500 hover:bg-teal-600 text-white shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 font-bold py-3 rounded-[14px] text-[13px] transition-all transform active:scale-95 flex items-center justify-center gap-1">
+                          class="flex-1 bg-teal-500 hover:bg-teal-600 text-white shadow-sm hover:shadow-md hover:shadow-teal-500/20 font-bold py-3 rounded-xl text-[13px] transition-all flex items-center justify-center gap-1">
                     <i class="bi bi-box-arrow-right"></i> Check-out
                   </button>
                   <button (click)="openModal(act, 'PROOF')"
-                          class="flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 font-bold py-3 rounded-[14px] text-[13px] transition-all transform active:scale-95 flex items-center justify-center gap-1">
-                    <i class="bi bi-cloud-upload"></i> Minh chứng
+                          class="flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md hover:shadow-blue-500/20 font-bold py-3 rounded-xl text-[13px] transition-all flex items-center justify-center gap-1">
+                    <i class="bi bi-cloud-upload"></i> Nộp M.Chứng
                   </button>
                 </div>
               } @else {
-                <button (click)="openModal(act, 'INFO')"
-                        class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3.5 rounded-[14px] text-sm transition-all transform active:scale-95 flex items-center justify-center gap-2">
-                  Xem thông tin
-                </button>
+                <a [href]="'/activity-hub/detail/' + act.activityId"
+                   class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-[13px] transition-all">
+                  Chi tiết hoạt động <i class="bi bi-arrow-right-short text-lg leading-none"></i>
+                </a>
               }
             </div>
+
           </div>
         } @empty {
           <div class="col-span-full py-24 flex flex-col items-center justify-center text-center bg-white rounded-[32px] border-2 border-dashed border-slate-200">
@@ -201,7 +232,7 @@
             <div class="absolute left-0 top-0 bottom-0 w-1.5" [ngClass]="modalMode() === 'SCAN' && selectedActivity()?.status === 1 ? 'bg-teal-500' : 'bg-blue-500'"></div>
             <h3 class="text-[19px] font-extrabold text-slate-900 mb-3 pl-2">{{ selectedActivity()?.title }}</h3>
             <div class="text-[13px] text-slate-500 font-medium grid grid-cols-1 sm:grid-cols-2 gap-3 pl-2">
-              <p class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg"><i class="bi bi-clock text-slate-400"></i> ĐK: {{ selectedActivity()?.startDate | date:'dd/MM/yyyy HH:mm' }}</p>
+              <p class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg"><i class="bi bi-clock text-slate-400"></i> ĐK: {{ (selectedActivity()?.realStartDate || selectedActivity()?.startDate) | date:'dd/MM/yyyy HH:mm' }}</p>
               <p class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg"><i class="bi bi-person-badge text-slate-400"></i> MSSV: {{ selectedActivity()?.studentCode || 'Chưa cập nhật' }}</p>
             </div>
           </div>

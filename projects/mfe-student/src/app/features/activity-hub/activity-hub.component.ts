@@ -63,7 +63,6 @@ export class ActivityHubComponent implements OnInit {
   }
 
   // --- EVENT HANDLERS (Triggers) ---
-
   onSearchChange(value: string) {
     this.searchQuery.set(value);
     this.currentPage.set(1);

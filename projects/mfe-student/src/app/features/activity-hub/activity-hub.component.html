@@ -1,60 +1,67 @@
 <div class="min-h-screen bg-slate-50/50 pb-20 font-sans text-slate-900">
-  <div class="bg-white border-b border-slate-200 relative overflow-hidden py-12 md:py-8">
-    <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+  <!-- HERO SECTION -->
+  <div class="bg-white border-b border-slate-200 relative overflow-hidden py-8 md:py-16">
+    <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-50/80 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 font-bold text-xs uppercase tracking-widest mb-6">
-        <i class="bi bi-stars"></i> Khám phá & Trải nghiệm
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[11px] uppercase tracking-wider mb-5 border border-indigo-100/50 shadow-sm">
+        <i class="bi bi-stars text-indigo-500"></i> Khám phá & Trải nghiệm
       </div>
-      <h1 class="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight leading-tight">
+      <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight leading-tight">
         Cổng thông tin
         <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">Hoạt động CTU</span>
       </h1>
-      <p class="text-slate-500 text-lg max-w-2xl leading-relaxed">
+      <p class="text-slate-500 text-lg max-w-2xl leading-relaxed font-medium">
         Tìm kiếm và đăng ký tham gia các hoạt động học thuật, thể thao, văn hóa để tích lũy điểm rèn luyện.
       </p>
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="bg-white p-4 rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-100 flex flex-col lg:flex-row items-center gap-4 mt-4 relative z-20 mb-8 w-full">
-
-      <div class="relative w-full lg:flex-1">
-        <i class="bi bi-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
+    <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row items-center w-full mb-8 mt-8">
+      <div class="relative w-full lg:flex-1 flex items-center bg-transparent rounded-xl hover:bg-slate-50 transition-colors">
+        <i class="bi bi-search absolute left-4 text-slate-400 pointer-events-none"></i>
         <input
           type="text"
           [ngModel]="searchQuery()"
           (ngModelChange)="onSearchChange($event)"
           placeholder="Tìm kiếm tên hoạt động..."
-          class="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm font-medium text-slate-700"
+          class="w-full h-12 pl-11 pr-4 bg-transparent border-transparent focus:border-transparent focus:ring-0 outline-none text-sm font-medium text-slate-700 placeholder-slate-400"
         />
       </div>
+      <div class="hidden lg:block w-px h-8 bg-slate-200 mx-1"></div>
+      <div class="flex flex-col sm:flex-row w-full lg:w-auto shrink-0 gap-1 lg:gap-0">
+        <div class="relative w-full sm:w-auto bg-transparent rounded-xl hover:bg-slate-50 transition-colors">
+          <select class="w-full sm:w-auto h-12 pl-4 pr-10 bg-transparent border-transparent focus:border-transparent focus:ring-0 outline-none text-sm font-semibold text-slate-600 appearance-none cursor-pointer min-w-[190px]">
+            <option>Tất cả danh mục</option>
+            <option>Học thuật & Hội thảo</option>
+            <option>Văn hóa - Thể thao</option>
+            <option>Tình nguyện</option>
+          </select>
+          <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs font-bold"></i>
+        </div>
+        <div class="hidden sm:block w-px h-8 bg-slate-200 mx-1 self-center"></div>
+        <div class="relative w-full sm:w-auto bg-transparent rounded-xl hover:bg-slate-50 transition-colors">
+          <select
+            [ngModel]="selectedStatus()"
+            (ngModelChange)="setFilterStatus($event)"
+            class="w-full sm:w-auto h-12 pl-4 pr-10 bg-transparent border-transparent focus:border-transparent focus:ring-0 outline-none text-sm font-semibold text-slate-600 appearance-none cursor-pointer min-w-[190px]"
+          >
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="OPEN">Đang mở đăng ký</option>
+            <option value="UPCOMING">Sắp mở đăng ký</option>
+          </select>
+          <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs font-bold"></i>
+        </div>
 
-      <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto shrink-0">
-        <select class="w-full sm:w-auto px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer hover:bg-slate-100 transition-colors min-w-[200px]">
-          <option>Tất cả danh mục</option>
-          <option>Học thuật & Hội thảo</option>
-          <option>Văn hóa - Thể thao</option>
-          <option>Tình nguyện</option>
-        </select>
-
-        <select
-          [ngModel]="selectedStatus()"
-          (ngModelChange)="setFilterStatus($event)"
-          class="w-full sm:w-auto px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer hover:bg-slate-100 transition-colors min-w-[200px]"
-        >
-          <option value="ALL">Tất cả trạng thái</option>
-          <option value="OPEN">Đang mở đăng ký</option>
-          <option value="UPCOMING">Sắp mở đăng ký</option>
-        </select>
       </div>
     </div>
 
-    <div class="flex flex-wrap gap-3 mb-10">
+    <div class="flex flex-wrap gap-2.5 mb-8">
       <button
         (click)="setFilterLevel('ALL')"
-        [ngClass]="selectedLevel() === 'ALL' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-indigo-600'"
-        class="px-6 py-2.5 rounded-full text-sm font-bold border transition-all"
+        [ngClass]="selectedLevel() === 'ALL' ? 'bg-slate-800 text-white shadow-md shadow-slate-300 border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'"
+        class="px-5 py-2 rounded-xl text-sm font-semibold border transition-all"
       >
         Tất cả
       </button>
@@ -62,7 +69,7 @@
       <button
         (click)="setFilterLevel('UNIVERSITY')"
         [ngClass]="selectedLevel() === 'UNIVERSITY' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-indigo-600'"
-        class="px-6 py-2.5 rounded-full text-sm font-bold border transition-all flex items-center gap-2"
+        class="px-5 py-2 rounded-xl text-sm font-semibold border transition-all flex items-center gap-2"
       >
         <i class="bi bi-bank"></i> Cấp Trường
       </button>
@@ -70,7 +77,7 @@
       <button
         (click)="setFilterLevel('FACULTY')"
         [ngClass]="selectedLevel() === 'FACULTY' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-indigo-600'"
-        class="px-6 py-2.5 rounded-full text-sm font-bold border transition-all flex items-center gap-2"
+        class="px-5 py-2 rounded-xl text-sm font-semibold border transition-all flex items-center gap-2"
       >
         <i class="bi bi-mortarboard-fill"></i> Cấp Khoa
       </button>
@@ -78,119 +85,129 @@
       <button
         (click)="setFilterLevel('EXTERNAL')"
         [ngClass]="selectedLevel() === 'EXTERNAL' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-indigo-600'"
-        class="px-6 py-2.5 rounded-full text-sm font-bold border transition-all flex items-center gap-2"
+        class="px-5 py-2 rounded-xl text-sm font-semibold border transition-all flex items-center gap-2"
       >
         <i class="bi bi-globe"></i> Ngoài Trường
       </button>
     </div>
 
+    <!-- MAIN CONTENT -->
     @if (isLoading()) {
-      <div class="flex flex-col items-center justify-center py-20">
-        <div class="animate-spin rounded-full h-10 w-10 border-4 border-slate-200 border-t-indigo-600 mb-4"></div>
-        <p class="text-slate-500 font-bold animate-pulse">Đang tải danh sách hoạt động...</p>
+      <div class="flex flex-col items-center justify-center py-24">
+        <div class="relative w-12 h-12 mb-4">
+          <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+          <div class="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+        </div>
+        <p class="text-slate-500 font-semibold animate-pulse">Đang tải danh sách hoạt động...</p>
       </div>
     } @else {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
         @for (act of activities(); track act.id) {
+          <!-- CARD -->
           <div
-            class="bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-100/50 hover:-translate-y-1 transition-all duration-300 flex flex-col group cursor-pointer focus:outline-none focus:ring-4 focus:ring-indigo-100"
+            class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-sm hover:shadow-xl hover:shadow-indigo-100/40 hover:-translate-y-1 transition-all duration-300 flex flex-col group cursor-pointer focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500"
             tabindex="0"
             (click)="viewDetails(act.id)"
             (keydown.enter)="viewDetails(act.id)"
           >
-            <div class="relative h-52 overflow-hidden bg-slate-100">
+            <!-- Card Image -->
+            <div class="relative h-48 overflow-hidden bg-slate-100">
               <img
                 [src]="act.coverImage || 'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772505926/default_activity_coverImage.jpg'"
                 alt="Ảnh bìa"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent"></div>
 
-              <div class="absolute top-4 left-4 bg-slate-900/70 backdrop-blur-md text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-xl shadow-sm">
-                {{ act.isExternal ? 'NGOÀI TRƯỜNG' : (act.isFaculty ? 'CẤP KHOA' : 'CẤP TRƯỜNG') }}
+              <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-slate-800 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg shadow-sm">
+                {{ act.isExternal ? 'Ngoại viện' : (act.isFaculty ? 'Cấp Khoa' : 'Cấp Trường') }}
               </div>
 
               @if (act.benefits && act.benefits.length > 0) {
-                <div class="absolute top-4 right-4 bg-amber-400 text-amber-950 text-[10px] font-black px-3 py-1.5 rounded-xl shadow-md flex items-center gap-1">
-                  <i class="bi bi-star-fill"></i> ĐIỂM RÈN LUYỆN
+                <div class="absolute top-3 right-3 bg-amber-400 text-amber-950 text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5">
+                  <i class="bi bi-star-fill text-amber-100"></i> ĐRL
                 </div>
               }
             </div>
 
-            <div class="p-6 md:p-8 flex flex-col flex-grow">
-              <h3 class="text-lg font-black text-slate-800 leading-snug mb-3 line-clamp-2 min-h-[3.5rem] group-hover:text-indigo-600 transition-colors">
-                {{ act.title }}
-              </h3>
+            <!-- Card Body -->
+            <div class="p-5 md:p-6 flex flex-col flex-grow">
 
-              <div class="flex items-center gap-2 mb-4">
-                <div class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center shrink-0">
-                  <i class="bi bi-building text-indigo-500 text-xs"></i>
+              <!-- Organizer -->
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100/50">
+                  <i class="bi bi-building text-indigo-500 text-[10px]"></i>
                 </div>
-                <span class="text-[11px] font-black text-indigo-600 uppercase tracking-tight truncate">
-                  {{ act.departmentName || act.organizer?.name || 'Đơn vị đang cập nhật' }}
+                <span class="text-[11px] font-semibold text-indigo-600 uppercase tracking-wider truncate">
+                  {{ act.departmentName || act.organizer?.name || 'Đơn vị tổ chức' }}
                 </span>
               </div>
 
-              <div class="space-y-3 mb-6 text-sm text-slate-500 font-medium">
+              <!-- Title -->
+              <h3 class="text-[1.1rem] font-bold text-slate-800 leading-snug mb-4 line-clamp-2 min-h-[3rem] group-hover:text-indigo-600 transition-colors">
+                {{ act.title }}
+              </h3>
+
+              <!-- Meta info -->
+              <div class="space-y-2.5 mb-6 text-sm text-slate-600 font-medium">
                 <p class="flex items-center gap-3 truncate">
-                  <span class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-indigo-500">
-                    <i class="bi bi-calendar-event"></i>
-                  </span>
+                  <i class="bi bi-calendar-event text-slate-400"></i>
                   {{ act.startDate | date: 'dd/MM/yyyy • HH:mm' }}
                 </p>
                 <p class="flex items-center gap-3 truncate" [title]="act.location">
-                  <span class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-indigo-500">
-                    <i class="bi bi-geo-alt"></i>
-                  </span>
+                  <i class="bi bi-geo-alt text-slate-400"></i>
                   {{ act.location || 'Chưa cập nhật địa điểm' }}
                 </p>
               </div>
-
-              <div class="mt-auto bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <div class="flex justify-between items-end text-xs font-bold mb-2">
-                  <span class="text-slate-500">Tiến độ ghi danh</span>
+              <div class="mt-auto bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                <div class="flex justify-between items-end text-xs font-semibold mb-2">
+                  <span class="text-slate-500">Ghi danh</span>
                   <span
-                    [ngClass]="act.maxParticipants - (act.registeredCount || 0) > 0 ? 'text-emerald-600 bg-emerald-50' : 'text-red-500 bg-red-50'"
-                    class="px-2 py-0.5 rounded-md flex items-center gap-1"
+                    [ngClass]="act.maxParticipants - (act.registeredCount || 0) > 0 ? 'text-emerald-700 bg-emerald-100/50' : 'text-rose-700 bg-rose-100/50'"
+                    class="px-2 py-0.5 rounded flex items-center gap-1 font-bold"
                   >
                     <i [class]="act.maxParticipants - (act.registeredCount || 0) > 0 ? 'bi bi-ticket-perforated' : 'bi bi-slash-circle'"></i>
-                    {{ act.maxParticipants - (act.registeredCount || 0) > 0 ? 'Còn ' + (act.maxParticipants - (act.registeredCount || 0)) + ' suất' : 'Đã đầy' }}
+                    {{ act.maxParticipants - (act.registeredCount || 0) > 0 ? 'Còn ' + (act.maxParticipants - (act.registeredCount || 0)) : 'Đã đầy' }}
                   </span>
                 </div>
-                <div class="w-full bg-slate-200 rounded-full h-1.5 mb-2 overflow-hidden">
+
+                <div class="w-full bg-slate-200/80 rounded-full h-1.5 mb-2 overflow-hidden">
                   <div
-                    class="h-full transition-all duration-1000"
-                    [ngClass]="getCapacityPercentage(act.registeredCount, act.maxParticipants) === 100 ? 'bg-red-500' : 'bg-gradient-to-r from-indigo-500 to-blue-500'"
+                    class="h-full transition-all duration-1000 ease-out rounded-full"
+                    [ngClass]="getCapacityPercentage(act.registeredCount, act.maxParticipants) === 100 ? 'bg-rose-500' : 'bg-indigo-500'"
                     [style.width.%]="getCapacityPercentage(act.registeredCount, act.maxParticipants)"
                   ></div>
                 </div>
-                <div class="text-right text-[10px] text-slate-400 font-medium">
-                  {{ act.registeredCount || 0 }} / {{ act.maxParticipants }} SV
+                <div class="text-right text-[10px] text-slate-500 font-semibold">
+                  {{ act.registeredCount || 0 }} / {{ act.maxParticipants }}
                 </div>
 
                 <div class="flex justify-between items-center pt-3 mt-3 border-t border-slate-200/60">
-                  <div class="flex items-center gap-2 text-[11px] font-black uppercase" [ngClass]="getActivityStatus(act).colorClass">
-                    <span class="w-2 h-2 rounded-full" [ngClass]="getActivityStatus(act).dotClass"></span>
+                  <div class="flex items-center gap-1.5 text-[11px] font-bold uppercase" [ngClass]="getActivityStatus(act).colorClass">
+                    <span class="w-1.5 h-1.5 rounded-full" [ngClass]="getActivityStatus(act).dotClass"></span>
                     {{ getActivityStatus(act).label }}
                   </div>
-                  <div class="text-indigo-600 text-sm font-black group-hover:translate-x-1 transition-transform flex items-center gap-1">
-                    Chi tiết <i class="bi bi-arrow-right-short text-lg"></i>
+                  <div class="text-indigo-600 text-sm font-bold group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                    Chi tiết <i class="bi bi-arrow-right-short text-lg leading-none"></i>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
         } @empty {
-          <div class="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col items-center justify-center py-24 bg-white rounded-[2rem] border border-dashed border-slate-300">
-            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-              <i class="bi bi-search text-3xl text-slate-400"></i>
+          <!-- EMPTY STATE -->
+          <div class="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm">
+            <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 border border-slate-100">
+              <i class="bi bi-search text-2xl text-slate-400"></i>
             </div>
-            <h3 class="text-xl font-black text-slate-800 mb-2">Không tìm thấy hoạt động</h3>
-            <p class="text-slate-500 text-sm text-center max-w-md mb-6">
-              Vui lòng thử thay đổi bộ lọc hoặc từ khóa.
+            <h3 class="text-lg font-bold text-slate-800 mb-1">Không tìm thấy hoạt động</h3>
+            <p class="text-slate-500 text-sm text-center max-w-md mb-6 font-medium">
+              Vui lòng thử thay đổi bộ lọc hoặc nhập từ khóa khác.
             </p>
             <button
               (click)="onSearchChange(''); setFilterLevel('ALL')"
-              class="px-6 py-2.5 bg-indigo-50 text-indigo-600 font-bold rounded-full hover:bg-indigo-100 transition-colors"
+              class="px-5 py-2 bg-indigo-50 text-indigo-600 font-semibold text-sm rounded-xl hover:bg-indigo-100 transition-colors"
             >
               Xóa bộ lọc
             </button>
@@ -198,9 +215,11 @@
         }
       </div>
 
+      <!-- PAGINATION -->
       @if (totalRows() > 0) {
-        <div class="flex justify-center pt-6 border-t border-slate-200/50">
+        <div class="student-pagination-container w-full mt-4 pt-4">
           <lib-pagination
+            class="block w-full"
             [currentPage]="currentPage()"
             [totalItems]="totalRows()"
             [pageSize]="pageSize()"

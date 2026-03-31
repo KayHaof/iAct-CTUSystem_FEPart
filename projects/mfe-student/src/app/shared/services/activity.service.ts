@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Activity } from '../models/activity.model';
+import { Activity, ActivityTimeResponse } from '../models/activity.model';
 import { PageDTO, ApiResponse } from 'interface';
 
 export interface Registration {
@@ -41,6 +41,12 @@ export class ActivityService {
   getActivityById(id: number | string): Observable<Activity> {
     return this.http
       .get<ApiResponse<Activity>>(`${this.apiUrl}/${id}`)
+      .pipe(map((response) => response.result));
+  }
+
+  getActivityTimes(id: number | string): Observable<ActivityTimeResponse> {
+    return this.http
+      .get<ApiResponse<ActivityTimeResponse>>(`${this.apiUrl}/${id}/times-location`)
       .pipe(map((response) => response.result));
   }
 

@@ -1,19 +1,30 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs/operators';
+import { finalize, switchMap, catchError, map } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
 import { BarcodeFormat } from '@zxing/library';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 
 import { AlertService } from '@my-mfe/ui';
-import { CloudinaryService} from '@my-mfe/data-access-media';
-import { ActivityRecord, RawRegistrationDto } from '../../shared/models/activity.model';
-import { Semester} from 'interface';
+import { CloudinaryService } from '@my-mfe/data-access-media';
+import { ActivityRecord, RawRegistrationDto, ActivityTimeResponse } from '../../shared/models/activity.model';
+import { Semester } from 'interface';
 
 import { AttendanceService, CheckInRequest } from '../../shared/services/attendance.service';
 import { RegistrationService } from '../../shared/services/registration.service';
 import { ProofService, ProofSubmissionRequest } from '../../shared/services/proof.service';
 import { SemesterService } from '../../shared/services/semester.service';
+import { ActivityService } from '../../shared/services/activity.service';
+
+type TabMode = 'REGISTERED' | 'ONGOING' | 'PROOF_SUBMITTED' | 'COMPLETED';
+
+export interface UiActivityRecord extends ActivityRecord {
+  realStartDate?: Date;
+  realEndDate?: Date;
+  isStartingSoon?: boolean;
+  isMissed?: boolean;
+}
 
 @Component({
   selector: 'app-my-records',
@@ -29,14 +40,15 @@ export class MyRecordsComponent implements OnInit {
   private semesterService = inject(SemesterService);
   private alertService = inject(AlertService);
   private cloudinaryService = inject(CloudinaryService);
+  private activityService = inject(ActivityService);
 
   // --- STATE QUẢN LÝ GIAO DIỆN ---
   semesters = signal<Semester[]>([]);
   selectedSemesterId = signal<number | null>(null);
-  currentTab = signal<'ACTION_REQUIRED' | 'UPCOMING' | 'COMPLETED'>('ACTION_REQUIRED');
+  currentTab = signal<TabMode>('ONGOING');
 
   isModalOpen = signal(false);
-  selectedActivity = signal<ActivityRecord | null>(null);
+  selectedActivity = signal<UiActivityRecord | null>(null);
   isLoadingData = signal(false);
 
   // --- STATE ĐIỂM DANH ---
@@ -56,7 +68,7 @@ export class MyRecordsComponent implements OnInit {
   selectedFile = signal<File | null>(null);
   selectedFileName = signal<string>('');
 
-  activities = signal<ActivityRecord[]>([]);
+  activities = signal<UiActivityRecord[]>([]);
 
   allowedFormats = [BarcodeFormat.QR_CODE];
 
@@ -95,26 +107,75 @@ export class MyRecordsComponent implements OnInit {
 
     this.registrationService
       .getMyRecords(semId)
-      .pipe(finalize(() => this.isLoadingData.set(false)))
-      .subscribe({
-        next: (res) => {
+      .pipe(
+        switchMap((res) => {
           const rawData = (res.result as unknown as RawRegistrationDto[]) || [];
-          const mappedData: ActivityRecord[] = rawData.map((item) => ({
-            id: item.id,
-            activityId: item.activityId,
-            title: item.activityTitle || 'Chưa có tên',
-            points: item.points || 0,
-            startDate: item.registeredAt,
-            attendedAt: item.attendedAt,
-            studentCode: item.studentCode,
-            location: item.activityLocation || 'Chưa cập nhật',
-            organizer: 'Đoàn - Hội',
-            status: item.status,
-            proofStatus: item.proofStatus || 0,
-            cancelReason: item.cancelReason || '',
-            point: item.point || 0,
-          }));
+          if (rawData.length === 0) return of([]);
 
+          const timeRequests = rawData.map((item) =>
+            this.activityService.getActivityTimes(item.activityId).pipe(catchError(() => of(null))),
+          );
+
+          return forkJoin(timeRequests).pipe(
+            map((timesArray) => {
+              const now = new Date();
+
+              return rawData.map((item, index) => {
+                const times: ActivityTimeResponse | null = timesArray[index];
+
+                let realStart: Date | undefined;
+                let realEnd: Date | undefined;
+                let isStartingSoon = false;
+                let isMissed = false;
+                let finalLocation = item.activityLocation || 'Chưa cập nhật địa điểm';
+
+                if (times) {
+                  realStart = new Date(times.startDate);
+                  realEnd = new Date(times.endDate);
+
+                  if (times.location) {
+                    finalLocation = times.location;
+                  }
+
+                  const diffTime = realStart.getTime() - now.getTime();
+                  const diffDays = diffTime / (1000 * 3600 * 24);
+
+                  if (diffDays > 0 && diffDays <= 3) {
+                    isStartingSoon = true;
+                  }
+
+                  if (item.status === 0 && now > realEnd) {
+                    isMissed = true;
+                  }
+                }
+
+                return {
+                  id: item.id,
+                  activityId: item.activityId,
+                  title: item.activityTitle || 'Chưa có tên',
+                  points: item.points || 0,
+                  startDate: times?.startDate || item.registeredAt,
+                  realStartDate: realStart,
+                  realEndDate: realEnd,
+                  isStartingSoon: isStartingSoon,
+                  isMissed: isMissed,
+                  attendedAt: item.attendedAt,
+                  studentCode: item.studentCode,
+                  location: finalLocation,
+                  organizer: 'Đoàn - Hội',
+                  status: item.status,
+                  proofStatus: item.proofStatus || 0,
+                  cancelReason: item.cancelReason || '',
+                  point: item.point || 0,
+                } as UiActivityRecord;
+              });
+            }),
+          );
+        }),
+        finalize(() => this.isLoadingData.set(false)),
+      )
+      .subscribe({
+        next: (mappedData) => {
           this.activities.set(mappedData);
         },
         error: () => {
@@ -135,11 +196,30 @@ export class MyRecordsComponent implements OnInit {
     await this.submitManualCode();
   }
 
-  // --- LOGIC GIAO DIỆN (TABS & MODAL) ---
-  getUiTabStatus(act: ActivityRecord): 'ACTION_REQUIRED' | 'UPCOMING' | 'COMPLETED' {
-    if (act.status === 0) return 'UPCOMING';
-    if (act.status === 1 && act.proofStatus === 0) return 'ACTION_REQUIRED';
-    return 'COMPLETED';
+  getUiTabStatus(act: UiActivityRecord): TabMode | null {
+    const now = new Date();
+
+    if (act.status === 2 || (act.status === 1 && act.proofStatus === 2) || act.isMissed) {
+      return 'COMPLETED';
+    }
+
+    if (act.status === 1 && act.proofStatus === 1) {
+      return 'PROOF_SUBMITTED';
+    }
+
+    const isHappeningNow =
+      act.realStartDate && act.realEndDate && now >= act.realStartDate && now <= act.realEndDate;
+
+    const needsProofAction = act.status === 1 && (act.proofStatus === 0 || act.proofStatus === 3);
+    if (needsProofAction || (act.status === 0 && isHappeningNow)) {
+      return 'ONGOING';
+    }
+
+    if (act.status === 0 && act.realStartDate && now < act.realStartDate) {
+      return 'REGISTERED';
+    }
+
+    return null;
   }
 
   filteredActivities = computed(() => {
@@ -152,11 +232,11 @@ export class MyRecordsComponent implements OnInit {
       .reduce((sum, act) => sum + act.point, 0);
   });
 
-  changeTab(tab: 'ACTION_REQUIRED' | 'UPCOMING' | 'COMPLETED') {
+  changeTab(tab: TabMode) {
     this.currentTab.set(tab);
   }
 
-  openModal(activity: ActivityRecord, mode: 'SCAN' | 'PROOF' | 'INFO' = 'INFO') {
+  openModal(activity: UiActivityRecord, mode: 'SCAN' | 'PROOF' | 'INFO' = 'INFO') {
     this.selectedActivity.set(activity);
     this.modalMode.set(mode);
     this.isModalOpen.set(true);
@@ -253,7 +333,6 @@ export class MyRecordsComponent implements OnInit {
     const act = this.selectedActivity();
     if (!act) return;
 
-    // Lấy dữ liệu file kéo thả hoặc link text do người dùng dán
     const fileToUpload = this.selectedFile();
     const textUrl = this.proofImageUrl().trim();
 
@@ -264,11 +343,9 @@ export class MyRecordsComponent implements OnInit {
 
     this.isSubmittingProof.set(true);
 
-    // TRƯỜNG HỢP 1: NGƯỜI DÙNG KÉO THẢ FILE
     if (fileToUpload) {
       this.cloudinaryService.uploadImage(fileToUpload, 'proof-activity').subscribe({
         next: (uploadedUrl) => {
-          // Up ảnh thành công -> lấy URL gọi tiếp API nộp minh chứng
           this.executeSubmitProofApi(act.activityId, uploadedUrl, this.proofDescription().trim());
         },
         error: () => {
@@ -276,9 +353,7 @@ export class MyRecordsComponent implements OnInit {
           this.alertService.error('Lỗi tải ảnh lên hệ thống! Vui lòng thử lại.');
         },
       });
-    }
-    // TRƯỜNG HỢP 2: NGƯỜI DÙNG DÁN LINK TEXT
-    else {
+    } else {
       this.executeSubmitProofApi(act.activityId, textUrl, this.proofDescription().trim());
     }
   }
@@ -337,25 +412,21 @@ export class MyRecordsComponent implements OnInit {
   }
 
   handleFile(file: File) {
-    // 1. Kiểm tra dung lượng (Giới hạn 5MB)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       this.alertService.error('File quá lớn! Vui lòng chọn ảnh dưới 5MB.');
       return;
     }
 
-    // 2. Kiểm tra định dạng ảnh
     if (!file.type.match(/image\/*/)) {
       this.alertService.error('Vui lòng chỉ tải lên file hình ảnh (JPG, PNG)!');
       return;
     }
 
-    // 3. Lưu file vào State
     this.selectedFile.set(file);
     this.selectedFileName.set(file.name);
     this.proofImageUrl.set('');
 
-    // 4. Tạo URL Preview để hiển thị lên HTML
     const reader = new FileReader();
     reader.onload = (e) => {
       this.previewUrl.set(e.target?.result as string | null);

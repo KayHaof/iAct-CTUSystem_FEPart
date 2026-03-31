@@ -2,7 +2,6 @@
   display: block;
 }
 
-/* Fallback cắt chữ cho các trình duyệt cũ nếu plugin line-clamp chưa cài */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -10,7 +9,6 @@
   overflow: hidden;
 }
 
-/* Thêm icon mũi tên cho Select Box */
 .custom-select-arrow {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 1rem center;
@@ -18,7 +16,6 @@
   background-size: 1.2em 1.2em;
 }
 
-/* Hiệu ứng nhịp tim cho chấm trạng thái */
 .custom-pulse {
   animation: myPulse 2s infinite;
 }
@@ -35,4 +32,32 @@
   }
 }
 
-/* ĐÃ XÓA ĐOẠN LỖI CIRCULAR DEPENDENCY Ở ĐÂY */
+.student-pagination-container {
+  display: block;
+  width: 100%;
+
+  ::ng-deep {
+    lib-pagination {
+      display: block;
+      width: 100%;
+      > div {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 1.5rem !important;
+
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        padding-bottom: 0 !important;
+        border-radius: 0 !important;
+      }
+
+      button {
+        box-shadow: none;
+      }
+    }
+  }
+}

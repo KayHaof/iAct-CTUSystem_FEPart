@@ -3,7 +3,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { RegistrationResponse, ApiResponse } from 'interface';
 
-// Khai báo Interface hứng dữ liệu cho màn hình My Records
 export interface ActivityRecord {
   id: number;
   activityId: number;
@@ -57,7 +56,6 @@ export class RegistrationService {
   getMyRecords(semesterId?: undefined | number | null): Observable<ApiResponse<ActivityRecord[]>> {
     let params = new HttpParams();
 
-    // Nếu có chọn học kỳ thì mới gửi ID xuống, không thì BE tự lấy tất cả
     if (semesterId) {
       params = params.set('semesterId', semesterId.toString());
     }

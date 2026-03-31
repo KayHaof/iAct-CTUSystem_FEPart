@@ -96,3 +96,11 @@ export interface RawRegistrationDto {
   proofStatus?: number;
   cancelReason?: string;
 }
+
+export interface ActivityTimeResponse {
+  registrationStart: string;
+  registrationEnd: string;
+  startDate: string;
+  endDate: string;
+  location: string;
+}
