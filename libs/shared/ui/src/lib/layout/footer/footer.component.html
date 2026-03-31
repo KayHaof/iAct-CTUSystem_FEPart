@@ -1,28 +1,55 @@
-<footer class="iact-footer">
-  <div class="container mx-auto px-6">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div>
-        <h3 class="footer-title">iAct - CTU</h3>
-        <p class="text-sm mb-2">Hệ thống Quản lý Hoạt động & Điểm rèn luyện</p>
-        <p class="text-xs opacity-75">Đại học Cần Thơ</p>
+<footer class="iact-footer relative overflow-hidden">
+  <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-ctu-gold/10 via-ctu-gold to-ctu-gold/10"></div>
+
+  <div class="container mx-auto px-6 pt-12 pb-6 relative z-10">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
+      <div class="md:col-span-12 lg:col-span-5">
+        <h3 class="footer-brand">
+          <span class="text-white">iAct</span><span class="text-ctu-gold"> - CTU</span>
+        </h3>
+        <p class="text-sm leading-relaxed text-gray-300 mb-5 max-w-sm">
+          Hệ thống Quản lý Hoạt động & Điểm rèn luyện sinh viên trường Đại học Cần Thơ. Nhanh chóng, tiện lợi và minh bạch.
+        </p>
+        <div class="flex gap-3 mt-4">
+          <a href="#" class="social-btn"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="social-btn"><i class="bi bi-youtube"></i></a>
+          <a href="#" class="social-btn"><i class="bi bi-globe"></i></a>
+        </div>
       </div>
 
-      <div>
-        <h4 class="footer-title">Liên kết</h4>
-        <ul class="space-y-2">
+      <div class="md:col-span-6 lg:col-span-3">
+        <h4 class="footer-title">Liên kết nhanh</h4>
+        <ul class="space-y-3">
           <li><a href="#" class="footer-link">Trang chủ</a></li>
           <li><a href="#" class="footer-link">Tra cứu hoạt động</a></li>
+          <li><a href="#" class="footer-link">Hướng dẫn sử dụng</a></li>
+          <li><a href="#" class="footer-link">Quy chế điểm rèn luyện</a></li>
         </ul>
       </div>
 
-      <div>
-        <h4 class="footer-title">Liên hệ</h4>
-        <p class="flex items-center mb-2 text-sm">
-          <i class="bi bi-geo-alt mr-2"></i> Khu II, Đ. 3/2, phường Ninh Kiều, TP. Cần Thơ
-        </p>
+      <div class="md:col-span-6 lg:col-span-4">
+        <h4 class="footer-title">Thông tin liên hệ</h4>
+        <ul class="space-y-4">
+          <li class="flex items-start">
+            <i class="bi bi-geo-alt text-ctu-gold mt-0.5 mr-3 text-lg"></i>
+            <span class="text-sm text-gray-300 leading-relaxed">Khu II, Đ. 3/2, Xuân Khánh, Ninh Kiều, TP. Cần Thơ</span>
+          </li>
+          <li class="flex items-center">
+            <i class="bi bi-envelope text-ctu-gold mr-3 text-lg"></i>
+            <a href="mailto:ctsv-iact@ctu.edu.vn" class="text-sm text-gray-300 hover:text-white transition-colors">ctsv-iact@ctu.edu.vn</a>
+          </li>
+          <li class="flex items-center">
+            <i class="bi bi-telephone text-ctu-gold mr-3 text-lg"></i>
+            <span class="text-sm text-gray-300">0292 3832 663</span>
+          </li>
+        </ul>
       </div>
+
     </div>
 
-    <div class="footer-copyright">&copy; {{ currentYear }} iAct-CTU. All rights reserved.</div>
+    <div class="footer-copyright">
+      <p>&copy; {{ currentYear }} <span class="font-semibold text-white">iAct-CTU</span>. All rights reserved.</p>
+      <p class="mt-2 md:mt-0">Phát triển bởi <span class="text-ctu-gold">CTU Tech Team</span></p>
+    </div>
   </div>
 </footer>

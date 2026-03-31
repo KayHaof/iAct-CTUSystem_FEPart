@@ -22,8 +22,6 @@ export class ConfirmService {
 
       confirmButtonText: confirmButtonText,
       cancelButtonText: cancelButtonText,
-
-      // Hiệu ứng focus vào nút hủy (để đỡ lỡ tay bấm xóa)
       focusCancel: true,
     });
 

@@ -1,20 +1,48 @@
 .iact-footer {
-  @apply bg-ctu-blue text-white py-4 mt-auto;
+  @apply bg-ctu-blue text-white mt-auto;
+}
+
+.footer-brand {
+  @apply text-3xl font-extrabold tracking-tight mb-4 inline-block;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .footer-title {
-  @apply text-ctu-gold text-lg font-bold mb-3 uppercase tracking-wide;
+  @apply text-ctu-gold text-lg font-bold mb-5 uppercase tracking-wider relative inline-block;
+
+  &::after {
+    content: '';
+    @apply absolute -bottom-2 left-0 w-8 h-[2px] bg-ctu-gold rounded-full;
+  }
 }
 
 .footer-link {
-  @apply text-gray-200 no-underline transition-all duration-300 block;
+  @apply text-gray-300 text-sm no-underline transition-all duration-300 flex items-center relative;
+
+  &::before {
+    content: '\F285'; // Mã Unicode của icon bi-chevron-right (Bootstrap Icons)
+    font-family: 'bootstrap-icons';
+    @apply absolute left-0 opacity-0 -translate-x-3 transition-all duration-300 text-ctu-gold text-xs;
+  }
 
   &:hover {
-    @apply text-white pl-2;
-    text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+    @apply text-white pl-5;
+    text-shadow: 0 0 8px rgba(255, 204, 0, 0.3);
+
+    &::before {
+      @apply opacity-100 translate-x-0;
+    }
+  }
+}
+
+.social-btn {
+  @apply flex items-center justify-center w-9 h-9 rounded-full bg-white/10 text-gray-300 transition-all duration-300;
+
+  &:hover {
+    @apply bg-ctu-gold text-ctu-blue -translate-y-1 shadow-[0_4px_10px_rgba(255,204,0,0.4)];
   }
 }
 
 .footer-copyright {
-  @apply border-t border-white/20 mt-8 pt-6 text-center text-sm text-gray-300;
+  @apply border-t border-white/10 mt-12 pt-6 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400;
 }

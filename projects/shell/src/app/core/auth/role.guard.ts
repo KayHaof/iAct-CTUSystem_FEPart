@@ -14,7 +14,6 @@ export const roleGuard: CanActivateFn = (route, state) => {
 
   const userRoles = authService.getUserRoles();
 
-  // Kiểm tra xem user có chứa role nào khớp với yêu cầu không
   const hasRole = requiredRoles.some(
     (requiredRole) =>
       userRoles.includes(requiredRole) || userRoles.includes(requiredRole.toLowerCase()),

@@ -1,7 +1,5 @@
 import { Routes } from '@angular/router';
 import { loadRemoteModule } from '@angular-architects/native-federation';
-
-import { AdminLayoutComponent } from '@my-mfe/ui';
 import { authGuard } from './core/auth/auth.guard';
 import { roleGuard } from './core/auth/role.guard';
 
@@ -13,7 +11,6 @@ export const routes: Routes = [
     title: '500 - Lỗi hệ thống',
   },
 
-  // MAIN LAYOUT (Cần đăng nhập)
   {
     path: '',
     canActivate: [authGuard],
@@ -58,7 +55,6 @@ export const routes: Routes = [
         title: '404 - Đường dẫn không tồn tại',
       },
 
-      // Wildcard con (để bắt lỗi 404 trong nội bộ layout)
       {
         path: '**',
         loadComponent: () =>
@@ -68,7 +64,6 @@ export const routes: Routes = [
     ],
   },
 
-  // 3. WILDCARD NGOÀI CÙNG (Fallback)
   {
     path: '**',
     redirectTo: 'not-found',

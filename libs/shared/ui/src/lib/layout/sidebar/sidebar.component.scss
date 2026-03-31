@@ -25,14 +25,31 @@
 }
 
 .sidebar-logo {
-  @apply flex items-center justify-center h-16 mb-6 text-2xl font-extrabold text-ctu-blue whitespace-nowrap overflow-hidden transition-all duration-300;
-  background-image: url('https://res.cloudinary.com/dhjamvg6j/image/upload/v1770173915/logo_ycoscg.png');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 0;
+  @apply flex items-center justify-center h-16 mb-6 text-2xl font-extrabold text-ctu-blue whitespace-nowrap overflow-hidden relative transition-all duration-300;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    background-image: url('https://res.cloudinary.com/dhjamvg6j/image/upload/v1770173915/logo_ycoscg.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 85%;
+    background-color: white;
+    border-radius: 12px; /* Bo góc xịn xò */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+  }
 
   .theme-dark & {
     @apply text-white;
+    &::before {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
   }
 }
 
@@ -65,7 +82,12 @@
     }
 
     .sidebar-logo {
-      background-size: 50px;
+      &::before {
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1);
+      }
+
       .logo-text {
         @apply opacity-0 w-0 overflow-hidden;
         transition-delay: 0s;

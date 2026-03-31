@@ -12,11 +12,11 @@ export const serverErrorInterceptor: HttpInterceptorFn = (req, next) => {
         if (error.status >= 500 || error.status === 0) {
           console.error('=> Server toang rồi! Đang chuyển hướng...', error.message);
 
-          router.navigate(['/server-error'], {
+          void router.navigate(['/server-error'], {
             state: { error: error.error || 'Connection Refused' },
           });
         } else if (error.status === 404) {
-          router.navigate(['/not-found']);
+          void router.navigate(['/not-found']);
         }
       }
       return throwError(() => error);

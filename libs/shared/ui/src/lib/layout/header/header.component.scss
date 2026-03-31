@@ -1,30 +1,47 @@
 :host {
   @apply block w-full sticky top-0 z-50;
-  --ctu-blue: #0065ff; // Màu xanh CTU đặc trưng
-  --ctu-blue-light: rgba(0, 101, 255, 0.1);
+  --ctu-blue: #0065ff;
 }
 
 .header-container {
-  @apply bg-white/70 backdrop-blur-md border-b border-gray-100 transition-all duration-300;
+  @apply bg-white/80 backdrop-blur-lg border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all duration-300;
 }
 
 .header-wrapper {
-  @apply flex justify-between items-center h-[72px] px-4 md:px-8 max-w-[1920px] mx-auto;
+  @apply flex justify-between items-center h-[72px] px-4 md:px-6 max-w-[1920px] mx-auto;
 }
 
-// --- Branding ---
 .system-title {
-  @apply text-xl font-black tracking-tight text-gray-800 leading-none;
+  @apply text-2xl font-black tracking-tight text-gray-800 leading-none;
 }
 
 .system-subtitle {
-  @apply text-[10px] uppercase tracking-widest text-gray-400 font-bold mt-1;
+  @apply text-[10px] uppercase tracking-widest text-gray-400 font-bold mt-1.5;
 }
 
-// --- User Profile ---
+.menu-mobile-btn, .action-btn {
+  @apply p-2 w-10 h-10 flex items-center justify-center rounded-xl text-gray-500 transition-all duration-300 bg-transparent;
+
+  &:hover {
+    @apply bg-gray-100 text-gray-800 scale-105;
+  }
+
+  &:active {
+    @apply scale-95;
+  }
+}
+
 .user-profile-wrapper {
-  @apply flex items-center gap-3 cursor-pointer py-1.5 pl-4 pr-1.5 rounded-2xl
-         border border-transparent transition-all duration-300 hover:bg-gray-50 hover:border-gray-200;
+  @apply flex items-center gap-3 cursor-pointer py-1.5 pl-3 pr-2 rounded-xl
+  border border-transparent transition-all duration-300 outline-none;
+
+  &:hover, &:focus-visible {
+    @apply bg-gray-50 border-gray-200 shadow-sm;
+
+    .user-name {
+      color: var(--ctu-blue);
+    }
+  }
 
   &:active {
     @apply scale-95;
@@ -32,14 +49,14 @@
 }
 
 .user-info {
-  @apply flex-col items-end leading-tight;
+  @apply flex-col items-end leading-tight justify-center;
 
   .user-name {
-    @apply font-bold text-sm text-gray-700 transition-colors group-hover:text-blue-600;
+    @apply font-bold text-sm text-gray-700 transition-colors duration-300;
   }
 
   .user-role {
-    @apply text-[11px] text-gray-400 font-semibold;
+    @apply text-[11px] text-gray-400 font-medium tracking-wide mt-0.5;
   }
 }
 
@@ -47,17 +64,15 @@
   @apply relative;
 
   .avatar-img {
-    @apply w-10 h-10 rounded-xl object-cover border-2 border-white shadow-sm transition-transform;
+    @apply w-10 h-10 rounded-xl object-cover bg-gray-100 border-2 border-white shadow-sm transition-all duration-300;
+
     .user-profile-wrapper:hover & {
-      @apply border-blue-100 scale-105;
+      @apply ring-2 ring-offset-1 border-transparent scale-105;
+      ring-color: var(--ctu-blue);
     }
   }
 
   .status-dot {
-    @apply absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full;
+    @apply absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-10;
   }
-}
-
-.menu-mobile-btn {
-  @apply p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors;
 }

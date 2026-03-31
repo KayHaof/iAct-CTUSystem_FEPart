@@ -8,7 +8,6 @@ export const CLOUDINARY_CONFIG = {
   cloudName: 'dhjamvg6j',
   uploadPreset: 'upload-iact',
   basePath: 'iAct-CTU',
-  // URL dùng cho Angular Image Loader
   loaderBaseUrl: 'https://res.cloudinary.com/dhjamvg6j',
 };
 

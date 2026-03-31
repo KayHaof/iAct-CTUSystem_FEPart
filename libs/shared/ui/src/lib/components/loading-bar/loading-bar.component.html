@@ -1,8 +1,13 @@
 @if (loadingService.progress() > 0) {
-  <div class="fixed top-0 left-0 w-full h-[3px] z-[99999] pointer-events-none bg-transparent">
+  <div
+    class="loading-container"
+    [class.is-finished]="loadingService.progress() === 100"
+  >
     <div
-      class="h-full bg-[#007bff] transition-all duration-300 ease-out rounded-r-sm shadow-[0_0_10px_rgba(0,74,153,0.7)]"
+      class="loading-bar"
       [style.width.%]="loadingService.progress()"
-    ></div>
+    >
+      <div class="glow-head"></div>
+    </div>
   </div>
 }
