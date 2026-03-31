@@ -1,12 +1,10 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/guards/role.guard';
-import { ImportUsersComponent } from './features/super-admin/user-management/import-users/import-users.component';
 
 export const routes: Routes = [
-  // Tự động chuyển hướng khi vừa vào mfe-admin
   { path: '', redirectTo: 'admin/dashboard', pathMatch: 'full' },
 
-  // --- VÙNG CHUNG (Admin & Khoa đều xài) ---
+  // --- VÙNG CHUNG  ---
   {
     path: 'dashboard',
     title: 'Dashboard Thống kê',
@@ -16,7 +14,6 @@ export const routes: Routes = [
     data: { roles: ['department', 'admin'] },
   },
 
-  // --- VÙNG QUẢN LÝ HOẠT ĐỘNG (Dùng chung) ---
   {
     path: 'org/activities',
     canActivate: [roleGuard],
@@ -65,7 +62,7 @@ export const routes: Routes = [
     ],
   },
 
-  // --- VÙNG RIÊNG CỦA KHOA (Department) ---
+  // --- VÙNG RIÊNG CỦA KHOA ---
   {
     path: 'approvals',
     title: 'Duyệt minh chứng',

@@ -32,10 +32,10 @@ export interface OrganizerMock {
   avatarUrl?: string | null;
 }
 
-export interface SemesterMock {
-  id: number;
-  name: string;
-}
+// export interface SemesterMock {
+//   id: number;
+//   name: string;
+// }
 
 export interface ActivityScheduleDto {
   id?: number;

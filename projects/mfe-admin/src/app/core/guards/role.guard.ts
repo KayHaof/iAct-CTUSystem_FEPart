@@ -30,7 +30,7 @@ export const roleGuard: CanActivateFn = async (route, state) => {
 
   if (!user) {
     console.error('[Guard] Quá thời gian chờ thông tin User từ API!');
-    router.navigate(['/']);
+    router.navigate(['/']).then();
     return false;
   }
 
@@ -46,7 +46,7 @@ export const roleGuard: CanActivateFn = async (route, state) => {
     console.warn(
       `[Guard] Lùi lại! Role của bạn là '${currentRoleString}' (Mã: ${user.roleType}), không có quyền vào đây.`,
     );
-    router.navigate(['/forbidden']);
+    router.navigate(['/forbidden']).then();
     return false;
   }
 

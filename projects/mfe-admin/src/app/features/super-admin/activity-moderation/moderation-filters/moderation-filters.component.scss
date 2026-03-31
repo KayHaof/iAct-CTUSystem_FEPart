@@ -20,7 +20,12 @@ $color-bg-input: #f8fafc;
 
 .filter-group {
   flex: 1;
-  min-width: 220px;
+  min-width: 180px;
+
+  &.search-group {
+    flex: 1.2;
+    min-width: 220px;
+  }
 
   label {
     display: block;
@@ -33,7 +38,8 @@ $color-bg-input: #f8fafc;
   }
 }
 
-.select-wrapper {
+/* Dùng chung cho cả Input và Select */
+.input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
@@ -62,19 +68,37 @@ $color-bg-input: #f8fafc;
   &:focus-within .icon-left {
     color: $color-primary;
   }
+
+  /* Nút xóa nhanh cho ô Input */
+  .btn-clear {
+    position: absolute;
+    right: 0.5rem;
+    background: transparent;
+    border: none;
+    color: #cbd5e1;
+    font-size: 1rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+    outline: none;
+
+    &:hover, &:focus-visible {
+      color: #f43f5e;
+    }
+  }
 }
 
-.custom-select {
+/* Base style chung cho các ô nhập liệu */
+.custom-select, .custom-input {
   width: 100%;
-  appearance: none;
   background-color: $color-bg-input;
   border: 1px solid $color-border;
   color: $color-text-main;
   font-weight: 600;
   font-size: 0.95rem;
-  padding: 0.65rem 2.5rem 0.65rem 2.5rem;
   border-radius: 0.85rem;
-  cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
 
@@ -90,11 +114,27 @@ $color-bg-input: #f8fafc;
   }
 }
 
+/* Chỉnh padding riêng cho Select và Input */
+.custom-select {
+  appearance: none;
+  cursor: pointer;
+  padding: 0.65rem 2.5rem 0.65rem 2.5rem;
+}
+
+.custom-input {
+  padding: 0.65rem 2.5rem 0.65rem 2.5rem;
+
+  &::placeholder {
+    color: #94a3b8;
+    font-weight: 500;
+  }
+}
+
 .action-group {
   flex-shrink: 0;
 
-  @media (max-width: 768px) {
-    width: 100%; // Nút full width trên mobile
+  @media (max-width: 1024px) {
+    width: 100%;
   }
 }
 
@@ -112,7 +152,7 @@ $color-bg-input: #f8fafc;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  height: 44px; // Cao bằng với ô input
+  height: 44px;
   box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
 
   &:hover {
@@ -125,7 +165,7 @@ $color-bg-input: #f8fafc;
     transform: translateY(0);
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     width: 100%;
   }
 }

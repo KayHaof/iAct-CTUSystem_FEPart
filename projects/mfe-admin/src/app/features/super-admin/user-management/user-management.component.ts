@@ -53,7 +53,7 @@ export class UserManagementComponent implements OnInit {
   totalRows = signal<number>(0);
 
   searchTerm = signal<string>('');
-  selectedFaculty = signal<number | ''>(''); // Dùng cho tab Khoa/Đơn vị
+  selectedFaculty = signal<number | ''>('');
   selectedStatus = signal<number | ''>('');
 
   totalPages = computed(() => Math.ceil(this.totalRows() / this.pageSize()));
@@ -63,7 +63,6 @@ export class UserManagementComponent implements OnInit {
 
   isAddModalOpen = signal(false);
 
-  // --- BỘ BIẾN LỌC KHOAN SÂU DÀNH CHO TAB SINH VIÊN ---
   cohorts = [
     { label: 'K46 (2020)', value: '46' },
     { label: 'K47 (2021)', value: '47' },
@@ -168,8 +167,9 @@ export class UserManagementComponent implements OnInit {
 
     this.adminUserService.getMajorsByDepartment(Number(deptId)).subscribe({
       next: (res: ApiResponse<MajorInfo[]>) => {
-        const safeResult = res.result as any;
-        this.filterMajors.set(Array.isArray(safeResult) ? safeResult : safeResult.data || []);
+        const result = res.result as unknown as MajorInfo[] | { data?: MajorInfo[] };
+        const majorsList = Array.isArray(result) ? result : result?.data || [];
+        this.filterMajors.set(majorsList);
       },
     });
   }
@@ -177,7 +177,7 @@ export class UserManagementComponent implements OnInit {
   onFilterMajorChange() {
     this.selectedFilterClass.set('');
     const majorId = this.selectedFilterMajor();
-    const academicYear = this.selectedFilterCohort(); // Lấy giá trị '48', '49'
+    const academicYear = this.selectedFilterCohort();
 
     if (!majorId || !academicYear) {
       this.filterClasses.set([]);
@@ -185,8 +185,9 @@ export class UserManagementComponent implements OnInit {
     }
     this.adminUserService.getClassesByMajor(Number(majorId), academicYear).subscribe({
       next: (res: ApiResponse<ClassInfo[]>) => {
-        const safeResult = res.result as any;
-        this.filterClasses.set(Array.isArray(safeResult) ? safeResult : safeResult.data || []);
+        const result = res.result as unknown as ClassInfo[] | { data?: ClassInfo[] };
+        const classesList = Array.isArray(result) ? result : result?.data || [];
+        this.filterClasses.set(classesList);
       },
     });
   }
@@ -213,7 +214,6 @@ export class UserManagementComponent implements OnInit {
 
     const apiPage = this.currentPage() - 1;
 
-    // Truyền classId vào API nếu đang tìm sinh viên
     this.adminUserService
       .getUsers(
         apiPage,
@@ -305,12 +305,6 @@ export class UserManagementComponent implements OnInit {
       this.currentPage.set(page);
       this.loadUsers();
     }
-  }
-
-  onSizeChange(size: number): void {
-    this.pageSize.set(size);
-    this.currentPage.set(1);
-    this.loadUsers();
   }
 
   sortedUsers = computed(() => {

@@ -1,8 +1,30 @@
 <div class="filter-container-card">
-  <!-- Cột 1: Khoa / Đơn vị -->
+  <!-- Cột 1: Tìm kiếm -->
+  <div class="filter-group search-group">
+    <label for="keyword-input">Tìm kiếm</label>
+    <div class="input-wrapper">
+      <div class="icon-left"><i class="bi bi-search"></i></div>
+      <input
+        id="keyword-input"
+        type="text"
+        [value]="keyword()"
+        (input)="onKeywordChange($event)"
+        (keyup.enter)="applyFilters()"
+        class="custom-input"
+        placeholder="Nhập tên hoạt động..."
+      />
+      @if (keyword()) {
+        <button class="btn-clear" (click)="clearKeyword()">
+          <i class="bi bi-x-circle-fill"></i>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Cột 2: Khoa / Đơn vị -->
   <div class="filter-group">
     <label for="department-select">Khoa / Đơn vị</label>
-    <div class="select-wrapper">
+    <div class="input-wrapper">
       <div class="icon-left"><i class="bi bi-buildings"></i></div>
       <select
         id="department-select"
@@ -19,10 +41,10 @@
     </div>
   </div>
 
-  <!-- Cột 2: Học kỳ -->
+  <!-- Cột 3: Học kỳ -->
   <div class="filter-group">
     <label for="semester-select">Học kỳ</label>
-    <div class="select-wrapper">
+    <div class="input-wrapper">
       <div class="icon-left"><i class="bi bi-calendar3"></i></div>
       <select
         id="semester-select"
@@ -39,10 +61,10 @@
     </div>
   </div>
 
-  <!-- Cột 3: Trạng thái -->
+  <!-- Cột 4: Trạng thái -->
   <div class="filter-group">
     <label for="status-select">Trạng thái</label>
-    <div class="select-wrapper">
+    <div class="input-wrapper">
       <div class="icon-left"><i class="bi bi-ui-radios"></i></div>
       <select
         id="status-select"
@@ -59,12 +81,11 @@
     </div>
   </div>
 
-  <!-- Cột 4: Nút Submit -->
+  <!-- Cột 5: Nút Submit -->
   <div class="action-group">
-    <button (click)="onApplyFilters()" class="btn-filter">
+    <button (click)="applyFilters()" class="btn-filter">
       <i class="bi bi-funnel-fill"></i>
-      <span>Áp dụng bộ lọc</span>
+      <span>Áp dụng</span>
     </button>
   </div>
-
 </div>

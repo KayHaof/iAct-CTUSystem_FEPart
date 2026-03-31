@@ -43,8 +43,9 @@
         <label for="statusSelect" class="input-label">Trạng thái</label>
         <select id="statusSelect" [(ngModel)]="selectedStatus" (change)="onSearch()" class="input-field py-2.5">
           <option value="">Tất cả trạng thái</option>
-          <option [value]="0">Đã vô hiệu hóa</option>
           <option [value]="1">Đang hoạt động</option>
+          <option [value]="2">Đã vô hiệu hóa</option>
+
         </select>
       </div>
 

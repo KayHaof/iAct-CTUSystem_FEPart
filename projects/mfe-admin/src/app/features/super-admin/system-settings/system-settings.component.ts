@@ -10,8 +10,7 @@ import { Component } from '@angular/core';
           <i class="bi bi-gear-wide-connected"></i> Cài đặt Hệ thống
         </h2>
         <p class="text-red-600 mt-2 font-medium">
-          Khu vực tuyệt mật! Nếu bạn thấy dòng này, bạn đích thị là Super Admin quyền lực nhất hệ
-          thống. 😎
+            Từ từ làm nhe
         </p>
 
         <div class="mt-8 space-y-4">

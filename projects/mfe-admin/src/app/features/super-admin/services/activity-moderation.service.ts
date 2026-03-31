@@ -41,6 +41,7 @@ export class ActivityModerationService {
 
     if (filters.departmentId) params = params.set('departmentId', filters.departmentId.toString());
     if (filters.semesterId) params = params.set('semesterId', filters.semesterId.toString());
+    if (filters.keyword) params = params.set('keyword', filters.keyword);
 
     return this.http.get<ApiResponse<PageDTO<Activity>>>(this.apiUrl, { params });
   }

@@ -17,6 +17,7 @@ export class ModerationFiltersComponent implements OnInit {
 
   departments = signal<Department[]>([]);
   semesters = signal<Semester[]>([]);
+  keyword = signal<string>('');
 
   filterApplied = output<ModerationFilters>();
 
@@ -26,6 +27,16 @@ export class ModerationFiltersComponent implements OnInit {
 
   ngOnInit() {
     this.loadDropdownData();
+  }
+
+  onKeywordChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.keyword.set(input.value);
+  }
+
+  clearKeyword(): void {
+    this.keyword.set('');
+    this.applyFilters();
   }
 
   loadDropdownData() {
@@ -46,11 +57,12 @@ export class ModerationFiltersComponent implements OnInit {
     });
   }
 
-  onApplyFilters() {
+  applyFilters() {
     const filters: ModerationFilters = {
       departmentId: this.selectedDepartment() === '' ? null : Number(this.selectedDepartment()),
       semesterId: this.selectedSemester() === '' ? null : Number(this.selectedSemester()),
       status: this.selectedStatus(),
+      keyword: this.keyword().trim(),
     };
 
     this.filterApplied.emit(filters);
