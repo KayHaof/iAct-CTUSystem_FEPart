@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModerationFilters } from '../../../../shared/models/activity-moderation.model';
 import { ActivityModerationService } from '../../services/activity-moderation.service';
-import { ApiResponse, PageDTO, Department, Semester } from 'interface';
+import { ApiResponse, PageDTO, Department } from 'interface';
 
 @Component({
   selector: 'app-moderation-filters',
@@ -16,17 +16,15 @@ export class ModerationFiltersComponent implements OnInit {
   private moderationService = inject(ActivityModerationService);
 
   departments = signal<Department[]>([]);
-  semesters = signal<Semester[]>([]);
   keyword = signal<string>('');
 
   filterApplied = output<ModerationFilters>();
 
   selectedDepartment = signal<number | ''>('');
-  selectedSemester = signal<number | ''>('');
   selectedStatus = signal<'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'>('ALL');
 
   ngOnInit() {
-    this.loadDropdownData();
+    this.loadDepartments();
   }
 
   onKeywordChange(event: Event): void {
@@ -39,19 +37,11 @@ export class ModerationFiltersComponent implements OnInit {
     this.applyFilters();
   }
 
-  loadDropdownData() {
+  loadDepartments() {
     this.moderationService.getAllDepartments().subscribe({
       next: (res: ApiResponse<PageDTO<Department>>) => {
         if (res.result && res.result.data) {
           this.departments.set(res.result.data);
-        }
-      },
-    });
-
-    this.moderationService.getAllSemesters().subscribe({
-      next: (res: ApiResponse<Semester[]>) => {
-        if (res.result) {
-          this.semesters.set(res.result);
         }
       },
     });
@@ -60,7 +50,6 @@ export class ModerationFiltersComponent implements OnInit {
   applyFilters() {
     const filters: ModerationFilters = {
       departmentId: this.selectedDepartment() === '' ? null : Number(this.selectedDepartment()),
-      semesterId: this.selectedSemester() === '' ? null : Number(this.selectedSemester()),
       status: this.selectedStatus(),
       keyword: this.keyword().trim(),
     };

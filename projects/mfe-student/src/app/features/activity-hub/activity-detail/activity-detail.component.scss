@@ -2,11 +2,10 @@
   display: block;
 }
 
-/* Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -15,45 +14,111 @@
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.4s ease-out forwards;
+  animation: fadeInUp 0.32s ease-out forwards;
 }
 
-/* Ẩn scrollbar cho thẻ Tabs trên mobile */
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+
   &::-webkit-scrollbar {
     display: none;
   }
 }
 
-/* Tùy chỉnh hiển thị HTML Content (thay cho @tailwindcss/typography nếu ko cài) */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(203 213 225) transparent;
+
+  &::-webkit-scrollbar {
+    width: 0.35rem;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-slate-300;
+  }
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.detail-stat-card {
+  @apply rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm;
+
+  i {
+    @apply mb-2 block text-2xl;
+  }
+
+  span {
+    @apply block text-xs font-bold uppercase tracking-wide text-slate-500;
+  }
+
+  strong {
+    @apply mt-1 block text-sm font-black text-slate-950;
+  }
+}
+
+.detail-info-row {
+  @apply flex gap-3;
+
+  > i {
+    @apply flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-50 text-lg;
+  }
+
+  span {
+    @apply block text-xs font-black uppercase tracking-wide text-slate-500;
+  }
+
+  strong {
+    @apply mt-1 block text-sm font-bold text-slate-950;
+  }
+}
+
+.section-title {
+  @apply mb-4 flex items-center gap-3;
+
+  span {
+    @apply h-6 w-1.5 rounded-full bg-blue-600;
+  }
+
+  h2 {
+    @apply text-xl font-black tracking-tight text-slate-950;
+  }
+}
+
 .custom-prose {
-  h1, h2, h3, h4 {
-    font-weight: 800;
-    color: #111827;
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply mb-3 mt-6 font-black text-slate-950;
   }
+
   p {
-    margin-bottom: 1.25em;
-    line-height: 1.75;
+    @apply mb-5 leading-7 text-slate-700;
   }
+
   ul {
-    list-style-type: disc;
-    padding-left: 1.5em;
-    margin-bottom: 1.25em;
-    li {
-      margin-bottom: 0.5em;
-    }
+    @apply mb-5 list-disc space-y-2 pl-6 text-slate-700;
   }
+
+  ol {
+    @apply mb-5 list-decimal space-y-2 pl-6 text-slate-700;
+  }
+
   img {
-    border-radius: 1rem;
-    margin: 2em 0;
+    @apply my-6 rounded-2xl border border-slate-200;
   }
+
   a {
-    color: #2563eb;
-    text-decoration: underline;
-    font-weight: 600;
+    @apply font-bold text-blue-700 underline underline-offset-4;
   }
 }

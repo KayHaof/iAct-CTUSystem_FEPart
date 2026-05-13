@@ -9,7 +9,7 @@ import { CategoryResponse, CategoryRequest } from '../../../shared/models/catego
 })
 export class CategoryService {
   private http = inject(HttpClient);
-  private readonly API_URL = 'http://localhost:8080/credit/api/v1/categories';
+  private readonly API_URL = 'http://localhost:8080/activity/api/v1/categories';
 
   getAllCategoriesFlat(): Observable<ApiResponse<CategoryResponse[]>> {
     return this.http.get<ApiResponse<CategoryResponse[]>>(this.API_URL);

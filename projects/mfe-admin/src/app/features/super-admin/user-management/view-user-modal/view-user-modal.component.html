@@ -9,7 +9,12 @@
             <i class="bi bi-person-lines-fill"></i>
           </div>
           <div>
-            <h3 class="text-xl font-extrabold text-slate-800">Hồ sơ người dùng</h3>
+            <h3 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+              Hồ sơ người dùng
+              @if (isLoading()) {
+                <i class="bi bi-arrow-repeat animate-spin text-teal-500 text-base"></i>
+              }
+            </h3>
             <p class="text-xs font-medium text-slate-500 mt-0.5">Thông tin chi tiết</p>
           </div>
         </div>
@@ -21,56 +26,57 @@
       <div class="p-6 overflow-y-auto custom-scrollbar space-y-8">
 
         <div class="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
-          <img [src]="user?.roleType === 3
+          <img [src]="displayUser?.roleType === 3
           ? 'https://res.cloudinary.com/dhjamvg6j/image/upload/v1773991699/iact_admin_avt.png'
-          : (user?.avatarUrl || 'https://ui-avatars.com/api/?name=' + user?.fullName + '&background=e2e8f0&color=475569')"
-               [alt]="'Ảnh đại diện của ' + user?.fullName"
-               class="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-lg shadow-slate-200/50 flex-shrink-0">
+          : (displayUser?.avatarUrl || 'https://ui-avatars.com/api/?name=' + displayUser?.fullName + '&background=e2e8f0&color=475569')"
+               [alt]="'Ảnh đại diện của ' + displayUser?.fullName"
+               class="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-lg shadow-slate-200/50 flex-shrink-0 transition-opacity"
+               [class.opacity-50]="isLoading()">
           <div class="text-center sm:text-left flex-1 mt-1">
-            <h4 class="text-2xl font-extrabold text-slate-800 tracking-tight">{{ user?.fullName }}</h4>
+            <h4 class="text-2xl font-extrabold text-slate-800 tracking-tight">{{ displayUser?.fullName }}</h4>
 
             <div class="flex flex-col gap-1.5 mt-2">
               <p class="text-slate-500 font-medium flex items-center justify-center sm:justify-start gap-2 text-sm">
-                <i class="bi bi-envelope-at-fill text-slate-400"></i> {{ user?.email }}
+                <i class="bi bi-envelope-at-fill text-slate-400"></i> {{ displayUser?.email }}
               </p>
               <p class="text-slate-500 font-medium flex items-center justify-center sm:justify-start gap-2 text-sm">
-                <i class="bi bi-person-badge-fill text-slate-400"></i> Username: <span class="text-slate-700 font-bold">{{ user?.username }}</span>
+                <i class="bi bi-person-badge-fill text-slate-400"></i> Username: <span class="text-slate-700 font-bold">{{ displayUser?.username }}</span>
               </p>
             </div>
 
             <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-4">
-              @if (user?.roleType === 1) { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-blue-100 text-blue-700"><i class="bi bi-mortarboard-fill"></i> Sinh viên</span> }
-              @else if (user?.roleType === 2) { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-purple-100 text-purple-700"><i class="bi bi-building-fill"></i> Đơn vị</span> }
-              @else if (user?.roleType === 3) { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-rose-100 text-rose-700"><i class="bi bi-shield-lock-fill"></i> Quản trị</span> }
+              @if (displayUser?.roleType === 1) { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-blue-100 text-blue-700"><i class="bi bi-mortarboard-fill"></i> Sinh viên</span> }
+              @else if (displayUser?.roleType === 2) { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-purple-100 text-purple-700"><i class="bi bi-building-fill"></i> Đơn vị</span> }
+              @else if (displayUser?.roleType === 3) { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-rose-100 text-rose-700"><i class="bi bi-shield-lock-fill"></i> Quản trị</span> }
 
-              @if (user?.status === 1) { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200"><i class="bi bi-check-circle-fill"></i> Hoạt động</span> }
+              @if (displayUser?.status === 1) { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200"><i class="bi bi-check-circle-fill"></i> Hoạt động</span> }
               @else { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-rose-50 text-rose-600 border border-rose-200"><i class="bi bi-dash-circle-fill"></i> Bị khóa</span> }
             </div>
           </div>
         </div>
 
-        @if (user?.roleType === 1 || user?.roleType === 2) {
-          <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
+        @if (displayUser?.roleType === 1 || displayUser?.roleType === 2) {
+          <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 relative">
             <h5 class="text-sm font-bold text-blue-800 mb-4 flex items-center gap-2">
               <i class="bi bi-bank2"></i> Thông tin Học vụ & Đơn vị
             </h5>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6" [class.opacity-50]="isLoading()">
 
               <div class="sm:col-span-2">
                 <span class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">Khoa / Đơn vị trực thuộc</span>
-                <p class="font-bold text-blue-900 text-[15px]">{{ user?.departmentName || 'Cấp trường / Không trực thuộc' }}</p>
+                <p class="font-bold text-blue-900 text-[15px]">{{ displayUser?.departmentName || 'Cấp trường / Không trực thuộc' }}</p>
               </div>
 
-              @if (user?.roleType === 1) {
+              @if (displayUser?.roleType === 1) {
                 <div>
                   <span class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">Mã định danh (MSSV/MĐK)</span>
-                  <p class="font-bold text-blue-900 text-[15px]">{{ user?.studentCode || 'Không có' }}</p>
+                  <p class="font-bold text-blue-900 text-[15px]">{{ displayUser?.studentCode || 'Không có' }}</p>
                 </div>
 
                 <div>
                   <span class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">Lớp / Chuyên ngành</span>
-                  <p class="font-bold text-blue-900 text-[15px]">{{ user?.classCode ? user?.classCode : 'Chưa phân lớp' }}</p>
+                  <p class="font-bold text-blue-900 text-[15px]">{{ displayUser?.classCode ? displayUser?.classCode : 'Chưa phân lớp' }}</p>
                 </div>
               }
             </div>
@@ -82,27 +88,27 @@
             <i class="bi bi-person-vcard"></i> Thông tin cá nhân & Hệ thống
           </h5>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8 px-1">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8 px-1" [class.opacity-50]="isLoading()">
 
-            @if (user?.roleType !== 3) {
+            @if (displayUser?.roleType !== 3) {
               <div>
                 <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-telephone-fill mr-1"></i> Số điện thoại</span>
-                <p class="font-semibold text-slate-700">{{ user?.phone || 'Chưa cập nhật' }}</p>
+                <p class="font-semibold text-slate-700">{{ displayUser?.phone || 'Chưa cập nhật' }}</p>
               </div>
             }
 
-            @if (user?.roleType === 1) {
+            @if (displayUser?.roleType === 1) {
               <div>
                 <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-calendar-event-fill mr-1"></i> Ngày sinh</span>
-                <p class="font-semibold text-slate-700">{{ user?.birthday ? (user?.birthday | date:'dd/MM/yyyy') : 'Chưa cập nhật' }}</p>
+                <p class="font-semibold text-slate-700">{{ displayUser?.birthday ? (displayUser?.birthday | date:'dd/MM/yyyy') : 'Chưa cập nhật' }}</p>
               </div>
 
               <div>
                 <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-gender-ambiguous mr-1"></i> Giới tính</span>
                 <p class="font-semibold text-slate-700">
-                  @if (user?.gender === 1) { Nam }
-                  @else if (user?.gender === 0) { Nữ }
-                  @else if (user?.gender === 2) { Khác }
+                  @if (displayUser?.gender === 1) { Nam }
+                  @else if (displayUser?.gender === 0) { Nữ }
+                  @else if (displayUser?.gender === 2) { Khác }
                   @else { Chưa cập nhật }
                 </p>
               </div>
@@ -110,13 +116,13 @@
 
             <div>
               <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-clock-history mr-1"></i> Ngày tạo tài khoản</span>
-              <p class="font-semibold text-slate-700">{{ user?.createdAt ? (user?.createdAt | date:'dd/MM/yyyy HH:mm') : 'Hôm nay' }}</p>
+              <p class="font-semibold text-slate-700">{{ displayUser?.createdAt ? (displayUser?.createdAt | date:'dd/MM/yyyy HH:mm') : 'Hôm nay' }}</p>
             </div>
 
-            @if (user?.roleType === 1) {
+            @if (displayUser?.roleType === 1) {
               <div class="sm:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-100 mt-2">
                 <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-geo-alt-fill mr-1"></i> Địa chỉ liên hệ</span>
-                <p class="font-semibold text-slate-700 leading-relaxed">{{ user?.address || 'Chưa cập nhật' }}</p>
+                <p class="font-semibold text-slate-700 leading-relaxed">{{ displayUser?.address || 'Chưa cập nhật' }}</p>
               </div>
             }
           </div>

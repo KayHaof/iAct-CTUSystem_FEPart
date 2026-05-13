@@ -21,12 +21,12 @@ export class ActivityModerationService {
 
   getAllDepartments(): Observable<ApiResponse<PageDTO<Department>>> {
     return this.http.get<ApiResponse<PageDTO<Department>>>(
-      `http://localhost:8080/profile/api/v1/departments`,
+      `http://localhost:8080/user/api/v1/departments`,
     );
   }
 
   getAllSemesters(): Observable<ApiResponse<Semester[]>> {
-    return this.http.get<ApiResponse<Semester[]>>(`http://localhost:8080/credit/api/v1/semesters`);
+    return this.http.get<ApiResponse<Semester[]>>(`http://localhost:8080/activity/api/v1/semesters`);
   }
 
   getFilteredActivities(
@@ -40,7 +40,6 @@ export class ActivityModerationService {
       .set('status', filters.status);
 
     if (filters.departmentId) params = params.set('departmentId', filters.departmentId.toString());
-    if (filters.semesterId) params = params.set('semesterId', filters.semesterId.toString());
     if (filters.keyword) params = params.set('keyword', filters.keyword);
 
     return this.http.get<ApiResponse<PageDTO<Activity>>>(this.apiUrl, { params });

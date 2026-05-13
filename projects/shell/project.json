@@ -8,7 +8,10 @@
   "targets": {
     "build": {
       "executor": "@angular-architects/native-federation:build",
-      "options": {},
+      "options": {
+        "outputPath": "dist/projects/shell",
+        "cacheExternalArtifacts": false
+      },
       "configurations": {
         "production": {
           "target": "shell:esbuild:production"
@@ -26,6 +29,8 @@
         "target": "shell:serve-original:development",
         "rebuildDelay": 500,
         "dev": true,
+        "outputPath": "dist/projects/shell",
+        "cacheExternalArtifacts": false,
         "port": 0
       }
     },

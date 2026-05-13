@@ -6,7 +6,6 @@ export interface ModerationStats {
 
 export interface ModerationFilters {
   departmentId: number | null;
-  semesterId: number | null;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL';
   keyword?: string;
 }

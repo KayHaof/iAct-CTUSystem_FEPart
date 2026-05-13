@@ -4,12 +4,9 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "../../out-tsc/app",
+    "rootDir": "../..",
     "types": []
   },
-  "include": [
-    "src/**/*.ts",
-    "../../libs/shared/ui/src/lib/services/loading.service.ts",
-    "../../libs/shared/ui/src/lib/components/loading-bar/loading.spec.ts"
-  ],
+  "include": ["src/**/*.ts"],
   "exclude": ["src/**/*.spec.ts"]
 }

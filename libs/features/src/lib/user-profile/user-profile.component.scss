@@ -2,33 +2,17 @@
   display: block;
 }
 
-// --- Keyframes Animation ---
-
-// Trượt từ dưới lên + mờ dần ra
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(15px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-// Gạch chân chạy từ 0 -> 100%
-@keyframes expandWidth {
-  from {
-    width: 0;
-    opacity: 0;
-  }
-  to {
-    width: 100%;
-    opacity: 1;
-  }
-}
-
-// Xoay vòng tròn (cho loader)
 @keyframes rotation {
   0% {
     transform: rotate(0deg);
@@ -38,22 +22,74 @@
   }
 }
 
-// --- Utility Classes ---
-
 .animate-fade-in-up {
-  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-expand-width {
-  animation: expandWidth 0.3s ease-out forwards;
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .loader {
-  width: 1.25rem; /* 20px */
-  height: 1.25rem;
-  border: 2px solid #ffffff;
-  border-bottom-color: transparent;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-style: solid;
   border-radius: 50%;
   display: inline-block;
-  animation: rotation 1s linear infinite;
+  animation: rotation 0.8s linear infinite;
+}
+
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.profile-section {
+  @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-sm;
+}
+
+.profile-section-header {
+  @apply mb-4;
+
+  p {
+    @apply text-xs font-bold uppercase tracking-wide text-blue-700;
+  }
+
+  h3 {
+    @apply mt-1 text-lg font-bold text-slate-950;
+  }
+}
+
+.profile-field {
+  @apply rounded-xl border border-slate-200 bg-slate-50 p-3;
+
+  span {
+    @apply block text-xs font-bold uppercase tracking-wide text-slate-500;
+  }
+
+  strong {
+    @apply mt-1 block break-words text-sm font-bold text-slate-950;
+  }
+}
+
+.profile-label {
+  @apply mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500;
+}
+
+.profile-input {
+  @apply w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10;
+}
+
+.profile-combobox-trigger {
+  @apply relative w-full rounded-lg border border-slate-200 bg-white px-4 py-3 pr-10 text-left text-sm font-semibold text-slate-900 outline-none transition hover:border-blue-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-65%) rotate(45deg);
+    opacity: 0.55;
+  }
 }

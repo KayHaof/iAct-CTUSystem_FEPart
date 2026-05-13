@@ -14,7 +14,6 @@ import { AdminUserService } from '../../services/admin-user.service'; // Chỉnh
 export class EditUserModalComponent {
   private adminUserService = inject(AdminUserService);
 
-  // Getter/Setter để tự reset form khi Modal đóng
   private _isOpen = false;
   @Input()
   set isOpen(value: boolean) {
@@ -27,7 +26,7 @@ export class EditUserModalComponent {
 
   @Input() user: UserInfo | null = null;
   @Input() departments: Department[] = [];
-  @Input() isSaving = false; // Nhận trạng thái loading từ Cha
+  @Input() isSaving = false;
 
   @Output() closeModal = new EventEmitter<void>();
   @Output() saveClass = new EventEmitter<number>();
@@ -90,6 +89,6 @@ export class EditUserModalComponent {
   submit() {
     const classId = this.editSelectedClass();
     if (!classId) return;
-    this.saveClass.emit(Number(classId)); // Gửi ID lớp lên cho thằng Cha gọi API
+    this.saveClass.emit(Number(classId));
   }
 }

@@ -1,9 +1,11 @@
 @if (isOpen) {
   <div
-    class="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity"
+    class="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm transition-opacity md:hidden"
     (click)="close()"
     (keydown.enter)="close()"
     tabindex="0"
+    role="button"
+    aria-label="Đóng menu"
   ></div>
 }
 
@@ -12,12 +14,17 @@
   [class.theme-dark]="theme === 'dark'"
   [class.translate-x-0]="isOpen"
   [class.-translate-x-full]="!isOpen"
+  aria-label="Thanh điều hướng chính"
 >
-  <div class="sidebar-logo p-4">
-    <span class="logo-text">iAct CTU</span>
+  <div class="sidebar-logo">
+    <div class="brand-mark" aria-hidden="true"></div>
+    <div class="brand-copy">
+      <span class="logo-text">iAct CTU</span>
+      <span class="logo-subtitle">Quản lý hoạt động</span>
+    </div>
   </div>
 
-  <nav class="flex-grow flex flex-col gap-2 p-3">
+  <nav class="sidebar-nav" aria-label="Danh mục điều hướng">
     @for (item of menuItems; track item.label) {
       <a
         [routerLink]="item.link"
@@ -25,17 +32,18 @@
         [routerLinkActiveOptions]="{ exact: false }"
         class="nav-item"
         (click)="close()"
+        [title]="item.label"
       >
-        <i [class]="item.icon" class="text-xl w-6 text-center"></i>
+        <i [class]="item.icon" class="nav-icon"></i>
         <span class="nav-text">{{ item.label }}</span>
       </a>
     }
   </nav>
 
-  <div class="p-3">
-    <button class="logout-btn w-full text-left" (click)="logout()">
-      <i class="bi bi-box-arrow-left text-xl w-6 text-center"></i>
-      <span class="nav-text">Log Out</span>
+  <div class="sidebar-footer">
+    <button class="logout-btn" type="button" (click)="logout()" title="Đăng xuất">
+      <i class="bi bi-box-arrow-left nav-icon"></i>
+      <span class="nav-text">Đăng xuất</span>
     </button>
   </div>
 </aside>

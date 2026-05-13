@@ -1,8 +1,16 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { PaginationComponent } from '@my-mfe/ui';
 import { ActivityService } from '../../shared/services/activity.service';
@@ -15,31 +23,37 @@ import { PageDTO } from 'interface';
   imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './activity-hub.component.html',
   styleUrls: ['./activity-hub.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ActivityHubComponent implements OnInit {
   private activityService = inject(ActivityService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
 
-  // --- STATE MANAGEMENT ---
   activities = signal<Activity[]>([]);
   isLoading = signal<boolean>(false);
 
-  // Filter States
   searchQuery = signal<string>('');
   selectedStatus = signal<string>('ALL');
   selectedLevel = signal<string>('ALL');
 
-  // Pagination States
   currentPage = signal<number>(1);
   pageSize = signal<number>(6);
   totalRows = signal<number>(0);
   totalPage = signal<number>(0);
 
+  private searchSubject = new Subject<string>();
+
   ngOnInit(): void {
     this.fetchActivities();
+
+    this.searchSubject
+      .pipe(debounceTime(3000), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((searchValue) => {
+        this.executeSearch(searchValue);
+      });
   }
 
-  // --- CORE LOGIC: GỌI API ---
   fetchActivities(): void {
     this.isLoading.set(true);
 
@@ -62,11 +76,28 @@ export class ActivityHubComponent implements OnInit {
       });
   }
 
-  // --- EVENT HANDLERS (Triggers) ---
-  onSearchChange(value: string) {
-    this.searchQuery.set(value);
+  resetFilters() {
+    this.searchQuery.set('');
+    this.selectedLevel.set('ALL');
+    this.selectedStatus.set('ALL');
     this.currentPage.set(1);
     this.fetchActivities();
+  }
+
+  onSearchChange(value: string) {
+    this.searchSubject.next(value.trim());
+  }
+
+  onSearchEnter(value: string) {
+    this.executeSearch(value.trim());
+  }
+
+  private executeSearch(value: string) {
+    if (this.searchQuery() !== value) {
+      this.searchQuery.set(value);
+      this.currentPage.set(1);
+      this.fetchActivities();
+    }
   }
 
   setFilterStatus(status: string) {
@@ -97,7 +128,6 @@ export class ActivityHubComponent implements OnInit {
     this.router.navigate(['/activity-hub/detail', id]).then();
   }
 
-  // --- UI HELPERS ---
   getCapacityPercentage(current = 0, max = 1): number {
     if (!max || max === 0) return 0;
     return Math.min(Math.round((current / max) * 100), 100);
@@ -109,12 +139,15 @@ export class ActivityHubComponent implements OnInit {
     const regEnd = new Date(act.registrationEnd).getTime();
     const isFull = (act.registeredCount || 0) >= act.maxParticipants;
 
-    if (now > regEnd)
+    if (now > regEnd) {
       return { label: 'Đã đóng đăng ký', colorClass: 'text-slate-500', dotClass: 'bg-slate-400' };
-    if (isFull)
+    }
+    if (isFull) {
       return { label: 'Đã đủ số lượng', colorClass: 'text-red-600', dotClass: 'bg-red-500' };
-    if (now < regStart)
+    }
+    if (now < regStart) {
       return { label: 'Sắp mở đăng ký', colorClass: 'text-amber-500', dotClass: 'bg-amber-400' };
+    }
     return { label: 'Đang mở đăng ký', colorClass: 'text-emerald-600', dotClass: 'bg-emerald-500' };
   }
 }

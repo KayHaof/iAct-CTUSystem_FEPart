@@ -2,21 +2,16 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import * as XLSX from 'xlsx';
-import { AdminUserService } from '../../services/admin-user.service'; // Chỉnh lại đường dẫn cho đúng
+import { AdminUserService } from '../../services/admin-user.service';
 import { AlertService } from '@my-mfe/ui';
-
-interface ImportResult {
-  successCount: number;
-  failCount: number;
-  errorFileBase64?: string;
-}
+import { ImportResultDto, ApiResponse } from 'interface';
 
 @Component({
   selector: 'app-import-users',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './import-users.component.html',
-  styleUrls: ['./import-users.component.scss']
+  styleUrls: ['./import-users.component.scss'],
 })
 export class ImportUsersComponent {
   private router = inject(Router);
@@ -28,12 +23,11 @@ export class ImportUsersComponent {
   isDragging = signal(false);
   isUploading = signal(false);
 
-  // Dữ liệu Preview
-  previewHeaders = signal<string[]>([]);
-  previewRows = signal<any[][]>([]);
+  previewHeaders = signal<unknown[]>([]);
+  previewRows = signal<unknown[][]>([]);
 
   // Kết quả trả về
-  importResult = signal<ImportResult | null>(null);
+  importResult = signal<ImportResultDto | null>(null);
 
   // 1. XỬ LÝ KÉO THẢ FILE
   onDragOver(event: DragEvent) {
@@ -59,39 +53,44 @@ export class ImportUsersComponent {
     }
   }
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      this.handleFile(file);
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.handleFile(input.files[0]);
     }
+    input.value = '';
   }
 
   // 2. ĐỌC FILE VÀ PREVIEW BẰNG XLSX
   handleFile(file: File) {
-    const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
+    const validTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+    ];
     if (!validTypes.includes(file.type) && !file.name.endsWith('.xlsx')) {
       this.alertService.error('Vui lòng chọn file Excel chuẩn (.xlsx, .xls)');
       return;
     }
 
     this.selectedFile.set(file);
-    this.importResult.set(null); // Reset kết quả nếu chọn lại file
+    this.importResult.set(null);
 
     const reader = new FileReader();
-    reader.onload = (e: any) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      const result = e.target?.result;
+      if (result instanceof ArrayBuffer) {
+        const data = new Uint8Array(result);
+        const workbook = XLSX.read(data, { type: 'array' });
 
-      // Đọc Sheet đầu tiên
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
+        // Đọc Sheet đầu tiên
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const jsonData: unknown[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-      // Chuyển thành mảng 2 chiều
-      const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-      if (jsonData.length > 0) {
-        this.previewHeaders.set(jsonData[0]); // Dòng 1 làm Header
-        this.previewRows.set(jsonData.slice(1, 6)); // Lấy max 5 dòng đầu làm Data Preview
+        if (jsonData.length > 0) {
+          this.previewHeaders.set(jsonData[0] as unknown[]); // Dòng 1 làm Header
+          this.previewRows.set(jsonData.slice(1, 6)); // Lấy max 5 dòng đầu làm Data Preview
+        }
       }
     };
     reader.readAsArrayBuffer(file);
@@ -105,23 +104,26 @@ export class ImportUsersComponent {
     this.isUploading.set(true);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('roleType', '1'); // Mặc định import Sinh viên
+    formData.append('roleType', '1');
 
     this.adminUserService.importUsersFromExcel(formData).subscribe({
-      next: (res: any) => {
+      next: (res: ApiResponse<ImportResultDto>) => {
         this.isUploading.set(false);
-        // Giả sử API trả về res.result chứa successCount, failCount, errorFileBase64
-        this.importResult.set(res.result);
-        if (res.result.failCount === 0) {
-          this.alertService.success('Import toàn bộ dữ liệu thành công!');
-        } else {
-          this.alertService.warning(`Thành công: ${res.result.successCount}, Lỗi: ${res.result.failCount}`);
+        if (res.result) {
+          this.importResult.set(res.result);
+          if (res.result.failCount === 0) {
+            this.alertService.success('Import toàn bộ dữ liệu thành công!');
+          } else {
+            this.alertService.warning(
+              `Thành công: ${res.result.successCount}, Lỗi: ${res.result.failCount}`,
+            );
+          }
         }
       },
       error: () => {
         this.isUploading.set(false);
         this.alertService.error('Có lỗi xảy ra khi xử lý file trên máy chủ.');
-      }
+      },
     });
   }
 
@@ -130,14 +132,16 @@ export class ImportUsersComponent {
     const result = this.importResult();
     if (result && result.errorFileBase64) {
       const link = document.createElement('a');
-      link.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + result.errorFileBase64;
+      link.href =
+        'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' +
+        result.errorFileBase64;
       link.download = `Loi_Import_SinhVien_${new Date().getTime()}.xlsx`;
       link.click();
     }
   }
 
   goBack() {
-    this.router.navigate(['/admin/user-management']);
+    void this.router.navigate(['/admin/user-management']);
   }
 
   cancelSelection() {

@@ -1,213 +1,284 @@
-<div class="min-h-screen bg-slate-50/50 pb-20 font-sans text-slate-900">
-  <!-- HERO SECTION -->
-  <div class="bg-white border-b border-slate-200 relative overflow-hidden py-8 md:py-16">
-    <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-50/80 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[11px] uppercase tracking-wider mb-5 border border-indigo-100/50 shadow-sm">
-        <i class="bi bi-stars text-indigo-500"></i> Khám phá & Trải nghiệm
-      </div>
-      <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight leading-tight">
-        Cổng thông tin
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">Hoạt động CTU</span>
-      </h1>
-      <p class="text-slate-500 text-lg max-w-2xl leading-relaxed font-medium">
-        Tìm kiếm và đăng ký tham gia các hoạt động học thuật, thể thao, văn hóa để tích lũy điểm rèn luyện.
-      </p>
-    </div>
-  </div>
-
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
-    <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row items-center w-full mb-8 mt-8">
-      <div class="relative w-full lg:flex-1 flex items-center bg-transparent rounded-xl hover:bg-slate-50 transition-colors">
-        <i class="bi bi-search absolute left-4 text-slate-400 pointer-events-none"></i>
-        <input
-          type="text"
-          [ngModel]="searchQuery()"
-          (ngModelChange)="onSearchChange($event)"
-          placeholder="Tìm kiếm tên hoạt động..."
-          class="w-full h-12 pl-11 pr-4 bg-transparent border-transparent focus:border-transparent focus:ring-0 outline-none text-sm font-medium text-slate-700 placeholder-slate-400"
-        />
-      </div>
-      <div class="hidden lg:block w-px h-8 bg-slate-200 mx-1"></div>
-      <div class="flex flex-col sm:flex-row w-full lg:w-auto shrink-0 gap-1 lg:gap-0">
-        <div class="relative w-full sm:w-auto bg-transparent rounded-xl hover:bg-slate-50 transition-colors">
-          <select class="w-full sm:w-auto h-12 pl-4 pr-10 bg-transparent border-transparent focus:border-transparent focus:ring-0 outline-none text-sm font-semibold text-slate-600 appearance-none cursor-pointer min-w-[190px]">
-            <option>Tất cả danh mục</option>
-            <option>Học thuật & Hội thảo</option>
-            <option>Văn hóa - Thể thao</option>
-            <option>Tình nguyện</option>
-          </select>
-          <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs font-bold"></i>
+<div class="min-h-screen bg-slate-50 pb-16 font-sans text-slate-950">
+  <section class="border-b border-slate-200 bg-white">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div class="max-w-3xl">
+          <div
+            class="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700"
+          >
+            <i class="bi bi-calendar3"></i>
+            Cổng hoạt động
+          </div>
+          <h1 class="text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">
+            Khám phá hoạt động CTU
+          </h1>
+          <p class="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-500 md:text-base">
+            Tìm kiếm, theo dõi trạng thái ghi danh và chọn hoạt động phù hợp để tích lũy điểm rèn
+            luyện.
+          </p>
         </div>
-        <div class="hidden sm:block w-px h-8 bg-slate-200 mx-1 self-center"></div>
-        <div class="relative w-full sm:w-auto bg-transparent rounded-xl hover:bg-slate-50 transition-colors">
+
+        <div class="grid grid-cols-2 gap-3 sm:min-w-[320px]">
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Kết quả</p>
+            <p class="mt-1 text-2xl font-black text-slate-950">{{ totalRows() }}</p>
+          </div>
+          <div class="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+            <p class="text-xs font-bold uppercase tracking-wide text-blue-700">Đang xem</p>
+            <p class="mt-1 text-sm font-black text-blue-950">
+              {{ selectedLevel() === 'ALL' ? 'Tất cả cấp' : selectedLevel() }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <section class="mb-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px_auto] lg:items-center">
+        <label class="relative block">
+          <span class="sr-only">Tìm kiếm hoạt động</span>
+          <i
+            class="bi bi-search pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+          ></i>
+          <input
+            #searchInput
+            type="text"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
+            (keyup.enter)="onSearchEnter(searchInput.value)"
+            placeholder="Tìm kiếm tên hoạt động..."
+            class="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+          />
+        </label>
+
+        <label class="relative block">
+          <span class="sr-only">Trạng thái đăng ký</span>
           <select
             [ngModel]="selectedStatus()"
             (ngModelChange)="setFilterStatus($event)"
-            class="w-full sm:w-auto h-12 pl-4 pr-10 bg-transparent border-transparent focus:border-transparent focus:ring-0 outline-none text-sm font-semibold text-slate-600 appearance-none cursor-pointer min-w-[190px]"
+            class="activity-select h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 pr-10 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
           >
             <option value="ALL">Tất cả trạng thái</option>
             <option value="OPEN">Đang mở đăng ký</option>
             <option value="UPCOMING">Sắp mở đăng ký</option>
           </select>
-          <i class="bi bi-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs font-bold"></i>
-        </div>
+        </label>
 
+        <button
+          type="button"
+          (click)="resetFilters()"
+          class="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+        >
+          Xóa bộ lọc
+        </button>
       </div>
-    </div>
+    </section>
 
-    <div class="flex flex-wrap gap-2.5 mb-8">
+    <section class="mb-6 flex flex-wrap gap-2">
       <button
+        type="button"
         (click)="setFilterLevel('ALL')"
-        [ngClass]="selectedLevel() === 'ALL' ? 'bg-slate-800 text-white shadow-md shadow-slate-300 border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'"
-        class="px-5 py-2 rounded-xl text-sm font-semibold border transition-all"
+        [ngClass]="
+          selectedLevel() === 'ALL'
+            ? 'border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20'
+            : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
+        "
+        class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition"
       >
+        <i class="bi bi-grid"></i>
         Tất cả
       </button>
 
       <button
+        type="button"
         (click)="setFilterLevel('UNIVERSITY')"
-        [ngClass]="selectedLevel() === 'UNIVERSITY' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-indigo-600'"
-        class="px-5 py-2 rounded-xl text-sm font-semibold border transition-all flex items-center gap-2"
+        [ngClass]="
+          selectedLevel() === 'UNIVERSITY'
+            ? 'border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20'
+            : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
+        "
+        class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition"
       >
-        <i class="bi bi-bank"></i> Cấp Trường
+        <i class="bi bi-bank"></i>
+        Cấp Trường
       </button>
 
       <button
+        type="button"
         (click)="setFilterLevel('FACULTY')"
-        [ngClass]="selectedLevel() === 'FACULTY' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-indigo-600'"
-        class="px-5 py-2 rounded-xl text-sm font-semibold border transition-all flex items-center gap-2"
+        [ngClass]="
+          selectedLevel() === 'FACULTY'
+            ? 'border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20'
+            : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
+        "
+        class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition"
       >
-        <i class="bi bi-mortarboard-fill"></i> Cấp Khoa
+        <i class="bi bi-mortarboard-fill"></i>
+        Cấp Khoa
       </button>
 
       <button
+        type="button"
         (click)="setFilterLevel('EXTERNAL')"
-        [ngClass]="selectedLevel() === 'EXTERNAL' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-indigo-600'"
-        class="px-5 py-2 rounded-xl text-sm font-semibold border transition-all flex items-center gap-2"
+        [ngClass]="
+          selectedLevel() === 'EXTERNAL'
+            ? 'border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20'
+            : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
+        "
+        class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition"
       >
-        <i class="bi bi-globe"></i> Ngoài Trường
+        <i class="bi bi-globe"></i>
+        Ngoài Trường
       </button>
-    </div>
+    </section>
 
-    <!-- MAIN CONTENT -->
     @if (isLoading()) {
-      <div class="flex flex-col items-center justify-center py-24">
-        <div class="relative w-12 h-12 mb-4">
-          <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
-          <div class="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
-        </div>
-        <p class="text-slate-500 font-semibold animate-pulse">Đang tải danh sách hoạt động...</p>
+      <div
+        class="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-24 shadow-sm"
+      >
+        <div
+          class="mb-4 h-11 w-11 animate-spin rounded-full border-4 border-slate-100 border-t-blue-600"
+        ></div>
+        <p class="text-sm font-bold text-slate-500">Đang tải danh sách hoạt động...</p>
       </div>
     } @else {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
+      <div class="mb-10 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
         @for (act of activities(); track act.id) {
-          <!-- CARD -->
-          <div
-            class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-sm hover:shadow-xl hover:shadow-indigo-100/40 hover:-translate-y-1 transition-all duration-300 flex flex-col group cursor-pointer focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500"
+          <article
+            class="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-blue-100 hover:shadow-lg hover:shadow-blue-100/50 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
             tabindex="0"
             (click)="viewDetails(act.id)"
             (keydown.enter)="viewDetails(act.id)"
           >
-            <!-- Card Image -->
-            <div class="relative h-48 overflow-hidden bg-slate-100">
+            <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">
               <img
-                [src]="act.coverImage || 'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772505926/default_activity_coverImage.jpg'"
-                alt="Ảnh bìa"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                [src]="
+                  act.coverImage ||
+                  'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772505926/default_activity_coverImage.jpg'
+                "
+                alt="Ảnh bìa hoạt động"
+                class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
               />
-              <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent"></div>
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent"
+              ></div>
 
-              <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-slate-800 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg shadow-sm">
-                {{ act.isExternal ? 'Ngoại viện' : (act.isFaculty ? 'Cấp Khoa' : 'Cấp Trường') }}
+              <div class="absolute left-3 top-3 flex flex-wrap gap-2">
+                <span
+                  class="rounded-lg bg-white/95 px-2.5 py-1.5 text-xs font-black uppercase tracking-wide text-slate-800 shadow-sm backdrop-blur"
+                >
+                  {{ act.isExternal ? 'Ngoài Trường' : act.isFaculty ? 'Cấp Khoa' : 'Cấp Trường' }}
+                </span>
+                @if (act.benefits && act.benefits.length > 0) {
+                  <span
+                    class="rounded-lg bg-amber-400 px-2.5 py-1.5 text-xs font-black uppercase tracking-wide text-amber-950 shadow-sm"
+                  >
+                    ĐRL
+                  </span>
+                }
               </div>
-
-              @if (act.benefits && act.benefits.length > 0) {
-                <div class="absolute top-3 right-3 bg-amber-400 text-amber-950 text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5">
-                  <i class="bi bi-star-fill text-amber-100"></i> ĐRL
-                </div>
-              }
             </div>
 
-            <!-- Card Body -->
-            <div class="p-5 md:p-6 flex flex-col flex-grow">
-
-              <!-- Organizer -->
-              <div class="flex items-center gap-2 mb-3">
-                <div class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100/50">
-                  <i class="bi bi-building text-indigo-500 text-[10px]"></i>
-                </div>
-                <span class="text-[11px] font-semibold text-indigo-600 uppercase tracking-wider truncate">
-                  {{ act.departmentName || act.organizer?.name || 'Đơn vị tổ chức' }}
-                </span>
+            <div class="flex flex-1 flex-col p-5">
+              <div
+                class="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-blue-700"
+              >
+                <i class="bi bi-building text-blue-500"></i>
+                <span class="truncate">{{
+                  act.departmentName || act.organizer?.name || 'Đơn vị tổ chức'
+                }}</span>
               </div>
 
-              <!-- Title -->
-              <h3 class="text-[1.1rem] font-bold text-slate-800 leading-snug mb-4 line-clamp-2 min-h-[3rem] group-hover:text-indigo-600 transition-colors">
+              <h2
+                class="line-clamp-2 min-h-[3rem] text-lg font-bold leading-snug text-slate-950 transition group-hover:text-blue-700"
+              >
                 {{ act.title }}
-              </h3>
+              </h2>
 
-              <!-- Meta info -->
-              <div class="space-y-2.5 mb-6 text-sm text-slate-600 font-medium">
-                <p class="flex items-center gap-3 truncate">
-                  <i class="bi bi-calendar-event text-slate-400"></i>
-                  {{ act.startDate | date: 'dd/MM/yyyy • HH:mm' }}
+              <div class="mt-4 grid gap-2 text-sm font-semibold text-slate-600">
+                <p class="flex items-center gap-2 truncate">
+                  <i class="bi bi-calendar-event w-5 text-slate-400"></i>
+                  {{ act.startDate | date: 'dd/MM/yyyy - HH:mm' }}
                 </p>
-                <p class="flex items-center gap-3 truncate" [title]="act.location">
-                  <i class="bi bi-geo-alt text-slate-400"></i>
+                <p class="flex items-center gap-2 truncate" [title]="act.location">
+                  <i class="bi bi-geo-alt w-5 text-slate-400"></i>
                   {{ act.location || 'Chưa cập nhật địa điểm' }}
                 </p>
               </div>
-              <div class="mt-auto bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                <div class="flex justify-between items-end text-xs font-semibold mb-2">
-                  <span class="text-slate-500">Ghi danh</span>
+
+              <div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div class="mb-2 flex items-center justify-between gap-3 text-xs font-bold">
+                  <span class="uppercase tracking-wide text-slate-500">Ghi danh</span>
                   <span
-                    [ngClass]="act.maxParticipants - (act.registeredCount || 0) > 0 ? 'text-emerald-700 bg-emerald-100/50' : 'text-rose-700 bg-rose-100/50'"
-                    class="px-2 py-0.5 rounded flex items-center gap-1 font-bold"
+                    [ngClass]="
+                      act.maxParticipants - (act.registeredCount || 0) > 0
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-rose-50 text-rose-700'
+                    "
+                    class="rounded-full px-2.5 py-1"
                   >
-                    <i [class]="act.maxParticipants - (act.registeredCount || 0) > 0 ? 'bi bi-ticket-perforated' : 'bi bi-slash-circle'"></i>
-                    {{ act.maxParticipants - (act.registeredCount || 0) > 0 ? 'Còn ' + (act.maxParticipants - (act.registeredCount || 0)) : 'Đã đầy' }}
+                    {{
+                      act.maxParticipants - (act.registeredCount || 0) > 0
+                        ? 'Còn ' + (act.maxParticipants - (act.registeredCount || 0))
+                        : 'Đã đầy'
+                    }}
                   </span>
                 </div>
 
-                <div class="w-full bg-slate-200/80 rounded-full h-1.5 mb-2 overflow-hidden">
+                <div class="h-2 overflow-hidden rounded-full bg-slate-200">
                   <div
-                    class="h-full transition-all duration-1000 ease-out rounded-full"
-                    [ngClass]="getCapacityPercentage(act.registeredCount, act.maxParticipants) === 100 ? 'bg-rose-500' : 'bg-indigo-500'"
-                    [style.width.%]="getCapacityPercentage(act.registeredCount, act.maxParticipants)"
+                    class="h-full rounded-full transition-all duration-700"
+                    [ngClass]="
+                      getCapacityPercentage(act.registeredCount, act.maxParticipants) === 100
+                        ? 'bg-rose-500'
+                        : 'bg-blue-600'
+                    "
+                    [style.width.%]="
+                      getCapacityPercentage(act.registeredCount, act.maxParticipants)
+                    "
                   ></div>
                 </div>
-                <div class="text-right text-[10px] text-slate-500 font-semibold">
-                  {{ act.registeredCount || 0 }} / {{ act.maxParticipants }}
-                </div>
 
-                <div class="flex justify-between items-center pt-3 mt-3 border-t border-slate-200/60">
-                  <div class="flex items-center gap-1.5 text-[11px] font-bold uppercase" [ngClass]="getActivityStatus(act).colorClass">
-                    <span class="w-1.5 h-1.5 rounded-full" [ngClass]="getActivityStatus(act).dotClass"></span>
-                    {{ getActivityStatus(act).label }}
+                <div
+                  class="mt-3 flex items-center justify-between gap-3 border-t border-slate-200 pt-3"
+                >
+                  <div
+                    class="flex min-w-0 items-center gap-2 text-xs font-black uppercase"
+                    [ngClass]="getActivityStatus(act).colorClass"
+                  >
+                    <span
+                      class="h-2 w-2 flex-shrink-0 rounded-full"
+                      [ngClass]="getActivityStatus(act).dotClass"
+                    ></span>
+                    <span class="truncate">{{ getActivityStatus(act).label }}</span>
                   </div>
-                  <div class="text-indigo-600 text-sm font-bold group-hover:translate-x-1 transition-transform flex items-center gap-1">
-                    Chi tiết <i class="bi bi-arrow-right-short text-lg leading-none"></i>
-                  </div>
+                  <span class="whitespace-nowrap text-sm font-black text-blue-700">
+                    Chi tiết
+                    <i class="bi bi-arrow-right-short text-lg"></i>
+                  </span>
                 </div>
               </div>
-
             </div>
-          </div>
+          </article>
         } @empty {
-          <!-- EMPTY STATE -->
-          <div class="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm">
-            <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 border border-slate-100">
-              <i class="bi bi-search text-2xl text-slate-400"></i>
+          <div
+            class="col-span-1 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm md:col-span-2 xl:col-span-3"
+          >
+            <div
+              class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-2xl text-slate-400"
+            >
+              <i class="bi bi-search"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-1">Không tìm thấy hoạt động</h3>
-            <p class="text-slate-500 text-sm text-center max-w-md mb-6 font-medium">
+            <h3 class="text-lg font-bold text-slate-950">Không tìm thấy hoạt động</h3>
+            <p class="mx-auto mt-2 max-w-md text-sm font-medium leading-6 text-slate-500">
               Vui lòng thử thay đổi bộ lọc hoặc nhập từ khóa khác.
             </p>
             <button
-              (click)="onSearchChange(''); setFilterLevel('ALL')"
-              class="px-5 py-2 bg-indigo-50 text-indigo-600 font-semibold text-sm rounded-xl hover:bg-indigo-100 transition-colors"
+              type="button"
+              (click)="resetFilters()"
+              class="mt-5 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
             >
               Xóa bộ lọc
             </button>
@@ -215,9 +286,8 @@
         }
       </div>
 
-      <!-- PAGINATION -->
       @if (totalRows() > 0) {
-        <div class="student-pagination-container w-full mt-4 pt-4">
+        <div class="student-pagination-container mt-4 w-full">
           <lib-pagination
             class="block w-full"
             [currentPage]="currentPage()"

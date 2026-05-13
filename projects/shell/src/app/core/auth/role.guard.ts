@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from './auth.service';
 
-export const roleGuard: CanActivateFn = (route, state) => {
+export const roleGuard: CanActivateFn = async (route) => {
   const router = inject(Router);
   const authService = inject(AuthService);
 
@@ -12,17 +12,19 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  const userRoles = authService.getUserRoles();
+  await authService.waitForCurrentUser();
 
-  const hasRole = requiredRoles.some(
-    (requiredRole) =>
-      userRoles.includes(requiredRole) || userRoles.includes(requiredRole.toLowerCase()),
-  );
+  const normalizedRequiredRoles = requiredRoles.map((role) => role.toLowerCase());
+  const userRoles = authService.getEffectiveUserRoles();
+  const hasRole = normalizedRequiredRoles.some((requiredRole) => userRoles.includes(requiredRole));
 
   if (hasRole) {
     return true;
   }
 
+  console.warn(
+    `[RoleGuard] Access denied. Required roles: ${requiredRoles.join(', ')}. User roles: ${userRoles.join(', ') || 'none'}`,
+  );
   router.navigate(['/forbidden']).then();
   return false;
 };

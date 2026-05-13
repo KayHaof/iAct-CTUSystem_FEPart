@@ -50,7 +50,6 @@ export class ActivityModerationComponent implements OnInit {
   // Signals cho bộ lọc và phân trang
   currentFilters = signal<ModerationFilters>({
     departmentId: null,
-    semesterId: null,
     status: 'ALL',
   });
   currentPage = signal(1);

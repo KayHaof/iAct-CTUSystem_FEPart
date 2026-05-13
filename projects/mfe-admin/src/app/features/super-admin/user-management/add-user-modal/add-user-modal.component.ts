@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { AdminUserService } from '../../services/admin-user.service';
-import { ApiResponse, MajorInfo, ClassInfo } from 'interface';
+import { ApiResponse, MajorInfo, ClassInfo, Department } from 'interface';
 
 @Component({
   selector: 'app-add-user-modal',
@@ -15,7 +15,7 @@ import { ApiResponse, MajorInfo, ClassInfo } from 'interface';
 export class AddUserModalComponent {
   private adminUserService = inject(AdminUserService);
 
-  @Input() departments: any[] = [];
+  @Input() departments: Department[] = [];
 
   private _isOpen = false;
 

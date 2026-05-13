@@ -1,320 +1,485 @@
 <lib-header></lib-header>
 
-<div class="p-4 md:p-6 lg:p-10 max-w-7xl mx-auto space-y-8 animate-fade-in-up">
-  <div class="mb-4">
-    <button (click)="goBack()" class="group flex items-center gap-3 text-slate-500 hover:text-blue-600 transition-colors font-semibold">
-      <div class="w-9 h-9 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center group-hover:bg-blue-50 group-hover:border-blue-200 transition-all">
-        <i class="bi bi-arrow-left text-lg group-hover:-translate-x-1 transition-transform"></i>
-      </div>
-      Quay lại
-    </button>
-  </div>
-
-  @if (!isEditing()) {
-
-    <div class="bg-white rounded-3xl shadow-lg border border-slate-100 p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-blue-100">
-
-      <div class="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-blue-50/50"></div>
-
-      <div class="relative flex-shrink-0 z-10">
-        <div class="w-36 h-36 rounded-full p-1.5 border-4 border-dashed border-blue-200 bg-white shadow-inner">
-          <img
-            [src]="user()?.roleType === 3 ? adminAvatar : (user()?.avatarUrl || defaultAvatar)"
-            class="w-full h-full rounded-full object-cover shadow-md"
-            alt="Avatar"
-          />
-        </div>
-        <div class="absolute bottom-2 right-2 z-10 flex h-6 w-6 rounded-full ring-4 ring-white shadow-lg"
-             [class.bg-emerald-500]="user()?.status === 1"
-             [class.bg-rose-500]="user()?.status === 2"
-             [class.bg-slate-400]="user()?.status !== 1 && user()?.status !== 2">
-        </div>
+<main class="min-h-screen bg-slate-50">
+  <div class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 animate-fade-in-up">
+    <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wide text-blue-700">Hồ sơ người dùng</p>
+        <h1 class="mt-1 text-2xl font-bold text-slate-950">
+          {{ isEditing() ? 'Cập nhật hồ sơ' : 'Thông tin tài khoản' }}
+        </h1>
       </div>
 
-      <div class="text-center md:text-left flex-1 space-y-4 z-10">
-        <div class="space-y-1">
-          <h1 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tight leading-tight">
-            <h1 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tight leading-tight">
-              {{ user()?.roleType === 3 ? 'Quản trị viên hệ thống' : (user()?.fullName || '---') }}
-            </h1>
-          </h1>
-          <p class="text-slate-500 font-medium text-lg flex items-center justify-center md:justify-start gap-2">
-            <i class="bi bi-envelope-at text-blue-400"></i> {{ user()?.email }}
-          </p>
-        </div>
-
-        <div class="flex flex-wrap justify-center md:justify-start gap-3">
-          <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-wider bg-blue-50 text-blue-800 border border-blue-100">
-            @switch (user()?.roleType) {
-              @case (1) { <i class="bi bi-backpack2-fill"></i> Sinh viên }
-              @case (2) { <i class="bi bi-building-fill"></i> Trường / Khoa / Viện }
-              @case (3) { <i class="bi bi-shield-lock-fill"></i> Quản trị viên }
-              @default { <i class="bi bi-person-fill"></i> Người dùng }
-            }
-          </span>
-        </div>
-      </div>
-
-      <div class="flex flex-row md:flex-col flex-wrap gap-3 z-10 mt-6 md:mt-0 w-full md:w-auto justify-center md:justify-end md:self-end">
-
-        @if (user()?.roleType !== 3) {
-          <button (click)="enterEditMode()" class="px-5 py-3 rounded-xl font-bold text-sm flex-1 md:flex-none justify-center items-center gap-2 transition-all duration-200 active:scale-95 bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200">
-            <i class="bi bi-pencil-square"></i> Cập nhật
-          </button>
-        }
-
-        <button (click)="changePassword()" class="px-5 py-3 rounded-xl font-bold text-sm flex-1 md:flex-none justify-center items-center gap-2 transition-all duration-200 active:scale-95 bg-slate-100 text-slate-700 hover:bg-slate-200">
-          <i class="bi bi-key-fill"></i> Đổi mật khẩu
-        </button>
-
-        <button (click)="confirmDeactivate()" class="px-5 py-3 rounded-xl font-bold text-sm flex-1 md:flex-none justify-center items-center gap-2 transition-all duration-200 active:scale-95 bg-white text-rose-600 border border-rose-200 hover:bg-rose-50 hover:border-rose-300">
-          <i class="bi bi-exclamation-triangle-fill"></i> Vô hiệu hóa
-        </button>
-      </div>
+      <button
+        type="button"
+        (click)="goBack()"
+        class="inline-flex w-fit items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+      >
+        Quay lại
+      </button>
     </div>
 
-    @switch (user()?.roleType) {
-      @case (3) {
-        <div class="bg-white rounded-3xl shadow-sm p-8 md:p-10 border border-slate-100 max-w-xl mx-auto flex justify-center hover:shadow-lg transition-all">
-          <div class="text-center space-y-6">
-            <i class="bi bi-shield-check text-6xl text-blue-200 inline-block"></i>
-            <div class="space-y-1">
-              <h3 class="font-extrabold text-2xl text-slate-800">Tài khoản Quản trị viên</h3>
-              <p class="text-slate-500 max-w-sm">Đây là tài khoản có quyền hạn cao nhất trong hệ thống. Mọi hành động luôn phải cân nhắc trước khi thực hiện !</p>
-            </div>
-            <p class="font-mono text-lg bg-slate-100 px-5 py-2.5 rounded-2xl text-slate-700 inline-block">Username: <b>{{ user()?.username }}</b></p>
-            @if (user()?.createdAt) {
-              <div class="pt-6 mt-6 border-t border-dashed border-slate-200">
-                 <span class="text-sm text-slate-400 font-medium italic flex items-center justify-center gap-1.5">
-                   <i class="bi bi-calendar-event"></i> Tham gia: {{ user()?.createdAt | date: 'dd/MM/yyyy' }}
-                 </span>
-              </div>
-            }
-          </div>
-        </div>
-      }
-
-      @default {
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-          <div class="bg-white rounded-3xl shadow-sm p-8 border border-slate-100 hover:shadow-md transition-shadow">
-            <div class="flex items-center gap-3.5 pb-5 mb-7 border-b border-slate-100">
-              <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl shadow-inner">
-                <i class="bi bi-mortarboard-fill"></i>
-              </div>
-              <h3 class="font-extrabold text-2xl text-slate-800">
-                {{ user()?.roleType === 1 ? 'Thông tin Học vụ' : 'Đơn vị quản lý' }}
-              </h3>
+    @if (!isEditing()) {
+      @switch (user()?.roleType) {
+        @case (3) {
+          <section
+            class="mx-auto grid max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:grid-cols-[300px_1fr]"
+          >
+            <div class="bg-gradient-to-br from-blue-600 to-sky-500 p-6 text-white">
+              <p class="text-xs font-bold uppercase tracking-wide text-blue-50">
+                Quản trị hệ thống
+              </p>
+              <h2 class="mt-2 text-2xl font-bold">Quản trị viên</h2>
+              <p class="mt-3 text-sm leading-6 text-blue-50">
+                Tài khoản vận hành và quản trị hệ thống iAct.
+              </p>
             </div>
 
-            <div class="space-y-8">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-                @if (user()?.roleType === 1) {
-                  <div class="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100">
-                    <span class="text-[11px] text-indigo-400 uppercase font-black tracking-widest block mb-1">Mã số sinh viên</span>
-                    <p class="font-mono font-black text-indigo-800 text-xl">
-                      {{ user()?.roleType === 3 ? 'iAct - CTU' : (user()?.studentCode || '---') }}
-                    </p>
+            <div class="grid gap-5 p-6 sm:grid-cols-[160px_1fr]">
+              <div class="flex flex-col items-center text-center">
+                <img
+                  [src]="adminAvatar"
+                  class="h-28 w-28 rounded-2xl border border-slate-100 object-cover shadow-sm"
+                  alt="Ảnh đại diện quản trị viên"
+                />
+                <p class="mt-3 text-base font-bold text-slate-950">
+                  {{ fullProfileData()?.fullName || user()?.fullName || 'Quản trị viên' }}
+                </p>
+                <p class="mt-1 break-all text-sm font-medium text-slate-500">{{ user()?.email }}</p>
+              </div>
+
+              <div class="space-y-4">
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <div class="profile-field">
+                    <span>Username</span>
+                    <strong class="font-mono">{{ user()?.username }}</strong>
                   </div>
-                }
-                <div class="p-4 rounded-xl bg-slate-100/50 border border-slate-200/50">
-                  <span class="text-[11px] text-slate-400 uppercase font-bold tracking-widest block mb-1">Username</span>
-                  <p class="font-mono font-medium text-slate-700 text-xl">{{ user()?.username }}</p>
+
+                  <div class="profile-field">
+                    <span>Trạng thái</span>
+                    <strong>
+                      @if (user()?.status === 1) {
+                        Đang hoạt động
+                      } @else if (user()?.status === 2) {
+                        Đã khóa
+                      } @else {
+                        Chưa xác định
+                      }
+                    </strong>
+                  </div>
                 </div>
+
+                <button
+                  type="button"
+                  (click)="changePassword()"
+                  class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  Đổi mật khẩu
+                </button>
               </div>
+            </div>
+          </section>
+        }
 
-              <div class="space-y-6 text-lg">
-                @if (user()?.roleType === 1) {
-                  <div class="flex items-start gap-3.5">
-                    <i class="bi bi-people-fill text-indigo-300 mt-1"></i>
-                    <div>
-                      <span class="text-xs text-slate-400 uppercase font-bold block mb-0.5">Lớp sinh hoạt</span>
-                      <p class="font-bold text-slate-800">{{ user()?.classCode || '⚠️ Chưa phân lớp' }}</p>
-                    </div>
-                  </div>
-                }
+        @default {
+          <div class="grid grid-cols-1 gap-5 lg:grid-cols-[300px_1fr]">
+            <aside
+              class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:sticky lg:top-5 lg:self-start"
+            >
+              <div class="h-20 bg-gradient-to-r from-blue-600 to-sky-500"></div>
 
-                <div class="flex items-start gap-3.5">
-                  <i class="bi bi-buildings-fill text-indigo-300 mt-1"></i>
-                  <div>
-                    <span class="text-xs text-slate-400 uppercase font-bold block mb-0.5">
-                      {{ user()?.roleType === 1 ? 'Trường / Khoa / Viện' : 'Cấp trên trực thuộc' }}
-                    </span>
-                    <p class="font-bold text-slate-800">{{ user()?.departmentName || 'Cấp cao nhất CTU' }}</p>
-                  </div>
+              <div class="-mt-12 px-5 pb-5 text-center">
+                <div
+                  class="relative mx-auto h-24 w-24 rounded-full border-4 border-white bg-white shadow-sm"
+                >
+                  <img
+                    [src]="fullProfileData()?.avatarUrl || user()?.avatarUrl || defaultAvatar"
+                    class="h-full w-full rounded-full object-cover"
+                    alt="Ảnh đại diện"
+                  />
+                  <span
+                    class="absolute bottom-0 right-1 h-5 w-5 rounded-full border-4 border-white"
+                    [class.bg-emerald-500]="user()?.status === 1"
+                    [class.bg-rose-500]="user()?.status === 2"
+                    [class.bg-slate-400]="user()?.status !== 1 && user()?.status !== 2"
+                  ></span>
+                </div>
+
+                <h2 class="mt-3 text-lg font-bold text-slate-950">
+                  {{ fullProfileData()?.fullName || user()?.fullName || 'Chưa cập nhật' }}
+                </h2>
+                <p class="mt-1 break-all text-sm font-medium text-slate-500">{{ user()?.email }}</p>
+
+                <div class="mt-4 flex flex-wrap justify-center gap-2">
+                  <span
+                    class="inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wide"
+                    [class]="
+                      user()?.roleType === 1
+                        ? 'border-blue-100 bg-blue-50 text-blue-700'
+                        : 'border-sky-100 bg-sky-50 text-sky-700'
+                    "
+                  >
+                    {{ user()?.roleType === 1 ? 'Sinh viên' : 'Đơn vị' }}
+                  </span>
+
+                  <span
+                    class="inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wide"
+                    [class]="
+                      user()?.status === 1
+                        ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                        : user()?.status === 2
+                          ? 'border-rose-100 bg-rose-50 text-rose-700'
+                          : 'border-slate-200 bg-slate-100 text-slate-600'
+                    "
+                  >
+                    @if (user()?.status === 1) {
+                      Đang hoạt động
+                    } @else if (user()?.status === 2) {
+                      Đã khóa
+                    } @else {
+                      Chưa xác định
+                    }
+                  </span>
                 </div>
 
                 @if (user()?.createdAt) {
-                  <div class="pt-6 mt-6 border-t border-dashed border-slate-200">
-                    <span class="text-sm text-slate-400 font-medium italic flex items-center gap-1.5">
-                      <i class="bi bi-calendar-event"></i> Tham gia ngày: {{ user()?.createdAt | date: 'dd/MM/yyyy' }}
-                    </span>
+                  <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left">
+                    <p class="text-xs font-bold uppercase tracking-wide text-slate-500">
+                      Ngày tham gia
+                    </p>
+                    <p class="mt-1 text-sm font-bold text-slate-950">
+                      {{ user()?.createdAt | date: 'dd/MM/yyyy' }}
+                    </p>
                   </div>
                 }
+
+                <div class="mt-4 grid gap-2">
+                  <button
+                    type="button"
+                    (click)="enterEditMode()"
+                    class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
+                  >
+                    Cập nhật hồ sơ
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="changePassword()"
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                  >
+                    Đổi mật khẩu
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="confirmDeactivate()"
+                    class="inline-flex items-center justify-center rounded-lg border border-rose-100 bg-rose-50 px-5 py-2.5 text-sm font-bold text-rose-700 transition hover:border-rose-200 hover:bg-rose-100"
+                  >
+                    Khóa tài khoản
+                  </button>
+                </div>
               </div>
+            </aside>
+
+            <div class="grid gap-5 xl:grid-cols-2">
+              <section class="profile-section">
+                <div class="profile-section-header">
+                  <p>Tài khoản</p>
+                  <h3>Thông tin đăng nhập</h3>
+                </div>
+
+                <div class="grid gap-3">
+                  <div class="profile-field">
+                    <span>Username</span>
+                    <strong class="font-mono">{{ user()?.username }}</strong>
+                  </div>
+
+                  <div class="profile-field">
+                    <span>Email</span>
+                    <strong>{{ user()?.email }}</strong>
+                  </div>
+                </div>
+              </section>
+
+              <section class="profile-section">
+                <div class="profile-section-header">
+                  <p>{{ user()?.roleType === 1 ? 'Học vụ' : 'Đơn vị' }}</p>
+                  <h3>{{ user()?.roleType === 1 ? 'Thông tin sinh viên' : 'Thông tin đơn vị' }}</h3>
+                </div>
+
+                <div class="grid gap-3">
+                  @if (user()?.roleType === 1) {
+                    <div class="profile-field border-blue-100 bg-blue-50">
+                      <span class="text-blue-700">Mã sinh viên</span>
+                      <strong class="font-mono text-blue-950">
+                        {{
+                          fullProfileData()?.studentCode || user()?.studentCode || 'Chưa cập nhật'
+                        }}
+                      </strong>
+                    </div>
+
+                    <div class="profile-field">
+                      <span>Lớp sinh hoạt</span>
+                      <strong>{{ fullProfileData()?.classCode || 'Chưa phân lớp' }}</strong>
+                    </div>
+                  }
+
+                  <div class="profile-field">
+                    <span>{{
+                      user()?.roleType === 1 ? 'Khoa / Viện trực thuộc' : 'Đơn vị cấp trên'
+                    }}</span>
+                    <strong>{{ fullProfileData()?.departmentName || 'Chưa xác định' }}</strong>
+                  </div>
+                </div>
+              </section>
+
+              <section class="profile-section xl:col-span-2">
+                <div class="profile-section-header">
+                  <p>Liên hệ</p>
+                  <h3>{{ user()?.roleType === 1 ? 'Thông tin cá nhân' : 'Thông tin liên hệ' }}</h3>
+                </div>
+
+                <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  @if (user()?.roleType === 1) {
+                    <div class="profile-field">
+                      <span>Ngày sinh</span>
+                      <strong>{{
+                        (fullProfileData()?.birthday | date: 'dd/MM/yyyy') || 'Chưa cập nhật'
+                      }}</strong>
+                    </div>
+
+                    <div class="profile-field">
+                      <span>Giới tính</span>
+                      <strong>
+                        @if (fullProfileData()?.gender === 1) {
+                          Nam
+                        } @else if (fullProfileData()?.gender === 0) {
+                          Nữ
+                        } @else if (fullProfileData()?.gender === 2) {
+                          Khác
+                        } @else {
+                          Chưa cập nhật
+                        }
+                      </strong>
+                    </div>
+                  }
+
+                  <div class="profile-field">
+                    <span>Số điện thoại</span>
+                    <strong>{{ fullProfileData()?.phone || 'Chưa cập nhật' }}</strong>
+                  </div>
+
+                  <div class="profile-field md:col-span-2 xl:col-span-4">
+                    <span>Địa chỉ liên hệ</span>
+                    <strong class="leading-6">{{
+                      fullProfileData()?.address || 'Chưa cập nhật'
+                    }}</strong>
+                  </div>
+                </div>
+              </section>
             </div>
           </div>
-
-          <div class="bg-white rounded-3xl shadow-sm p-8 border border-slate-100 hover:shadow-md transition-shadow">
-            <div class="flex items-center gap-3.5 pb-5 mb-7 border-b border-slate-100">
-              <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 text-xl shadow-inner">
-                <i class="bi bi-person-vcard-fill"></i>
-              </div>
-              <h3 class="font-extrabold text-2xl text-slate-800">
-                {{ user()?.roleType === 1 ? 'Thông tin Cá nhân' : 'Thông tin Liên hệ' }}
-              </h3>
-            </div>
-
-            <div class="space-y-6 text-lg">
-              <div class="flex items-start gap-3.5">
-                <i class="bi bi-tag-fill text-blue-300 mt-1"></i>
-                <div>
-                  <span class="text-xs text-slate-400 uppercase font-bold block mb-0.5">
-                    {{ user()?.roleType === 1 ? 'Họ và tên' : 'Tên đơn vị' }}
-                  </span>
-                  <p class="font-bold text-slate-800">{{ user()?.fullName }}</p>
-                </div>
-              </div>
-
-              @if (user()?.roleType === 1) {
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-3">
-                  <div class="flex items-start gap-3.5">
-                    <i class="bi bi-gender-ambiguous text-blue-300 mt-1"></i>
-                    <div>
-                      <span class="text-xs text-slate-400 uppercase font-bold block mb-0.5">Giới tính</span>
-                      <p class="font-semibold text-slate-800">
-                        @if (user()?.gender === 1) { Nam }
-                        @else if (user()?.gender === 0) { Nữ }
-                        @else { Khác }
-                      </p>
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-3.5">
-                    <i class="bi bi-calendar3 text-blue-300 mt-1"></i>
-                    <div>
-                      <span class="text-xs text-slate-400 uppercase font-bold block mb-0.5">Ngày sinh</span>
-                      <p class="font-semibold text-slate-800">{{ (user()?.birthday | date: 'dd/MM/yyyy') || '---' }}</p>
-                    </div>
-                  </div>
-                </div>
-              }
-
-              <div class="space-y-6 pt-3">
-                <div class="flex items-start gap-3.5">
-                  <i class="bi bi-telephone-fill text-blue-300 mt-1"></i>
-                  <div>
-                    <span class="text-xs text-slate-400 uppercase font-bold block mb-0.5">Số điện thoại</span>
-                    <p class="font-semibold text-slate-800">{{ user()?.phone || '---' }}</p>
-                  </div>
-                </div>
-
-                @if (user()?.roleType === 1) {
-                  <div class="flex items-start gap-3.5">
-                    <i class="bi bi-geo-alt-fill text-blue-300 mt-1"></i>
-                    <div>
-                      <span class="text-xs text-slate-400 uppercase font-bold block mb-0.5">Địa chỉ</span>
-                      <p class="font-semibold text-slate-800 leading-relaxed">{{ user()?.address || '---' }}</p>
-                    </div>
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-        </div>
+        }
       }
-    }
+    } @else {
+      <section
+        class="mx-auto max-w-5xl overflow-visible rounded-2xl border border-slate-200 bg-white shadow-sm"
+      >
+        <div
+          class="flex flex-col gap-3 rounded-t-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-5 py-5 text-white sm:flex-row sm:items-center sm:justify-between sm:px-6"
+        >
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-blue-50">Biểu mẫu hồ sơ</p>
+            <h2 class="mt-1 text-2xl font-bold">Cập nhật hồ sơ</h2>
+          </div>
 
-  } @else {
-
-    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden max-w-4xl mx-auto">
-      <div class="border-b border-slate-200 bg-slate-50/70 px-8 py-5 flex items-center gap-3.5">
-        <div class="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl shadow-sm">
-          <i class="bi bi-pencil-fill"></i>
+          <button
+            type="button"
+            (click)="cancelEdit()"
+            class="inline-flex w-fit items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-bold text-blue-700 transition hover:bg-blue-50"
+            title="Đóng"
+          >
+            Đóng
+          </button>
         </div>
-        <div>
-          <h2 class="text-2xl font-black tracking-tight text-slate-800">Cập nhật hồ sơ</h2>
-          <p class="text-slate-500 text-sm mt-0.5">Vui lòng điền chính xác các thông tin cần thay đổi bên dưới.</p>
-        </div>
-      </div>
 
-      <div class="p-8 md:p-10 lg:p-12">
-        <form [formGroup]="profileForm" (ngSubmit)="saveInfo()">
-
-          <div class="flex flex-col items-center mb-10 group">
-            <button type="button" class="relative cursor-pointer border-0 bg-transparent p-0 outline-none" (click)="fileInput.click()">
-              <div class="w-36 h-36 relative rounded-full overflow-hidden border-4 border-white ring-4 ring-slate-100 shadow-2xl transition-transform group-hover:scale-105">
-                <img
-                  [src]="previewAvatar() || (user()?.roleType === 3 ? adminAvatar : (user()?.avatarUrl || defaultAvatar))"
-                  class="w-full h-full object-cover"
-                  alt="Avatar Preview"
-                />
-              </div>
-              <div class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                <i class="bi bi-camera-fill text-white text-4xl drop-shadow-md"></i>
-              </div>
-              <input #fileInput type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" />
+        <form
+          [formGroup]="profileForm"
+          (ngSubmit)="saveInfo()"
+          class="grid gap-6 p-5 lg:grid-cols-[220px_1fr] lg:p-6"
+        >
+          <div
+            class="flex flex-col items-center rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center"
+          >
+            <button type="button" class="group relative" (click)="fileInput.click()">
+              <span
+                class="block h-28 w-28 rounded-full border-2 border-dashed border-slate-300 bg-white p-2 transition group-hover:border-blue-400 group-hover:bg-blue-50"
+              >
+                <span class="block h-full w-full overflow-hidden rounded-full bg-white shadow-sm">
+                  <img
+                    [src]="
+                      previewAvatar() ||
+                      (user()?.roleType === 3
+                        ? adminAvatar
+                        : fullProfileData()?.avatarUrl || defaultAvatar)
+                    "
+                    class="h-full w-full object-cover transition group-hover:opacity-75"
+                    alt="Ảnh đại diện"
+                  />
+                </span>
+              </span>
+              <span class="mt-3 block text-sm font-bold text-blue-700">Đổi ảnh</span>
+              <input
+                #fileInput
+                type="file"
+                accept="image/*"
+                class="hidden"
+                (change)="onFileSelected($event)"
+              />
             </button>
-            <p class="text-sm text-slate-500 mt-5 font-bold bg-slate-100 px-5 py-2 rounded-full flex items-center gap-2">
-              <i class="bi bi-cloud-upload"></i> Chạm để tải ảnh mới
+
+            <p class="mt-3 text-xs font-medium leading-5 text-slate-500">
+              Ảnh nên rõ mặt, dung lượng dưới 5MB.
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div class="md:col-span-2">
-              <label for="fullNameInput" class="block text-sm font-bold text-slate-700 mb-2">
-                {{ user()?.roleType === 1 ? 'Họ và tên' : 'Tên đơn vị' }} <span class="text-red-500">*</span>
+              <label for="profileFullName" class="profile-label">
+                {{ user()?.roleType === 1 ? 'Họ và tên' : 'Tên đơn vị' }}
+                <span class="text-rose-600">*</span>
               </label>
-              <input id="fullNameInput" type="text" formControlName="fullName" class="w-full py-3 px-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all" placeholder="Nhập tên chính xác..." />
+              <input
+                id="profileFullName"
+                type="text"
+                formControlName="fullName"
+                class="profile-input"
+                placeholder="Nhập thông tin"
+              />
             </div>
 
             @if (user()?.roleType === 1) {
               <div>
-                <label for="birthdayInput" class="block text-sm font-bold text-slate-700 mb-2">Ngày sinh</label>
-                <input id="birthdayInput" type="date" formControlName="birthday" class="w-full py-3 px-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all" />
+                <label for="profileBirthday" class="profile-label">Ngày sinh</label>
+                <input
+                  id="profileBirthday"
+                  type="date"
+                  formControlName="birthday"
+                  class="profile-input"
+                />
               </div>
 
-              <div>
-                <label for="genderInput" class="block text-sm font-bold text-slate-700 mb-2">Giới tính</label>
-                <div class="relative">
-                  <select id="genderInput" formControlName="gender" class="w-full py-3 px-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all appearance-none">
-                    <option [ngValue]="1">Nam</option>
-                    <option [ngValue]="0">Nữ</option>
-                    <option [ngValue]="2">Khác</option>
-                  </select>
-                  <i class="bi bi-chevron-down absolute right-4 top-4 text-slate-400 text-sm pointer-events-none"></i>
-                </div>
+              <div class="relative">
+                <span id="profileGenderLabel" class="profile-label">Giới tính</span>
+                <button
+                  type="button"
+                  class="profile-combobox-trigger"
+                  [class.border-blue-500]="isGenderDropdownOpen()"
+                  [class.ring-4]="isGenderDropdownOpen()"
+                  [class.ring-blue-500]="isGenderDropdownOpen()"
+                  [class.ring-opacity-10]="isGenderDropdownOpen()"
+                  aria-haspopup="listbox"
+                  [attr.aria-expanded]="isGenderDropdownOpen()"
+                  aria-labelledby="profileGenderLabel"
+                  (click)="toggleGenderDropdown($event)"
+                >
+                  {{ selectedGenderLabel() }}
+                </button>
+
+                @if (isGenderDropdownOpen()) {
+                  <div
+                    class="absolute left-0 right-0 z-20 mt-2 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-lg"
+                    role="listbox"
+                    aria-labelledby="profileGenderLabel"
+                  >
+                    @for (option of genderOptions; track option.value) {
+                      <button
+                        type="button"
+                        class="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition hover:bg-blue-50 hover:text-blue-700"
+                        [class.bg-blue-50]="profileForm.get('gender')?.value === option.value"
+                        [class.text-blue-700]="profileForm.get('gender')?.value === option.value"
+                        role="option"
+                        [attr.aria-selected]="profileForm.get('gender')?.value === option.value"
+                        (click)="selectGender(option.value)"
+                      >
+                        <span>{{ option.label }}</span>
+                        @if (profileForm.get('gender')?.value === option.value) {
+                          <span class="h-2 w-2 rounded-full bg-blue-600"></span>
+                        }
+                      </button>
+                    }
+                  </div>
+                }
               </div>
             }
 
             <div class="md:col-span-2">
-              <label for="phoneInput" class="block text-sm font-bold text-slate-700 mb-2">Số điện thoại liên hệ</label>
-              <input id="phoneInput" type="text" formControlName="phone" class="w-full py-3 px-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all" placeholder="09xxxxxxxxx..." />
+              <label for="profilePhone" class="profile-label">Số điện thoại liên hệ</label>
+              <input
+                id="profilePhone"
+                type="text"
+                formControlName="phone"
+                class="profile-input"
+                placeholder="09xxxxxxxx"
+              />
+              @if (
+                profileForm.get('phone')?.invalid &&
+                (profileForm.get('phone')?.dirty || profileForm.get('phone')?.touched)
+              ) {
+                <p
+                  class="mt-2 w-fit rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700"
+                >
+                  Số điện thoại không hợp lệ.
+                </p>
+              }
             </div>
 
             @if (user()?.roleType === 1) {
               <div class="md:col-span-2">
-                <label for="addressInput" class="block text-sm font-bold text-slate-700 mb-2">Địa chỉ</label>
-                <textarea id="addressInput" formControlName="address" rows="3" class="w-full py-3 px-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all resize-none" placeholder="Nhập địa chỉ thường trú hoặc tạm trú..."></textarea>
+                <label for="profileAddress" class="profile-label">Địa chỉ thường trú</label>
+                <textarea
+                  id="profileAddress"
+                  formControlName="address"
+                  rows="3"
+                  class="profile-input resize-none"
+                  placeholder="Nhập địa chỉ"
+                ></textarea>
               </div>
             }
 
-          </div>
+            <div
+              class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 md:col-span-2 sm:flex-row sm:justify-end"
+            >
+              <button
+                type="button"
+                (click)="cancelEdit()"
+                [disabled]="isUploading()"
+                class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Hủy bỏ
+              </button>
 
-          <div class="flex justify-end gap-3.5 mt-12 pt-8 border-t border-slate-100">
-            <button type="button" (click)="cancelEdit()" [disabled]="isUploading()" class="px-7 py-3 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition">
-              Hủy bỏ
-            </button>
-            <button type="submit" [disabled]="isUploading() || profileForm.invalid" class="px-9 py-3 rounded-xl font-bold flex items-center justify-center gap-2.5 shadow-lg transition duration-200"
-                    [class]="profileForm.valid ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-blue-200' : 'bg-slate-300 text-slate-600 cursor-not-allowed'">
-              @if (isUploading()) {
-                <span class="loader w-4 h-4 border-2 border-white/50 border-t-white"></span>
-              }
-              Lưu thay đổi
-            </button>
+              <button
+                type="submit"
+                [disabled]="isUploading() || profileForm.invalid"
+                class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-sm font-bold shadow-sm transition disabled:cursor-not-allowed"
+                [class]="
+                  profileForm.valid
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-slate-200 text-slate-500 shadow-none'
+                "
+              >
+                @if (isUploading()) {
+                  <span class="loader mr-2 border-2 border-white/40 border-t-white"></span>
+                  Đang lưu
+                } @else {
+                  Lưu thay đổi
+                }
+              </button>
+            </div>
           </div>
         </form>
-      </div>
-    </div>
-  }
-</div>
+      </section>
+    }
+  </div>
+</main>

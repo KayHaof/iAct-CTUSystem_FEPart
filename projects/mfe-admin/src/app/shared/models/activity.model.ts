@@ -97,5 +97,7 @@ export interface Activity {
 
   schedules?: ActivityScheduleDto[];
 
+  handledAt: Date;
+  handledBy?: UserDto | null;
   reason?: string;
 }

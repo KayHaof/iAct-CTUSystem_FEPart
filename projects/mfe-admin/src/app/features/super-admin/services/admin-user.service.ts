@@ -17,12 +17,12 @@ export interface UserCounts {
 export class AdminUserService {
   private http = inject(HttpClient);
 
-  private baseUrl = 'http://localhost:8080/identity/api/v1/users';
-  private profileUrl = 'http://localhost:8080/profile/api/v1';
-  private authUrl = 'http://localhost:8080/identity/auth';
+  private baseUrl = 'http://localhost:8080/user/api/v1/users';
+  private profileUrl = 'http://localhost:8080/user/api/v1';
+  private authUrl = 'http://localhost:8080/auth';
 
-  getAllDepartments(): Observable<ApiResponse<Department[]>> {
-    return this.http.get<ApiResponse<Department[]>>(`${this.profileUrl}/departments`);
+  getAllDepartments(): Observable<ApiResponse<PageDTO<Department>>> {
+    return this.http.get<ApiResponse<PageDTO<Department>>>(`${this.profileUrl}/departments`);
   }
 
   // Fetch all users by specification
@@ -56,7 +56,7 @@ export class AdminUserService {
 
   getMajorsByDepartment(departmentId: number | string): Observable<ApiResponse<MajorInfo[]>> {
     const params = new HttpParams().set('departmentId', departmentId);
-    return this.http.get<ApiResponse<MajorInfo[]>>(`${this.profileUrl}/majors`, { params });
+    return this.http.get<ApiResponse<MajorInfo[]>>(`http://localhost:8080/user/api/v1/majors`, { params });
   }
 
   getClassesByMajor(
@@ -69,7 +69,7 @@ export class AdminUserService {
       params = params.set('academicYear', academicYear);
     }
 
-    return this.http.get<ApiResponse<ClassInfo[]>>(`${this.profileUrl}/classes`, { params });
+    return this.http.get<ApiResponse<ClassInfo[]>>(`http://localhost:8080/user/api/v1/classes`, { params });
   }
 
   toggleUserStatus(id: string | number, status: number): Observable<ApiResponse<string>> {

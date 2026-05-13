@@ -24,32 +24,26 @@ body {
     @apply bg-ctu-blue;
   }
 }
-/* =========================================
-   CUSTOM MATERIAL SNACKBAR (Xuyên giáp MDC)
-   ========================================= */
 
-/* 1. Xuyên thẳng vào lớp bề mặt (surface) để ép màu nền */
+
 .success-snackbar .mdc-snackbar__surface {
-  background-color: #4caf50 !important; /* Xanh lá */
+  background-color: #4caf50 !important;
 }
 
 .error-snackbar .mdc-snackbar__surface {
-  background-color: #f44336 !important; /* Đỏ */
+  background-color: #f44336 !important;
 }
 
-/* 2. Đổi màu chữ của Text thành màu trắng */
 .success-snackbar .mdc-snackbar__label,
 .error-snackbar .mdc-snackbar__label {
   color: white !important;
 }
 
-/* 3. Đổi màu chữ của nút "Đóng" thành màu trắng */
 .success-snackbar .mat-mdc-button .mdc-button__label,
 .error-snackbar .mat-mdc-button .mdc-button__label {
   color: white !important;
 }
 
-/* 4. Đẩy khung thông báo xuống để không bị thanh Header che khuất */
 .mat-mdc-snack-bar-container {
-  margin-top: 70px !important; /* Nếu thấy còn bị che thì tăng số này lên (vd 80px, 90px) */
+  margin-top: 70px !important;
 }

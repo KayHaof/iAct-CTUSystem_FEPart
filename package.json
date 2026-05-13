@@ -2,16 +2,17 @@
   "name": "my-mfe-project",
   "version": "0.0.0",
   "scripts": {
-    "start": "nx serve shell",
-    "start:all": "nx run-many --target=serve --all --parallel=3",
+    "nx": "set NX_ISOLATE_PLUGINS=false&& nx",
+    "start": "yarn nx serve shell",
+    "start:all": "yarn nx run-many --target=serve --all --parallel=3",
     "start:shellStudent": "yarn nx run-many --target=serve --projects=shell,mfe-student",
     "start:shellAdmin": "yarn nx run-many --target=serve --projects=shell,mfe-admin",
-    "start:student": "nx serve mfe-student",
-    "start:admin": "nx serve mfe-admin",
-    "build:all": "nx run-many --target=build --all",
-    "test:all": "nx run-many --target=test --all",
-    "lint:all": "nx run-many --target=lint --all",
-    "graph": "nx graph"
+    "start:student": "yarn nx serve mfe-student",
+    "start:admin": "yarn nx serve mfe-admin",
+    "build:all": "yarn nx run-many --target=build --all",
+    "test:all": "yarn nx run-many --target=test --all",
+    "lint:all": "yarn nx run-many --target=lint --all",
+    "graph": "yarn nx graph"
   },
   "cli": {
     "packageManager": "yarn"

@@ -8,7 +8,10 @@
   "targets": {
     "build": {
       "executor": "@angular-architects/native-federation:build",
-      "options": {},
+      "options": {
+        "outputPath": "dist/projects/mfe-admin",
+        "cacheExternalArtifacts": false
+      },
       "configurations": {
         "production": {
           "target": "mfe-admin:esbuild:production"
@@ -26,6 +29,7 @@
         "target": "mfe-admin:serve-original:development",
         "rebuildDelay": 500,
         "dev": true,
+        "outputPath": "dist/projects/mfe-admin",
         "cacheExternalArtifacts": false,
         "port": 0
       }

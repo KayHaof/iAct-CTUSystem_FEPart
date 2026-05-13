@@ -103,11 +103,9 @@ export class UserManagementComponent implements OnInit {
 
   loadDepartments() {
     this.adminUserService.getAllDepartments().subscribe({
-      next: (res: ApiResponse<Department[]>) => {
-        if (res && res.result) {
-          const safeResult = res.result as unknown as Department[] | { data?: Department[] };
-          const deptList = Array.isArray(safeResult) ? safeResult : safeResult.data;
-          this.departments.set(deptList || []);
+      next: (res: ApiResponse<PageDTO<Department>>) => {
+        if (res && res.result && res.result.data) {
+          this.departments.set(res.result.data);
         }
       },
     });

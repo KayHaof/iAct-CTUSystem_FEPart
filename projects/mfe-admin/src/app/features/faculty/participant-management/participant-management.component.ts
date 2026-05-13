@@ -158,10 +158,8 @@ export class ParticipantManagementComponent implements OnInit {
 
   toggleSort(column: keyof RegistrationResponse): void {
     if (this.sortColumn() === column) {
-      // Đang sort cột này -> đổi chiều
       this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
     } else {
-      // Sort cột mới -> mặc định tăng dần
       this.sortColumn.set(column);
       this.sortDirection.set('asc');
     }
@@ -207,15 +205,11 @@ export class ParticipantManagementComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (blob: Blob) => {
-          // 1. Tạo một URL ảo từ cục Blob tải về
           const downloadUrl = window.URL.createObjectURL(blob);
-          // 2. Tạo một thẻ <a> ẩn
           const link = document.createElement('a');
           link.href = downloadUrl;
-          link.download = `Danh_sach_Sinh_vien_${actId}.xlsx`; // Tên file mặc định
-          // 3. Giả lập cú click để tải file
+          link.download = `Danh_sach_Sinh_vien_${actId}.xlsx`;
           link.click();
-          // 4. Dọn dẹp bộ nhớ
           window.URL.revokeObjectURL(downloadUrl);
 
           this.alertService.success('Đã xuất file Excel thành công!');

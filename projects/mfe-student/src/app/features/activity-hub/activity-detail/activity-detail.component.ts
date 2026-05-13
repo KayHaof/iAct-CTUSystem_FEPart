@@ -1,5 +1,12 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule, NgOptimizedImage} from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -18,6 +25,7 @@ import { ActivityRegistrationModalComponent } from '../activity-form/activity-re
   imports: [CommonModule, ActivityRegistrationModalComponent],
   templateUrl: './activity-detail.component.html',
   styleUrls: ['./activity-detail.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ActivityDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -28,7 +36,6 @@ export class ActivityDetailComponent implements OnInit {
   private alertService = inject(AlertService);
   private confirmService = inject(ConfirmService);
 
-  // --- STATE ---
   activity = signal<Activity | null>(null);
   userRegistration = signal<RegistrationResponse | null>(null);
   isLoading = signal<boolean>(true);
@@ -36,7 +43,6 @@ export class ActivityDetailComponent implements OnInit {
   activeTab = signal<'overview' | 'content' | 'benefits'>('overview');
   isRegistrationModalOpen = signal<boolean>(false);
 
-  // --- COMPUTED ---
   isRegistered = computed(() => {
     const reg = this.userRegistration();
     return !!reg && (reg.status === 0 || reg.status === 1);
@@ -65,8 +71,9 @@ export class ActivityDetailComponent implements OnInit {
 
     if (now < regStart) return { isOpen: false, label: 'Chưa mở đăng ký', canRegister: false };
     if (now > regEnd) return { isOpen: false, label: 'Đã đóng đăng ký', canRegister: false };
-    if (isFull && !this.isRegistered())
+    if (isFull && !this.isRegistered()) {
       return { isOpen: false, label: 'Đủ số lượng', canRegister: false };
+    }
 
     return { isOpen: true, label: 'Đang mở đăng ký', canRegister: true };
   });

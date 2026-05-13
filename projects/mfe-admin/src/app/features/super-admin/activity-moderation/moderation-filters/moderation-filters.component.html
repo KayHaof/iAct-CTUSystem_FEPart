@@ -41,26 +41,6 @@
     </div>
   </div>
 
-  <!-- Cột 3: Học kỳ -->
-  <div class="filter-group">
-    <label for="semester-select">Học kỳ</label>
-    <div class="input-wrapper">
-      <div class="icon-left"><i class="bi bi-calendar3"></i></div>
-      <select
-        id="semester-select"
-        [ngModel]="selectedSemester()"
-        (ngModelChange)="selectedSemester.set($event)"
-        class="custom-select"
-      >
-        <option value="">Tất cả Học kỳ</option>
-        @for (sem of semesters(); track sem.id) {
-          <option [value]="sem.id">{{ sem.semesterName }}</option>
-        }
-      </select>
-      <div class="icon-right"><i class="bi bi-chevron-down"></i></div>
-    </div>
-  </div>
-
   <!-- Cột 4: Trạng thái -->
   <div class="filter-group">
     <label for="status-select">Trạng thái</label>
