@@ -1,9 +1,10 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   EventEmitter,
   Input,
-  Output,
   OnChanges,
+  Output,
   SimpleChanges,
   inject,
   signal,
@@ -18,6 +19,7 @@ import { UserService } from '@my-mfe/auth';
   imports: [CommonModule],
   templateUrl: './view-user-modal.component.html',
   styleUrls: ['./view-user-modal.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ViewUserModalComponent implements OnChanges {
   @Input() isOpen = false;
@@ -26,19 +28,13 @@ export class ViewUserModalComponent implements OnChanges {
 
   private userService = inject(UserService);
 
-  // ĐÃ SỬA: Thêm `| null` để khớp với giá trị khởi tạo
-  displayUser: UserInfo | null = null;
+  displayUser = signal<UserInfo | null>(null);
   isLoading = signal(false);
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen && this.user) {
-      // 1. Lấy data cơ bản đắp lên giao diện ngay lập tức
-      this.displayUser = { ...this.user };
-
-      // 2. Đi fetch data chi tiết
-      if (this.user.id) {
-        this.fetchProfileDetails(this.user.id);
-      }
+      this.displayUser.set({ ...this.user });
+      this.fetchProfileDetails(this.user.id);
     }
   }
 
@@ -46,31 +42,45 @@ export class ViewUserModalComponent implements OnChanges {
     this.isLoading.set(true);
     this.userService.getFullProfile(userId).subscribe({
       next: (res) => {
-        // ĐÃ SỬA: Phải check displayUser khác null trước khi trộn data
-        if (res.result && this.displayUser) {
-          this.displayUser = {
-            ...this.displayUser,
+        const current = this.displayUser();
+        if (res.result && current) {
+          this.displayUser.set({
+            ...current,
             birthday: res.result.birthday,
             gender: res.result.gender,
             phone: res.result.phone,
             address: res.result.address,
-            departmentName: res.result.departmentName || this.displayUser.departmentName,
-            classCode: res.result.classCode || this.displayUser.classCode,
-            studentCode: res.result.studentCode || this.displayUser.studentCode,
-          };
+            departmentName: res.result.departmentName || current.departmentName,
+            classCode: res.result.classCode || current.classCode,
+            studentCode: res.result.studentCode || current.studentCode,
+          });
         }
       },
-      error: (err) => {
-        console.error('Lấy chi tiết hồ sơ thất bại (Có thể user chưa có profile):', err);
-      },
-      complete: () => {
-        this.isLoading.set(false);
-      },
+      error: () => this.isLoading.set(false),
+      complete: () => this.isLoading.set(false),
     });
   }
 
   close() {
-    this.displayUser = null;
+    this.displayUser.set(null);
     this.closeModal.emit();
+  }
+
+  roleLabel(roleType?: number) {
+    if (roleType === 1) return 'Sinh viên';
+    if (roleType === 2) return 'Khoa / đơn vị';
+    if (roleType === 3) return 'Quản trị viên';
+    return 'Khác';
+  }
+
+  genderLabel(gender?: number) {
+    if (gender === 1) return 'Nam';
+    if (gender === 0) return 'Nữ';
+    if (gender === 2) return 'Khác';
+    return 'Chưa cập nhật';
+  }
+
+  isActive(user: UserInfo | null) {
+    return user?.status === 1;
   }
 }

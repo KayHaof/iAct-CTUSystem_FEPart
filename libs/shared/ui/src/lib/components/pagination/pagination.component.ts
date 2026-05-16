@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './pagination.component.html',
+  styleUrl: './pagination.component.scss',
 })
 export class PaginationComponent {
   totalItems = input.required<number>();

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import * as XLSX from 'xlsx';
@@ -12,6 +12,7 @@ import { ImportResultDto, ApiResponse } from 'interface';
   imports: [CommonModule],
   templateUrl: './import-users.component.html',
   styleUrls: ['./import-users.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImportUsersComponent {
   private router = inject(Router);

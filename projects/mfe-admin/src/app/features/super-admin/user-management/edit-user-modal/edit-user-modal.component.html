@@ -1,49 +1,63 @@
 @if (isOpen) {
-  <div class="fixed inset-0 z-[100] flex items-start pt-[10vh] justify-center animate-fade-in p-4">
+  <div class="fixed inset-0 z-[115] flex items-start justify-center p-4 pt-[8vh]">
     <div class="modal-backdrop" role="button" tabindex="0" aria-label="Đóng" (click)="close()" (keydown.enter)="close()"></div>
-    <div class="modal-content max-w-md p-6 relative bg-white rounded-2xl shadow-2xl">
-
-      <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+    <div class="modal-content max-w-xl">
+      <header class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
         <div>
-          <h3 class="text-xl font-extrabold text-slate-800">Phân Lớp Sinh Viên</h3>
-          <p class="text-sm text-slate-500 font-medium mt-1">MSSV: <span class="text-blue-600 font-bold">{{ user?.studentCode || user?.username }}</span> - {{ user?.fullName }}</p>
+          <h2 class="text-xl font-black text-slate-900">Phân lớp sinh viên</h2>
+          <p class="mt-1 text-sm font-semibold text-slate-500">
+            {{ user?.studentCode || user?.username }} - {{ user?.fullName || 'Chưa cập nhật' }}
+          </p>
         </div>
-        <button (click)="close()" class="action-btn bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 tooltip" title="Đóng">
+        <button type="button" (click)="close()" class="icon-btn" title="Đóng">
           <i class="bi bi-x-lg"></i>
         </button>
+      </header>
+
+      <div class="space-y-4 p-6">
+        <div>
+          <label for="editDeptSelect" class="input-label">Trường / khoa</label>
+          <select id="editDeptSelect" [(ngModel)]="editSelectedDept" (change)="onEditDeptChange()" class="input-field">
+            <option value="">Chọn trường / khoa</option>
+            @for (dept of departments; track dept.id) {
+              <option [value]="dept.id">{{ dept.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label for="editMajorSelect" class="input-label" [class.opacity-50]="!editSelectedDept()">Chuyên ngành</label>
+          <select id="editMajorSelect" [(ngModel)]="editSelectedMajor" (change)="onEditMajorChange()" [disabled]="!editSelectedDept()" class="input-field">
+            <option value="">Chọn chuyên ngành</option>
+            @for (major of majors(); track major.id) {
+              <option [value]="major.id">{{ major.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label for="editClassSelect" class="input-label" [class.opacity-50]="!editSelectedMajor()">Lớp sinh hoạt</label>
+          <select id="editClassSelect" [(ngModel)]="editSelectedClass" [disabled]="!editSelectedMajor()" class="input-field border-emerald-200 bg-emerald-50 text-emerald-800">
+            <option value="">Chọn lớp sinh hoạt</option>
+            @for (cls of classesForEdit(); track cls.id) {
+              <option [value]="cls.id">{{ cls.classCode || cls.name }}</option>
+            }
+          </select>
+        </div>
       </div>
 
-      <div class="space-y-5">
-        <div>
-          <label for="editDeptSelect" class="input-label">1. Chọn Trường / Khoa</label>
-          <select id="editDeptSelect" [(ngModel)]="editSelectedDept" (change)="onEditDeptChange()" class="input-field py-3">
-            <option value="">-- Vui lòng chọn Trường/Khoa --</option>
-            @for (dept of departments; track dept.id) { <option [value]="dept.id">{{ dept.name }}</option> }
-          </select>
-        </div>
-        <div>
-          <label for="editMajorSelect" class="input-label" [class.opacity-50]="!editSelectedDept()">2. Chọn Chuyên Ngành</label>
-          <select id="editMajorSelect" [(ngModel)]="editSelectedMajor" (change)="onEditMajorChange()" [disabled]="!editSelectedDept()" class="input-field py-3">
-            <option value="">-- Chọn chuyên ngành --</option>
-            @for (major of majors(); track major.id) { <option [value]="major.id">{{ major.name }}</option> }
-          </select>
-        </div>
-        <div>
-          <label for="editClassSelect" class="input-label" [class.opacity-50]="!editSelectedMajor()">3. Chọn Lớp</label>
-          <select id="editClassSelect" [(ngModel)]="editSelectedClass" [disabled]="!editSelectedMajor()" class="input-field py-3">
-            <option value="">-- Chọn lớp học --</option>
-            @for (cls of classesForEdit(); track cls.id) { <option [value]="cls.id">{{ cls.name }} ({{ cls.classCode }})</option> }
-          </select>
-        </div>
-      </div>
-
-      <div class="flex items-center justify-end gap-3 mt-8 pt-5 border-t border-slate-100">
-        <button (click)="close()" class="btn-secondary">Hủy bỏ</button>
-        <button (click)="submit()" [disabled]="!editSelectedClass() || isSaving" class="btn-primary">
-          @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> Đang lưu... }
-          @else { <i class="bi bi-check-circle-fill"></i> Lưu thay đổi }
+      <footer class="flex justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+        <button type="button" (click)="close()" class="btn-secondary">Hủy bỏ</button>
+        <button type="button" (click)="submit()" [disabled]="!editSelectedClass() || isSaving" class="btn-primary">
+          @if (isSaving) {
+            <i class="bi bi-arrow-repeat animate-spin"></i>
+            Đang lưu
+          } @else {
+            <i class="bi bi-check-circle-fill"></i>
+            Lưu thay đổi
+          }
         </button>
-      </div>
+      </footer>
     </div>
   </div>
 }

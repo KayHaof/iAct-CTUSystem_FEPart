@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, Input } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { ChangeDetectionStrategy, Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { LayoutService } from '../layout.service';
 
-// Interface gọn nhẹ, không cần role nữa
 export interface MenuItem {
   label: string;
   link: string;
@@ -32,6 +31,12 @@ export class SidebarComponent {
 
   close() {
     this.layoutService.closeMobileMenu();
+  }
+
+  handleNavigation(event: MouseEvent) {
+    const currentTarget = event.currentTarget as HTMLElement | null;
+    this.close();
+    window.setTimeout(() => currentTarget?.blur());
   }
 
   logout() {

@@ -1,25 +1,36 @@
-import { Component, EventEmitter, Input, Output, signal, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UserInfo, Department, MajorInfo, ClassInfo, ApiResponse } from 'interface';
-import { AdminUserService } from '../../services/admin-user.service'; // Chỉnh đường dẫn cho đúng nha
+import { ApiResponse, ClassInfo, Department, MajorInfo, UserInfo } from 'interface';
+import { AdminUserService } from '../../services/admin-user.service';
 
 @Component({
   selector: 'app-edit-user-modal',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './edit-user-modal.component.html',
-  styleUrls: ['./edit-user-modal.component.scss']
+  styleUrls: ['./edit-user-modal.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EditUserModalComponent {
   private adminUserService = inject(AdminUserService);
 
   private _isOpen = false;
+
   @Input()
   set isOpen(value: boolean) {
     this._isOpen = value;
     if (!value) this.resetForm();
   }
+
   get isOpen(): boolean {
     return this._isOpen;
   }
@@ -56,16 +67,17 @@ export class EditUserModalComponent {
     this.editSelectedClass.set('');
     this.classesForEdit.set([]);
 
-    if (!deptId) return;
+    if (!deptId) {
+      this.majors.set([]);
+      return;
+    }
 
     this.adminUserService.getMajorsByDepartment(Number(deptId)).subscribe({
       next: (res: ApiResponse<MajorInfo[]>) => {
-        if (res && res.result) {
-          const safeResult = res.result as unknown as MajorInfo[] | { data?: MajorInfo[] };
-          const majorList = Array.isArray(safeResult) ? safeResult : safeResult.data;
-          this.majors.set(majorList || []);
-        }
+        const result = res.result as unknown as MajorInfo[] | { data?: MajorInfo[] };
+        this.majors.set(Array.isArray(result) ? result : result?.data || []);
       },
+      error: () => this.majors.set([]),
     });
   }
 
@@ -73,16 +85,17 @@ export class EditUserModalComponent {
     const majorId = this.editSelectedMajor();
     this.editSelectedClass.set('');
 
-    if (!majorId) return;
+    if (!majorId) {
+      this.classesForEdit.set([]);
+      return;
+    }
 
     this.adminUserService.getClassesByMajor(Number(majorId)).subscribe({
       next: (res: ApiResponse<ClassInfo[]>) => {
-        if (res && res.result) {
-          const safeResult = res.result as unknown as ClassInfo[] | { data?: ClassInfo[] };
-          const classList = Array.isArray(safeResult) ? safeResult : safeResult.data;
-          this.classesForEdit.set(classList || []);
-        }
+        const result = res.result as unknown as ClassInfo[] | { data?: ClassInfo[] };
+        this.classesForEdit.set(Array.isArray(result) ? result : result?.data || []);
       },
+      error: () => this.classesForEdit.set([]),
     });
   }
 

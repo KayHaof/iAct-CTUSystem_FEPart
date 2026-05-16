@@ -115,4 +115,44 @@ export const routes: Routes = [
     canActivate: [roleGuard],
     data: { roles: ['admin'] },
   },
+  {
+    path: 'semesters',
+    title: 'Quản lý học kỳ',
+    loadComponent: () =>
+      import('./features/super-admin/semester-management/semester-management.component').then(
+        (m) => m.SemesterManagementComponent,
+      ),
+    canActivate: [roleGuard],
+    data: { roles: ['admin'] },
+  },
+  {
+    path: 'categories',
+    title: 'Danh mục điểm rèn luyện',
+    loadComponent: () =>
+      import('./features/super-admin/category-management/category-management.component').then(
+        (m) => m.CategoryManagementComponent,
+      ),
+    canActivate: [roleGuard],
+    data: { roles: ['admin'] },
+  },
+  {
+    path: 'departments',
+    title: 'Quản lý Khoa/Trường/Viện',
+    loadComponent: () =>
+      import('./features/super-admin/department-management/department-management.component').then(
+        (m) => m.DepartmentManagementComponent,
+      ),
+    canActivate: [roleGuard],
+    data: { roles: ['admin'] },
+  },
+  {
+    path: 'majors',
+    title: 'Quản lý chuyên ngành',
+    loadComponent: () =>
+      import('./features/super-admin/major-management/major-management.component').then(
+        (m) => m.MajorManagementComponent,
+      ),
+    canActivate: [roleGuard],
+    data: { roles: ['admin'] },
+  },
 ];

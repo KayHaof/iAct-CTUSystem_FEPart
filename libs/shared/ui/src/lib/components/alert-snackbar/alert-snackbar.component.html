@@ -1,0 +1,20 @@
+<div class="alert-toast" [ngClass]="'alert-toast-' + data.variant">
+  <div class="alert-accent" aria-hidden="true"></div>
+
+  <div class="alert-state" aria-hidden="true">
+    @if (data.variant === 'loading') {
+      <span class="loading-ring"></span>
+    } @else {
+      <span class="state-dot"></span>
+    }
+  </div>
+
+  <div class="min-w-0 flex-1">
+    <p class="alert-title">{{ data.title }}</p>
+    <p class="alert-message">{{ data.message }}</p>
+  </div>
+
+  @if (data.dismissible) {
+    <button type="button" class="alert-close" (click)="dismiss()">Đóng</button>
+  }
+</div>

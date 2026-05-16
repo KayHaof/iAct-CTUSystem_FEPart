@@ -1,7 +1,9 @@
 export interface Department {
   id: number;
   name: string;
-  description: string;
+  code?: string | null;
+  description?: string | null;
+  isActive?: boolean;
 }
 
 export interface ClassInfo {
@@ -14,9 +16,11 @@ export interface ClassInfo {
 export interface MajorInfo {
   id: number;
   name: string;
+  code?: string | null;
   programType?: string;
   departmentId?: number;
   departmentName?: string;
+  isActive?: boolean;
 }
 
 export interface Semester {

@@ -1,0 +1,162 @@
+:host {
+  display: block;
+}
+
+.semester-command-bar {
+  @apply flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between;
+}
+
+.eyebrow {
+  @apply text-xs font-black uppercase tracking-wide;
+}
+
+.page-title {
+  @apply mt-1 text-2xl font-black text-slate-950 md:text-3xl;
+}
+
+.page-description {
+  @apply mt-2 max-w-3xl text-sm font-medium text-slate-500;
+}
+
+.semester-create-btn {
+  @apply inline-flex items-center justify-center gap-3 rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100;
+}
+
+.create-mark {
+  @apply inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-sky-500 text-lg leading-none text-white;
+}
+
+.active-semester-card {
+  @apply flex flex-col gap-4 rounded-2xl border border-blue-100 bg-white p-5 shadow-sm ring-1 ring-blue-100/60 lg:flex-row lg:items-center lg:justify-between;
+}
+
+.active-meter {
+  @apply inline-flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-2xl bg-blue-50 text-blue-700;
+
+  span {
+    @apply text-3xl font-black leading-none;
+  }
+
+  small {
+    @apply mt-1 text-xs font-black uppercase tracking-wide;
+  }
+}
+
+.semester-side-panel {
+  @apply h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:sticky xl:top-5;
+}
+
+.panel-heading {
+  @apply mb-5 rounded-2xl bg-blue-50 p-4 ring-1 ring-blue-100;
+
+  strong {
+    @apply mt-1 block text-lg font-black text-slate-950;
+  }
+}
+
+.panel-kicker {
+  @apply text-xs font-black uppercase tracking-wide text-blue-700;
+}
+
+.semester-timeline-shell {
+  @apply overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm;
+}
+
+.timeline-header {
+  @apply flex flex-col gap-3 border-b border-slate-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between;
+}
+
+.timeline-count {
+  @apply inline-flex w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600;
+}
+
+.timeline-list {
+  @apply space-y-3 bg-slate-50/70 p-4;
+}
+
+.semester-timeline-item {
+  @apply grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md sm:grid-cols-[12px_minmax(0,1fr)];
+}
+
+.timeline-rail {
+  @apply hidden rounded-full bg-slate-200 sm:block;
+}
+
+.timeline-rail-active {
+  @apply bg-gradient-to-b from-blue-600 to-sky-500;
+}
+
+.timeline-actions {
+  @apply mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-4;
+}
+
+.filter-label,
+.form-label {
+  @apply text-xs font-bold uppercase tracking-wide text-slate-500;
+}
+
+.form-input {
+  @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100;
+}
+
+.select-trigger {
+  @apply flex min-h-12 w-full items-center justify-between gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-bold text-slate-800 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-100;
+
+  > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  > i {
+    flex-shrink: 0;
+  }
+}
+
+.select-panel {
+  @apply absolute left-0 right-0 z-40 overflow-y-auto rounded-2xl border border-blue-100 bg-white p-2 shadow-xl;
+
+  top: calc(100% + 0.5rem);
+}
+
+.select-option {
+  @apply flex w-full flex-col rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-blue-50 hover:text-blue-700;
+}
+
+.select-option-active {
+  @apply bg-blue-600 text-white shadow-sm hover:bg-blue-600 hover:text-white;
+}
+
+.filter-primary-btn,
+.modal-primary-btn {
+  @apply inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+.filter-secondary-btn {
+  @apply inline-flex items-center justify-center rounded-xl bg-slate-100 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-200;
+}
+
+.action-btn {
+  @apply rounded-full bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-600 transition hover:bg-blue-100 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40;
+}
+
+.action-activate {
+  @apply bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white;
+}
+
+.danger-btn {
+  @apply rounded-full bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-40;
+}
+
+.status-badge {
+  @apply inline-flex rounded-full px-3 py-1 text-xs font-bold;
+}
+
+.empty-state {
+  @apply rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-12 text-center text-sm font-bold text-slate-500;
+}
+
+.top-button {
+  @apply fixed bottom-6 right-6 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-xs font-black uppercase text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100;
+}

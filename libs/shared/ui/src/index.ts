@@ -6,6 +6,7 @@ export * from './lib/components/loading-bar/loading-bar.component';
 export * from './lib/components/pagination/pagination.component';
 export * from './lib/components/page-header/page-header.component';
 export * from './lib/components/table-container/table-container.component'
+export * from './lib/components/alert-snackbar/alert-snackbar.component';
 
 export * from './lib/layout/admin-layout/admin-layout.component';
 export * from './lib/layout/student-layout/student-layout.component';

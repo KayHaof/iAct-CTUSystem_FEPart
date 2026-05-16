@@ -1,16 +1,17 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { UserInfo, Department, MajorInfo, ClassInfo, ApiResponse, PageDTO } from 'interface';
-import { TableContainerComponent, PaginationComponent } from '@my-mfe/ui';
-import { AlertService } from '@my-mfe/ui';
+import { AlertService, PaginationComponent, TableContainerComponent } from '@my-mfe/ui';
+import { ApiResponse, ClassInfo, Department, MajorInfo, PageDTO, UserInfo } from 'interface';
 import Swal from 'sweetalert2';
 
 import { AdminUserService } from '../services/admin-user.service';
 import { AddUserModalComponent } from './add-user-modal/add-user-modal.component';
-import { ViewUserModalComponent } from './view-user-modal/view-user-modal.component';
 import { EditUserModalComponent } from './edit-user-modal/edit-user-modal.component';
+import { ViewUserModalComponent } from './view-user-modal/view-user-modal.component';
+
+type UserTab = 'STUDENT' | 'FACULTY' | 'ADMIN';
 
 @Component({
   selector: 'app-user-management',
@@ -26,6 +27,7 @@ import { EditUserModalComponent } from './edit-user-modal/edit-user-modal.compon
   ],
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserManagementComponent implements OnInit {
   private adminUserService = inject(AdminUserService);
@@ -34,33 +36,31 @@ export class UserManagementComponent implements OnInit {
 
   users = signal<UserInfo[]>([]);
   departments = signal<Department[]>([]);
-  isLoading = signal<boolean>(false);
-  activeTab = signal<'STUDENT' | 'FACULTY' | 'ADMIN'>('STUDENT');
+  isLoading = signal(false);
+  activeTab = signal<UserTab>('STUDENT');
 
-  studentCount = signal<number>(0);
-  facultyCount = signal<number>(0);
-  adminCount = signal<number>(0);
+  studentCount = signal(0);
+  facultyCount = signal(0);
+  adminCount = signal(0);
 
-  sortBy = signal<string>('');
+  sortBy = signal('');
   sortDirection = signal<'asc' | 'desc'>('asc');
 
-  isEditModalOpen = signal<boolean>(false);
+  isEditModalOpen = signal(false);
   editingUser = signal<UserInfo | null>(null);
-  isSavingClass = signal<boolean>(false);
+  isSavingClass = signal(false);
 
-  currentPage = signal<number>(1);
-  pageSize = signal<number>(10);
-  totalRows = signal<number>(0);
+  currentPage = signal(1);
+  pageSize = signal(10);
+  totalRows = signal(0);
+  totalPages = computed(() => Math.ceil(this.totalRows() / this.pageSize()));
 
-  searchTerm = signal<string>('');
+  searchTerm = signal('');
   selectedFaculty = signal<number | ''>('');
   selectedStatus = signal<number | ''>('');
 
-  totalPages = computed(() => Math.ceil(this.totalRows() / this.pageSize()));
-
-  isViewModalOpen = signal<boolean>(false);
+  isViewModalOpen = signal(false);
   viewingUser = signal<UserInfo | null>(null);
-
   isAddModalOpen = signal(false);
 
   cohorts = [
@@ -72,7 +72,7 @@ export class UserManagementComponent implements OnInit {
     { label: 'K51 (2025)', value: '51' },
     { label: 'K52 (2026)', value: '52' },
   ];
-  selectedFilterCohort = signal<string>('');
+  selectedFilterCohort = signal('');
   selectedFilterDept = signal<number | ''>('');
   selectedFilterMajor = signal<number | ''>('');
   selectedFilterClass = signal<number | ''>('');
@@ -80,13 +80,35 @@ export class UserManagementComponent implements OnInit {
   filterMajors = signal<MajorInfo[]>([]);
   filterClasses = signal<ClassInfo[]>([]);
 
+  sortedUsers = computed(() => {
+    const data = [...this.users()];
+    const col = this.sortBy();
+    const dir = this.sortDirection();
+
+    if (!col) return data;
+
+    return data.sort((a, b) => {
+      const valA =
+        col === 'studentCode' ? a.studentCode || a.username || '' : a[col as keyof UserInfo];
+      const valB =
+        col === 'studentCode' ? b.studentCode || b.username || '' : b[col as keyof UserInfo];
+
+      const strA = valA ? String(valA).toLowerCase() : '';
+      const strB = valB ? String(valB).toLowerCase() : '';
+
+      if (strA < strB) return dir === 'asc' ? -1 : 1;
+      if (strA > strB) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  });
+
   ngOnInit() {
     this.loadDepartments();
     this.loadCounts();
     this.loadUsers();
   }
 
-  switchTab(tab: 'STUDENT' | 'FACULTY' | 'ADMIN') {
+  switchTab(tab: UserTab) {
     if (this.activeTab() === tab) return;
     this.activeTab.set(tab);
     this.currentPage.set(1);
@@ -104,9 +126,7 @@ export class UserManagementComponent implements OnInit {
   loadDepartments() {
     this.adminUserService.getAllDepartments().subscribe({
       next: (res: ApiResponse<PageDTO<Department>>) => {
-        if (res && res.result && res.result.data) {
-          this.departments.set(res.result.data);
-        }
+        this.departments.set(res?.result?.data || []);
       },
     });
   }
@@ -114,22 +134,14 @@ export class UserManagementComponent implements OnInit {
   loadCounts() {
     this.adminUserService.getUserCounts(this.searchTerm()).subscribe({
       next: (res) => {
-        if (res.result) {
-          if (this.activeTab() !== 'FACULTY') {
-            this.facultyCount.set(res.result.faculty || 0);
-          }
-          if (this.activeTab() !== 'ADMIN') {
-            this.adminCount.set(res.result.admin || 0);
-          }
-          if (this.activeTab() !== 'STUDENT') {
-            this.studentCount.set(res.result.student || 0);
-          }
-        }
+        if (!res.result) return;
+        this.studentCount.set(res.result.student || 0);
+        this.facultyCount.set(res.result.faculty || 0);
+        this.adminCount.set(res.result.admin || 0);
       },
     });
   }
 
-  // --- LOGIC CASCADING DROPDOWN TÌM KIẾM SINH VIÊN ---
   onSearchInputChanged(value: string) {
     if (
       this.activeTab() === 'STUDENT' &&
@@ -166,8 +178,7 @@ export class UserManagementComponent implements OnInit {
     this.adminUserService.getMajorsByDepartment(Number(deptId)).subscribe({
       next: (res: ApiResponse<MajorInfo[]>) => {
         const result = res.result as unknown as MajorInfo[] | { data?: MajorInfo[] };
-        const majorsList = Array.isArray(result) ? result : result?.data || [];
-        this.filterMajors.set(majorsList);
+        this.filterMajors.set(Array.isArray(result) ? result : result?.data || []);
       },
     });
   }
@@ -181,11 +192,11 @@ export class UserManagementComponent implements OnInit {
       this.filterClasses.set([]);
       return;
     }
+
     this.adminUserService.getClassesByMajor(Number(majorId), academicYear).subscribe({
       next: (res: ApiResponse<ClassInfo[]>) => {
         const result = res.result as unknown as ClassInfo[] | { data?: ClassInfo[] };
-        const classesList = Array.isArray(result) ? result : result?.data || [];
-        this.filterClasses.set(classesList);
+        this.filterClasses.set(Array.isArray(result) ? result : result?.data || []);
       },
     });
   }
@@ -205,72 +216,28 @@ export class UserManagementComponent implements OnInit {
 
     this.isLoading.set(true);
 
-    let currentRole: number;
-    if (this.activeTab() === 'STUDENT') currentRole = 1;
-    else if (this.activeTab() === 'FACULTY') currentRole = 2;
-    else currentRole = 3;
-
-    const apiPage = this.currentPage() - 1;
-
     this.adminUserService
       .getUsers(
-        apiPage,
+        this.currentPage(),
         this.pageSize(),
-        this.searchTerm(),
-        currentRole,
+        this.searchTerm().trim(),
+        this.getRoleType(this.activeTab()),
         this.selectedFaculty(),
         this.selectedStatus(),
         this.selectedFilterClass(),
       )
       .subscribe({
         next: (res: ApiResponse<PageDTO<UserInfo>>) => {
-          let listUsers: UserInfo[] = [];
-          let total = 0;
-          type FlexibleResponse =
-            | {
-                result?:
-                  | { data?: UserInfo[]; totalRows?: number; totalElements?: number }
-                  | UserInfo[];
-                data?: UserInfo[];
-                totalRows?: number;
-                totalElements?: number;
-              }
-            | UserInfo[];
-          const safeRes = res as unknown as FlexibleResponse;
-
-          if (
-            safeRes &&
-            !Array.isArray(safeRes) &&
-            safeRes.result &&
-            !Array.isArray(safeRes.result) &&
-            safeRes.result.data
-          ) {
-            listUsers = safeRes.result.data;
-            total = safeRes.result.totalRows ?? safeRes.result.totalElements ?? 0;
-          } else if (safeRes && !Array.isArray(safeRes) && safeRes.data) {
-            listUsers = safeRes.data;
-            total = safeRes.totalRows ?? safeRes.totalElements ?? 0;
-          } else if (safeRes && !Array.isArray(safeRes) && Array.isArray(safeRes.result)) {
-            listUsers = safeRes.result;
-            total = safeRes.result.length;
-          } else if (Array.isArray(safeRes)) {
-            listUsers = listUsers = safeRes;
-            total = safeRes.length;
-          }
-
-          this.users.set(listUsers);
+          const { data, total } = this.readUserPage(res);
+          this.users.set(data);
           this.totalRows.set(total);
-
-          if (this.activeTab() === 'STUDENT') this.studentCount.set(total);
-          else if (this.activeTab() === 'FACULTY') this.facultyCount.set(total);
-          else if (this.activeTab() === 'ADMIN') this.adminCount.set(total);
-
+          this.updateActiveCount(total);
           this.isLoading.set(false);
         },
         error: () => {
           this.users.set([]);
           this.totalRows.set(0);
-          if (this.activeTab() === 'STUDENT') this.studentCount.set(0);
+          this.updateActiveCount(0);
           this.isLoading.set(false);
         },
       });
@@ -286,15 +253,12 @@ export class UserManagementComponent implements OnInit {
     this.searchTerm.set('');
     this.selectedFaculty.set('');
     this.selectedStatus.set('');
-
-    // Reset bộ lọc sinh viên
     this.selectedFilterCohort.set('');
     this.selectedFilterDept.set('');
     this.selectedFilterMajor.set('');
     this.selectedFilterClass.set('');
     this.filterMajors.set([]);
     this.filterClasses.set([]);
-
     this.onSearch();
   }
 
@@ -305,27 +269,11 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
-  sortedUsers = computed(() => {
-    const data = [...this.users()];
-    const col = this.sortBy();
-    const dir = this.sortDirection();
-
-    if (!col) return data;
-
-    return data.sort((a, b) => {
-      const valA =
-        col === 'studentCode' ? a.studentCode || a.username || '' : a[col as keyof UserInfo];
-      const valB =
-        col === 'studentCode' ? b.studentCode || b.username || '' : b[col as keyof UserInfo];
-
-      const strA = valA ? String(valA).toLowerCase() : '';
-      const strB = valB ? String(valB).toLowerCase() : '';
-
-      if (strA < strB) return dir === 'asc' ? -1 : 1;
-      if (strA > strB) return dir === 'asc' ? 1 : -1;
-      return 0;
-    });
-  });
+  onPageSizeChange(size: number) {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+    this.loadUsers();
+  }
 
   onSort(columnName: string) {
     if (this.sortBy() === columnName) {
@@ -337,37 +285,39 @@ export class UserManagementComponent implements OnInit {
   }
 
   toggleStatus(user: UserInfo) {
-    const newStatus = user.status === 1 ? 0 : 1;
-    const actionTxt = newStatus === 1 ? 'mở khóa' : 'khóa';
+    const newStatus = this.isActive(user) ? 0 : 1;
+    const actionText = newStatus === 1 ? 'mở khóa' : 'khóa';
 
     Swal.fire({
-      title: `Xác nhận ${actionTxt}?`,
-      text: `Bạn có chắc muốn ${actionTxt} tài khoản ${user.email}?`,
+      title: `Xác nhận ${actionText}?`,
+      text: `Bạn có chắc muốn ${actionText} tài khoản ${user.email}?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: newStatus === 1 ? '#10b981' : '#ef4444',
       cancelButtonText: 'Hủy',
-      confirmButtonText: `Đồng ý ${actionTxt}`,
+      confirmButtonText: `Đồng ý ${actionText}`,
     }).then((result) => {
-      if (result.isConfirmed) {
-        this.adminUserService.toggleUserStatus(user.id, newStatus).subscribe({
-          next: () => {
-            void Swal.fire('Thành công!', `Đã ${actionTxt} tài khoản.`, 'success');
-            this.loadUsers();
-          },
-          error: () => {
-            void Swal.fire('Lỗi!', 'Có lỗi xảy ra, vui lòng thử lại.', 'error');
-            this.loadUsers();
-          },
-        });
-      } else {
+      if (!result.isConfirmed) {
         this.loadUsers();
+        return;
       }
+
+      this.adminUserService.toggleUserStatus(user.id, newStatus).subscribe({
+        next: () => {
+          void Swal.fire('Thành công!', `Đã ${actionText} tài khoản.`, 'success');
+          this.loadUsers();
+          this.loadCounts();
+        },
+        error: () => {
+          void Swal.fire('Lỗi!', 'Có lỗi xảy ra, vui lòng thử lại.', 'error');
+          this.loadUsers();
+        },
+      });
     });
   }
 
   goToImportPage() {
-    this.router.navigate(['/admin/user-management/import-users']).then();
+    void this.router.navigate(['/admin/user-management/import-users']);
   }
 
   editUser(user: UserInfo) {
@@ -385,9 +335,7 @@ export class UserManagementComponent implements OnInit {
     if (!user) return;
 
     this.isSavingClass.set(true);
-    const updatePayload = { classId: classId };
-
-    this.adminUserService.updateProfile(user.id, updatePayload).subscribe({
+    this.adminUserService.updateProfile(user.id, { classId }).subscribe({
       next: () => {
         this.alertService.success('Đã phân lớp cho sinh viên thành công!');
         this.isSavingClass.set(false);
@@ -414,35 +362,35 @@ export class UserManagementComponent implements OnInit {
   resetPassword(user: UserInfo) {
     Swal.fire({
       title: 'Gửi link đặt lại mật khẩu?',
-      text: `Hệ thống sẽ gửi một Email chứa liên kết đặt lại mật khẩu an toàn đến địa chỉ: ${user.email}. Bạn có chắc chắn không?`,
+      text: `Hệ thống sẽ gửi email đặt lại mật khẩu đến ${user.email}. Bạn có chắc chắn không?`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',
       cancelButtonColor: '#94a3b8',
-      confirmButtonText: 'Gửi Email ngay',
+      confirmButtonText: 'Gửi email ngay',
       cancelButtonText: 'Hủy',
     }).then((result) => {
-      if (result.isConfirmed) {
-        void Swal.fire({
-          title: 'Đang gửi Email...',
-          text: 'Vui lòng đợi trong giây lát.',
-          allowOutsideClick: false,
-          didOpen: () => Swal.showLoading(),
-        });
+      if (!result.isConfirmed) return;
 
-        this.adminUserService.resetPassword(user.id).subscribe({
-          next: () => {
-            void Swal.fire({
-              icon: 'success',
-              title: 'Đã gửi Email!',
-              html: `Vui lòng thông báo người dùng kiểm tra hộp thư đến (hoặc thư rác) tại <b>${user.email}</b> để đặt lại mật khẩu.`,
-            });
-          },
-          error: () => {
-            void Swal.fire('Gửi thất bại', 'Hệ thống không thể gửi email lúc này.', 'error');
-          },
-        });
-      }
+      void Swal.fire({
+        title: 'Đang gửi email...',
+        text: 'Vui lòng đợi trong giây lát.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      this.adminUserService.resetPassword(user.id).subscribe({
+        next: () => {
+          void Swal.fire({
+            icon: 'success',
+            title: 'Đã gửi email!',
+            html: `Vui lòng thông báo người dùng kiểm tra hộp thư đến hoặc thư rác tại <b>${user.email}</b>.`,
+          });
+        },
+        error: () => {
+          void Swal.fire('Gửi thất bại', 'Hệ thống không thể gửi email lúc này.', 'error');
+        },
+      });
     });
   }
 
@@ -454,24 +402,22 @@ export class UserManagementComponent implements OnInit {
     roleType: number;
     studentCode?: string;
     classId?: number | null;
-    departmentId?: number | null;
     description?: string;
   }) {
-    const nameParts = newUserData.fullName.trim().split(' ');
-    const firstNameToSend = nameParts[0];
-    const lastNameToSend = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+    const nameParts = newUserData.fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] || newUserData.fullName.trim();
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
 
     const payload = {
-      username: newUserData.username,
-      email: newUserData.email,
-      firstName: firstNameToSend,
-      lastName: lastNameToSend,
+      username: newUserData.username.trim(),
+      email: newUserData.email.trim(),
+      firstName,
+      lastName,
       password: newUserData.password,
       roleType: newUserData.roleType,
-      studentCode: newUserData.studentCode,
-      classId: newUserData.classId,
-      departmentId: newUserData.departmentId,
-      description: newUserData.description,
+      studentCode: newUserData.studentCode?.trim() || undefined,
+      classId: newUserData.classId || undefined,
+      description: newUserData.description?.trim() || undefined,
     };
 
     this.adminUserService.registerUser(payload).subscribe({
@@ -494,5 +440,58 @@ export class UserManagementComponent implements OnInit {
         this.alertService.error(errorMsg);
       },
     });
+  }
+
+  isActive(user: UserInfo) {
+    return user.status === 1;
+  }
+
+  roleLabel(roleType?: number) {
+    if (roleType === 1) return 'Sinh viên';
+    if (roleType === 2) return 'Khoa / đơn vị';
+    if (roleType === 3) return 'Quản trị viên';
+    return 'Khác';
+  }
+
+  private getRoleType(tab: UserTab) {
+    if (tab === 'STUDENT') return 1;
+    if (tab === 'FACULTY') return 2;
+    return 3;
+  }
+
+  private updateActiveCount(total: number) {
+    if (this.activeTab() === 'STUDENT') this.studentCount.set(total);
+    if (this.activeTab() === 'FACULTY') this.facultyCount.set(total);
+    if (this.activeTab() === 'ADMIN') this.adminCount.set(total);
+  }
+
+  private readUserPage(res: ApiResponse<PageDTO<UserInfo>>) {
+    type FlexiblePage = {
+      result?: PageDTO<UserInfo> | UserInfo[];
+      data?: UserInfo[];
+      totalRows?: number;
+      totalElements?: number;
+    };
+    const safeRes = res as unknown as FlexiblePage | UserInfo[];
+
+    if (Array.isArray(safeRes)) {
+      return { data: safeRes, total: safeRes.length };
+    }
+
+    if (safeRes?.result && !Array.isArray(safeRes.result)) {
+      return {
+        data: safeRes.result.data || [],
+        total: safeRes.result.totalRows ?? safeRes.result.data?.length ?? 0,
+      };
+    }
+
+    if (safeRes?.result && Array.isArray(safeRes.result)) {
+      return { data: safeRes.result, total: safeRes.result.length };
+    }
+
+    return {
+      data: safeRes?.data || [],
+      total: safeRes?.totalRows ?? safeRes?.totalElements ?? safeRes?.data?.length ?? 0,
+    };
   }
 }

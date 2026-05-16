@@ -1,0 +1,304 @@
+<section class="min-h-screen bg-slate-50 px-4 py-5 text-slate-800 md:px-6 lg:px-8">
+  <div class="mx-auto flex max-w-[1500px] flex-col gap-5">
+    <header class="directory-header">
+      <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+        <div class="min-w-0">
+          <p class="eyebrow text-blue-600">Directory</p>
+          <h1 class="page-title">Quản lý Khoa/Trường/Viện</h1>
+          <p class="page-description">
+            Chuẩn hóa thông tin đơn vị đào tạo, mã định danh và trạng thái sử dụng cho lớp, chuyên ngành và người dùng.
+          </p>
+        </div>
+
+        <button type="button" class="department-create-btn" (click)="openCreateForm()">
+          <span class="create-symbol">+</span>
+          <span>Thêm đơn vị</span>
+        </button>
+      </div>
+
+      <div class="directory-search-band">
+        <div class="min-w-0 space-y-2">
+          <label for="departmentKeyword" class="filter-label">Tìm kiếm đơn vị</label>
+          <input
+            id="departmentKeyword"
+            type="text"
+            class="form-input"
+            placeholder="Nhập tên, mã hoặc mô tả đơn vị"
+            [ngModel]="filters().keyword"
+            (ngModelChange)="updateFilter('keyword', $event)"
+            (keyup.enter)="applyFilters()"
+          />
+        </div>
+
+        <div class="status-segment">
+          @for (option of statusFilterOptions; track option.value) {
+            <button
+              type="button"
+              class="segment-btn"
+              [class.segment-btn-active]="filters().active === option.value"
+              (click)="selectStatusFilter(option.value)"
+            >
+              {{ option.label }}
+            </button>
+          }
+        </div>
+
+        <div class="flex gap-2">
+          <button type="button" class="filter-secondary-btn" (click)="resetFilters()">Đặt lại</button>
+          <button type="button" class="filter-primary-btn" (click)="applyFilters()">Tìm kiếm</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="directory-summary-strip">
+      <article>
+        <span>Tổng đơn vị</span>
+        <strong>{{ allDepartments().length }}</strong>
+      </article>
+      <article>
+        <span>Đang hoạt động</span>
+        <strong>{{ activeCount() }}</strong>
+      </article>
+      <article>
+        <span>Có chuyên ngành</span>
+        <strong>{{ departmentsWithMajors() }}</strong>
+      </article>
+      <article>
+        <span>Tạm ngưng</span>
+        <strong>{{ inactiveCount() }}</strong>
+      </article>
+    </section>
+
+    @if (isLoading()) {
+      <div class="empty-state">Đang tải dữ liệu...</div>
+    } @else if (departments().length === 0) {
+      <div class="empty-state">Chưa có đơn vị phù hợp.</div>
+    } @else {
+      <section class="department-card-grid">
+        @for (department of departments(); track department.id) {
+          <article class="department-card">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <span class="code-badge">{{ department.code || 'Chưa có mã' }}</span>
+                <h2 class="department-title">{{ department.name }}</h2>
+              </div>
+              <button
+                type="button"
+                class="status-toggle"
+                [class.status-toggle-active]="department.isActive !== false"
+                [class.status-toggle-inactive]="department.isActive === false"
+                [attr.aria-pressed]="department.isActive !== false ? 'true' : 'false'"
+                [attr.aria-label]="
+                  department.isActive !== false
+                    ? 'Tạm ngưng đơn vị ' + department.name
+                    : 'Kích hoạt đơn vị ' + department.name
+                "
+                (click)="toggleActive(department)"
+              >
+                <span class="status-dot" aria-hidden="true"></span>
+                {{ department.isActive !== false ? 'Hoạt động' : 'Tạm ngưng' }}
+              </button>
+            </div>
+
+            <p class="mt-4 line-clamp-2 text-sm font-medium text-slate-600">
+              {{ department.description || 'Chưa có mô tả cho đơn vị này.' }}
+            </p>
+
+            <div class="department-contact">
+              <div>
+                <span>Điện thoại</span>
+                <strong>{{ department.phone || 'Chưa cập nhật' }}</strong>
+              </div>
+              <div>
+                <span>Địa chỉ</span>
+                <strong>{{ department.address || 'Chưa cập nhật' }}</strong>
+              </div>
+            </div>
+
+            <div class="department-card-footer">
+              <div class="major-count-pill">
+                <span>{{ getMajorCount(department.id) }}</span>
+                <small>chuyên ngành</small>
+              </div>
+              <span class="created-date">{{ formatDate(department.createdAt) }}</span>
+            </div>
+
+            <div class="department-actions">
+              <button
+                type="button"
+                class="icon-action-btn icon-action-edit"
+                [attr.aria-label]="'Sửa đơn vị ' + department.name"
+                title="Sửa"
+                (click)="openEditForm(department)"
+              >
+                <i class="bi bi-pencil-square" aria-hidden="true"></i>
+              </button>
+              <button
+                type="button"
+                class="icon-action-btn icon-action-delete"
+                [attr.aria-label]="'Xóa đơn vị ' + department.name"
+                title="Xóa"
+                (click)="deleteDepartment(department)"
+              >
+                <i class="bi bi-trash3" aria-hidden="true"></i>
+              </button>
+            </div>
+          </article>
+        }
+      </section>
+    }
+
+    <div class="pagination-panel">
+      <lib-pagination
+        [totalItems]="totalItems()"
+        [pageSize]="pageSize()"
+        [currentPage]="currentPage()"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
+      ></lib-pagination>
+    </div>
+  </div>
+
+  <button type="button" class="top-button" (click)="scrollToTop()">Top</button>
+</section>
+
+@if (isFormOpen()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="department-form-title"
+  >
+    <form class="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl" (ngSubmit)="saveDepartment()">
+      <div class="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h2 id="department-form-title" class="text-xl font-black text-slate-900">
+            {{ editingDepartment() ? 'Cập nhật đơn vị' : 'Thêm đơn vị mới' }}
+          </h2>
+          <p class="mt-1 text-sm text-slate-500">
+            Thiết lập mã, tên hiển thị và trạng thái sử dụng cho Khoa/Trường/Viện.
+          </p>
+        </div>
+        <button type="button" class="filter-secondary-btn" (click)="closeForm()">Đóng</button>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-2">
+          <label for="departmentName" class="form-label">Tên đơn vị</label>
+          <input
+            id="departmentName"
+            type="text"
+            class="form-input"
+            required
+            [ngModel]="form().name"
+            name="name"
+            (ngModelChange)="updateForm('name', $event)"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <label for="departmentCode" class="form-label">Mã đơn vị</label>
+          <input
+            id="departmentCode"
+            type="text"
+            class="form-input uppercase"
+            required
+            [ngModel]="form().code"
+            name="code"
+            (ngModelChange)="updateForm('code', $event)"
+          />
+        </div>
+
+        <div class="space-y-2 md:col-span-2">
+          <label for="departmentDescription" class="form-label">Mô tả</label>
+          <textarea
+            id="departmentDescription"
+            rows="4"
+            class="form-input resize-none"
+            [ngModel]="form().description"
+            name="description"
+            (ngModelChange)="updateForm('description', $event)"
+          ></textarea>
+        </div>
+
+        <div class="space-y-2">
+          <label for="departmentPhone" class="form-label">Số điện thoại</label>
+          <input
+            id="departmentPhone"
+            type="text"
+            class="form-input"
+            [ngModel]="form().phone"
+            name="phone"
+            (ngModelChange)="updateForm('phone', $event)"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <label for="departmentAddress" class="form-label">Địa chỉ</label>
+          <input
+            id="departmentAddress"
+            type="text"
+            class="form-input"
+            [ngModel]="form().address"
+            name="address"
+            (ngModelChange)="updateForm('address', $event)"
+          />
+        </div>
+
+        <div class="space-y-2 md:col-span-2">
+          <label for="departmentAvatarUrl" class="form-label">Ảnh đại diện</label>
+          <input
+            id="departmentAvatarUrl"
+            type="text"
+            class="form-input"
+            placeholder="Nhập URL ảnh nếu có"
+            [ngModel]="form().avatarUrl"
+            name="avatarUrl"
+            (ngModelChange)="updateForm('avatarUrl', $event)"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <span class="form-label">Trạng thái</span>
+          <div class="relative">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('activeForm')"
+              (click)="toggleDropdown('activeForm')"
+            >
+              <span>{{ getActiveFormLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+            </button>
+
+            @if (isDropdownOpen('activeForm')) {
+              <div class="select-panel" role="listbox">
+                @for (option of activeFormOptions; track option.label) {
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="form().isActive === option.value ? 'true' : 'false'"
+                    [class.select-option-active]="form().isActive === option.value"
+                    (click)="selectActiveForm(option.value)"
+                  >
+                    <span class="font-bold">{{ option.label }}</span>
+                    <span class="text-xs opacity-80">{{ option.description }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button type="button" class="filter-secondary-btn" (click)="closeForm()">Hủy</button>
+        <button type="submit" class="modal-primary-btn" [disabled]="isSaving()">
+          {{ isSaving() ? 'Đang lưu...' : 'Lưu đơn vị' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

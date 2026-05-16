@@ -1,132 +1,101 @@
 @if (isOpen) {
-  <div class="fixed inset-0 z-[110] flex items-start pt-[10vh] justify-center animate-fade-in p-4">
+  <div class="fixed inset-0 z-[110] flex items-start justify-center p-4 pt-[7vh]">
     <div class="modal-backdrop" role="button" tabindex="0" aria-label="Đóng" (click)="close()" (keydown.enter)="close()"></div>
-    <div class="modal-content max-w-2xl max-h-[85vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col relative">
-
-      <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 shrink-0">
+    <div class="modal-content max-h-[88vh] max-w-3xl">
+      <header class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-lg shadow-sm">
-            <i class="bi bi-person-lines-fill"></i>
-          </div>
+          <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-xl text-blue-700">
+            <i class="bi bi-person-vcard"></i>
+          </span>
           <div>
-            <h3 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
-              Hồ sơ người dùng
-              @if (isLoading()) {
-                <i class="bi bi-arrow-repeat animate-spin text-teal-500 text-base"></i>
-              }
-            </h3>
-            <p class="text-xs font-medium text-slate-500 mt-0.5">Thông tin chi tiết</p>
+            <h2 class="text-xl font-black text-slate-900">Hồ sơ người dùng</h2>
+            <p class="mt-1 text-sm font-semibold text-slate-500">Thông tin tài khoản và hồ sơ liên kết</p>
           </div>
         </div>
-        <button (click)="close()" class="w-8 h-8 rounded-lg flex items-center justify-center bg-white border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 shadow-sm transition-all" title="Đóng">
+        <button type="button" (click)="close()" class="icon-btn" title="Đóng">
           <i class="bi bi-x-lg"></i>
         </button>
-      </div>
+      </header>
 
-      <div class="p-6 overflow-y-auto custom-scrollbar space-y-8">
-
-        <div class="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
-          <img [src]="displayUser?.roleType === 3
-          ? 'https://res.cloudinary.com/dhjamvg6j/image/upload/v1773991699/iact_admin_avt.png'
-          : (displayUser?.avatarUrl || 'https://ui-avatars.com/api/?name=' + displayUser?.fullName + '&background=e2e8f0&color=475569')"
-               [alt]="'Ảnh đại diện của ' + displayUser?.fullName"
-               class="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-lg shadow-slate-200/50 flex-shrink-0 transition-opacity"
-               [class.opacity-50]="isLoading()">
-          <div class="text-center sm:text-left flex-1 mt-1">
-            <h4 class="text-2xl font-extrabold text-slate-800 tracking-tight">{{ displayUser?.fullName }}</h4>
-
-            <div class="flex flex-col gap-1.5 mt-2">
-              <p class="text-slate-500 font-medium flex items-center justify-center sm:justify-start gap-2 text-sm">
-                <i class="bi bi-envelope-at-fill text-slate-400"></i> {{ displayUser?.email }}
-              </p>
-              <p class="text-slate-500 font-medium flex items-center justify-center sm:justify-start gap-2 text-sm">
-                <i class="bi bi-person-badge-fill text-slate-400"></i> Username: <span class="text-slate-700 font-bold">{{ displayUser?.username }}</span>
-              </p>
-            </div>
-
-            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-4">
-              @if (displayUser?.roleType === 1) { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-blue-100 text-blue-700"><i class="bi bi-mortarboard-fill"></i> Sinh viên</span> }
-              @else if (displayUser?.roleType === 2) { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-purple-100 text-purple-700"><i class="bi bi-building-fill"></i> Đơn vị</span> }
-              @else if (displayUser?.roleType === 3) { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-rose-100 text-rose-700"><i class="bi bi-shield-lock-fill"></i> Quản trị</span> }
-
-              @if (displayUser?.status === 1) { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200"><i class="bi bi-check-circle-fill"></i> Hoạt động</span> }
-              @else { <span class="px-2 py-1 rounded-md text-[11px] font-bold bg-rose-50 text-rose-600 border border-rose-200"><i class="bi bi-dash-circle-fill"></i> Bị khóa</span> }
-            </div>
-          </div>
-        </div>
-
-        @if (displayUser?.roleType === 1 || displayUser?.roleType === 2) {
-          <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 relative">
-            <h5 class="text-sm font-bold text-blue-800 mb-4 flex items-center gap-2">
-              <i class="bi bi-bank2"></i> Thông tin Học vụ & Đơn vị
-            </h5>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6" [class.opacity-50]="isLoading()">
-
-              <div class="sm:col-span-2">
-                <span class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">Khoa / Đơn vị trực thuộc</span>
-                <p class="font-bold text-blue-900 text-[15px]">{{ displayUser?.departmentName || 'Cấp trường / Không trực thuộc' }}</p>
-              </div>
-
-              @if (displayUser?.roleType === 1) {
-                <div>
-                  <span class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">Mã định danh (MSSV/MĐK)</span>
-                  <p class="font-bold text-blue-900 text-[15px]">{{ displayUser?.studentCode || 'Không có' }}</p>
-                </div>
-
-                <div>
-                  <span class="block text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-1">Lớp / Chuyên ngành</span>
-                  <p class="font-bold text-blue-900 text-[15px]">{{ displayUser?.classCode ? displayUser?.classCode : 'Chưa phân lớp' }}</p>
-                </div>
+      @let profile = displayUser();
+      <div class="flex-1 overflow-y-auto p-6">
+        <section class="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:flex-row sm:items-center">
+          <img
+            [src]="profile?.avatarUrl || 'https://ui-avatars.com/api/?name=' + (profile?.fullName || profile?.username || 'User') + '&background=e2e8f0&color=475569'"
+            [alt]="'Ảnh đại diện của ' + (profile?.fullName || profile?.username)"
+            class="h-24 w-24 rounded-2xl border-4 border-white object-cover shadow-sm"
+            [class.opacity-60]="isLoading()"
+          />
+          <div class="min-w-0 flex-1">
+            <h3 class="text-2xl font-black text-slate-900">{{ profile?.fullName || 'Chưa cập nhật hồ sơ' }}</h3>
+            <p class="mt-1 text-sm font-semibold text-slate-500">{{ profile?.email }}</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <span class="badge bg-blue-50 text-blue-700">{{ roleLabel(profile?.roleType) }}</span>
+              <span class="badge" [class.bg-emerald-50]="isActive(profile)" [class.text-emerald-700]="isActive(profile)" [class.bg-slate-100]="!isActive(profile)" [class.text-slate-600]="!isActive(profile)">
+                {{ isActive(profile) ? 'Hoạt động' : 'Bị khóa' }}
+              </span>
+              @if (isLoading()) {
+                <span class="badge bg-sky-50 text-sky-700">
+                  <i class="bi bi-arrow-repeat animate-spin"></i>
+                  Đang cập nhật
+                </span>
               }
             </div>
           </div>
-        }
+        </section>
 
-        <div>
-          <h5 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 px-1">
-            <i class="bi bi-person-vcard"></i> Thông tin cá nhân & Hệ thống
-          </h5>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8 px-1" [class.opacity-50]="isLoading()">
-
-            @if (displayUser?.roleType !== 3) {
-              <div>
-                <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-telephone-fill mr-1"></i> Số điện thoại</span>
-                <p class="font-semibold text-slate-700">{{ displayUser?.phone || 'Chưa cập nhật' }}</p>
-              </div>
-            }
-
-            @if (displayUser?.roleType === 1) {
-              <div>
-                <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-calendar-event-fill mr-1"></i> Ngày sinh</span>
-                <p class="font-semibold text-slate-700">{{ displayUser?.birthday ? (displayUser?.birthday | date:'dd/MM/yyyy') : 'Chưa cập nhật' }}</p>
-              </div>
-
-              <div>
-                <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-gender-ambiguous mr-1"></i> Giới tính</span>
-                <p class="font-semibold text-slate-700">
-                  @if (displayUser?.gender === 1) { Nam }
-                  @else if (displayUser?.gender === 0) { Nữ }
-                  @else if (displayUser?.gender === 2) { Khác }
-                  @else { Chưa cập nhật }
-                </p>
-              </div>
-            }
-
-            <div>
-              <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-clock-history mr-1"></i> Ngày tạo tài khoản</span>
-              <p class="font-semibold text-slate-700">{{ displayUser?.createdAt ? (displayUser?.createdAt | date:'dd/MM/yyyy HH:mm') : 'Hôm nay' }}</p>
-            </div>
-
-            @if (displayUser?.roleType === 1) {
-              <div class="sm:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-100 mt-2">
-                <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1"><i class="bi bi-geo-alt-fill mr-1"></i> Địa chỉ liên hệ</span>
-                <p class="font-semibold text-slate-700 leading-relaxed">{{ displayUser?.address || 'Chưa cập nhật' }}</p>
-              </div>
-            }
+        <section class="mt-5 grid gap-4 md:grid-cols-2">
+          <div class="info-card">
+            <span class="info-label">Username</span>
+            <strong>{{ profile?.username || '-' }}</strong>
           </div>
-        </div>
+          <div class="info-card">
+            <span class="info-label">Email</span>
+            <strong>{{ profile?.email || '-' }}</strong>
+          </div>
+
+          @if (profile?.roleType === 1) {
+            <div class="info-card">
+              <span class="info-label">Mã số sinh viên</span>
+              <strong>{{ profile?.studentCode || 'Chưa cập nhật' }}</strong>
+            </div>
+            <div class="info-card">
+              <span class="info-label">Lớp sinh hoạt</span>
+              <strong>{{ profile?.classCode || 'Chưa phân lớp' }}</strong>
+            </div>
+          }
+
+          @if (profile?.roleType === 1 || profile?.roleType === 2) {
+            <div class="info-card md:col-span-2">
+              <span class="info-label">Trường / khoa / đơn vị</span>
+              <strong>{{ profile?.departmentName || 'Chưa cập nhật' }}</strong>
+            </div>
+            <div class="info-card">
+              <span class="info-label">Số điện thoại</span>
+              <strong>{{ profile?.phone || 'Chưa cập nhật' }}</strong>
+            </div>
+          }
+
+          @if (profile?.roleType === 1) {
+            <div class="info-card">
+              <span class="info-label">Ngày sinh</span>
+              <strong>{{ profile?.birthday ? (profile?.birthday | date:'dd/MM/yyyy') : 'Chưa cập nhật' }}</strong>
+            </div>
+            <div class="info-card">
+              <span class="info-label">Giới tính</span>
+              <strong>{{ genderLabel(profile?.gender) }}</strong>
+            </div>
+            <div class="info-card md:col-span-2">
+              <span class="info-label">Địa chỉ</span>
+              <strong>{{ profile?.address || 'Chưa cập nhật' }}</strong>
+            </div>
+          }
+
+          <div class="info-card md:col-span-2">
+            <span class="info-label">Ngày tạo tài khoản</span>
+            <strong>{{ profile?.createdAt ? (profile?.createdAt | date:'dd/MM/yyyy HH:mm') : 'Chưa có dữ liệu' }}</strong>
+          </div>
+        </section>
       </div>
     </div>
   </div>

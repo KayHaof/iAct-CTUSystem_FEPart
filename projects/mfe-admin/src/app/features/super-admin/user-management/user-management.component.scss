@@ -1,59 +1,51 @@
-/* --- ANIMATIONS --- */
-.animate-fade-in {
-  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+.input-label {
+  @apply mb-1.5 block text-[11px] font-black uppercase tracking-wide text-slate-500;
 }
 
-/* --- FORMS & BUTTONS --- */
-.input-label { @apply block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider; }
 .input-field {
-  @apply w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50
-  focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500
-  outline-none transition-all text-sm font-medium text-slate-700 shadow-sm
-  disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100;
+  @apply h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400;
 }
+
 .btn-primary {
-  @apply bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm
-  flex items-center gap-2 transition-all shadow-sm shadow-blue-600/20
-  hover:bg-blue-700 hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white shadow-sm shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50;
 }
-.btn-outline-green {
-  @apply bg-white text-emerald-600 border border-emerald-200 px-5 py-2.5
-  rounded-xl font-bold text-sm flex items-center gap-2 transition-all
-  hover:bg-emerald-50 hover:border-emerald-300 active:scale-95 disabled:opacity-50;
+
+.role-card {
+  @apply flex min-h-[72px] items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50;
 }
-.action-btn { @apply w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200; }
-.tab-btn { @apply pb-3 text-sm font-bold transition-all border-b-[3px] flex items-center gap-2 whitespace-nowrap; }
 
-/* --- BADGES (Màu Role trên bảng) --- */
-.badge { @apply px-2.5 py-1 rounded-md text-[10px] font-extrabold tracking-wider uppercase border inline-flex items-center gap-1; }
-.badge-student { @apply bg-blue-50 text-blue-600 border-blue-100; }
-.badge-organizer { @apply bg-purple-50 text-purple-600 border-purple-100; }
-.badge-admin { @apply bg-rose-50 text-rose-600 border-rose-100; }
+.role-card-active {
+  @apply border-blue-500 bg-blue-50 shadow-blue-100;
+}
 
-/* --- TOGGLE SWITCH (Bật/tắt trạng thái độc quyền của bảng) --- */
-.toggle-switch {
-  @apply relative inline-block w-11 h-6 cursor-pointer;
-  input {
-    @apply opacity-0 w-0 h-0;
-    &:checked + .slider { @apply bg-emerald-500; }
-    &:checked + .slider:before { transform: translateX(20px); }
-    &:disabled + .slider { @apply opacity-50 cursor-not-allowed; }
+.role-icon {
+  @apply flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-lg;
+}
+
+.table-head {
+  @apply px-4 py-3.5;
+}
+
+.table-cell {
+  @apply px-4 py-3.5 align-middle;
+}
+
+.icon-btn {
+  @apply flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-base transition;
+}
+
+.status-pill {
+  @apply inline-flex min-w-[112px] items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:border-blue-200 hover:bg-blue-50;
+
+  .status-dot {
+    @apply h-2 w-2 rounded-full bg-slate-400;
   }
-  .slider {
-    @apply absolute inset-0 bg-slate-200 rounded-full transition-all duration-300;
-    &:before {
-      content: "";
-      @apply absolute h-5 w-5 bg-white rounded-full left-[2px] bottom-[2px] transition-all duration-300 shadow-sm;
-    }
-  }
 }
 
-/* --- CUSTOM SCROLLBAR --- */
-.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-full; }
-.custom-scrollbar:hover::-webkit-scrollbar-thumb { @apply bg-slate-400; }
+.status-pill-active {
+  @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+
+  .status-dot {
+    @apply bg-emerald-500;
+  }
+}

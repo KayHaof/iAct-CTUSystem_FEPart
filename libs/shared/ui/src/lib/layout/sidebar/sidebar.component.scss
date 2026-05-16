@@ -1,6 +1,7 @@
 :host {
   display: block;
   @apply relative z-50 md:h-screen md:w-[80px] md:flex-shrink-0;
+  overflow: visible;
 }
 
 .sidebar-container {
@@ -13,7 +14,7 @@
 }
 
 .sidebar-logo {
-  @apply flex h-20 items-center gap-3 overflow-hidden border-b border-slate-100 px-4;
+  @apply flex h-20 items-center gap-3 overflow-hidden border-b border-slate-100 px-3;
 
   .theme-dark & {
     @apply border-slate-800;
@@ -31,7 +32,7 @@
 }
 
 .brand-copy {
-  @apply min-w-0 overflow-hidden;
+  @apply min-w-0 overflow-hidden opacity-100 transition-all duration-300 ease-out;
 }
 
 .logo-text {
@@ -56,7 +57,7 @@
 
 .nav-item,
 .logout-btn {
-  @apply relative flex min-h-[46px] w-full items-center gap-3 overflow-hidden rounded-lg px-3 text-sm font-bold outline-none transition-all duration-200;
+  @apply relative flex min-h-[44px] w-full items-center overflow-hidden rounded-xl px-0 text-sm font-bold outline-none transition-colors duration-200;
 
   &::before {
     content: '';
@@ -97,7 +98,7 @@
 }
 
 .nav-icon {
-  @apply w-6 flex-shrink-0 text-center text-xl leading-none transition-transform duration-200;
+  @apply flex h-11 w-14 flex-shrink-0 items-center justify-center text-center text-lg leading-none transition-transform duration-200;
 }
 
 .nav-item:hover .nav-icon,
@@ -109,6 +110,10 @@
 .logo-text,
 .logo-subtitle {
   @apply transition-all duration-300 ease-out;
+}
+
+.nav-text {
+  @apply min-w-0 translate-x-0 whitespace-nowrap opacity-100;
 }
 
 .sidebar-footer {
@@ -136,15 +141,6 @@
 }
 
 @media (min-width: 768px) {
-  :host {
-    transition: width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  :host:has(.sidebar-container:hover),
-  :host:has(.sidebar-container:focus-within) {
-    @apply w-[256px];
-  }
-
   .sidebar-container {
     transition:
       width 0.34s cubic-bezier(0.22, 1, 0.36, 1),
@@ -154,29 +150,59 @@
 
     &:hover,
     &:focus-within {
-      @apply w-[256px] shadow-2xl;
+      @apply w-[256px] shadow-2xl shadow-slate-900/10;
     }
   }
 
   .sidebar-container:not(:hover):not(:focus-within) {
     .sidebar-logo {
-      @apply justify-center px-0;
+      @apply px-3;
     }
 
     .brand-copy {
-      @apply w-0;
+      @apply w-0 translate-x-[-6px] opacity-0;
     }
 
     .logo-text,
-    .logo-subtitle,
-    .nav-text {
-      @apply w-0 translate-x-[-8px] overflow-hidden opacity-0;
+    .logo-subtitle {
+      @apply opacity-0;
       transition-delay: 0s;
     }
 
-    .nav-item,
-    .logout-btn {
-      @apply justify-center px-0;
+    .sidebar-nav {
+      @apply px-3;
+    }
+
+    .sidebar-footer {
+      @apply px-3;
+    }
+
+    .nav-text {
+      @apply translate-x-[-6px] opacity-0;
+      transition-delay: 0s;
+    }
+
+    .nav-item::before,
+    .logout-btn::before {
+      @apply h-4 w-1;
+    }
+
+    .nav-item.active {
+      @apply shadow-sm shadow-blue-950/20;
+
+      .nav-icon {
+        @apply scale-100;
+      }
+    }
+  }
+
+  .sidebar-container:hover,
+  .sidebar-container:focus-within {
+    .brand-copy,
+    .nav-text,
+    .logo-text,
+    .logo-subtitle {
+      transition-delay: 0.06s;
     }
   }
 }

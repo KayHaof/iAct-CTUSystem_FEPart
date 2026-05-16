@@ -1,0 +1,208 @@
+:host {
+  display: block;
+}
+
+.directory-header {
+  @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-sm;
+}
+
+.eyebrow {
+  @apply text-xs font-black uppercase tracking-wide;
+}
+
+.page-title {
+  @apply mt-1 text-2xl font-black text-slate-950 md:text-3xl;
+}
+
+.page-description {
+  @apply mt-2 max-w-4xl text-sm font-medium text-slate-500;
+}
+
+.department-create-btn {
+  @apply inline-flex items-center justify-center gap-3 rounded-2xl bg-blue-600 px-6 py-4 text-sm font-black text-white shadow-xl shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100;
+}
+
+.create-symbol {
+  @apply inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-2xl leading-none text-white;
+}
+
+.directory-search-band {
+  @apply mt-5 grid gap-4 rounded-2xl bg-blue-50 p-4 ring-1 ring-blue-100 xl:grid-cols-[minmax(0,1fr)_auto_auto] xl:items-end;
+}
+
+.directory-summary-strip {
+  @apply grid gap-3 md:grid-cols-4;
+
+  article {
+    @apply rounded-2xl border border-slate-200 bg-white p-4 shadow-sm;
+  }
+
+  span {
+    @apply block text-xs font-black uppercase tracking-wide text-slate-500;
+  }
+
+  strong {
+    @apply mt-2 block text-3xl font-black text-slate-950;
+  }
+}
+
+.status-segment {
+  @apply flex flex-wrap gap-2 rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-blue-100;
+}
+
+.segment-btn {
+  @apply rounded-xl px-3.5 py-2 text-xs font-black text-slate-500 transition hover:bg-blue-50 hover:text-blue-700;
+}
+
+.segment-btn-active {
+  @apply bg-blue-600 text-white shadow-sm hover:bg-blue-600 hover:text-white;
+}
+
+.department-card-grid {
+  @apply grid gap-4 md:grid-cols-2 2xl:grid-cols-3;
+}
+
+.department-card {
+  @apply relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md;
+
+  &::before {
+    content: '';
+
+    @apply absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-600 to-sky-500;
+  }
+}
+
+.department-title {
+  @apply mt-3 line-clamp-2 text-xl font-black leading-snug text-slate-950;
+}
+
+.department-contact {
+  @apply mt-5 grid gap-3 sm:grid-cols-2;
+
+  div {
+    @apply rounded-2xl bg-slate-50 p-3;
+  }
+
+  span {
+    @apply block text-xs font-bold uppercase tracking-wide text-slate-500;
+  }
+
+  strong {
+    @apply mt-1 block line-clamp-2 text-sm font-bold text-slate-700;
+  }
+}
+
+.department-card-footer {
+  @apply mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4;
+}
+
+.major-count-pill {
+  @apply inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-blue-700;
+
+  span {
+    @apply text-lg font-black leading-none;
+  }
+
+  small {
+    @apply text-xs font-black;
+  }
+}
+
+.created-date {
+  @apply text-xs font-bold text-slate-500;
+}
+
+.department-actions {
+  @apply mt-4 flex justify-end gap-2;
+}
+
+.pagination-panel {
+  @apply overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm;
+}
+
+.filter-label,
+.form-label {
+  @apply text-xs font-bold uppercase tracking-wide text-slate-500;
+}
+
+.form-input {
+  @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100;
+}
+
+.select-trigger {
+  @apply flex min-h-12 w-full items-center justify-between gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-bold text-slate-800 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-100;
+
+  > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  > i {
+    flex-shrink: 0;
+  }
+}
+
+.select-panel {
+  @apply absolute left-0 right-0 z-40 overflow-y-auto rounded-2xl border border-blue-100 bg-white p-2 shadow-xl;
+
+  top: calc(100% + 0.5rem);
+}
+
+.select-option {
+  @apply flex w-full flex-col rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-blue-50 hover:text-blue-700;
+}
+
+.select-option-active {
+  @apply bg-blue-600 text-white shadow-sm hover:bg-blue-600 hover:text-white;
+}
+
+.filter-primary-btn,
+.modal-primary-btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+.filter-secondary-btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-100;
+}
+
+.code-badge {
+  @apply inline-flex max-w-40 items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600;
+}
+
+.status-toggle {
+  @apply inline-flex shrink-0 items-center justify-center gap-2 rounded-full border px-3 py-2 text-xs font-black transition focus:outline-none focus:ring-4;
+}
+
+.status-toggle-active {
+  @apply border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 focus:ring-emerald-100;
+}
+
+.status-toggle-inactive {
+  @apply border-slate-200 bg-slate-100 text-slate-500 hover:bg-slate-200 focus:ring-slate-100;
+}
+
+.status-dot {
+  @apply h-2 w-2 rounded-full bg-current;
+}
+
+.icon-action-btn {
+  @apply inline-flex h-10 w-10 items-center justify-center rounded-xl border text-base transition focus:outline-none focus:ring-4;
+}
+
+.icon-action-edit {
+  @apply border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white focus:ring-blue-100;
+}
+
+.icon-action-delete {
+  @apply border-rose-100 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white focus:ring-rose-100;
+}
+
+.empty-state {
+  @apply rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-12 text-center text-sm font-bold text-slate-500;
+}
+
+.top-button {
+  @apply fixed bottom-20 right-6 z-40 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-xs font-black uppercase text-white shadow-xl shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100 md:bottom-6;
+}

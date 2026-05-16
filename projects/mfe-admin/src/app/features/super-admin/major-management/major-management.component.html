@@ -1,0 +1,460 @@
+<section class="min-h-screen bg-slate-50 px-4 py-5 text-slate-800 md:px-6 lg:px-8">
+  <div class="mx-auto flex max-w-[1500px] flex-col gap-5">
+    <header class="matrix-header">
+      <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-stretch">
+        <div class="min-w-0">
+          <p class="eyebrow text-blue-700">Program matrix</p>
+          <h1 class="page-title">Quản lý chuyên ngành</h1>
+          <p class="page-description">
+            Kết nối chuyên ngành với đơn vị phụ trách và hệ đào tạo để dữ liệu lớp, người dùng và chương trình học luôn nhất quán.
+          </p>
+        </div>
+
+        <button type="button" class="major-create-btn" (click)="openCreateForm()">
+          <i class="bi bi-plus-circle" aria-hidden="true"></i>
+          <span>Thêm chuyên ngành</span>
+        </button>
+      </div>
+
+      <div class="matrix-filter-grid">
+        <div class="min-w-0 space-y-2 xl:col-span-2">
+          <label for="majorKeyword" class="filter-label">Tìm kiếm</label>
+          <input
+            id="majorKeyword"
+            type="text"
+            class="form-input"
+            placeholder="Nhập tên, mã hoặc hệ đào tạo"
+            [ngModel]="filters().keyword"
+            (ngModelChange)="updateFilter('keyword', $event)"
+            (keyup.enter)="applyFilters()"
+          />
+        </div>
+
+        <div class="min-w-0 space-y-2">
+          <span class="filter-label">Đơn vị</span>
+          <div class="relative">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('departmentFilter')"
+              (click)="toggleDropdown('departmentFilter')"
+            >
+              <span>{{ getDepartmentFilterLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+            </button>
+
+            @if (isDropdownOpen('departmentFilter')) {
+              <div class="select-panel max-h-96" role="listbox">
+                <button
+                  type="button"
+                  role="option"
+                  class="select-option"
+                  [attr.aria-selected]="filters().departmentId === '' ? 'true' : 'false'"
+                  [class.select-option-active]="filters().departmentId === ''"
+                  (click)="selectDepartmentFilter('')"
+                >
+                  <span class="font-bold">Tất cả đơn vị</span>
+                  <span class="text-xs opacity-80">Không lọc theo Khoa/Trường/Viện</span>
+                </button>
+                @for (department of departments(); track department.id) {
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="filters().departmentId === department.id ? 'true' : 'false'"
+                    [class.select-option-active]="filters().departmentId === department.id"
+                    (click)="selectDepartmentFilter(department.id)"
+                  >
+                    <span class="font-bold">{{ department.name }}</span>
+                    <span class="text-xs opacity-80">{{ department.code || 'Chưa có mã' }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="min-w-0 space-y-2">
+          <span class="filter-label">Trạng thái</span>
+          <div class="relative">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('statusFilter')"
+              (click)="toggleDropdown('statusFilter')"
+            >
+              <span>{{ getStatusFilterLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+            </button>
+
+            @if (isDropdownOpen('statusFilter')) {
+              <div class="select-panel" role="listbox">
+                @for (option of statusFilterOptions; track option.value) {
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="filters().active === option.value ? 'true' : 'false'"
+                    [class.select-option-active]="filters().active === option.value"
+                    (click)="selectStatusFilter(option.value)"
+                  >
+                    <span class="font-bold">{{ option.label }}</span>
+                    <span class="text-xs opacity-80">{{ option.description }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="min-w-0 space-y-2">
+          <span class="filter-label">Hệ đào tạo</span>
+          <div class="relative">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('programFilter')"
+              (click)="toggleDropdown('programFilter')"
+            >
+              <span>{{ getProgramFilterLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+            </button>
+
+            @if (isDropdownOpen('programFilter')) {
+              <div class="select-panel" role="listbox">
+                <button
+                  type="button"
+                  role="option"
+                  class="select-option"
+                  [attr.aria-selected]="filters().programType === '' ? 'true' : 'false'"
+                  [class.select-option-active]="filters().programType === ''"
+                  (click)="selectProgramFilter('')"
+                >
+                  <span class="font-bold">Tất cả hệ đào tạo</span>
+                  <span class="text-xs opacity-80">Không lọc theo hệ đào tạo</span>
+                </button>
+                @for (option of programTypeOptions; track option.value) {
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="filters().programType === option.value ? 'true' : 'false'"
+                    [class.select-option-active]="filters().programType === option.value"
+                    (click)="selectProgramFilter(option.value)"
+                  >
+                    <span class="font-bold">{{ option.label }}</span>
+                    <span class="text-xs opacity-80">{{ option.description }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="flex shrink-0 justify-end gap-2 xl:items-end">
+          <button type="button" class="filter-secondary-btn" (click)="resetFilters()">Đặt lại</button>
+          <button type="button" class="filter-primary-btn" (click)="applyFilters()">Tìm kiếm</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="matrix-summary-strip">
+      <article>
+        <span>Tổng chuyên ngành</span>
+        <strong>{{ allMajors().length }}</strong>
+      </article>
+      <article>
+        <span>Đang hoạt động</span>
+        <strong>{{ activeCount() }}</strong>
+      </article>
+      <article>
+        <span>Đơn vị phụ trách</span>
+        <strong>{{ departmentCount() }}</strong>
+      </article>
+      <article>
+        <span>Hệ phổ biến</span>
+        <strong class="summary-text">{{ topProgramType() }}</strong>
+      </article>
+    </section>
+
+    <section class="major-matrix-shell">
+      <div class="matrix-table-title">
+        <div>
+          <p class="eyebrow text-slate-500">Ma trận chương trình</p>
+          <h2 class="text-xl font-black text-slate-950">Chuyên ngành theo đơn vị và hệ đào tạo</h2>
+        </div>
+        <span>{{ totalItems() }} bản ghi</span>
+      </div>
+
+      <lib-admin-table-container>
+        <table class="w-full min-w-[1160px] text-left text-sm">
+          <thead class="bg-slate-950 text-xs font-black uppercase tracking-wide text-white">
+            <tr>
+              <th class="px-5 py-4">Chuyên ngành</th>
+              <th class="px-5 py-4">Mã</th>
+              <th class="px-5 py-4">Đơn vị quản lý</th>
+              <th class="px-5 py-4">Hệ đào tạo</th>
+              <th class="px-5 py-4 text-center">Ngày tạo</th>
+              <th class="px-5 py-4 text-center">Trạng thái</th>
+              <th class="px-5 py-4 text-right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @if (isLoading()) {
+              <tr>
+                <td colspan="7" class="px-5 py-12 text-center font-semibold text-slate-500">
+                  Đang tải dữ liệu...
+                </td>
+              </tr>
+            } @else if (majors().length === 0) {
+              <tr>
+                <td colspan="7" class="px-5 py-12 text-center font-semibold text-slate-500">
+                  Chưa có chuyên ngành phù hợp.
+                </td>
+              </tr>
+            } @else {
+              @for (major of majors(); track major.id) {
+                <tr class="major-row">
+                  <td class="px-5 py-4">
+                    <div class="major-title">{{ major.name }}</div>
+                  </td>
+                  <td class="px-5 py-4">
+                    <span class="code-badge">{{ major.code || 'Chưa có mã' }}</span>
+                  </td>
+                  <td class="px-5 py-4">
+                    <span class="department-chip">{{ major.departmentName || 'Chưa gán đơn vị' }}</span>
+                  </td>
+                  <td class="px-5 py-4">
+                    <span class="program-badge">{{ major.programType || 'Chưa phân loại' }}</span>
+                  </td>
+                  <td class="px-5 py-4 text-center font-semibold text-slate-600">
+                    {{ formatDate(major.createdAt) }}
+                  </td>
+                  <td class="px-5 py-4 text-center">
+                    <button
+                      type="button"
+                      class="status-toggle"
+                      [class.status-toggle-active]="major.isActive !== false"
+                      [class.status-toggle-inactive]="major.isActive === false"
+                      [attr.aria-pressed]="major.isActive !== false ? 'true' : 'false'"
+                      [attr.aria-label]="
+                        major.isActive !== false
+                          ? 'Tạm ngưng chuyên ngành ' + major.name
+                          : 'Kích hoạt chuyên ngành ' + major.name
+                      "
+                      (click)="toggleActive(major)"
+                    >
+                      <span class="status-dot" aria-hidden="true"></span>
+                      {{ major.isActive !== false ? 'Đang hoạt động' : 'Tạm ngưng' }}
+                    </button>
+                  </td>
+                  <td class="px-5 py-4">
+                    <div class="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        class="icon-action-btn icon-action-edit"
+                        [attr.aria-label]="'Sửa chuyên ngành ' + major.name"
+                        title="Sửa"
+                        (click)="openEditForm(major)"
+                      >
+                        <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="icon-action-btn icon-action-delete"
+                        [attr.aria-label]="'Xóa chuyên ngành ' + major.name"
+                        title="Xóa"
+                        (click)="deleteMajor(major)"
+                      >
+                        <i class="bi bi-trash3" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+
+        <lib-pagination
+          [totalItems]="totalItems()"
+          [pageSize]="pageSize()"
+          [currentPage]="currentPage()"
+          (pageChange)="onPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)"
+        ></lib-pagination>
+      </lib-admin-table-container>
+    </section>
+  </div>
+
+  <button type="button" class="top-button" (click)="scrollToTop()">Top</button>
+</section>
+
+@if (isFormOpen()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="major-form-title"
+  >
+    <form class="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl" (ngSubmit)="saveMajor()">
+      <div class="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h2 id="major-form-title" class="text-xl font-black text-slate-900">
+            {{ editingMajor() ? 'Cập nhật chuyên ngành' : 'Thêm chuyên ngành mới' }}
+          </h2>
+          <p class="mt-1 text-sm text-slate-500">
+            Thiết lập chuyên ngành trực thuộc đơn vị và hệ đào tạo tương ứng.
+          </p>
+        </div>
+        <button type="button" class="filter-secondary-btn" (click)="closeForm()">Đóng</button>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-2">
+          <label for="majorName" class="form-label">Tên chuyên ngành</label>
+          <input
+            id="majorName"
+            type="text"
+            class="form-input"
+            required
+            [ngModel]="form().name"
+            name="name"
+            (ngModelChange)="updateForm('name', $event)"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <label for="majorCode" class="form-label">Mã chuyên ngành</label>
+          <input
+            id="majorCode"
+            type="text"
+            class="form-input uppercase"
+            required
+            [ngModel]="form().code"
+            name="code"
+            (ngModelChange)="updateForm('code', $event)"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <span class="form-label">Đơn vị quản lý</span>
+          <div class="relative">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('departmentForm')"
+              (click)="toggleDropdown('departmentForm')"
+            >
+              <span>{{ getDepartmentFormLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+            </button>
+
+            @if (isDropdownOpen('departmentForm')) {
+              <div class="select-panel max-h-80" role="listbox">
+                @if (activeDepartments().length === 0) {
+                  <div class="px-3 py-3 text-sm font-semibold text-slate-500">
+                    Chưa có đơn vị đang hoạt động.
+                  </div>
+                } @else {
+                  @for (department of activeDepartments(); track department.id) {
+                    <button
+                      type="button"
+                      role="option"
+                      class="select-option"
+                      [attr.aria-selected]="form().departmentId === department.id ? 'true' : 'false'"
+                      [class.select-option-active]="form().departmentId === department.id"
+                      (click)="selectDepartmentForm(department.id)"
+                    >
+                      <span class="font-bold">{{ department.name }}</span>
+                      <span class="text-xs opacity-80">{{ department.code || 'Chưa có mã' }}</span>
+                    </button>
+                  }
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <span class="form-label">Hệ đào tạo</span>
+          <div class="relative">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('programForm')"
+              (click)="toggleDropdown('programForm')"
+            >
+              <span>{{ getProgramFormLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+            </button>
+
+            @if (isDropdownOpen('programForm')) {
+              <div class="select-panel" role="listbox">
+                @for (option of programTypeOptions; track option.value) {
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="form().programType === option.value ? 'true' : 'false'"
+                    [class.select-option-active]="form().programType === option.value"
+                    (click)="selectProgramForm(option.value)"
+                  >
+                    <span class="font-bold">{{ option.label }}</span>
+                    <span class="text-xs opacity-80">{{ option.description }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <span class="form-label">Trạng thái</span>
+          <div class="relative">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('activeForm')"
+              (click)="toggleDropdown('activeForm')"
+            >
+              <span>{{ getActiveFormLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+            </button>
+
+            @if (isDropdownOpen('activeForm')) {
+              <div class="select-panel" role="listbox">
+                @for (option of activeFormOptions; track option.label) {
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="form().isActive === option.value ? 'true' : 'false'"
+                    [class.select-option-active]="form().isActive === option.value"
+                    (click)="selectActiveForm(option.value)"
+                  >
+                    <span class="font-bold">{{ option.label }}</span>
+                    <span class="text-xs opacity-80">{{ option.description }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button type="button" class="filter-secondary-btn" (click)="closeForm()">Hủy</button>
+        <button type="submit" class="modal-primary-btn" [disabled]="isSaving()">
+          {{ isSaving() ? 'Đang lưu...' : 'Lưu chuyên ngành' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

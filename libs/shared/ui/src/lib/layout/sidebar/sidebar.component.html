@@ -31,7 +31,7 @@
         routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: false }"
         class="nav-item"
-        (click)="close()"
+        (click)="handleNavigation($event)"
         [title]="item.label"
       >
         <i [class]="item.icon" class="nav-icon"></i>

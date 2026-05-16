@@ -1,0 +1,514 @@
+<section class="min-h-screen bg-slate-50 px-4 py-5 text-slate-800 md:px-6 lg:px-8">
+  <div class="mx-auto flex max-w-[1500px] flex-col gap-5">
+    <header class="taxonomy-header">
+      <div class="min-w-0">
+        <p class="eyebrow text-blue-600">Taxonomy workspace</p>
+        <h1 class="page-title">Danh mục điểm rèn luyện</h1>
+        <p class="page-description">
+          Quản trị cấu trúc tiêu chí, điểm tối đa và quan hệ cha con theo một không gian phân cấp riêng.
+        </p>
+      </div>
+
+      <div class="taxonomy-actions">
+        <button type="button" class="tree-action-btn" (click)="openTree()">
+          <i class="bi bi-diagram-3" aria-hidden="true"></i>
+          <span>Xem cây</span>
+        </button>
+        <button type="button" class="category-create-btn" (click)="openCreateForm()">
+          <i class="bi bi-plus-circle" aria-hidden="true"></i>
+          <span>Thêm danh mục</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+      <aside class="taxonomy-sidebar">
+        <div class="sidebar-gradient">
+          <p class="text-xs font-black uppercase tracking-wide text-blue-100">Tổng quan</p>
+          <strong>{{ categories().length }}</strong>
+          <span>danh mục đang hiển thị</span>
+        </div>
+
+        <div class="metric-rail">
+          <div>
+            <span>Hoạt động</span>
+            <strong>{{ activeCount() }}</strong>
+          </div>
+          <div>
+            <span>Cấp 1</span>
+            <strong>{{ rootCount() }}</strong>
+          </div>
+          <div>
+            <span>Cấp 2</span>
+            <strong>{{ levelTwoCount() }}</strong>
+          </div>
+          <div>
+            <span>Tổng điểm</span>
+            <strong>{{ totalPoint() }}</strong>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+          <div class="space-y-2">
+            <span class="filter-label">Trạng thái</span>
+            <div class="relative">
+              <button
+                type="button"
+                class="select-trigger"
+                aria-haspopup="listbox"
+                [attr.aria-expanded]="isDropdownOpen('statusFilter')"
+                (click)="toggleDropdown('statusFilter')"
+              >
+                <span>{{ getStatusFilterLabel() }}</span>
+                <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+              </button>
+
+              @if (isDropdownOpen('statusFilter')) {
+                <div class="select-panel" role="listbox">
+                  @for (option of statusFilterOptions; track option.value) {
+                    <button
+                      type="button"
+                      role="option"
+                      class="select-option"
+                      [attr.aria-selected]="filters().active === option.value ? 'true' : 'false'"
+                      [class.select-option-active]="filters().active === option.value"
+                      (click)="selectStatusFilter(option.value)"
+                    >
+                      <span class="font-bold">{{ option.label }}</span>
+                      <span class="text-xs opacity-80">{{ option.description }}</span>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <span class="filter-label">Danh mục cấp 1</span>
+            <div class="relative">
+              <button
+                type="button"
+                class="select-trigger"
+                aria-haspopup="listbox"
+                [attr.aria-expanded]="isDropdownOpen('parentFilter')"
+                (click)="toggleDropdown('parentFilter')"
+              >
+                <span>{{ getParentFilterLabel() }}</span>
+                <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+              </button>
+
+              @if (isDropdownOpen('parentFilter')) {
+                <div class="select-panel max-h-96" role="listbox">
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="filters().parentId === '' ? 'true' : 'false'"
+                    [class.select-option-active]="filters().parentId === ''"
+                    (click)="selectParentFilter('')"
+                  >
+                    <span class="font-bold">Tất cả danh mục cấp 1</span>
+                    <span class="text-xs opacity-80">Không lọc theo danh mục cấp 1</span>
+                  </button>
+
+                  @if (levelOneCategories().length === 0) {
+                    <div class="px-3 py-3 text-sm font-semibold text-slate-500">
+                      Chưa có danh mục cấp 1 phù hợp.
+                    </div>
+                  } @else {
+                    @for (category of levelOneCategories(); track category.id) {
+                      <button
+                        type="button"
+                        role="option"
+                        class="select-option"
+                        [attr.aria-selected]="filters().parentId === category.id ? 'true' : 'false'"
+                        [class.select-option-active]="filters().parentId === category.id"
+                        (click)="selectParentFilter(category.id)"
+                      >
+                        <span class="font-bold">{{ category.name }}</span>
+                        <span class="text-xs opacity-80">{{ getNodeCode(category) }}</span>
+                      </button>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <button type="button" class="filter-secondary-btn w-full" (click)="resetFilters()">
+            Đặt lại bộ lọc
+          </button>
+        </div>
+      </aside>
+
+      <main class="category-work-panel">
+        <div class="work-panel-header">
+          <div>
+            <p class="eyebrow text-slate-500">Danh sách tiêu chí</p>
+            <h2 class="text-xl font-black text-slate-950">Bảng danh mục</h2>
+          </div>
+          <span class="work-chip">{{ flattenedTree().length }} nút trong cây</span>
+        </div>
+
+        <lib-admin-table-container>
+          <table class="w-full min-w-[1120px] text-left text-sm">
+            <thead class="bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500">
+              <tr>
+                <th class="px-5 py-4">Danh mục</th>
+                <th class="px-5 py-4">Mã</th>
+                <th class="px-5 py-4">Cấp</th>
+                <th class="px-5 py-4">Danh mục cha</th>
+                <th class="px-5 py-4 text-center">Điểm tối đa</th>
+                <th class="px-5 py-4 text-center">Trạng thái</th>
+                <th class="px-5 py-4 text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @if (isLoading()) {
+                <tr>
+                  <td colspan="7" class="px-5 py-12 text-center font-semibold text-slate-500">
+                    Đang tải dữ liệu...
+                  </td>
+                </tr>
+              } @else if (categories().length === 0) {
+                <tr>
+                  <td colspan="7" class="px-5 py-12 text-center font-semibold text-slate-500">
+                    Chưa có danh mục phù hợp.
+                  </td>
+                </tr>
+              } @else {
+                @for (category of pagedCategories(); track category.id) {
+                  <tr class="category-row">
+                    <td class="px-5 py-4">
+                      <div class="category-title">{{ category.name }}</div>
+                    </td>
+                    <td class="px-5 py-4">
+                      <span class="code-badge">{{ category.code || ' ' }}</span>
+                    </td>
+                    <td class="px-5 py-4">
+                      <span class="level-badge">{{ getLevelLabel(getCategoryLevel(category.id)) }}</span>
+                    </td>
+                    <td class="px-5 py-4 font-medium text-slate-600">
+                      {{ getParentName(category.parentId) }}
+                    </td>
+                    <td class="px-5 py-4 text-center font-bold text-slate-800">
+                      {{ category.maxPoint }}
+                    </td>
+                    <td class="px-5 py-4 text-center">
+                      <button
+                        type="button"
+                        class="status-toggle"
+                        [class.status-toggle-active]="category.isActive !== false"
+                        [class.status-toggle-inactive]="category.isActive === false"
+                        [attr.aria-pressed]="category.isActive !== false ? 'true' : 'false'"
+                        [attr.aria-label]="
+                          category.isActive !== false
+                            ? 'Tạm ngưng danh mục ' + category.name
+                            : 'Kích hoạt danh mục ' + category.name
+                        "
+                        (click)="toggleActive(category)"
+                      >
+                        <span class="status-dot" aria-hidden="true"></span>
+                        {{ category.isActive !== false ? 'Đang hoạt động' : 'Tạm ngưng' }}
+                      </button>
+                    </td>
+                    <td class="px-5 py-4">
+                      <div class="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          class="icon-action-btn icon-action-edit"
+                          [attr.aria-label]="'Sửa danh mục ' + category.name"
+                          title="Sửa"
+                          (click)="openEditForm(category)"
+                        >
+                          <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                        </button>
+                        <button
+                          type="button"
+                          class="icon-action-btn icon-action-delete"
+                          [attr.aria-label]="'Xóa danh mục ' + category.name"
+                          title="Xóa"
+                          (click)="deleteCategory(category)"
+                        >
+                          <i class="bi bi-trash3" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+
+          <lib-pagination
+            [totalItems]="categories().length"
+            [pageSize]="pageSize()"
+            [currentPage]="currentPage()"
+            (pageChange)="onPageChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)"
+          ></lib-pagination>
+        </lib-admin-table-container>
+      </main>
+    </div>
+  </div>
+
+  <button type="button" class="top-button" [class.hidden]="isTreeOpen()" (click)="scrollToTop()">Top</button>
+</section>
+
+@if (isTreeOpen()) {
+  <div
+    class="fixed inset-0 z-50 bg-slate-50"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="category-tree-title"
+  >
+    <section class="flex h-screen w-screen flex-col overflow-hidden bg-slate-50">
+      <header class="shrink-0 border-b border-slate-200 bg-white px-4 py-4 shadow-sm md:px-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div class="min-w-0">
+            <p class="text-xs font-bold uppercase tracking-wide text-blue-600">Cấu trúc ĐRL</p>
+            <h2 id="category-tree-title" class="mt-1 text-2xl font-black text-slate-900">
+              Cây danh mục điểm rèn luyện
+            </h2>
+            <p class="mt-1 max-w-4xl text-sm font-medium text-slate-500">
+              Theo dõi toàn bộ cấu trúc tiêu chí theo dạng bảng phân cấp, có mã, danh mục cha, điểm tối đa và trạng thái.
+            </p>
+          </div>
+          <button type="button" class="filter-secondary-btn" (click)="closeTree()">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+            <span>Đóng</span>
+          </button>
+        </div>
+
+        <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div class="tree-summary-card">
+            <span>Tổng mục</span>
+            <strong>{{ flattenedTree().length }}</strong>
+          </div>
+          <div class="tree-summary-card">
+            <span>Cấp 1</span>
+            <strong>{{ rootCount() }}</strong>
+          </div>
+          <div class="tree-summary-card">
+            <span>Cấp 2</span>
+            <strong>{{ levelTwoCount() }}</strong>
+          </div>
+          <div class="tree-summary-card">
+            <span>Tổng điểm</span>
+            <strong>{{ totalPoint() }}</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="min-h-0 flex-1 overflow-hidden p-4 md:p-6">
+        @if (categoryTree().length === 0) {
+          <div class="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white">
+            <p class="px-6 py-10 text-center text-sm font-semibold text-slate-500">
+              Chưa có dữ liệu cây danh mục.
+            </p>
+          </div>
+        } @else {
+          <div class="tree-table-shell">
+            <div class="h-full overflow-auto">
+              <div class="min-w-[1160px]">
+                <div class="tree-grid tree-header">
+                  <div>Mã tiêu chí</div>
+                  <div>Tên tiêu chí</div>
+                  <div>Danh mục cha</div>
+                  <div class="text-center">Điểm tối đa</div>
+                  <div class="text-center">Cấp</div>
+                  <div class="text-center">Trạng thái</div>
+                </div>
+
+                @for (node of flattenedTree(); track node.id) {
+                  <div
+                    class="tree-grid tree-row"
+                    [class.tree-row-root]="node.level === 0"
+                    [class.tree-row-level-two]="node.level === 1"
+                  >
+                    <div class="font-bold text-slate-800">{{ getNodeCode(node) }}</div>
+                    <div>
+                      <div class="tree-name" [style.padding-left.px]="node.level * 24">
+                        <span class="tree-rail" [class.opacity-0]="node.level === 0"></span>
+                        <span>{{ node.name }}</span>
+                      </div>
+                    </div>
+                    <div class="font-semibold text-slate-600">
+                      {{ getParentName(node.parentId) }}
+                    </div>
+                    <div class="text-center">
+                      <span class="point-badge">{{ node.maxPoint }}</span>
+                    </div>
+                    <div class="text-center">
+                      <span class="level-badge">{{ getLevelLabel(node.level) }}</span>
+                    </div>
+                    <div class="text-center">
+                      <span
+                        class="status-badge"
+                        [ngClass]="
+                          node.isActive !== false
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-slate-100 text-slate-500'
+                        "
+                      >
+                        {{ node.isActive !== false ? 'Hoạt động' : 'Tạm ngưng' }}
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </main>
+    </section>
+  </div>
+}
+
+@if (isFormOpen()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="category-form-title"
+  >
+    <form class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl" (ngSubmit)="saveCategory()">
+      <div class="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h2 id="category-form-title" class="text-xl font-black text-slate-900">
+            {{ editingCategory() ? 'Cập nhật danh mục' : 'Thêm danh mục mới' }}
+          </h2>
+          <p class="mt-1 text-sm text-slate-500">
+            Thiết lập nhóm điểm và quan hệ cha con cho danh mục.
+          </p>
+        </div>
+        <button type="button" class="filter-secondary-btn" (click)="closeForm()">Đóng</button>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-2 md:col-span-2">
+          <label for="categoryName" class="form-label">Tên danh mục</label>
+          <input
+            id="categoryName"
+            type="text"
+            class="form-input"
+            required
+            [ngModel]="form().name"
+            name="name"
+            (ngModelChange)="updateForm('name', $event)"
+          />
+        </div>
+        <div class="space-y-2">
+          <label for="categoryCode" class="form-label">Mã danh mục</label>
+          <input
+            id="categoryCode"
+            type="text"
+            class="form-input"
+            [ngModel]="form().code"
+            name="code"
+            (ngModelChange)="updateForm('code', $event)"
+          />
+        </div>
+        <div class="space-y-2">
+          <label for="categoryMaxPoint" class="form-label">Điểm tối đa</label>
+          <input
+            id="categoryMaxPoint"
+            type="number"
+            min="0"
+            class="form-input"
+            [ngModel]="form().maxPoint"
+            name="maxPoint"
+            (ngModelChange)="updateMaxPoint($event)"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <span class="form-label">Danh mục cha</span>
+          <div class="relative">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('parentForm')"
+              (click)="toggleDropdown('parentForm')"
+            >
+              <span class="truncate">{{ getParentFormLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+            </button>
+
+            @if (isDropdownOpen('parentForm')) {
+              <div class="select-panel max-h-72" role="listbox">
+                <button
+                  type="button"
+                  role="option"
+                  class="select-option"
+                  [attr.aria-selected]="form().parentId === '' ? 'true' : 'false'"
+                  [class.select-option-active]="form().parentId === ''"
+                  (click)="selectParent('')"
+                >
+                  <span class="font-bold">Danh mục gốc</span>
+                  <span class="text-xs opacity-80">Không có danh mục cha</span>
+                </button>
+
+                @for (category of parentOptions(); track category.id) {
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="form().parentId === category.id ? 'true' : 'false'"
+                    [class.select-option-active]="form().parentId === category.id"
+                    (click)="selectParent(category.id)"
+                  >
+                    <span class="font-bold">{{ category.name }}</span>
+                    <span class="text-xs opacity-80">{{ getLevelLabel(category.level) }} - {{ getNodeCode(category) }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <span class="form-label">Trạng thái</span>
+          <div class="relative">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('activeForm')"
+              (click)="toggleDropdown('activeForm')"
+            >
+              <span>{{ getActiveFormLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+            </button>
+
+            @if (isDropdownOpen('activeForm')) {
+              <div class="select-panel" role="listbox">
+                @for (option of activeFormOptions; track option.label) {
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="form().isActive === option.value ? 'true' : 'false'"
+                    [class.select-option-active]="form().isActive === option.value"
+                    (click)="selectActiveForm(option.value)"
+                  >
+                    <span class="font-bold">{{ option.label }}</span>
+                    <span class="text-xs opacity-80">{{ option.description }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button type="button" class="filter-secondary-btn" (click)="closeForm()">Hủy</button>
+        <button type="submit" class="modal-primary-btn" [disabled]="isSaving()">
+          {{ isSaving() ? 'Đang lưu...' : 'Lưu danh mục' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

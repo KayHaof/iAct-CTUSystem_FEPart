@@ -5,6 +5,9 @@ import { ApiResponse, UserInfo, Department, ClassInfo, PageDTO, MajorInfo } from
 
 export interface CreateUserDto extends Partial<UserInfo> {
   password?: string;
+  firstName?: string;
+  lastName?: string;
+  description?: string;
 }
 
 export interface UserCounts {
@@ -94,7 +97,7 @@ export class AdminUserService {
     return this.http.put<ApiResponse<string>>(`${this.baseUrl}/${id}/reset-password`, {});
   }
 
-  registerUser(payload: any) {
+  registerUser(payload: CreateUserDto) {
     return this.http.post(`${this.authUrl}/register`, payload, { responseType: 'text' });
   }
 
