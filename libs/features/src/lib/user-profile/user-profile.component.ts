@@ -96,8 +96,8 @@ export class UserProfileComponent implements OnInit {
   loadFullProfile(userId: number | string) {
     this.userService.getFullProfile(userId).subscribe({
       next: (res) => {
-        if (res.result) {
-          this.fullProfileData.set(res.result);
+        if (res.data) {
+          this.fullProfileData.set(res.data);
         }
       },
       error: (err) => console.error('Không thể tải chi tiết hồ sơ:', err),
@@ -239,29 +239,29 @@ export class UserProfileComponent implements OnInit {
   }
 
   async confirmDeactivate() {
-    const isConfirmed = await this.confirmService.confirm(
-      'Vô hiệu hóa tài khoản?',
-      'Bạn sẽ bị đăng xuất và không thể tự đăng nhập lại cho đến khi Admin mở khóa!',
-      'Vô hiệu hóa ngay',
-      'Để tôi suy nghĩ lại',
-    );
+    await this.confirmService.confirm({
+      title: 'Vô hiệu hóa tài khoản?',
+      message: 'Bạn sẽ bị đăng xuất và không thể tự đăng nhập lại cho đến khi Admin mở khóa!',
+      confirmText: 'Vô hiệu hóa ngay',
+      cancelText: 'Để tôi suy nghĩ lại',
+      type: 'danger',
+      onConfirm: () => {
+        const currentUser = this.user();
+        if (!currentUser || !currentUser.id) return;
 
-    if (isConfirmed) {
-      const currentUser = this.user();
-      if (!currentUser || !currentUser.id) return;
-
-      this.userService.deactivateAccount(currentUser.id).subscribe({
-        next: (res: ApiResponse<string>) => {
-          this.alertService.success(res.message || 'Tài khoản đã được vô hiệu hóa!');
-          this.oauthService.logOut();
-        },
-        error: (err: HttpErrorResponse) => {
-          console.error('Lỗi vô hiệu hóa:', err);
-          const msg = err.error?.message || 'Có lỗi xảy ra, không thể thực hiện.';
-          this.alertService.error(msg);
-        },
-      });
-    }
+        this.userService.deactivateAccount(currentUser.id).subscribe({
+          next: (res: ApiResponse<string>) => {
+            this.alertService.success(res.message || 'Tài khoản đã được vô hiệu hóa!');
+            this.oauthService.logOut();
+          },
+          error: (err: HttpErrorResponse) => {
+            console.error('Lỗi vô hiệu hóa:', err);
+            const msg = err.error?.message || 'Có lỗi xảy ra, không thể thực hiện.';
+            this.alertService.error(msg);
+          },
+        });
+      },
+    });
   }
 
   goBack() {

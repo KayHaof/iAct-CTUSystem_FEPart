@@ -31,26 +31,26 @@ export class ActivityService {
 
     return this.http
       .get<ApiResponse<PageDTO<Activity>>>(this.apiUrl, { params })
-      .pipe(map((response) => response.result));
+      .pipe(map((response) => response.data as PageDTO<Activity>));
   }
 
   // --- CÁC HÀM KHÁC (Đã bọc ApiResponse chuẩn) ---
   getActivityById(id: string | number): Observable<Activity> {
     return this.http
       .get<ApiResponse<Activity>>(`${this.apiUrl}/${id}`)
-      .pipe(map((response) => response.result));
+      .pipe(map((response) => response.data as Activity));
   }
 
   createActivity(payload: ActivityRequest): Observable<Activity> {
     return this.http
       .post<ApiResponse<Activity>>(this.apiUrl, payload)
-      .pipe(map((response) => response.result));
+      .pipe(map((response) => response.data as Activity));
   }
 
   updateActivity(id: string | number, payload: ActivityRequest): Observable<Activity> {
     return this.http
       .put<ApiResponse<Activity>>(`${this.apiUrl}/${id}`, payload)
-      .pipe(map((response) => response.result));
+      .pipe(map((response) => response.data as Activity));
   }
 
   deleteActivity(id: string | number): Observable<void> {

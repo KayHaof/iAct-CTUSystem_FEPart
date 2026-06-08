@@ -110,8 +110,8 @@ export class UserManagementComponent implements OnInit {
 
   switchTab(tab: UserTab) {
     if (this.activeTab() === tab) return;
-    this.activeTab.set(tab);
     this.currentPage.set(1);
+    this.activeTab.set(tab);
     this.loadUsers();
   }
 
@@ -125,8 +125,8 @@ export class UserManagementComponent implements OnInit {
 
   loadDepartments() {
     this.adminUserService.getAllDepartments().subscribe({
-      next: (res: ApiResponse<PageDTO<Department>>) => {
-        this.departments.set(res?.result?.data || []);
+      next: (res: ApiResponse<Department[]>) => {
+        this.departments.set(AdminUserService.extractArray<Department>(res.data));
       },
     });
   }
@@ -134,10 +134,10 @@ export class UserManagementComponent implements OnInit {
   loadCounts() {
     this.adminUserService.getUserCounts(this.searchTerm()).subscribe({
       next: (res) => {
-        if (!res.result) return;
-        this.studentCount.set(res.result.student || 0);
-        this.facultyCount.set(res.result.faculty || 0);
-        this.adminCount.set(res.result.admin || 0);
+        if (!res.data) return;
+        this.studentCount.set(res.data.student || 0);
+        this.facultyCount.set(res.data.faculty || 0);
+        this.adminCount.set(res.data.admin || 0);
       },
     });
   }
@@ -152,7 +152,6 @@ export class UserManagementComponent implements OnInit {
       this.users.set([]);
       this.totalRows.set(0);
       this.studentCount.set(0);
-      this.isLoading.set(false);
     }
   }
 
@@ -177,8 +176,7 @@ export class UserManagementComponent implements OnInit {
 
     this.adminUserService.getMajorsByDepartment(Number(deptId)).subscribe({
       next: (res: ApiResponse<MajorInfo[]>) => {
-        const result = res.result as unknown as MajorInfo[] | { data?: MajorInfo[] };
-        this.filterMajors.set(Array.isArray(result) ? result : result?.data || []);
+        this.filterMajors.set(AdminUserService.extractArray<MajorInfo>(res.data));
       },
     });
   }
@@ -195,8 +193,7 @@ export class UserManagementComponent implements OnInit {
 
     this.adminUserService.getClassesByMajor(Number(majorId), academicYear).subscribe({
       next: (res: ApiResponse<ClassInfo[]>) => {
-        const result = res.result as unknown as ClassInfo[] | { data?: ClassInfo[] };
-        this.filterClasses.set(Array.isArray(result) ? result : result?.data || []);
+        this.filterClasses.set(AdminUserService.extractArray<ClassInfo>(res.data));
       },
     });
   }
@@ -467,31 +464,31 @@ export class UserManagementComponent implements OnInit {
 
   private readUserPage(res: ApiResponse<PageDTO<UserInfo>>) {
     type FlexiblePage = {
-      result?: PageDTO<UserInfo> | UserInfo[];
-      data?: UserInfo[];
+      data?: PageDTO<UserInfo> | UserInfo[];
       totalRows?: number;
       totalElements?: number;
     };
     const safeRes = res as unknown as FlexiblePage | UserInfo[];
 
     if (Array.isArray(safeRes)) {
-      return { data: safeRes, total: safeRes.length };
+      return { data: safeRes as UserInfo[], total: safeRes.length };
     }
 
-    if (safeRes?.result && !Array.isArray(safeRes.result)) {
+    const pageData = (safeRes as FlexiblePage).data;
+    if (pageData && !Array.isArray(pageData)) {
       return {
-        data: safeRes.result.data || [],
-        total: safeRes.result.totalRows ?? safeRes.result.data?.length ?? 0,
+        data: (pageData as PageDTO<UserInfo>).data || [],
+        total: (pageData as PageDTO<UserInfo>).totalRows ?? (pageData as PageDTO<UserInfo>).data?.length ?? 0,
       };
     }
 
-    if (safeRes?.result && Array.isArray(safeRes.result)) {
-      return { data: safeRes.result, total: safeRes.result.length };
+    if (pageData && Array.isArray(pageData)) {
+      return { data: pageData as UserInfo[], total: pageData.length };
     }
 
     return {
-      data: safeRes?.data || [],
-      total: safeRes?.totalRows ?? safeRes?.totalElements ?? safeRes?.data?.length ?? 0,
+      data: [] as UserInfo[],
+      total: 0,
     };
   }
 }

@@ -5,9 +5,26 @@
   cursor: pointer;
 
   &:focus-visible {
-    color: #4f46e5;
+    color: var(--primary);
     text-decoration: underline;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
+}
+
+.sort-icon {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.5rem;
+  line-height: 0.5;
+  gap: 2px;
+
+  i {
+    font-size: 0.625rem;
+    color: var(--border);
+
+    &.active {
+      color: var(--primary);
+    }
   }
 }
 

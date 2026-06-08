@@ -26,7 +26,6 @@ export class ActivityManagementComponent implements OnInit {
   activity = signal<Activity | null>(null);
   isLoading = signal<boolean>(true);
 
-  // Quản lý hiển thị Modal QR
   showQrModal = signal<boolean>(false);
   qrCodeImage = signal<string | null>(null);
   isGeneratingQr = signal<boolean>(false);
@@ -85,16 +84,14 @@ export class ActivityManagementComponent implements OnInit {
     const act = this.activity();
     if (!act || !act.id) return;
 
-    const isConfirmed = await this.confirmService.confirm(
-      'Bạn có chắc chắn muốn xóa?',
-      'Dữ liệu của hoạt động này sẽ bị xóa vĩnh viễn và không thể khôi phục!',
-      'Đồng ý, xóa luôn!',
-      'Hủy bỏ',
-    );
-
-    if (isConfirmed) {
+    try {
+      await this.confirmService.danger({
+        title: 'Bạn có chắc chắn muốn xóa?',
+        message: 'Dữ liệu của hoạt động này sẽ bị xóa vĩnh viễn và không thể khôi phục!',
+        confirmText: 'Đồng ý, xóa luôn!',
+        cancelText: 'Hủy bỏ',
+      });
       this.isLoading.set(true);
-
       this.activityService
         .deleteActivity(act.id)
         .pipe(finalize(() => this.isLoading.set(false)))
@@ -109,6 +106,8 @@ export class ActivityManagementComponent implements OnInit {
             this.alertService.error(errMsg);
           },
         });
+    } catch {
+      // User cancelled, do nothing
     }
   }
 
@@ -124,7 +123,6 @@ export class ActivityManagementComponent implements OnInit {
     if (!act || !act.id) return;
 
     this.showQrModal.set(true);
-
     if (this.qrCodeImage()) return;
 
     this.isGeneratingQr.set(true);
@@ -133,7 +131,7 @@ export class ActivityManagementComponent implements OnInit {
       .pipe(finalize(() => this.isGeneratingQr.set(false)))
       .subscribe({
         next: (res: any) => {
-          this.qrCodeImage.set(res.result);
+          this.qrCodeImage.set(res.data);
         },
         error: (err: HttpErrorResponse) => {
           console.error('Lỗi khi tải mã QR:', err);
@@ -145,5 +143,49 @@ export class ActivityManagementComponent implements OnInit {
 
   closeQrModal(): void {
     this.showQrModal.set(false);
+  }
+
+  // ============ Helper Methods ============
+
+  getStatusBadgeClass(status: number): string {
+    const classes: Record<number, string> = {
+      0: 'badge-admin--warning',
+      1: 'badge-admin--success',
+      2: 'badge-admin--danger',
+      3: 'badge-admin--neutral',
+    };
+    return classes[status] || 'badge-admin--neutral';
+  }
+
+  getStatusIcon(status: number): string {
+    const icons: Record<number, string> = {
+      0: 'bi bi-hourglass-split',
+      1: 'bi bi-check-circle-fill',
+      2: 'bi bi-x-circle-fill',
+      3: 'bi bi-file-earmark-text',
+    };
+    return icons[status] || 'bi bi-question-circle';
+  }
+
+  getStatusLabel(status: number): string {
+    const labels: Record<number, string> = {
+      0: 'Chờ duyệt',
+      1: 'Đã duyệt',
+      2: 'Từ chối',
+      3: 'Bản nháp',
+    };
+    return labels[status] || 'Không xác định';
+  }
+
+  getLevelIcon(act: Activity): string {
+    if (act.isExternal) return 'bi bi-globe';
+    if (act.isFaculty) return 'bi bi-mortarboard-fill';
+    return 'bi bi-bank';
+  }
+
+  getLevelLabel(act: Activity): string {
+    if (act.isExternal) return 'Ngoài trường';
+    if (act.isFaculty) return 'Cấp Khoa';
+    return 'Cấp Trường';
   }
 }

@@ -35,8 +35,8 @@ export class UserService {
   getMyInfo(): Observable<ApiResponse<UserInfo>> {
     return this.http.get<ApiResponse<UserInfo>>(`${this.baseUrl}/my-info`).pipe(
       tap((response) => {
-        if (response.result) {
-          this.currentUser.set(response.result);
+        if (response.data) {
+          this.currentUser.set(response.data);
         }
       }),
     );

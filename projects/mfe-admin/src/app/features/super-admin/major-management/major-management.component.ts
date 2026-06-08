@@ -9,8 +9,10 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { AlertService, ConfirmService, PaginationComponent, TableContainerComponent } from '@my-mfe/ui';
+import { AlertService, ConfirmDialogComponent, ConfirmService, PaginationComponent, TableContainerComponent } from '@my-mfe/ui';
 
+import { MajorFiltersComponent } from './components/major-filters/major-filters.component';
+import { MajorFormModalComponent } from './components/major-form-modal/major-form-modal.component';
 import { MasterDataService } from '../services/master-data.service';
 import {
   DepartmentResponse,
@@ -44,7 +46,15 @@ type SelectOption<T> = {
 @Component({
   selector: 'app-major-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, TableContainerComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ConfirmDialogComponent,
+    PaginationComponent,
+    TableContainerComponent,
+    MajorFiltersComponent,
+    MajorFormModalComponent,
+  ],
   templateUrl: './major-management.component.html',
   styleUrls: ['./major-management.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -93,6 +103,20 @@ export class MajorManagementComponent implements OnInit {
     { label: 'Văn bằng 2', value: 'Văn bằng 2', description: 'Chương trình văn bằng 2' },
   ];
 
+  public filterDropdown = computed<import('./components/major-filters/major-filters.component').MajorFilterDropdownKey | null>(() => {
+    const dropdown = this.openDropdown();
+    return dropdown === 'departmentFilter' || dropdown === 'statusFilter' || dropdown === 'programFilter'
+      ? dropdown
+      : null;
+  });
+
+  public formDropdown = computed<import('./components/major-form-modal/major-form-modal.component').MajorFormDropdownKey | null>(() => {
+    const dropdown = this.openDropdown();
+    return dropdown === 'departmentForm' || dropdown === 'programForm' || dropdown === 'activeForm'
+      ? dropdown
+      : null;
+  });
+
   public activeCount = computed(
     () => this.allMajors().filter((major) => major.isActive !== false).length,
   );
@@ -139,7 +163,7 @@ export class MajorManagementComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (response) => {
-          const page = response.result;
+          const page = response.data;
           this.majors.set(page?.data || []);
           this.totalItems.set(page?.totalRows || 0);
           this.normalizeCurrentPage();
@@ -150,12 +174,12 @@ export class MajorManagementComponent implements OnInit {
 
   loadReferenceData(): void {
     this.masterDataService.getDepartmentOptions().subscribe({
-      next: (response) => this.departments.set(response.result || []),
+      next: (response) => this.departments.set(response.data || []),
       error: () => this.departments.set([]),
     });
 
     this.masterDataService.getMajorList().subscribe({
-      next: (response) => this.allMajors.set(response.result || []),
+      next: (response) => this.allMajors.set(response.data || []),
       error: () => this.allMajors.set([]),
     });
   }
@@ -300,23 +324,20 @@ export class MajorManagementComponent implements OnInit {
     });
   }
 
-  async deleteMajor(major: MajorResponse): Promise<void> {
-    const confirmed = await this.confirmService.warning(
-      'Xóa chuyên ngành',
-      `Nếu "${major.name}" đã có lớp sinh hoạt, hệ thống sẽ tạm ngưng thay vì xóa hẳn.`,
-      'Xóa',
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.masterDataService.deleteMajor(major.id).subscribe({
-      next: () => {
-        this.alertService.success('Đã xử lý xóa chuyên ngành.');
-        this.reloadData();
+  deleteMajor(major: MajorResponse): void {
+    this.confirmService.warning({
+      title: 'Xóa chuyên ngành',
+      message: `Nếu "${major.name}" đã có lớp sinh hoạt, hệ thống sẽ tạm ngưng thay vì xóa hẳn.`,
+      confirmText: 'Xóa',
+      onConfirm: () => {
+        this.masterDataService.deleteMajor(major.id).subscribe({
+          next: () => {
+            this.alertService.success('Đã xử lý xóa chuyên ngành.');
+            this.reloadData();
+          },
+          error: () => this.alertService.error('Không thể xóa chuyên ngành này.'),
+        });
       },
-      error: () => this.alertService.error('Không thể xóa chuyên ngành này.'),
     });
   }
 

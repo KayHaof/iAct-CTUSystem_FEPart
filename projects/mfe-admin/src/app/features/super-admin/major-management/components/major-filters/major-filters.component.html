@@ -1,0 +1,140 @@
+<section class="major-filter-bar">
+  <div class="major-filter-grid">
+    <div class="filter-search-wrap">
+      <label for="majorKeyword" class="filter-label">Tìm kiếm</label>
+      <div class="filter-input-wrap">
+        <i class="bi bi-search filter-icon"></i>
+        <input
+          id="majorKeyword"
+          type="text"
+          class="filter-input"
+          placeholder="Nhập tên, mã hoặc hệ đào tạo"
+          [ngModel]="filters.keyword"
+          (ngModelChange)="onKeywordChange($event)"
+          (keyup.enter)="applyFilters.emit()"
+        />
+      </div>
+    </div>
+
+    <div class="filter-select-wrap">
+      <span class="filter-label">Đơn vị</span>
+      <div class="select-field">
+        <button
+          type="button"
+          class="select-trigger"
+          aria-haspopup="listbox"
+          [attr.aria-expanded]="isDropdownOpen('departmentFilter')"
+          (click)="dropdownToggle.emit('departmentFilter')"
+        >
+          <span>{{ getDepartmentFilterLabel() }}</span>
+          <i class="bi bi-chevron-down text-xs"></i>
+        </button>
+        @if (isDropdownOpen('departmentFilter')) {
+          <div class="select-panel" role="listbox">
+            <button
+              type="button"
+              role="option"
+              class="select-option"
+              [class.select-option-active]="filters.departmentId === ''"
+              (click)="selectDepartment.emit('')"
+            >
+              <span class="option-label">Tất cả đơn vị</span>
+              <span class="option-desc">Không lọc theo Khoa/Trường/Viện</span>
+            </button>
+            @for (department of departments; track department.id) {
+              <button
+                type="button"
+                role="option"
+                class="select-option"
+                [class.select-option-active]="filters.departmentId === department.id"
+                (click)="selectDepartment.emit(department.id)"
+              >
+                <span class="option-label">{{ department.name }}</span>
+                <span class="option-desc">{{ department.code || 'Chưa có mã' }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="filter-select-wrap">
+      <span class="filter-label">Trạng thái</span>
+      <div class="select-field">
+        <button
+          type="button"
+          class="select-trigger"
+          aria-haspopup="listbox"
+          [attr.aria-expanded]="isDropdownOpen('statusFilter')"
+          (click)="dropdownToggle.emit('statusFilter')"
+        >
+          <span>{{ getStatusFilterLabel() }}</span>
+          <i class="bi bi-chevron-down text-xs"></i>
+        </button>
+        @if (isDropdownOpen('statusFilter')) {
+          <div class="select-panel" role="listbox">
+            @for (option of statusFilterOptions; track option.value) {
+              <button
+                type="button"
+                role="option"
+                class="select-option"
+                [class.select-option-active]="filters.active === option.value"
+                (click)="selectStatus.emit(option.value)"
+              >
+                <span class="option-label">{{ option.label }}</span>
+                <span class="option-desc">{{ option.description }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="filter-select-wrap">
+      <span class="filter-label">Hệ đào tạo</span>
+      <div class="select-field">
+        <button
+          type="button"
+          class="select-trigger"
+          aria-haspopup="listbox"
+          [attr.aria-expanded]="isDropdownOpen('programFilter')"
+          (click)="dropdownToggle.emit('programFilter')"
+        >
+          <span>{{ getProgramFilterLabel() }}</span>
+          <i class="bi bi-chevron-down text-xs"></i>
+        </button>
+        @if (isDropdownOpen('programFilter')) {
+          <div class="select-panel" role="listbox">
+            <button
+              type="button"
+              role="option"
+              class="select-option"
+              [class.select-option-active]="filters.programType === ''"
+              (click)="selectProgram.emit('')"
+            >
+              <span class="option-label">Tất cả hệ đào tạo</span>
+              <span class="option-desc">Không lọc theo hệ đào tạo</span>
+            </button>
+            @for (option of programTypeOptions; track option.value) {
+              <button
+                type="button"
+                role="option"
+                class="select-option"
+                [class.select-option-active]="filters.programType === option.value"
+                (click)="selectProgram.emit(option.value)"
+              >
+                <span class="option-label">{{ option.label }}</span>
+                <span class="option-desc">{{ option.description }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <button type="button" class="filter-btn-reset" (click)="resetFilters.emit()">Đặt lại</button>
+      <button type="button" class="filter-btn-primary" (click)="applyFilters.emit()">Tìm kiếm</button>
+    </div>
+  </div>
+</section>

@@ -4,10 +4,9 @@ import { roleGuard } from './core/guards/role.guard';
 export const routes: Routes = [
   { path: '', redirectTo: 'admin/dashboard', pathMatch: 'full' },
 
-  // --- VÙNG CHUNG  ---
   {
     path: 'dashboard',
-    title: 'Dashboard Thống kê',
+    title: 'Dashboard Thong ke',
     loadComponent: () =>
       import('./features/common/dashboard/dashboard.component').then((m) => m.DashboardComponent),
     canActivate: [roleGuard],
@@ -21,7 +20,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        title: 'Quản lý hoạt động',
+        title: 'Quan ly hoat dong',
         loadComponent: () =>
           import('./features/faculty/activity-list/activity-list.component').then(
             (m) => m.ActivityListComponent,
@@ -29,7 +28,7 @@ export const routes: Routes = [
       },
       {
         path: 'create',
-        title: 'Tạo hoạt động mới',
+        title: 'Tao hoat dong moi',
         loadComponent: () =>
           import('./features/faculty/activity-build/activity-create.component').then(
             (m) => m.ActivityCreateComponent,
@@ -37,7 +36,7 @@ export const routes: Routes = [
       },
       {
         path: 'edit/:id',
-        title: 'Chỉnh sửa hoạt động',
+        title: 'Chinh sua hoat dong',
         loadComponent: () =>
           import('./features/faculty/activity-build/activity-create.component').then(
             (m) => m.ActivityCreateComponent,
@@ -45,7 +44,7 @@ export const routes: Routes = [
       },
       {
         path: 'detail/:id',
-        title: 'Chi tiết hoạt động',
+        title: 'Chi tiet hoat dong',
         loadComponent: () =>
           import('./features/faculty/activity-management/activity-management.component').then(
             (m) => m.ActivityManagementComponent,
@@ -53,19 +52,26 @@ export const routes: Routes = [
       },
       {
         path: 'participants/:id',
-        title: 'Quản lý sinh viên',
+        title: 'Quan ly sinh vien',
         loadComponent: () =>
           import('./features/faculty/participant-management/participant-management.component').then(
             (m) => m.ParticipantManagementComponent,
           ),
       },
+      {
+        path: 'urgent-notification',
+        title: 'Gui thong bao khan cap',
+        loadComponent: () =>
+          import('./features/faculty/urgent-notification/urgent-notification.component').then(
+            (m) => m.UrgentNotificationComponent,
+          ),
+      },
     ],
   },
 
-  // --- VÙNG RIÊNG CỦA KHOA ---
   {
     path: 'approvals',
-    title: 'Duyệt minh chứng',
+    title: 'Duyet minh chung',
     loadComponent: () =>
       import('./features/faculty/participant-approvals/approvals.component').then(
         (m) => m.ApprovalsComponent,
@@ -74,10 +80,9 @@ export const routes: Routes = [
     data: { roles: ['department'] },
   },
 
-  // --- VÙNG RIÊNG CỦA SUPER ADMIN ---
   {
     path: 'system',
-    title: 'Cài đặt hệ thống',
+    title: 'Cai dat he thong',
     loadComponent: () =>
       import('./features/super-admin/system-settings/system-settings.component').then(
         (m) => m.SystemSettingsComponent,
@@ -87,7 +92,7 @@ export const routes: Routes = [
   },
   {
     path: 'user-management',
-    title: 'Quản lý người dùng',
+    title: 'Quan ly nguoi dung',
     loadComponent: () =>
       import('./features/super-admin/user-management/user-management.component').then(
         (m) => m.UserManagementComponent,
@@ -107,7 +112,7 @@ export const routes: Routes = [
   },
   {
     path: 'activity-moderation',
-    title: 'Quản lý hoạt động',
+    title: 'Quan ly hoat dong',
     loadComponent: () =>
       import('./features/super-admin/activity-moderation/activity-moderation.component').then(
         (m) => m.ActivityModerationComponent,
@@ -117,7 +122,7 @@ export const routes: Routes = [
   },
   {
     path: 'semesters',
-    title: 'Quản lý học kỳ',
+    title: 'Quan ly hoc ky',
     loadComponent: () =>
       import('./features/super-admin/semester-management/semester-management.component').then(
         (m) => m.SemesterManagementComponent,
@@ -127,7 +132,7 @@ export const routes: Routes = [
   },
   {
     path: 'categories',
-    title: 'Danh mục điểm rèn luyện',
+    title: 'Danh muc diem ren luyen',
     loadComponent: () =>
       import('./features/super-admin/category-management/category-management.component').then(
         (m) => m.CategoryManagementComponent,
@@ -137,7 +142,7 @@ export const routes: Routes = [
   },
   {
     path: 'departments',
-    title: 'Quản lý Khoa/Trường/Viện',
+    title: 'Quan ly Khoa/Truong/Vien',
     loadComponent: () =>
       import('./features/super-admin/department-management/department-management.component').then(
         (m) => m.DepartmentManagementComponent,
@@ -147,10 +152,20 @@ export const routes: Routes = [
   },
   {
     path: 'majors',
-    title: 'Quản lý chuyên ngành',
+    title: 'Quan ly chuyen nghanh',
     loadComponent: () =>
       import('./features/super-admin/major-management/major-management.component').then(
         (m) => m.MajorManagementComponent,
+      ),
+    canActivate: [roleGuard],
+    data: { roles: ['admin'] },
+  },
+  {
+    path: 'classes',
+    title: 'Quan ly lop sinh hoat',
+    loadComponent: () =>
+      import('./features/super-admin/class-management/class-management.component').then(
+        (m) => m.ClassManagementComponent,
       ),
     canActivate: [roleGuard],
     data: { roles: ['admin'] },

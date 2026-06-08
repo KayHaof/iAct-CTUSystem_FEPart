@@ -1,31 +1,31 @@
 <header class="header-container">
   <div class="header-wrapper">
-    <div class="flex items-center gap-3 md:gap-4">
-      <div class="branding hidden sm:flex flex-col justify-center">
+    <div class="header-left">
+      <div class="branding">
         <h2 class="system-title">
-          iAct<span class="text-ctu-blue ml-1">CTU</span>
+          iAct<span class="accent-text">CTU</span>
         </h2>
-        <p class="system-subtitle hidden lg:block">Hệ thống quản lý hoạt động & rèn luyện</p>
+        <p class="system-subtitle">Hệ thống quản lý hoạt động & rèn luyện</p>
       </div>
     </div>
 
-    <div class="flex items-center gap-2 sm:gap-4">
-      <button class="action-btn relative" aria-label="Thông báo">
-        <i class="bi bi-bell text-lg"></i>
-        <span class="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white"></span>
+    <div class="header-right">
+      <button class="action-btn" aria-label="Thông báo">
+        <i class="bi bi-bell"></i>
+        <span class="notification-wrapper">
+          <span class="notification-ping"></span>
+          <span class="notification-dot"></span>
         </span>
       </button>
-      <div class="hidden sm:block h-8 w-[1px] bg-gray-200"></div>
+      <div class="divider"></div>
       <div
-        class="user-profile-wrapper group"
+        class="user-profile-wrapper"
         (click)="navigateToProfile()"
         (keydown.enter)="navigateToProfile()"
         tabindex="0"
         role="button"
       >
-        <div class="user-info hidden md:flex">
+        <div class="user-info">
           <span class="user-name">
             @if (isAdmin()) {
               Quản trị hệ thống
@@ -46,7 +46,7 @@
           </span>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="user-avatar-wrapper">
           <div class="avatar-container">
             <img
               [src]="isAdmin() ? adminAvatar : (currentUser()?.avatarUrl || defaultAvatar)"
@@ -55,7 +55,7 @@
             />
             <div class="status-dot"></div>
           </div>
-          <i class="bi bi-chevron-down text-gray-400 text-xs transition-transform duration-300 group-hover:rotate-180 hidden sm:block"></i>
+          <i class="bi bi-chevron-down chevron-icon"></i>
         </div>
       </div>
     </div>

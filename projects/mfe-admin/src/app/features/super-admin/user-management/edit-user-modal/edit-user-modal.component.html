@@ -1,11 +1,11 @@
 @if (isOpen) {
-  <div class="fixed inset-0 z-[115] flex items-start justify-center p-4 pt-[8vh]">
+  <div class="modal-overlay">
     <div class="modal-backdrop" role="button" tabindex="0" aria-label="Đóng" (click)="close()" (keydown.enter)="close()"></div>
-    <div class="modal-content max-w-xl">
-      <header class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
-        <div>
-          <h2 class="text-xl font-black text-slate-900">Phân lớp sinh viên</h2>
-          <p class="mt-1 text-sm font-semibold text-slate-500">
+    <div class="modal-content">
+      <header class="modal-header">
+        <div class="modal-header-info">
+          <h2 class="modal-title">Phân lớp sinh viên</h2>
+          <p class="modal-subtitle">
             {{ user?.studentCode || user?.username }} - {{ user?.fullName || 'Chưa cập nhật' }}
           </p>
         </div>
@@ -14,43 +14,43 @@
         </button>
       </header>
 
-      <div class="space-y-4 p-6">
-        <div>
+      <div class="modal-body">
+        <div class="form-group">
           <label for="editDeptSelect" class="input-label">Trường / khoa</label>
-          <select id="editDeptSelect" [(ngModel)]="editSelectedDept" (change)="onEditDeptChange()" class="input-field">
+          <select id="editDeptSelect" [(ngModel)]="editSelectedDept" (change)="onEditDeptChange()" class="input-field select-field">
             <option value="">Chọn trường / khoa</option>
-            @for (dept of departments; track dept.id) {
+            @for (dept of departments || []; track dept.id) {
               <option [value]="dept.id">{{ dept.name }}</option>
             }
           </select>
         </div>
 
-        <div>
-          <label for="editMajorSelect" class="input-label" [class.opacity-50]="!editSelectedDept()">Chuyên ngành</label>
-          <select id="editMajorSelect" [(ngModel)]="editSelectedMajor" (change)="onEditMajorChange()" [disabled]="!editSelectedDept()" class="input-field">
+        <div class="form-group">
+          <label for="editMajorSelect" class="input-label" [class.input-label-disabled]="!editSelectedDept()">Chuyên ngành</label>
+          <select id="editMajorSelect" [(ngModel)]="editSelectedMajor" (change)="onEditMajorChange()" [disabled]="!editSelectedDept()" class="input-field select-field">
             <option value="">Chọn chuyên ngành</option>
-            @for (major of majors(); track major.id) {
+            @for (major of majors() || []; track major.id) {
               <option [value]="major.id">{{ major.name }}</option>
             }
           </select>
         </div>
 
-        <div>
-          <label for="editClassSelect" class="input-label" [class.opacity-50]="!editSelectedMajor()">Lớp sinh hoạt</label>
-          <select id="editClassSelect" [(ngModel)]="editSelectedClass" [disabled]="!editSelectedMajor()" class="input-field border-emerald-200 bg-emerald-50 text-emerald-800">
+        <div class="form-group">
+          <label for="editClassSelect" class="input-label" [class.input-label-disabled]="!editSelectedMajor()">Lớp sinh hoạt</label>
+          <select id="editClassSelect" [(ngModel)]="editSelectedClass" [disabled]="!editSelectedMajor()" class="input-field select-field input-field-emerald">
             <option value="">Chọn lớp sinh hoạt</option>
-            @for (cls of classesForEdit(); track cls.id) {
+            @for (cls of classesForEdit() || []; track cls.id) {
               <option [value]="cls.id">{{ cls.classCode || cls.name }}</option>
             }
           </select>
         </div>
       </div>
 
-      <footer class="flex justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+      <footer class="modal-footer">
         <button type="button" (click)="close()" class="btn-secondary">Hủy bỏ</button>
         <button type="button" (click)="submit()" [disabled]="!editSelectedClass() || isSaving" class="btn-primary">
           @if (isSaving) {
-            <i class="bi bi-arrow-repeat animate-spin"></i>
+            <i class="bi bi-arrow-repeat spin-icon"></i>
             Đang lưu
           } @else {
             <i class="bi bi-check-circle-fill"></i>

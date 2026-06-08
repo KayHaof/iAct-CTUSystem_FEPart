@@ -10,5 +10,15 @@ export interface PageDTO<T> {
 export interface ApiResponse<T> {
   code: number;
   message: string;
-  result: T;
+  data?: T;
+  timestamp?: number;
+  /** @deprecated Use `data` instead. Kept for backward compatibility. */
+  result?: T;
+}
+
+export function unwrapResponse<T>(res: ApiResponse<T> | T): T {
+  if (res && typeof res === 'object' && 'data' in res) {
+    return (res as ApiResponse<T>).data ?? (res as ApiResponse<T>).result!;
+  }
+  return res as T;
 }

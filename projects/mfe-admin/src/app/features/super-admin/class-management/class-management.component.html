@@ -1,0 +1,190 @@
+<div class="class-page">
+  <header class="class-header">
+    <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+      <div>
+        <p class="header-eyebrow">Ma trận lớp</p>
+        <h1 class="header-title">Quản lý lớp sinh hoạt</h1>
+        <p class="header-subtitle">
+          Kết nối lớp với chuyên ngành và khóa tuyển sinh để quản lý danh sách sinh viên chính xác theo từng lớp học.
+        </p>
+      </div>
+      <button type="button" class="btn-create" (click)="openCreateForm()">
+        <i class="bi bi-plus-circle"></i>
+        Thêm lớp mới
+      </button>
+    </div>
+  </header>
+
+  <app-class-filters
+    [filters]="filters()"
+    [departments]="departments()"
+    [majors]="filterMajorsByDepartment()"
+    [academicYearOptions]="academicYearOptions"
+    [statusFilterOptions]="statusFilterOptions"
+    [openDropdown]="filterDropdown()"
+    (keywordChange)="updateFilter('keyword', $event)"
+    (applyFilters)="applyFilters()"
+    (resetFilters)="resetFilters()"
+    (dropdownToggle)="toggleDropdown($event)"
+    (selectStatus)="selectStatusFilter($event)"
+    (selectDepartment)="selectDepartmentFilter($event)"
+    (selectMajor)="selectMajorFilter($event)"
+    (selectAcademicYear)="selectAcademicYearFilter($event)"
+  ></app-class-filters>
+
+  <section class="class-summary-strip">
+    <div class="summary-item">
+      <div class="summary-icon summary-icon-emerald">
+        <i class="bi bi-collection-fill"></i>
+      </div>
+      <div class="summary-content">
+        <span class="summary-value">{{ allClasses().length }}</span>
+        <span class="summary-label">Tổng lớp</span>
+      </div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-icon summary-icon-teal">
+        <i class="bi bi-check-circle-fill"></i>
+      </div>
+      <div class="summary-content">
+        <span class="summary-value">{{ activeCount() }}</span>
+        <span class="summary-label">Đang hoạt động</span>
+      </div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-icon summary-icon-blue">
+        <i class="bi bi-building-fill"></i>
+      </div>
+      <div class="summary-content">
+        <span class="summary-value">{{ departmentCount() }}</span>
+        <span class="summary-label">Đơn vị có lớp</span>
+      </div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-icon summary-icon-amber">
+        <i class="bi bi-calendar-event-fill"></i>
+      </div>
+      <div class="summary-content">
+        <span class="summary-value">{{ topAcademicYear() }}</span>
+        <span class="summary-label">Khóa phổ biến</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="table-wrapper">
+    <div class="table-header-bar">
+      <div>
+        <p class="table-header-eyebrow">Ma trận lớp</p>
+        <h2 class="table-header-title">Lớp sinh hoạt theo đơn vị và khóa tuyển sinh</h2>
+      </div>
+      <span class="record-count">{{ totalItems() }} bản ghi</span>
+    </div>
+
+    <lib-admin-table-container>
+      <table class="class-table">
+        <thead>
+          <tr>
+            <th>Lớp sinh hoạt</th>
+            <th>Mã lớp</th>
+            <th>Chuyên ngành</th>
+            <th>Đơn vị quản lý</th>
+            <th>Khóa tuyển sinh</th>
+            <th class="th-center">Ngày tạo</th>
+            <th class="th-center">Trạng thái</th>
+            <th class="th-right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (isLoading()) {
+            <tr>
+              <td colspan="8" class="td-empty">
+                <div class="empty-state">
+                  <i class="bi bi-arrow-repeat"></i>
+                  <span>Đang tải dữ liệu...</span>
+                </div>
+              </td>
+            </tr>
+          } @else if (classes().length === 0) {
+            <tr>
+              <td colspan="8" class="td-empty">
+                <div class="empty-state">
+                  <i class="bi bi-inbox"></i>
+                  <span>Chưa có lớp sinh hoạt phù hợp.</span>
+                </div>
+              </td>
+            </tr>
+          } @else {
+            @for (cls of classes(); track cls.id) {
+              <tr class="tr-data">
+                <td class="td-class-name">{{ cls.name }}</td>
+                <td><span class="code-badge">{{ cls.classCode || 'Chưa có mã' }}</span></td>
+                <td><span class="major-badge">{{ cls.majorName || 'Chưa gắn' }}</span></td>
+                <td><span class="dept-badge">{{ cls.departmentName || 'Chưa gắn' }}</span></td>
+                <td><span class="cohort-badge">{{ cls.academicYear || 'Chưa xác định' }}</span></td>
+                <td class="td-center td-date">{{ formatDate(cls.createdAt) }}</td>
+                <td class="td-center">
+                  <button
+                    type="button"
+                    class="status-toggle"
+                    [class.status-toggle-active]="cls.isActive !== false"
+                    [class.status-toggle-inactive]="cls.isActive === false"
+                    (click)="toggleActive(cls)"
+                  >
+                    <span class="status-dot"></span>
+                    {{ cls.isActive !== false ? 'Đang hoạt động' : 'Tạm ngừng' }}
+                  </button>
+                </td>
+                <td class="td-right">
+                  <div class="action-group">
+                    <button type="button" class="icon-btn icon-btn-edit" title="Sửa" (click)="openEditForm(cls)">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button type="button" class="icon-btn icon-btn-delete" title="Xóa" (click)="deleteClass(cls)">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </lib-admin-table-container>
+
+    <lib-pagination
+      [totalItems]="totalItems()"
+      [pageSize]="pageSize()"
+      [currentPage]="currentPage()"
+      theme="dark"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    ></lib-pagination>
+  </div>
+</div>
+
+<button type="button" class="top-button" (click)="scrollToTop()">
+  <i class="bi bi-arrow-up-circle"></i>
+</button>
+
+<app-class-form-modal
+  [isOpen]="isFormOpen()"
+  [isSaving]="isSaving()"
+  [editingClass]="editingClass()"
+  [form]="form()"
+  [openDropdown]="formDropdown()"
+  [activeDepartments]="activeDepartments()"
+  [activeMajorsByDepartment]="activeMajorsByDepartment()"
+  [academicYearOptions]="academicYearOptions"
+  [activeFormOptions]="activeFormOptions"
+  (close)="closeForm()"
+  (save)="saveClass()"
+  (nameChange)="updateForm('name', $event)"
+  (classCodeChange)="updateForm('classCode', $event)"
+  (dropdownToggle)="toggleDropdown($event)"
+  (selectDepartment)="selectDepartmentForm($event)"
+  (selectMajor)="selectMajorForm($event)"
+  (selectAcademicYear)="selectAcademicYearForm($event)"
+  (selectActive)="selectActiveForm($event)"
+></app-class-form-modal>
+
+<lib-confirm-dialog></lib-confirm-dialog>

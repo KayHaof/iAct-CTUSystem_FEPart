@@ -144,25 +144,25 @@ export class ActivityListComponent implements OnInit {
   }
 
   async deleteActivity(id: number): Promise<void> {
-    const isConfirmed = await this.confirmService.confirm(
-      'Bạn có chắc chắn muốn xóa?',
-      'Dữ liệu sẽ bị xóa vĩnh viễn!',
-      'Xóa luôn!',
-      'Hủy',
-    );
-
-    if (isConfirmed) {
-      this.isLoading.set(true);
-      this.activityService
-        .deleteActivity(id)
-        .pipe(finalize(() => this.isLoading.set(false)))
-        .subscribe({
-          next: () => {
-            this.alertService.success('Đã xóa thành công!');
-            this.fetchActivities();
-          },
-          error: () => this.alertService.error('Lỗi khi xóa!'),
-        });
-    }
+    await this.confirmService.confirm({
+      title: 'Bạn có chắc chắn muốn xóa?',
+      message: 'Dữ liệu sẽ bị xóa vĩnh viễn!',
+      confirmText: 'Xóa luôn!',
+      cancelText: 'Hủy',
+      type: 'danger',
+      onConfirm: () => {
+        this.isLoading.set(true);
+        this.activityService
+          .deleteActivity(id)
+          .pipe(finalize(() => this.isLoading.set(false)))
+          .subscribe({
+            next: () => {
+              this.alertService.success('Đã xóa thành công!');
+              this.fetchActivities();
+            },
+            error: () => this.alertService.error('Lỗi khi xóa!'),
+          });
+      },
+    });
   }
 }

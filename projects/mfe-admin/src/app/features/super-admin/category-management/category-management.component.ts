@@ -9,7 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { AlertService, ConfirmService, PaginationComponent, TableContainerComponent } from '@my-mfe/ui';
+import { AlertService, ConfirmDialogComponent, ConfirmService, PaginationComponent, TableContainerComponent } from '@my-mfe/ui';
 
 import { MasterDataService } from '../services/master-data.service';
 import {
@@ -39,7 +39,7 @@ type TreeCategoryNode = CategoryResponse & { level: number };
 @Component({
   selector: 'app-category-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, TableContainerComponent],
+  imports: [CommonModule, FormsModule, ConfirmDialogComponent, PaginationComponent, TableContainerComponent],
   templateUrl: './category-management.component.html',
   styleUrls: ['./category-management.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -111,14 +111,14 @@ export class CategoryManagementComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (response) => {
-          this.categories.set(response.result || []);
+          this.categories.set(response.data || []);
           this.normalizeCurrentPage();
         },
         error: () => this.alertService.error('Không thể tải danh mục điểm rèn luyện.'),
       });
 
     this.masterDataService.getCategoryTree(this.filters().active).subscribe({
-      next: (response) => this.categoryTree.set(response.result || []),
+      next: (response) => this.categoryTree.set(response.data || []),
       error: () => this.categoryTree.set([]),
     });
   }
@@ -268,23 +268,20 @@ export class CategoryManagementComponent implements OnInit {
     });
   }
 
-  async deleteCategory(category: CategoryResponse): Promise<void> {
-    const confirmed = await this.confirmService.warning(
-      'Xóa danh mục',
-      `Hệ thống sẽ tự tạm ngừng danh mục "${category.name}".`,
-      'Xóa',
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.masterDataService.deleteCategory(category.id).subscribe({
-      next: () => {
-        this.alertService.success('Đã xử lý xóa danh mục.');
-        this.loadCategories();
+  deleteCategory(category: CategoryResponse): void {
+    this.confirmService.warning({
+      title: 'Xóa danh mục',
+      message: `Hệ thống sẽ tự tạm ngừng danh mục "${category.name}".`,
+      confirmText: 'Xóa',
+      onConfirm: () => {
+        this.masterDataService.deleteCategory(category.id).subscribe({
+          next: () => {
+            this.alertService.success('Đã xử lý xóa danh mục.');
+            this.loadCategories();
+          },
+          error: () => this.alertService.error('Không thể xóa danh mục này.'),
+        });
       },
-      error: () => this.alertService.error('Không thể xóa danh mục này.'),
     });
   }
 

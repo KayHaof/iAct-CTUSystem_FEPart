@@ -1,0 +1,126 @@
+// ==============================================
+// IACT THEME - CSS Variables Export
+// ==============================================
+// Export tat ca CSS variables ra :root
+// Dung chung cho Admin, Student, Shell
+// CHI CO LIGHT THEME - khong co dark theme
+
+@use 'variables' as *;
+
+// === Export to :root ===
+:root {
+  // Primary Colors
+  --primary: #{$blue-600};
+  --primary-hover: #{$blue-700};
+  --primary-light: #{rgba($blue-600, 0.08)};
+  --primary-active: #{rgba($blue-600, 0.12)};
+
+  // Background Colors
+  --bg: #{$bg-primary};
+  --bg-surface: #{$bg-secondary};
+  --bg-elevated: #{$bg-elevated};
+  --bg-input: #{$bg-tertiary};
+
+  // Border Colors
+  --border: #{$border-default};
+  --border-subtle: #{$border-subtle};
+
+  // Text Colors
+  --text: #{$text-primary};
+  --text-secondary: #{$text-secondary};
+  --text-muted: #{$text-muted};
+  --text-disabled: #{$text-disabled};
+
+  // Status Colors
+  --success: #{$success};
+  --success-bg: #{$success-bg};
+  --success-light: #{$success-light};
+
+  --warning: #{$warning};
+  --warning-bg: #{$warning-bg};
+  --warning-light: #{$warning-light};
+
+  --danger: #{$danger};
+  --danger-bg: #{$danger-bg};
+  --danger-light: #{$danger-light};
+
+  --info: #{$info};
+  --info-bg: #{$info-bg};
+
+  // Gradients
+  --gradient-primary: #{$gradient-primary};
+  --gradient-primary-hover: #{$gradient-primary-hover};
+  --gradient-success: #{$gradient-success};
+  --gradient-warning: #{$gradient-warning};
+  --gradient-danger: #{$gradient-danger};
+  --gradient-blue: linear-gradient(135deg, #{$blue-600}, #{$blue-500});
+  --gradient-teal: linear-gradient(135deg, #059669, #10b981);
+
+  // Table Colors
+  --table-header-bg: #f1f5f9;
+  --table-border: #e2e8f0;
+  --table-header-text: #64748b;
+  --table-text-primary: #0f172a;
+  --table-row-hover-bg: rgba(241, 245, 249, 0.6);
+
+  // Border Radius
+  --radius-xs: #{$radius-xs};
+  --radius-sm: #{$radius-sm};
+  --radius-md: #{$radius-md};
+  --radius-lg: #{$radius-lg};
+  --radius-xl: #{$radius-xl};
+  --radius-2xl: #{$radius-2xl};
+  --radius-3xl: #{$radius-3xl};
+  --radius-full: #{$radius-full};
+
+  // Shadows
+  --shadow-xs: #{$shadow-xs};
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+  --shadow-xl: #{$shadow-xl};
+  --shadow-primary: #{$shadow-primary};
+  --shadow-success: #{$shadow-success};
+  --shadow-danger: #{$shadow-danger};
+  --shadow-warning: #{$shadow-warning};
+
+  // Z-Index
+  --z-dropdown: #{$z-dropdown};
+  --z-sticky: #{$z-sticky};
+  --z-fixed: #{$z-fixed};
+  --z-modal-backdrop: #{$z-modal-backdrop};
+  --z-modal: #{$z-modal};
+  --z-popover: #{$z-popover};
+  --z-tooltip: #{$z-tooltip};
+  --z-toast: #{$z-toast};
+
+  // Layout
+  --sidebar-collapsed: #{$sidebar-width-collapsed};
+  --sidebar-expanded: #{$sidebar-width-expanded};
+  --header-height: #{$header-height};
+  --footer-height: #{$footer-height};
+}
+
+// === Backward Compatibility - theme-* aliases ===
+// Cac component cu van su dung var(--theme-*) se duoc tuong thich
+:root {
+  --theme-bg: var(--bg);
+  --theme-bg-surface: var(--bg-surface);
+  --theme-bg-input: var(--bg-input);
+  --theme-border: var(--border);
+  --theme-text: var(--text);
+  --theme-text-secondary: var(--text-secondary);
+  --theme-text-muted: var(--text-muted);
+  --theme-text-disabled: var(--text-disabled);
+  --theme-accent: var(--primary);
+  --theme-accent-text: var(--primary);
+  --theme-accent-light: var(--primary-light);
+  --theme-success: var(--success);
+  --theme-success-bg: var(--success-bg);
+  --theme-warning: var(--warning);
+  --theme-warning-bg: var(--warning-bg);
+  --theme-danger: var(--danger);
+  --theme-danger-bg: var(--danger-bg);
+  --theme-info: var(--info);
+  --theme-info-bg: var(--info-bg);
+}

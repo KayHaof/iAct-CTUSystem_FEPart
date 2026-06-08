@@ -43,16 +43,16 @@ export class ViewUserModalComponent implements OnChanges {
     this.userService.getFullProfile(userId).subscribe({
       next: (res) => {
         const current = this.displayUser();
-        if (res.result && current) {
+        if (res.data && current) {
           this.displayUser.set({
             ...current,
-            birthday: res.result.birthday,
-            gender: res.result.gender,
-            phone: res.result.phone,
-            address: res.result.address,
-            departmentName: res.result.departmentName || current.departmentName,
-            classCode: res.result.classCode || current.classCode,
-            studentCode: res.result.studentCode || current.studentCode,
+            birthday: res.data.birthday,
+            gender: res.data.gender,
+            phone: res.data.phone,
+            address: res.data.address,
+            departmentName: res.data.departmentName || current.departmentName,
+            classCode: res.data.classCode || current.classCode,
+            studentCode: res.data.studentCode || current.studentCode,
           });
         }
       },

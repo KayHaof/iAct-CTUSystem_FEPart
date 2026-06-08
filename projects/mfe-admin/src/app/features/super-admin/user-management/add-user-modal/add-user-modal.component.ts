@@ -13,14 +13,14 @@ import { FormsModule } from '@angular/forms';
 import { AdminUserService } from '../../services/admin-user.service';
 import { ApiResponse, ClassInfo, Department, MajorInfo } from 'interface';
 
-export interface NewUserForm {
+export interface NewStudentForm {
   username: string;
   email: string;
-  roleType: number;
   password: string;
   studentCode: string;
   fullName: string;
-  description: string;
+  description?: string;
+  roleType: number;
   departmentId: number | null;
   majorId: number | null;
   classId: number | null;
@@ -39,7 +39,7 @@ export class AddUserModalComponent {
 
   @Input() departments: Department[] = [];
   @Output() closeModal = new EventEmitter<void>();
-  @Output() saveUser = new EventEmitter<NewUserForm>();
+  @Output() saveUser = new EventEmitter<NewStudentForm>();
 
   private _isOpen = false;
 
@@ -50,7 +50,7 @@ export class AddUserModalComponent {
   showConfirmPassword = signal(false);
   confirmPassword = '';
 
-  newUser: NewUserForm = this.createEmptyUser();
+  newUser: NewStudentForm = this.createEmptyUser();
 
   @Input()
   set isOpen(value: boolean) {
@@ -79,18 +79,6 @@ export class AddUserModalComponent {
     this.addClasses.set([]);
   }
 
-  onRoleChange() {
-    this.newUser.roleType = Number(this.newUser.roleType);
-    this.newUser.studentCode = '';
-    this.newUser.fullName = '';
-    this.newUser.description = '';
-    this.newUser.departmentId = null;
-    this.newUser.majorId = null;
-    this.newUser.classId = null;
-    this.addMajors.set([]);
-    this.addClasses.set([]);
-  }
-
   onAddDeptChange() {
     this.newUser.majorId = null;
     this.newUser.classId = null;
@@ -103,7 +91,7 @@ export class AddUserModalComponent {
 
     this.adminUserService.getMajorsByDepartment(this.newUser.departmentId).subscribe({
       next: (res: ApiResponse<MajorInfo[]>) => {
-        const result = res.result as unknown as MajorInfo[] | { data?: MajorInfo[] };
+        const result = res.data as unknown as MajorInfo[] | { data?: MajorInfo[] };
         this.addMajors.set(Array.isArray(result) ? result : result?.data || []);
       },
       error: () => this.addMajors.set([]),
@@ -120,12 +108,14 @@ export class AddUserModalComponent {
 
     this.adminUserService.getClassesByMajor(this.newUser.majorId).subscribe({
       next: (res: ApiResponse<ClassInfo[]>) => {
-        const result = res.result as unknown as ClassInfo[] | { data?: ClassInfo[] };
+        const result = res.data as unknown as ClassInfo[] | { data?: ClassInfo[] };
         this.addClasses.set(Array.isArray(result) ? result : result?.data || []);
       },
       error: () => this.addClasses.set([]),
     });
   }
+
+  onRoleChange() {}
 
   togglePassword() {
     this.showPassword.set(!this.showPassword());
@@ -142,33 +132,41 @@ export class AddUserModalComponent {
       !this.newUser.password ||
       !this.confirmPassword ||
       this.newUser.password !== this.confirmPassword ||
-      this.newUser.roleType === 0
+      !this.newUser.roleType
     ) {
       return false;
     }
+    return !!(this.newUser.studentCode.trim() && this.newUser.fullName.trim());
+  }
 
-    if (this.newUser.roleType === 1) {
-      return !!(this.newUser.studentCode.trim() && this.newUser.fullName.trim());
-    }
-
-    return !!this.newUser.fullName.trim();
+  passwordStrength(): 'weak' | 'medium' | 'strong' | null {
+    const pwd = this.newUser.password;
+    if (!pwd) return null;
+    if (pwd.length < 8) return 'weak';
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasLower = /[a-z]/.test(pwd);
+    const hasDigit = /\d/.test(pwd);
+    const score = [hasUpper, hasLower, hasDigit].filter(Boolean).length;
+    if (score >= 3) return 'strong';
+    if (score >= 2) return 'medium';
+    return 'weak';
   }
 
   submit() {
     if (!this.isFormValid()) return;
     this.isSaving.set(true);
-    this.saveUser.emit(this.newUser);
+    this.saveUser.emit({ ...this.newUser });
   }
 
-  private createEmptyUser(): NewUserForm {
+  private createEmptyUser(): NewStudentForm {
     return {
       username: '',
       email: '',
-      roleType: 0,
       password: '',
       studentCode: '',
       fullName: '',
       description: '',
+      roleType: 0,
       departmentId: null,
       majorId: null,
       classId: null,

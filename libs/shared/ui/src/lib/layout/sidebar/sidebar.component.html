@@ -1,21 +1,4 @@
-@if (isOpen) {
-  <div
-    class="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm transition-opacity md:hidden"
-    (click)="close()"
-    (keydown.enter)="close()"
-    tabindex="0"
-    role="button"
-    aria-label="Đóng menu"
-  ></div>
-}
-
-<aside
-  class="sidebar-container"
-  [class.theme-dark]="theme === 'dark'"
-  [class.translate-x-0]="isOpen"
-  [class.-translate-x-full]="!isOpen"
-  aria-label="Thanh điều hướng chính"
->
+<aside class="sidebar-container" aria-label="Thanh điều hướng chính">
   <div class="sidebar-logo">
     <div class="brand-mark" aria-hidden="true"></div>
     <div class="brand-copy">

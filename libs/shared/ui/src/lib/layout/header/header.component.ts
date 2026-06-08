@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, input, inject, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
@@ -13,6 +13,8 @@ import { LayoutService } from '../layout.service';
   styleUrls: ['./header.component.scss'],
 })
 export class HeaderComponent {
+  theme = input<'light' | 'dark'>('light');
+
   public userService = inject(UserService);
 
   private layoutService = inject(LayoutService);
@@ -20,7 +22,6 @@ export class HeaderComponent {
 
   currentUser = computed(() => this.userService.currentUser());
 
-  // Check role
   isAdmin = computed(() => this.userService.isAdmin());
   isStudent = computed(() => this.userService.isStudent());
   isDepartment = computed(() => this.userService.isDepartment());

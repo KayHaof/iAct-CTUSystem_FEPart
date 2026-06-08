@@ -28,7 +28,7 @@ export class ViewActivityModalComponent implements OnInit {
     this.isLoading.set(true);
     this.moderationService.getActivityDetails(this.activityId().toString()).subscribe({
       next: (res: ApiResponse<Activity>) => {
-        this.activity.set(res.result as Activity);
+        this.activity.set(res.data as Activity);
         this.isLoading.set(false);
       },
       error: () => {

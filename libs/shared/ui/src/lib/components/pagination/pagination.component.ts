@@ -1,4 +1,4 @@
-import { Component, input, output, computed, signal } from '@angular/core';
+import { Component, input, output, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -7,11 +7,13 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   templateUrl: './pagination.component.html',
   styleUrl: './pagination.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PaginationComponent {
   totalItems = input.required<number>();
   pageSize = input<number>(10);
   currentPage = input<number>(1);
+  theme = input<'light' | 'dark'>('light');
 
   pageSizeOptions = input<number[]>([5, 10, 15, 20, 50]);
 

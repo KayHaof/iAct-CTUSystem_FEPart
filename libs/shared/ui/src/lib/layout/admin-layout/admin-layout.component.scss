@@ -1,37 +1,58 @@
+// ==============================================
+// ADMIN LAYOUT STYLES
+// ==============================================
+
 :host {
   display: block;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
 }
 
 .layout-wrapper {
   display: flex;
   height: 100vh;
-  width: 100vw;
   overflow: hidden;
 }
 
+// ==============================================
+// SIDEBAR - FIXED OVERLAY
+// ==============================================
 .sidebar-area {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: var(--sidebar-collapsed, 80px);
+  z-index: var(--z-fixed, 200);
   flex-shrink: 0;
-  background: #fff;
-  border-right: 1px solid #eee;
-  z-index: 50;
-  transition: all 0.3s ease;
+  transition: width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+
+  &:hover,
+  &:focus-within {
+    width: var(--sidebar-expanded, 280px);
+  }
 }
 
+// ==============================================
+// CONTENT AREA - PUSHED BY SIDEBAR WIDTH
+// ==============================================
 .content-area {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #f5f7fa;
   min-width: 0;
   max-width: 100%;
   position: relative;
+  overflow: hidden;
+  margin-left: var(--sidebar-collapsed, 80px);
+  transition: margin-left 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .header-area {
   flex-shrink: 0;
-  background: #fff;
-  z-index: 40;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  z-index: var(--z-sticky, 50);
 }
 
 .main-scrollable {
@@ -40,15 +61,12 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  background: var(--bg-surface, #f8fafc);
 }
 
 .page-content {
   flex: 1;
   width: 100%;
   max-width: 100%;
-  padding: 16px;
-
-  @media (min-width: 768px) {
-    padding: 0;
-  }
+  padding: 1.5rem;
 }

@@ -71,7 +71,7 @@ export class ActivityModerationComponent implements OnInit {
 
   loadStats(): void {
     this.moderationService.getStats().subscribe({
-      next: (res) => this.stats.set(res.result),
+      next: (res) => this.stats.set(res.data ?? null),
       error: () => this.alertService.error('Lỗi khi tải dữ liệu thống kê!'),
     });
   }
@@ -85,8 +85,8 @@ export class ActivityModerationComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
-          this.activities.set(res.result?.data || []);
-          this.totalItems.set(res.result?.totalRows || 0);
+          this.activities.set(res.data?.data || []);
+          this.totalItems.set(res.data?.totalRows || 0);
         },
         error: () => this.alertService.error('Lỗi khi tải danh sách hoạt động!'),
       });

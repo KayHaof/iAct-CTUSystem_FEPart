@@ -1,106 +1,68 @@
-import { Injectable } from '@angular/core';
-import Swal, { SweetAlertIcon, SweetAlertOptions } from 'sweetalert2';
-
-export type ConfirmDialogVariant = 'danger' | 'warning' | 'primary' | 'info' | 'success';
-
-export type ConfirmDialogOptions = {
-  title: string;
-  message?: string;
-  html?: string;
-  variant?: ConfirmDialogVariant;
-  confirmText?: string;
-  cancelText?: string;
-  focusCancel?: boolean;
-  reverseButtons?: boolean;
-};
+import { Injectable, signal } from '@angular/core';
+import { ConfirmDialogConfig, ConfirmType } from '../components/confirm-dialog/confirm-dialog.component';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class ConfirmService {
-  async confirm(
-    title = 'Bạn có chắc không?',
-    text = 'Hành động này không thể hoàn tác!',
-    confirmButtonText = 'Xác nhận',
-    cancelButtonText = 'Hủy',
-  ): Promise<boolean> {
-    return this.confirmAction({
-      title,
-      message: text,
-      variant: 'danger',
-      confirmText: confirmButtonText,
-      cancelText: cancelButtonText,
+  private _dialogState = signal<ConfirmDialogConfig | null>(null);
+  dialogState = this._dialogState.asReadonly();
+
+  private resolvePromise: (() => void) | null = null;
+  private rejectPromise: (() => void) | null = null;
+
+  confirm(config: ConfirmDialogConfig): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this._dialogState.set({
+        ...config,
+        type: config.type || 'info',
+        onConfirm: () => {
+          config.onConfirm?.();
+          resolve();
+        },
+        onCancel: () => {
+          config.onCancel?.();
+          reject();
+        }
+      });
+      this.resolvePromise = resolve;
+      this.rejectPromise = reject;
     });
   }
 
-  async confirmAction(options: ConfirmDialogOptions): Promise<boolean> {
-    const result = await Swal.fire(this.buildConfig(options));
-    return result.isConfirmed;
+  success(config: Omit<ConfirmDialogConfig, 'type'>): Promise<void> {
+    return this.confirm({ ...config, type: 'success' });
   }
 
-  danger(title: string, message: string, confirmText = 'Xác nhận'): Promise<boolean> {
-    return this.confirmAction({
-      title,
-      message,
-      confirmText,
-      variant: 'danger',
-    });
+  warning(config: Omit<ConfirmDialogConfig, 'type'>): Promise<void> {
+    return this.confirm({ ...config, type: 'warning' });
   }
 
-  warning(title: string, message: string, confirmText = 'Tiếp tục'): Promise<boolean> {
-    return this.confirmAction({
-      title,
-      message,
-      confirmText,
-      variant: 'warning',
-    });
+  danger(config: Omit<ConfirmDialogConfig, 'type'>): Promise<void> {
+    return this.confirm({ ...config, type: 'danger' });
   }
 
-  info(title: string, message: string, confirmText = 'Đồng ý'): Promise<boolean> {
-    return this.confirmAction({
-      title,
-      message,
-      confirmText,
-      variant: 'info',
-      focusCancel: false,
-    });
+  info(config: Omit<ConfirmDialogConfig, 'type'>): Promise<void> {
+    return this.confirm({ ...config, type: 'info' });
   }
 
-  private buildConfig(options: ConfirmDialogOptions): SweetAlertOptions {
-    const variant = options.variant || 'primary';
-    const icon = this.getIcon(variant);
-
-    return {
-      title: options.title,
-      text: options.html ? undefined : options.message,
-      html: options.html,
-      icon,
-      showCancelButton: true,
-      buttonsStyling: false,
-      confirmButtonText: options.confirmText || 'Xác nhận',
-      cancelButtonText: options.cancelText || 'Hủy',
-      focusCancel: options.focusCancel ?? variant === 'danger',
-      reverseButtons: options.reverseButtons ?? true,
-      customClass: {
-        popup: `iact-confirm-popup iact-confirm-popup-${variant}`,
-        title: 'iact-confirm-title',
-        htmlContainer: 'iact-confirm-html',
-        actions: 'iact-confirm-actions',
-        confirmButton: `iact-confirm-button iact-confirm-${variant}`,
-        cancelButton: 'iact-cancel-button',
-      },
-    };
-  }
-
-  private getIcon(variant: ConfirmDialogVariant): SweetAlertIcon {
-    if (variant === 'danger') {
-      return 'warning';
+  confirmAction(): void {
+    if (this.resolvePromise) {
+      this.resolvePromise();
     }
+    this._dialogState.set(null);
+  }
 
-    if (variant === 'primary') {
-      return 'question';
+  cancel(): void {
+    if (this.rejectPromise) {
+      this.rejectPromise();
     }
+    this._dialogState.set(null);
+    this.resolvePromise = null;
+    this.rejectPromise = null;
+  }
 
-    return variant;
+  isOpen(): boolean {
+    return this._dialogState() !== null;
   }
 }

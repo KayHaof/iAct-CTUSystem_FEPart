@@ -111,7 +111,7 @@ export class ParticipantManagementComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (response: ApiResponse<PageDTO<RegistrationResponse>>) => {
-          const pageData = response.result;
+          const pageData = response.data;
           this.participants.set(pageData?.data || []);
           this.totalRows.set(pageData?.totalRows || 0);
 
@@ -166,27 +166,27 @@ export class ParticipantManagementComponent implements OnInit {
   }
 
   async changeStatus(id: number, newStatus: number, actionName: string): Promise<void> {
-    const isConfirmed = await this.confirmService.confirm(
-      `Xác nhận ${actionName}?`,
-      `Bạn có chắc chắn muốn ${actionName.toLowerCase()} sinh viên này không?`,
-      'Đồng ý',
-      'Hủy',
-    );
-
-    if (isConfirmed) {
-      this.isLoading.set(true);
-      this.participantService
-        .updateParticipantStatus(id, newStatus)
-        .pipe(finalize(() => this.isLoading.set(false)))
-        .subscribe({
-          next: () => {
-            this.alertService.success(`Đã ${actionName.toLowerCase()} thành công!`);
-            this.fetchParticipants();
-          },
-          error: (err: HttpErrorResponse) =>
-            this.alertService.error(err.error?.message || 'Có lỗi xảy ra!'),
+    await this.confirmService.confirm({
+      title: `Xác nhận ${actionName}?`,
+      message: `Bạn có chắc chắn muốn ${actionName.toLowerCase()} sinh viên này không?`,
+      confirmText: 'Đồng ý',
+      cancelText: 'Hủy',
+      type: 'warning',
+      onConfirm: () => {
+        this.isLoading.set(true);
+        this.participantService
+          .updateParticipantStatus(id, newStatus)
+          .pipe(finalize(() => this.isLoading.set(false)))
+          .subscribe({
+            next: () => {
+              this.alertService.success(`Đã ${actionName.toLowerCase()} thành công!`);
+              this.fetchParticipants();
+            },
+            error: (err: HttpErrorResponse) =>
+              this.alertService.error(err.error?.message || 'Có lỗi xảy ra!'),
         });
-    }
+      },
+    });
   }
 
   getInitial(name: string): string {

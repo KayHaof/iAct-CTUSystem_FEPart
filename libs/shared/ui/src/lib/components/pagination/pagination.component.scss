@@ -1,3 +1,136 @@
+.pagination-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg-surface);
+  padding: 1rem 1.25rem;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.pagination-info {
+  width: 100%;
+
+  @media (min-width: 640px) {
+    width: auto;
+  }
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  @media (min-width: 640px) {
+    justify-content: flex-start;
+  }
+}
+
+.info-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.info-highlight {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.info-separator {
+  color: var(--border);
+}
+
+.page-size-dropdown {
+  position: relative;
+}
+
+.page-size-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+}
+
+.dropdown-icon {
+  font-size: 0.625rem;
+  color: var(--text-muted);
+}
+
+.page-size-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 50;
+  margin-bottom: 0.5rem;
+  width: 6rem;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: 0.25rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.page-size-option {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 0.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: var(--bg-input);
+    color: var(--text);
+  }
+
+  &.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 700;
+  }
+}
+
+.pagination-nav {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 .custom-scrollbar-hidden {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -7,6 +140,79 @@
   }
 }
 
-.pagination-nav-button {
-  @apply inline-flex h-9 min-w-9 items-center justify-center rounded-xl px-2 text-slate-500 transition hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40;
+.nav-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: 0.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  border-radius: 0.625rem;
+  padding: 0 0.5rem;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.nav-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  padding: 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--border);
+}
+
+.nav-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  padding: 0 0.75rem;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(.active) {
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+
+  &.active {
+    background: var(--primary);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    font-weight: 800;
+  }
 }

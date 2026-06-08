@@ -26,9 +26,12 @@ export class StudentLayoutComponent implements OnInit {
 
   studentMenus: MenuItem[] = [
     { label: 'Tổng quan', link: '/dashboard', icon: 'bi bi-grid-fill' },
-    { label: 'Cổng hoạt động', link: '/activity-hub', icon: 'bi bi-calendar3' },
+    { label: 'Cộng hoạt động', link: '/activity-hub', icon: 'bi bi-calendar3' },
     { label: 'Quản lý hoạt động', link: '/my-records', icon: 'bi bi-person-lines-fill' },
+    { label: 'Điểm rèn luyện', link: '/point-management', icon: 'bi bi-star-fill' },
+    { label: 'Quét QR điểm danh', link: '/qr-checkin', icon: 'bi bi-qr-code-scan' },
     { label: 'Khiếu nại', link: '/submit-proof', icon: 'bi bi-cloud-arrow-up' },
+    { label: 'Cài đặt ưu tiên', link: '/preferences', icon: 'bi bi-sliders' },
   ];
 
   ngOnInit() {

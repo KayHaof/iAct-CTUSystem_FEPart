@@ -7,6 +7,9 @@ import {
   CategoryFilters,
   CategoryRequest,
   CategoryResponse,
+  ClassFilters,
+  ClassRequest,
+  ClassResponse,
   DepartmentFilters,
   DepartmentRequest,
   DepartmentResponse,
@@ -27,6 +30,7 @@ export class MasterDataService {
   private readonly categoryUrl = 'http://localhost:8080/activity/api/v1/categories';
   private readonly departmentUrl = 'http://localhost:8080/user/api/v1/departments';
   private readonly majorUrl = 'http://localhost:8080/user/api/v1/majors';
+  private readonly classUrl = 'http://localhost:8080/user/api/v1/classes';
 
   getSemesters(filters?: SemesterFilters): Observable<ApiResponse<SemesterResponse[]>> {
     let params = new HttpParams();
@@ -231,5 +235,91 @@ export class MasterDataService {
 
   deleteMajor(id: number): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.majorUrl}/${id}`);
+  }
+
+  getClasses(
+    page: number,
+    size: number,
+    filters?: ClassFilters,
+  ): Observable<ApiResponse<PageDTO<ClassResponse>>> {
+    let params = new HttpParams().set('page', page).set('size', size);
+
+    if (filters?.keyword) {
+      params = params.set('keyword', filters.keyword.trim());
+    }
+
+    if (filters?.departmentId !== '' && filters?.departmentId !== undefined) {
+      params = params.set('departmentId', filters.departmentId);
+    }
+
+    if (filters?.majorId !== '' && filters?.majorId !== undefined) {
+      params = params.set('majorId', filters.majorId);
+    }
+
+    if (filters?.academicYear?.trim()) {
+      params = params.set('academicYear', filters.academicYear.trim());
+    }
+
+    if (filters?.active) {
+      params = params.set('active', filters.active);
+    }
+
+    return this.http.get<ApiResponse<PageDTO<ClassResponse>>>(`${this.classUrl}/page`, { params });
+  }
+
+  getClassesByMajor(
+    majorId: number | string,
+    academicYear?: string,
+  ): Observable<ApiResponse<ClassResponse[]>> {
+    let params = new HttpParams().set('majorId', majorId);
+
+    if (academicYear) {
+      params = params.set('academicYear', academicYear);
+    }
+
+    return this.http.get<ApiResponse<ClassResponse[]>>(this.classUrl, { params });
+  }
+
+  getClassOptions(
+    majorId: '' | number = '',
+    active: '' | 'true' | 'false' = '',
+  ): Observable<ApiResponse<ClassResponse[]>> {
+    let params = new HttpParams();
+
+    if (majorId !== '') {
+      params = params.set('majorId', majorId);
+    }
+
+    if (active === 'true') {
+      params = params.set('active', 'true');
+    } else if (active === 'false') {
+      params = params.set('active', 'false');
+    }
+
+    return this.http.get<ApiResponse<ClassResponse[]>>(this.classUrl, { params });
+  }
+
+  getClassById(id: number): Observable<ApiResponse<ClassResponse>> {
+    return this.http.get<ApiResponse<ClassResponse>>(`${this.classUrl}/${id}`);
+  }
+
+  createClass(payload: ClassRequest): Observable<ApiResponse<ClassResponse>> {
+    return this.http.post<ApiResponse<ClassResponse>>(this.classUrl, payload);
+  }
+
+  updateClass(id: number, payload: ClassRequest): Observable<ApiResponse<ClassResponse>> {
+    return this.http.put<ApiResponse<ClassResponse>>(`${this.classUrl}/${id}`, payload);
+  }
+
+  activateClass(id: number): Observable<ApiResponse<ClassResponse>> {
+    return this.http.patch<ApiResponse<ClassResponse>>(`${this.classUrl}/${id}/activate`, {});
+  }
+
+  deactivateClass(id: number): Observable<ApiResponse<ClassResponse>> {
+    return this.http.patch<ApiResponse<ClassResponse>>(`${this.classUrl}/${id}/deactivate`, {});
+  }
+
+  deleteClass(id: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.classUrl}/${id}`);
   }
 }

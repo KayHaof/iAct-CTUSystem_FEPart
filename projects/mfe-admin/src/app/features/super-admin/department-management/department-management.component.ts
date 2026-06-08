@@ -9,8 +9,9 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { AlertService, ConfirmService, PaginationComponent } from '@my-mfe/ui';
+import { AlertService, ConfirmDialogComponent, ConfirmService, PaginationComponent } from '@my-mfe/ui';
 
+import { DepartmentFormModalComponent } from './components/department-form-modal/department-form-modal.component';
 import { MasterDataService } from '../services/master-data.service';
 import {
   DepartmentFilters,
@@ -40,7 +41,7 @@ type SelectOption<T> = {
 @Component({
   selector: 'app-department-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, ConfirmDialogComponent, PaginationComponent, DepartmentFormModalComponent],
   templateUrl: './department-management.component.html',
   styleUrls: ['./department-management.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -97,6 +98,11 @@ export class DepartmentManagementComponent implements OnInit {
   });
   public departmentsWithMajors = computed(() => this.majorCountMap().size);
 
+  public formDropdown = computed<import('./components/department-form-modal/department-form-modal.component').DepartmentFormDropdownKey | null>(() => {
+    const dropdown = this.openDropdown();
+    return dropdown === 'activeForm' ? dropdown : null;
+  });
+
   ngOnInit(): void {
     this.loadDepartments();
     this.loadReferenceData();
@@ -110,7 +116,7 @@ export class DepartmentManagementComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (response) => {
-          const page = response.result;
+          const page = response.data;
           this.departments.set(page?.data || []);
           this.totalItems.set(page?.totalRows || 0);
           this.normalizeCurrentPage();
@@ -121,12 +127,12 @@ export class DepartmentManagementComponent implements OnInit {
 
   loadReferenceData(): void {
     this.masterDataService.getDepartmentOptions().subscribe({
-      next: (response) => this.allDepartments.set(response.result || []),
+      next: (response) => this.allDepartments.set(response.data || []),
       error: () => this.allDepartments.set([]),
     });
 
     this.masterDataService.getMajorList().subscribe({
-      next: (response) => this.allMajors.set(response.result || []),
+      next: (response) => this.allMajors.set(response.data || []),
       error: () => this.allMajors.set([]),
     });
   }
@@ -251,23 +257,20 @@ export class DepartmentManagementComponent implements OnInit {
     });
   }
 
-  async deleteDepartment(department: DepartmentResponse): Promise<void> {
-    const confirmed = await this.confirmService.warning(
-      'Xóa đơn vị',
-      `Nếu "${department.name}" đã có chuyên ngành, hệ thống sẽ tạm ngưng thay vì xóa hẳn.`,
-      'Xóa',
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.masterDataService.deleteDepartment(department.id).subscribe({
-      next: () => {
-        this.alertService.success('Đã xử lý xóa đơn vị.');
-        this.reloadData();
+  deleteDepartment(department: DepartmentResponse): void {
+    this.confirmService.warning({
+      title: 'Xóa đơn vị',
+      message: `Nếu "${department.name}" đã có chuyên ngành, hệ thống sẽ tạm ngưng thay vì xóa hẳn.`,
+      confirmText: 'Xóa',
+      onConfirm: () => {
+        this.masterDataService.deleteDepartment(department.id).subscribe({
+          next: () => {
+            this.alertService.success('Đã xử lý xóa đơn vị.');
+            this.reloadData();
+          },
+          error: () => this.alertService.error('Không thể xóa đơn vị này.'),
+        });
       },
-      error: () => this.alertService.error('Không thể xóa đơn vị này.'),
     });
   }
 

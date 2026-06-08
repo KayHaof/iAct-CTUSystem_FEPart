@@ -79,7 +79,7 @@ export class MyRecordsComponent implements OnInit {
   fetchSemesters() {
     this.semesterService.getAllSemesters().subscribe({
       next: (res) => {
-        const semesterList = res.result || [];
+        const semesterList = res.data || [];
         this.semesters.set(semesterList);
 
         const activeSem = semesterList.find((s) => s.isActive);
@@ -109,7 +109,7 @@ export class MyRecordsComponent implements OnInit {
       .getMyRecords(semId)
       .pipe(
         switchMap((res) => {
-          const rawData = (res.result as unknown as RawRegistrationDto[]) || [];
+          const rawData = (res.data as unknown as RawRegistrationDto[]) || [];
           if (rawData.length === 0) return of([]);
 
           const timeRequests = rawData.map((item) =>
@@ -302,7 +302,7 @@ export class MyRecordsComponent implements OnInit {
       .pipe(finalize(() => this.isSubmittingCheckIn.set(false)))
       .subscribe({
         next: (res) => {
-          const successMsg = res.result?.message || 'Điểm danh thành công!';
+          const successMsg = res.message || 'Điểm danh thành công!';
           this.alertService.success(successMsg);
           this.fetchMyRecords();
 

@@ -1,364 +1,376 @@
-<div class="min-h-full bg-slate-50 px-4 py-5 md:px-6 lg:px-8">
-  <section class="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
-    <div class="bg-gradient-to-r from-blue-600 to-sky-500 px-5 py-5 text-white md:px-7">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <p class="text-xs font-bold uppercase tracking-wide text-blue-100">Super Admin</p>
-          <h1 class="mt-1 text-2xl font-black tracking-tight md:text-3xl">
-            Quản lý người dùng
-          </h1>
-          <p class="mt-2 max-w-3xl text-sm font-medium text-blue-50">
-            Kiểm soát tài khoản, vai trò, trạng thái truy cập và hồ sơ theo đúng dữ liệu người dùng của hệ thống.
-          </p>
-        </div>
+<div class="user-page">
+  <!-- Page Header -->
+  <header class="user-header">
+    <div class="page-header-content">
+      <div class="page-header-left">
+        <p class="header-eyebrow">Super Admin</p>
+        <h1 class="header-title">Quản lý người dùng</h1>
+        <p class="header-subtitle">Kiểm soát tài khoản, vai trò, trạng thái truy cập và hồ sơ người dùng hệ thống</p>
+      </div>
+      <div class="page-header-actions">
+        <button
+          type="button"
+          (click)="goToImportPage()"
+          class="btn-action-secondary"
+          title="Nhập danh sách sinh viên từ file Excel"
+        >
+          <i class="bi bi-file-earmark-spreadsheet"></i>
+          Nhập Excel
+        </button>
+        <button
+          type="button"
+          (click)="openAddModal()"
+          class="btn-action-primary"
+          title="Thêm người dùng mới"
+        >
+          <i class="bi bi-person-plus-fill"></i>
+          Thêm người dùng
+        </button>
+      </div>
+    </div>
+  </header>
 
-        <div class="flex flex-wrap gap-3">
-          <button
-            type="button"
-            (click)="goToImportPage()"
-            class="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-white/20"
-            title="Nhập danh sách sinh viên từ file Excel"
-          >
-            <i class="bi bi-file-earmark-spreadsheet"></i>
-            Nhập Excel
-          </button>
-          <button
-            type="button"
-            (click)="openAddModal()"
-            class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-blue-700 shadow-sm transition hover:bg-blue-50"
-            title="Thêm người dùng mới"
-          >
-            <i class="bi bi-person-plus-fill"></i>
-            Thêm người dùng
-          </button>
+  <!-- Role Tab Cards -->
+  <section class="role-tabs-section">
+    <button
+      type="button"
+      (click)="switchTab('STUDENT')"
+      class="role-tab-card"
+      [class.role-tab-active]="activeTab() === 'STUDENT'"
+    >
+      <div class="role-tab-icon role-tab-icon-blue">
+        <i class="bi bi-mortarboard-fill"></i>
+      </div>
+      <div class="role-tab-info">
+        <span class="role-tab-label">Sinh viên</span>
+        <span class="role-tab-count">{{ studentCount() }} tài khoản</span>
+      </div>
+      <div class="role-tab-indicator" [class.indicator-active]="activeTab() === 'STUDENT'"></div>
+    </button>
+
+    <button
+      type="button"
+      (click)="switchTab('FACULTY')"
+      class="role-tab-card"
+      [class.role-tab-active]="activeTab() === 'FACULTY'"
+    >
+      <div class="role-tab-icon role-tab-icon-teal">
+        <i class="bi bi-building-fill"></i>
+      </div>
+      <div class="role-tab-info">
+        <span class="role-tab-label">Khoa / Đơn vị</span>
+        <span class="role-tab-count">{{ facultyCount() }} tài khoản</span>
+      </div>
+      <div class="role-tab-indicator" [class.indicator-active]="activeTab() === 'FACULTY'"></div>
+    </button>
+
+    <button
+      type="button"
+      (click)="switchTab('ADMIN')"
+      class="role-tab-card"
+      [class.role-tab-active]="activeTab() === 'ADMIN'"
+    >
+      <div class="role-tab-icon role-tab-icon-sky">
+        <i class="bi bi-shield-lock-fill"></i>
+      </div>
+      <div class="role-tab-info">
+        <span class="role-tab-label">Quản trị viên</span>
+        <span class="role-tab-count">{{ adminCount() }} tài khoản</span>
+      </div>
+      <div class="role-tab-indicator" [class.indicator-active]="activeTab() === 'ADMIN'"></div>
+    </button>
+  </section>
+
+  <!-- Filter Section -->
+  <section class="filter-section">
+    <div class="filter-grid">
+      <div class="filter-search-wrap">
+        <label for="searchInput" class="filter-label">Tìm kiếm</label>
+        <div class="filter-search-box">
+          <i class="bi bi-search filter-search-icon"></i>
+          <input
+            id="searchInput"
+            type="text"
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="onSearch()"
+            (ngModelChange)="onSearchInputChanged($event)"
+            placeholder="Nhập username, email, MSSV hoặc họ tên"
+            class="filter-search-input"
+          />
         </div>
+      </div>
+
+      @if (activeTab() === 'FACULTY') {
+        <div class="filter-select-wrap">
+          <label for="facultySelect" class="filter-label">Đơn vị trực thuộc</label>
+          <select
+            id="facultySelect"
+            [(ngModel)]="selectedFaculty"
+            (change)="onSearch()"
+            class="filter-select"
+          >
+            <option value="">Tất cả đơn vị</option>
+            @for (dept of departments() || []; track dept.id) {
+              <option [value]="dept.id">{{ dept.name }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <div class="filter-select-wrap">
+        <label for="statusSelect" class="filter-label">Trạng thái</label>
+        <select
+          id="statusSelect"
+          [(ngModel)]="selectedStatus"
+          (change)="onSearch()"
+          class="filter-select"
+        >
+          <option value="">Tất cả trạng thái</option>
+          <option [value]="1">Đang hoạt động</option>
+          <option [value]="0">Bị vô hiệu hóa</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" (click)="onSearch()" class="filter-btn-search">
+          <i class="bi bi-search"></i>
+          Lọc
+        </button>
+        <button
+          type="button"
+          (click)="resetFilters()"
+          class="filter-btn-reset"
+          title="Đặt lại bộ lọc"
+        >
+          <i class="bi bi-arrow-counterclockwise"></i>
+        </button>
       </div>
     </div>
 
-    <div class="grid gap-3 border-b border-slate-200 bg-white p-4 md:grid-cols-3 md:p-5">
-      <button
-        type="button"
-        (click)="switchTab('STUDENT')"
-        class="role-card"
-        [class.role-card-active]="activeTab() === 'STUDENT'"
-      >
-        <span class="role-icon bg-blue-50 text-blue-700"><i class="bi bi-mortarboard-fill"></i></span>
-        <span class="min-w-0 text-left">
-          <span class="block text-sm font-black text-slate-800">Sinh viên</span>
-          <span class="block text-xs font-semibold text-slate-500">{{ studentCount() }} tài khoản</span>
-        </span>
-      </button>
-
-      <button
-        type="button"
-        (click)="switchTab('FACULTY')"
-        class="role-card"
-        [class.role-card-active]="activeTab() === 'FACULTY'"
-      >
-        <span class="role-icon bg-sky-50 text-sky-700"><i class="bi bi-building-fill"></i></span>
-        <span class="min-w-0 text-left">
-          <span class="block text-sm font-black text-slate-800">Khoa / đơn vị</span>
-          <span class="block text-xs font-semibold text-slate-500">{{ facultyCount() }} tài khoản</span>
-        </span>
-      </button>
-
-      <button
-        type="button"
-        (click)="switchTab('ADMIN')"
-        class="role-card"
-        [class.role-card-active]="activeTab() === 'ADMIN'"
-      >
-        <span class="role-icon bg-slate-100 text-slate-800"><i class="bi bi-shield-lock-fill"></i></span>
-        <span class="min-w-0 text-left">
-          <span class="block text-sm font-black text-slate-800">Quản trị viên</span>
-          <span class="block text-xs font-semibold text-slate-500">{{ adminCount() }} tài khoản</span>
-        </span>
-      </button>
-    </div>
-
-    <div class="border-b border-slate-200 bg-slate-50/80 p-4 md:p-5">
-      <div class="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_220px_180px_auto] lg:items-end">
-        <div>
-          <label for="searchInput" class="input-label">Tìm kiếm</label>
-          <div class="relative">
-            <i class="bi bi-search pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input
-              id="searchInput"
-              type="text"
-              [(ngModel)]="searchTerm"
-              (keyup.enter)="onSearch()"
-              (ngModelChange)="onSearchInputChanged($event)"
-              placeholder="Nhập username, email, MSSV hoặc họ tên"
-              class="input-field pl-11"
-            />
-          </div>
-        </div>
-
-        @if (activeTab() === 'FACULTY') {
-          <div>
-            <label for="facultySelect" class="input-label">Đơn vị trực thuộc</label>
-            <select
-              id="facultySelect"
-              [(ngModel)]="selectedFaculty"
-              (change)="onSearch()"
-              class="input-field"
-            >
-              <option value="">Tất cả đơn vị</option>
-              @for (dept of departments(); track dept.id) {
-                <option [value]="dept.id">{{ dept.name }}</option>
-              }
-            </select>
-          </div>
-        }
-
-        <div>
-          <label for="statusSelect" class="input-label">Trạng thái</label>
+    @if (activeTab() === 'STUDENT') {
+      <div class="student-filter-strip">
+        <div class="student-filter-item">
+          <label for="filterCohort" class="filter-label">Khóa tuyển sinh</label>
           <select
-            id="statusSelect"
-            [(ngModel)]="selectedStatus"
-            (change)="onSearch()"
-            class="input-field"
+            id="filterCohort"
+            [(ngModel)]="selectedFilterCohort"
+            (change)="onFilterCohortChange()"
+            class="filter-select filter-select-sm"
           >
-            <option value="">Tất cả trạng thái</option>
-            <option [value]="1">Đang hoạt động</option>
-            <option [value]="0">Bị vô hiệu hóa</option>
+            <option value="">Chọn khóa học</option>
+            @for (cohort of cohorts; track cohort.value) {
+              <option [value]="cohort.value">{{ cohort.label }}</option>
+            }
           </select>
         </div>
 
-        <div class="flex gap-2">
-          <button type="button" (click)="onSearch()" class="btn-primary">
-            <i class="bi bi-search"></i>
-            Lọc
-          </button>
-          <button
-            type="button"
-            (click)="resetFilters()"
-            class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-            title="Đặt lại bộ lọc"
+        <div class="student-filter-item">
+          <label for="filterDept" class="filter-label" [class.filter-label-disabled]="!selectedFilterCohort()">
+            Trường / Khoa
+          </label>
+          <select
+            id="filterDept"
+            [(ngModel)]="selectedFilterDept"
+            (change)="onFilterDeptChange()"
+            [disabled]="!selectedFilterCohort()"
+            class="filter-select filter-select-sm"
           >
-            <i class="bi bi-arrow-counterclockwise"></i>
-          </button>
+            <option value="">Chọn Trường / Khoa</option>
+            @for (dept of departments() || []; track dept.id) {
+              <option [value]="dept.id">{{ dept.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="student-filter-item">
+          <label for="filterMajor" class="filter-label" [class.filter-label-disabled]="!selectedFilterDept()">
+            Chuyên ngành
+          </label>
+          <select
+            id="filterMajor"
+            [(ngModel)]="selectedFilterMajor"
+            (change)="onFilterMajorChange()"
+            [disabled]="!selectedFilterDept()"
+            class="filter-select filter-select-sm"
+          >
+            <option value="">Chọn chuyên ngành</option>
+            @for (major of filterMajors() || []; track major.id) {
+              <option [value]="major.id">{{ major.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="student-filter-item">
+          <label for="filterClass" class="filter-label" [class.filter-label-disabled]="!selectedFilterMajor()">
+            Lớp sinh hoạt
+          </label>
+          <select
+            id="filterClass"
+            [(ngModel)]="selectedFilterClass"
+            (change)="onSearch()"
+            class="filter-select filter-select-sm filter-select-class"
+          >
+            <option value="">Chọn lớp để tải danh sách</option>
+            <option value="0">Sinh viên chưa phân lớp</option>
+            @for (cls of filterClasses() || []; track cls.id) {
+              <option [value]="cls.id">{{ cls.classCode || cls.name }}</option>
+            }
+          </select>
         </div>
       </div>
-
-      @if (activeTab() === 'STUDENT') {
-        <div class="mt-4 grid gap-3 rounded-xl border border-blue-100 bg-white p-4 md:grid-cols-2 xl:grid-cols-4">
-          <div>
-            <label for="filterCohort" class="input-label">Khóa tuyển sinh</label>
-            <select
-              id="filterCohort"
-              [(ngModel)]="selectedFilterCohort"
-              (change)="onFilterCohortChange()"
-              class="input-field"
-            >
-              <option value="">Chọn khóa học</option>
-              @for (cohort of cohorts; track cohort.value) {
-                <option [value]="cohort.value">{{ cohort.label }}</option>
-              }
-            </select>
-          </div>
-
-          <div>
-            <label for="filterDept" class="input-label" [class.opacity-50]="!selectedFilterCohort()">
-              Trường / khoa
-            </label>
-            <select
-              id="filterDept"
-              [(ngModel)]="selectedFilterDept"
-              (change)="onFilterDeptChange()"
-              [disabled]="!selectedFilterCohort()"
-              class="input-field"
-            >
-              <option value="">Chọn trường / khoa</option>
-              @for (dept of departments(); track dept.id) {
-                <option [value]="dept.id">{{ dept.name }}</option>
-              }
-            </select>
-          </div>
-
-          <div>
-            <label for="filterMajor" class="input-label" [class.opacity-50]="!selectedFilterDept()">
-              Chuyên ngành
-            </label>
-            <select
-              id="filterMajor"
-              [(ngModel)]="selectedFilterMajor"
-              (change)="onFilterMajorChange()"
-              [disabled]="!selectedFilterDept()"
-              class="input-field"
-            >
-              <option value="">Chọn chuyên ngành</option>
-              @for (major of filterMajors(); track major.id) {
-                <option [value]="major.id">{{ major.name }}</option>
-              }
-            </select>
-          </div>
-
-          <div>
-            <label for="filterClass" class="input-label" [class.opacity-50]="!selectedFilterMajor()">
-              Lớp sinh hoạt
-            </label>
-            <select
-              id="filterClass"
-              [(ngModel)]="selectedFilterClass"
-              (change)="onSearch()"
-              class="input-field border-emerald-200 bg-emerald-50 text-emerald-800"
-            >
-              <option value="">Chọn lớp để tải danh sách</option>
-              <option value="0">Sinh viên chưa phân lớp</option>
-              @for (cls of filterClasses(); track cls.id) {
-                <option [value]="cls.id">{{ cls.classCode || cls.name }}</option>
-              }
-            </select>
-          </div>
-        </div>
-      }
-    </div>
-
-    <div class="overflow-x-auto">
-      <lib-admin-table-container>
-        <table class="w-full min-w-[980px] border-collapse text-left">
-          <thead>
-            <tr class="border-b border-slate-200 bg-white text-xs font-black uppercase tracking-wide text-slate-500">
-              <th class="table-head cursor-pointer select-none" tabindex="0" role="button" (click)="onSort('studentCode')" (keydown.enter)="onSort('studentCode')">
-                <span class="inline-flex items-center gap-2">
-                  {{ activeTab() === 'STUDENT' ? 'MSSV' : 'Username' }}
-                  <i class="bi bi-arrow-down-up text-slate-300"></i>
-                </span>
-              </th>
-              @if (activeTab() !== 'ADMIN') {
-                <th class="table-head cursor-pointer select-none" tabindex="0" role="button" (click)="onSort('fullName')" (keydown.enter)="onSort('fullName')">
-                  {{ activeTab() === 'FACULTY' ? 'Tên đơn vị' : 'Họ và tên' }}
-                </th>
-              }
-              <th class="table-head">Email</th>
-              @if (activeTab() === 'STUDENT') {
-                <th class="table-head">Lớp / đơn vị</th>
-              }
-              <th class="table-head text-center">Trạng thái</th>
-              <th class="table-head text-center">Thao tác</th>
-            </tr>
-          </thead>
-
-          <tbody class="text-sm">
-            @if (isLoading()) {
-              <tr>
-                <td [colSpan]="activeTab() === 'STUDENT' ? 6 : activeTab() === 'ADMIN' ? 4 : 5" class="py-14 text-center">
-                  <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
-                    <i class="bi bi-arrow-repeat animate-spin"></i>
-                    Đang tải dữ liệu
-                  </span>
-                </td>
-              </tr>
-            } @else if (activeTab() === 'STUDENT' && !selectedFilterClass() && !searchTerm().trim() && selectedStatus() === '') {
-              <tr>
-                <td colspan="6" class="bg-slate-50 px-6 py-16 text-center">
-                  <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-2xl text-blue-700">
-                    <i class="bi bi-funnel"></i>
-                  </div>
-                  <h3 class="mt-4 text-lg font-black text-slate-800">Chọn lớp để tải danh sách sinh viên</h3>
-                  <p class="mx-auto mt-2 max-w-xl text-sm font-medium text-slate-500">
-                    Dữ liệu sinh viên có thể rất lớn, vui lòng chọn khóa, khoa, chuyên ngành và lớp sinh hoạt trước khi xem danh sách.
-                  </p>
-                </td>
-              </tr>
-            } @else if (sortedUsers().length === 0) {
-              <tr>
-                <td [colSpan]="activeTab() === 'STUDENT' ? 6 : activeTab() === 'ADMIN' ? 4 : 5" class="bg-slate-50 px-6 py-16 text-center">
-                  <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-2xl text-slate-400">
-                    <i class="bi bi-inbox"></i>
-                  </div>
-                  <p class="mt-4 font-bold text-slate-600">Không tìm thấy người dùng phù hợp với bộ lọc.</p>
-                </td>
-              </tr>
-            } @else {
-              @for (user of sortedUsers(); track user.id) {
-                <tr class="border-b border-slate-100 bg-white transition hover:bg-blue-50/40">
-                  <td class="table-cell">
-                    <div class="font-black text-slate-800">{{ user.studentCode || user.username }}</div>
-                    <div class="text-xs font-semibold text-slate-400">{{ roleLabel(user.roleType) }}</div>
-                  </td>
-
-                  @if (activeTab() !== 'ADMIN') {
-                    <td class="table-cell font-bold text-slate-800">{{ user.fullName || 'Chưa cập nhật' }}</td>
-                  }
-
-                  <td class="table-cell text-slate-600">{{ user.email }}</td>
-
-                  @if (activeTab() === 'STUDENT') {
-                    <td class="table-cell">
-                      <span class="inline-flex rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">
-                        {{ user.classCode || user.departmentName || 'Chưa phân lớp' }}
-                      </span>
-                    </td>
-                  }
-
-                  <td class="table-cell text-center">
-                    <button
-                      type="button"
-                      (click)="toggleStatus(user)"
-                      class="status-pill"
-                      [class.status-pill-active]="isActive(user)"
-                      [title]="isActive(user) ? 'Khóa tài khoản' : 'Mở khóa tài khoản'"
-                    >
-                      <span class="status-dot"></span>
-                      {{ isActive(user) ? 'Hoạt động' : 'Bị khóa' }}
-                    </button>
-                  </td>
-
-                  <td class="table-cell">
-                    <div class="flex items-center justify-center gap-2">
-                      <button type="button" (click)="openViewModal(user)" class="icon-btn text-slate-500 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700" title="Xem hồ sơ">
-                        <i class="bi bi-person-vcard"></i>
-                      </button>
-                      @if (activeTab() === 'STUDENT') {
-                        <button type="button" (click)="editUser(user)" class="icon-btn text-slate-500 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700" title="Phân lớp">
-                          <i class="bi bi-person-gear"></i>
-                        </button>
-                      }
-                      <button type="button" (click)="resetPassword(user)" class="icon-btn text-slate-500 hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700" title="Gửi email đặt lại mật khẩu">
-                        <i class="bi bi-key"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
-      </lib-admin-table-container>
-    </div>
-
-    <div class="border-t border-slate-200 bg-white p-4">
-      <lib-pagination
-        [currentPage]="currentPage()"
-        [totalItems]="totalRows()"
-        [pageSize]="pageSize()"
-        (pageChange)="onPageChange($event)"
-        (pageSizeChange)="onPageSizeChange($event)"
-      ></lib-pagination>
-    </div>
+    }
   </section>
 
-  <app-view-user-modal
-    [isOpen]="isViewModalOpen()"
-    [user]="viewingUser()"
-    (closeModal)="closeViewModal()"
-  ></app-view-user-modal>
+  <!-- Data Table -->
+  <div class="table-wrapper">
+    <lib-admin-table-container>
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th class="th-sort" tabindex="0" role="button" (click)="onSort('studentCode')" (keydown.enter)="onSort('studentCode')">
+              {{ activeTab() === 'STUDENT' ? 'MSSV' : 'Username' }}
+              <i class="bi bi-arrow-down-up"></i>
+            </th>
+            @if (activeTab() !== 'ADMIN') {
+              <th class="th-sort" tabindex="0" role="button" (click)="onSort('fullName')" (keydown.enter)="onSort('fullName')">
+                {{ activeTab() === 'FACULTY' ? 'Tên đơn vị' : 'Họ và tên' }}
+                <i class="bi bi-arrow-down-up"></i>
+              </th>
+            }
+            <th>Email</th>
+            @if (activeTab() === 'STUDENT') {
+              <th>Lớp / Đơn vị</th>
+            }
+            <th class="th-center">Trạng thái</th>
+            <th class="th-center">Thao tác</th>
+          </tr>
+        </thead>
 
-  <app-edit-user-modal
-    [isOpen]="isEditModalOpen()"
-    [user]="editingUser()"
-    [departments]="departments()"
-    [isSaving]="isSavingClass()"
-    (closeModal)="closeEditModal()"
-    (saveClass)="handleSaveUserClass($event)"
-  ></app-edit-user-modal>
+        <tbody>
+          @if (isLoading()) {
+            <tr>
+              <td [colSpan]="activeTab() === 'STUDENT' ? 6 : activeTab() === 'ADMIN' ? 4 : 5" class="td-empty">
+                <div class="empty-state">
+                  <div class="empty-icon">
+                    <i class="bi bi-arrow-repeat"></i>
+                  </div>
+                  <span>Đang tải dữ liệu...</span>
+                </div>
+              </td>
+            </tr>
+          } @else if (activeTab() === 'STUDENT' && !selectedFilterClass() && !searchTerm().trim() && selectedStatus() === '') {
+            <tr>
+              <td [colSpan]="activeTab() === 'STUDENT' ? 6 : activeTab() === 'ADMIN' ? 4 : 5" class="td-empty">
+                <div class="empty-state empty-state-large">
+                  <div class="empty-icon empty-icon-lg">
+                    <i class="bi bi-funnel"></i>
+                  </div>
+                  <h3 class="empty-title">Chọn lớp để tải danh sách sinh viên</h3>
+                  <p class="empty-desc">
+                    Dữ liệu sinh viên có thể rất lớn, vui lòng chọn khóa, khoa, chuyên ngành và lớp sinh hoạt trước khi xem danh sách.
+                  </p>
+                </div>
+              </td>
+            </tr>
+          } @else if (sortedUsers().length === 0) {
+            <tr>
+              <td [colSpan]="activeTab() === 'STUDENT' ? 6 : activeTab() === 'ADMIN' ? 4 : 5" class="td-empty">
+                <div class="empty-state">
+                  <div class="empty-icon">
+                    <i class="bi bi-inbox"></i>
+                  </div>
+                  <span>Không tìm thấy người dùng phù hợp với bộ lọc.</span>
+                </div>
+              </td>
+            </tr>
+          } @else {
+            @for (user of sortedUsers() || []; track user.id) {
+              <tr class="tr-data">
+                <td class="td-user-code">
+                  <span class="user-code">{{ user.studentCode || user.username }}</span>
+                  <span class="user-role-tag">{{ roleLabel(user.roleType) }}</span>
+                </td>
 
-  <app-add-user-modal
-    [isOpen]="isAddModalOpen()"
-    [departments]="departments()"
-    (closeModal)="closeAddModal()"
-    (saveUser)="handleSaveNewUser($event)"
-  ></app-add-user-modal>
+                @if (activeTab() !== 'ADMIN') {
+                  <td class="td-name">{{ user.fullName || 'Chưa cập nhật' }}</td>
+                }
+
+                <td class="td-email">{{ user.email }}</td>
+
+                @if (activeTab() === 'STUDENT') {
+                  <td class="td-class">
+                    <span class="class-badge">{{ user.classCode || user.departmentName || 'Chưa phân lớp' }}</span>
+                  </td>
+                }
+
+                <td class="td-center">
+                  <button
+                    type="button"
+                    (click)="toggleStatus(user)"
+                    class="status-pill"
+                    [class.status-pill-active]="isActive(user)"
+                    [title]="isActive(user) ? 'Khóa tài khoản' : 'Mở khóa tài khoản'"
+                  >
+                    <span class="status-dot"></span>
+                    {{ isActive(user) ? 'Hoạt động' : 'Bị khóa' }}
+                  </button>
+                </td>
+
+                <td class="td-actions">
+                  <div class="action-group">
+                    <button type="button" (click)="openViewModal(user)" class="icon-btn icon-btn-view" title="Xem hồ sơ">
+                      <i class="bi bi-person-vcard"></i>
+                    </button>
+                    @if (activeTab() === 'STUDENT') {
+                      <button type="button" (click)="editUser(user)" class="icon-btn icon-btn-edit" title="Phân lớp">
+                        <i class="bi bi-person-gear"></i>
+                      </button>
+                    }
+                    <button type="button" (click)="resetPassword(user)" class="icon-btn icon-btn-key" title="Gửi email đặt lại mật khẩu">
+                      <i class="bi bi-key"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </lib-admin-table-container>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-bar">
+    <lib-pagination
+      [currentPage]="currentPage()"
+      [totalItems]="totalRows()"
+      [pageSize]="pageSize()"
+      theme="dark"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    ></lib-pagination>
+  </div>
 </div>
+
+<!-- Modals -->
+<app-view-user-modal
+  [isOpen]="isViewModalOpen()"
+  [user]="viewingUser()"
+  (closeModal)="closeViewModal()"
+></app-view-user-modal>
+
+<app-edit-user-modal
+  [isOpen]="isEditModalOpen()"
+  [user]="editingUser()"
+  [departments]="departments()"
+  [isSaving]="isSavingClass()"
+  (closeModal)="closeEditModal()"
+  (saveClass)="handleSaveUserClass($event)"
+></app-edit-user-modal>
+
+<app-add-user-modal
+  [isOpen]="isAddModalOpen()"
+  [departments]="departments()"
+  (closeModal)="closeAddModal()"
+  (saveUser)="handleSaveNewUser($event)"
+></app-add-user-modal>

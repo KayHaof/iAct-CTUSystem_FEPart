@@ -1,31 +1,21 @@
-<div class="min-h-full bg-slate-50 px-4 py-5 md:px-6 lg:px-8">
-  <section class="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
-    <header class="bg-gradient-to-r from-blue-600 to-sky-500 px-5 py-5 text-white md:px-7">
-      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div class="flex items-start gap-4">
-          <button
-            type="button"
-            (click)="goBack()"
-            class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition hover:bg-white/25"
-            title="Quay lại danh sách"
-          >
+<div class="import-page">
+  <section class="page-card">
+    <header class="page-header">
+      <div class="header-top">
+        <div class="header-left">
+          <button type="button" (click)="goBack()" class="back-btn" title="Quay lại danh sách">
             <i class="bi bi-arrow-left"></i>
           </button>
-          <div>
-            <p class="text-xs font-bold uppercase tracking-wide text-blue-100">Quản lý người dùng</p>
-            <h1 class="mt-1 text-2xl font-black tracking-tight md:text-3xl">Nhập sinh viên từ Excel</h1>
-            <p class="mt-2 max-w-2xl text-sm font-medium text-blue-50">
+          <div class="header-info">
+            <p class="header-eyebrow">Quản lý người dùng</p>
+            <h1 class="header-title">Nhập sinh viên từ Excel</h1>
+            <p class="header-desc">
               Tải lên file `.xlsx` để tạo nhiều tài khoản sinh viên cùng lúc và nhận file lỗi nếu có dòng không hợp lệ.
             </p>
           </div>
         </div>
 
-        <a
-          href="/assets/templates/import_students_template.xlsx"
-          download
-          class="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-blue-700 shadow-sm transition hover:bg-blue-50"
-          title="Tải file Excel mẫu"
-        >
+        <a href="/assets/templates/import_students_template.xlsx" download class="download-template-btn" title="Tải file Excel mẫu">
           <i class="bi bi-cloud-arrow-down-fill"></i>
           Tải file mẫu
         </a>
@@ -33,10 +23,10 @@
     </header>
 
     @if (!importResult()) {
-      <div class="grid gap-5 p-5 lg:grid-cols-[340px,1fr] lg:p-6">
-        <aside class="rounded-2xl border border-blue-100 bg-blue-50 p-5">
-          <h2 class="text-sm font-black uppercase tracking-wide text-blue-800">Cột dữ liệu bắt buộc</h2>
-          <div class="mt-4 space-y-3">
+      <div class="page-body">
+        <aside class="sidebar-panel">
+          <h2 class="sidebar-title">Cột dữ liệu bắt buộc</h2>
+          <div class="requirements-list">
             <div class="requirement-item">
               <strong>Username</strong>
               <span>Tên đăng nhập duy nhất, thường dùng MSSV.</span>
@@ -64,14 +54,11 @@
           </div>
         </aside>
 
-        <div class="space-y-5">
+        <div class="main-content">
           <div
-            class="relative overflow-hidden rounded-2xl border-2 border-dashed p-8 text-center transition"
-            [class.border-blue-400]="isDragging()"
-            [class.bg-blue-50]="isDragging()"
-            [class.border-slate-200]="!isDragging() && !selectedFile()"
-            [class.border-emerald-400]="selectedFile() && !isDragging()"
-            [class.bg-emerald-50]="selectedFile() && !isDragging()"
+            class="upload-zone"
+            [class.drag-active]="isDragging()"
+            [class.file-selected]="selectedFile() && !isDragging()"
             (dragover)="onDragOver($event)"
             (dragleave)="onDragLeave($event)"
             (drop)="onDrop($event)"
@@ -79,48 +66,48 @@
             <input
               type="file"
               id="fileUpload"
-              class="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+              class="file-input-hidden"
               accept=".xlsx, .xls"
               (change)="onFileSelected($event)"
               [disabled]="isUploading()"
             />
 
             @if (!selectedFile()) {
-              <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-3xl text-slate-500">
+              <div class="upload-icon">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </div>
-              <h2 class="mt-4 text-lg font-black text-slate-800">Kéo thả file Excel vào đây</h2>
-              <p class="mt-2 text-sm font-medium text-slate-500">Hoặc chọn file `.xlsx`, `.xls` từ máy tính.</p>
+              <h2 class="upload-title">Kéo thả file Excel vào đây</h2>
+              <p class="upload-desc">Hoặc chọn file `.xlsx`, `.xls` từ máy tính.</p>
             } @else {
-              <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-3xl text-emerald-600">
+              <div class="upload-icon">
                 <i class="bi bi-check-circle-fill"></i>
               </div>
-              <h2 class="mt-4 text-lg font-black text-emerald-800">{{ selectedFile()?.name }}</h2>
-              <p class="mt-1 text-sm font-bold text-emerald-700">{{ (selectedFile()?.size || 0) / 1024 | number:'1.0-0' }} KB</p>
+              <h2 class="file-name">{{ selectedFile()?.name }}</h2>
+              <p class="file-size">{{ (selectedFile()?.size || 0) / 1024 | number:'1.0-0' }} KB</p>
             }
           </div>
 
           @if (selectedFile() && previewHeaders().length > 0) {
-            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-4">
-                <h2 class="font-black text-slate-800">Xem trước 5 dòng đầu</h2>
+            <div class="preview-card">
+              <div class="preview-header">
+                <h2 class="preview-title">Xem trước 5 dòng đầu</h2>
               </div>
-              <div class="overflow-x-auto">
-                <table class="w-full min-w-[760px] border-collapse text-left text-sm">
+              <div class="preview-table-wrapper">
+                <table class="preview-table">
                   <thead>
-                    <tr class="border-b border-slate-200 text-xs font-black uppercase tracking-wide text-slate-500">
-                      <th class="px-4 py-3 text-center">#</th>
+                    <tr>
+                      <th>#</th>
                       @for (header of previewHeaders(); track header) {
-                        <th class="px-4 py-3">{{ header }}</th>
+                        <th>{{ header }}</th>
                       }
                     </tr>
                   </thead>
                   <tbody>
                     @for (row of previewRows(); track $index) {
-                      <tr class="border-b border-slate-100 hover:bg-blue-50/40">
-                        <td class="px-4 py-3 text-center font-bold text-slate-400">{{ $index + 1 }}</td>
+                      <tr>
+                        <td>{{ $index + 1 }}</td>
                         @for (cell of previewHeaders(); track cellIdx; let cellIdx = $index) {
-                          <td class="px-4 py-3 font-semibold text-slate-700">{{ row[cellIdx] || '-' }}</td>
+                          <td>{{ row[cellIdx] || '-' }}</td>
                         }
                       </tr>
                     }
@@ -129,11 +116,11 @@
               </div>
             </div>
 
-            <div class="flex justify-end gap-3">
+            <div class="action-row">
               <button type="button" (click)="cancelSelection()" [disabled]="isUploading()" class="btn-secondary">Hủy bỏ</button>
               <button type="button" (click)="uploadFile()" [disabled]="isUploading()" class="btn-primary">
                 @if (isUploading()) {
-                  <i class="bi bi-arrow-repeat animate-spin"></i>
+                  <i class="bi bi-arrow-repeat spin-icon"></i>
                   Đang xử lý
                 } @else {
                   <i class="bi bi-cloud-arrow-up-fill"></i>
@@ -145,39 +132,39 @@
         </div>
       </div>
     } @else {
-      <div class="p-6">
-        <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+      <div class="page-body" style="display: block;">
+        <div class="result-card">
           @if (importResult()?.failCount === 0) {
-            <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-emerald-100 text-4xl text-emerald-600">
+            <div class="result-icon result-icon-success">
               <i class="bi bi-check-lg"></i>
             </div>
-            <h2 class="mt-5 text-2xl font-black text-slate-900">Import thành công</h2>
-            <p class="mt-2 font-semibold text-slate-500">
+            <h2 class="result-title">Import thành công</h2>
+            <p class="result-desc">
               Đã thêm {{ importResult()?.successCount }} sinh viên vào hệ thống.
             </p>
-            <button type="button" (click)="goBack()" class="btn-primary mx-auto mt-6">
+            <button type="button" (click)="goBack()" class="btn-primary" style="margin: 1.5rem auto 0; display: flex;">
               <i class="bi bi-arrow-left"></i>
               Quay lại danh sách
             </button>
           } @else {
-            <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-100 text-4xl text-amber-600">
+            <div class="result-icon result-icon-warning">
               <i class="bi bi-exclamation-triangle-fill"></i>
             </div>
-            <h2 class="mt-5 text-2xl font-black text-slate-900">Import hoàn tất nhưng có lỗi</h2>
-            <div class="mt-6 flex flex-wrap justify-center gap-4">
-              <div class="result-box bg-emerald-50 text-emerald-700">
+            <h2 class="result-title">Import hoàn tất nhưng có lỗi</h2>
+            <div class="results-summary">
+              <div class="result-box success">
                 <strong>{{ importResult()?.successCount }}</strong>
                 <span>Thành công</span>
               </div>
-              <div class="result-box bg-rose-50 text-rose-700">
+              <div class="result-box error">
                 <strong>{{ importResult()?.failCount }}</strong>
                 <span>Thất bại</span>
               </div>
             </div>
-            <p class="mx-auto mt-6 max-w-xl rounded-xl bg-slate-50 p-4 text-sm font-semibold text-slate-600">
+            <p class="error-note">
               Tải file lỗi, chỉnh lại các dòng chưa hợp lệ rồi import lại để hoàn tất dữ liệu.
             </p>
-            <div class="mt-6 flex flex-wrap justify-center gap-3">
+            <div class="result-actions">
               <button type="button" (click)="cancelSelection()" class="btn-secondary">
                 <i class="bi bi-arrow-clockwise"></i>
                 Import file khác

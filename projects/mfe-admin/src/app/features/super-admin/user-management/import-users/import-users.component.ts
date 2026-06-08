@@ -110,13 +110,13 @@ export class ImportUsersComponent {
     this.adminUserService.importUsersFromExcel(formData).subscribe({
       next: (res: ApiResponse<ImportResultDto>) => {
         this.isUploading.set(false);
-        if (res.result) {
-          this.importResult.set(res.result);
-          if (res.result.failCount === 0) {
+        if (res.data) {
+          this.importResult.set(res.data);
+          if (res.data.failCount === 0) {
             this.alertService.success('Import toàn bộ dữ liệu thành công!');
           } else {
             this.alertService.warning(
-              `Thành công: ${res.result.successCount}, Lỗi: ${res.result.failCount}`,
+              `Thành công: ${res.data.successCount}, Lỗi: ${res.data.failCount}`,
             );
           }
         }

@@ -1,0 +1,174 @@
+@if (isOpen) {
+  <div class="modal-overlay">
+    <div class="modal-backdrop" role="button" tabindex="0" aria-label="Đóng" (click)="close()" (keydown.enter)="close()"></div>
+
+    <div class="modal-content">
+      <header class="modal-header">
+        <div class="modal-header-left">
+          <span class="modal-header-icon">
+            <i class="bi bi-shield-plus-fill"></i>
+          </span>
+          <div class="modal-header-info">
+            <h2 class="modal-title">Thêm Quản trị viên</h2>
+            <p class="modal-subtitle">Thao tác nhạy cảm, cần xác nhận kỹ lưỡng</p>
+          </div>
+        </div>
+        <button type="button" (click)="close()" class="icon-close" title="Đóng">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <div class="security-warning">
+          <div class="warning-content">
+            <span class="warning-icon">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+            </span>
+            <div>
+              <p class="warning-title">Cảnh báo bảo mật</p>
+              <p class="warning-text">
+                Tạo tài khoản Quản trị viên là thao tác nhạy cảm. Vui lòng đảm bảo bạn có quyền hạn cần thiết trước khi tiếp tục.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <section class="form-section">
+          <div class="section-title">
+            <i class="bi bi-shield-lock-fill" style="color: #dc2626;"></i>
+            Thông tin đăng nhập
+          </div>
+
+          <div class="form-grid">
+            <div>
+              <label for="adminUsername" class="input-label">Tên đăng nhập <span style="color: #dc2626;">*</span></label>
+              <input
+                id="adminUsername"
+                type="text"
+                [(ngModel)]="adminData.username"
+                class="input-field"
+                placeholder="VD: admin.quantri"
+                autocomplete="off"
+              />
+            </div>
+            <div>
+              <label for="adminEmail" class="input-label">Email <span style="color: #dc2626;">*</span></label>
+              <input
+                id="adminEmail"
+                type="email"
+                [(ngModel)]="adminData.email"
+                class="input-field"
+                placeholder="admin@ctu.edu.vn"
+              />
+            </div>
+            <div class="form-group-full">
+              <label for="adminFullName" class="input-label">Họ và tên hiển thị <span style="color: #dc2626;">*</span></label>
+              <input
+                id="adminFullName"
+                type="text"
+                [(ngModel)]="adminData.fullName"
+                class="input-field"
+                placeholder="Nhập họ tên hoặc tên định danh"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-title">
+            <i class="bi bi-key-fill" style="color: #dc2626;"></i>
+            Mật khẩu
+          </div>
+
+          <div class="form-grid">
+            <div>
+              <label for="adminPassword" class="input-label">Mật khẩu <span style="color: #dc2626;">*</span></label>
+              <div class="input-wrapper">
+                <input
+                  id="adminPassword"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  [(ngModel)]="adminData.password"
+                  class="input-field input-with-icon"
+                  placeholder="Ít nhất 8 ký tự, có chữ hoa, chữ thường và số"
+                  autocomplete="new-password"
+                />
+                <button type="button" (click)="togglePassword()" class="field-icon" title="Ẩn hoặc hiện mật khẩu">
+                  <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()"></i>
+                </button>
+              </div>
+              @if (adminData.password) {
+                <div class="password-strength">
+                  <div class="strength-bars">
+                    <div class="strength-bar" [class.bar-weak]="passwordStrength() === 'weak'" [class.bar-medium]="passwordStrength() === 'medium'" [class.bar-strong]="passwordStrength() === 'strong'"></div>
+                    <div class="strength-bar" [class.bar-medium]="passwordStrength() === 'medium' || passwordStrength() === 'strong'" [class.bar-weak]="passwordStrength() === 'weak'"></div>
+                    <div class="strength-bar" [class.bar-strong]="passwordStrength() === 'strong'"></div>
+                  </div>
+                  <p class="strength-text" [class.text-weak]="passwordStrength() === 'weak'" [class.text-medium]="passwordStrength() === 'medium'" [class.text-strong]="passwordStrength() === 'strong'">
+                    @if (passwordStrength() === 'weak') { Yếu - Cần thêm ký tự đặc biệt, chữ hoa, số }
+                    @if (passwordStrength() === 'medium') { Trung bình - Nên thêm ký tự đặc biệt }
+                    @if (passwordStrength() === 'strong') { Mạnh }
+                  </p>
+                </div>
+              }
+            </div>
+            <div>
+              <label for="adminConfirmPassword" class="input-label">Xác nhận mật khẩu <span style="color: #dc2626;">*</span></label>
+              <div class="input-wrapper">
+                <input
+                  id="adminConfirmPassword"
+                  [type]="showConfirmPassword() ? 'text' : 'password'"
+                  [(ngModel)]="confirmPassword"
+                  class="input-field input-with-icon"
+                  [class.input-error]="confirmPassword && adminData.password !== confirmPassword"
+                  placeholder="Nhập lại mật khẩu"
+                  autocomplete="new-password"
+                />
+                <button type="button" (click)="toggleConfirmPassword()" class="field-icon" title="Ẩn hoặc hiện mật khẩu">
+                  <i class="bi" [class.bi-eye]="!showConfirmPassword()" [class.bi-eye-slash]="showConfirmPassword()"></i>
+                </button>
+              </div>
+              @if (confirmPassword && adminData.password !== confirmPassword) {
+                <p class="error-message">Mật khẩu xác nhận chưa khớp.</p>
+              }
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-title">
+            <i class="bi bi-sticky-fill" style="color: #94a3b8;"></i>
+            Ghi chú (không bắt buộc)
+          </div>
+          <div>
+            <label for="adminDesc" class="input-label">Lý do / Ghi chú</label>
+            <textarea
+              id="adminDesc"
+              [(ngModel)]="adminData.description"
+              rows="2"
+              class="input-field input-textarea"
+              placeholder="VD: Tạo tài khoản cho bộ phận quản lý hoạt động..."
+            ></textarea>
+          </div>
+        </section>
+      </div>
+
+      <footer class="modal-footer">
+        <button type="button" (click)="close()" class="btn-secondary">Hủy bỏ</button>
+        <button
+          type="button"
+          (click)="submit()"
+          [disabled]="!isFormValid() || isSaving()"
+          class="btn-danger"
+        >
+          @if (isSaving()) {
+            <i class="bi bi-arrow-repeat spin-icon"></i>
+            Đang tạo
+          } @else {
+            <i class="bi bi-shield-check-fill"></i>
+            Tạo tài khoản QTV
+          }
+        </button>
+      </footer>
+    </div>
+  </div>
+}

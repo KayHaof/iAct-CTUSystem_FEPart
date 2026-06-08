@@ -1,0 +1,215 @@
+:host {
+  display: contents;
+}
+
+.sidebar-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.sidebar-panel-header {
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.sidebar-panel-kicker {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #2563eb;
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-panel-header strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.sidebar-filters {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.filter-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+
+  &::placeholder { color: #94a3b8; }
+
+  &:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    background: #ffffff;
+  }
+}
+
+.select-field {
+  position: relative;
+}
+
+.select-trigger {
+  width: 100%;
+  min-width: 0;
+  padding: 0.625rem 0.875rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+
+  > span:first-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+
+  &:hover { border-color: #94a3b8; }
+  &:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+}
+
+.select-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  max-height: 16rem;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  z-index: 70;
+}
+
+.select-option {
+  padding: 0.625rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  text-align: left;
+  background: transparent;
+  border: none;
+  width: 100%;
+  min-width: 0;
+
+  .option-label {
+    font-weight: 600;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+    display: block;
+  }
+
+  .option-desc {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+    display: block;
+  }
+
+  &:hover { background: #f1f5f9; }
+  &:active { background: #e2e8f0; }
+
+  &.select-option-active {
+    background: rgba(37, 99, 235, 0.08);
+
+    .option-label { color: #2563eb; font-weight: 700; }
+    .option-desc { color: #64748b; }
+  }
+}
+
+.sidebar-filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem 1.25rem;
+}
+
+.filter-btn-primary {
+  flex: 1;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  color: #ffffff;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 2.5rem;
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+  }
+}
+
+.filter-btn-reset {
+  flex: 1;
+  padding: 0.5rem;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 2.5rem;
+
+  &:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+  }
+}

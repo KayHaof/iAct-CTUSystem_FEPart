@@ -104,3 +104,33 @@ export interface MajorFilters {
   keyword: string;
   programType: string;
 }
+
+export interface ClassResponse {
+  id: number;
+  name: string;
+  classCode?: string | null;
+  majorId?: number | null;
+  majorName?: string | null;
+  departmentId?: number | null;
+  departmentName?: string | null;
+  academicYear?: string | null;
+  isActive?: boolean;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface ClassRequest {
+  name: string;
+  classCode: string | null;
+  majorId: number;
+  academicYear: string | null;
+  isActive?: boolean;
+}
+
+export interface ClassFilters {
+  active: '' | 'true' | 'false';
+  departmentId: '' | number;
+  majorId: '' | number;
+  academicYear: string;
+  keyword: string;
+}

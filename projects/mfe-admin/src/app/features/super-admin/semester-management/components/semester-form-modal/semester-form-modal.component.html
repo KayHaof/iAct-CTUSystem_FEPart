@@ -1,0 +1,120 @@
+@if (isOpen) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="semester-form-title">
+    <form class="modal-form" (ngSubmit)="save.emit()">
+      <div class="modal-form-header">
+        <div>
+          <h2 id="semester-form-title" class="modal-form-title">
+            {{ editingSemester ? 'Cập nhật học kỳ' : 'Thêm học kỳ mới' }}
+          </h2>
+          <p class="modal-form-desc">Thông tin này được dùng cho hoạt động và xét điểm rèn luyện.</p>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="close.emit()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="modal-form-grid">
+        <div class="form-group form-group-full">
+          <label for="semesterName" class="form-label">Tên học kỳ</label>
+          <input
+            id="semesterName"
+            type="text"
+            class="form-input"
+            required
+            [ngModel]="form.name"
+            name="name"
+            (ngModelChange)="nameChange.emit($event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="semesterYear" class="form-label">Năm học</label>
+          <input
+            id="semesterYear"
+            type="text"
+            class="form-input"
+            required
+            placeholder="2025-2026"
+            [ngModel]="form.academicYear"
+            name="academicYear"
+            (ngModelChange)="academicYearChange.emit($event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Trạng thái</span>
+          <div class="select-field">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('statusForm')"
+              (click)="dropdownToggle.emit('statusForm')"
+            >
+              <span>{{ getStatusFormLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs"></i>
+            </button>
+            @if (isDropdownOpen('statusForm')) {
+              <div class="select-panel" role="listbox">
+                @for (option of statusFormOptions; track option.label) {
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="form.isActive === option.value ? 'true' : 'false'"
+                    [class.select-option-active]="form.isActive === option.value"
+                    (click)="selectStatus.emit(option.value)"
+                  >
+                    <span class="option-label">{{ option.label }}</span>
+                    <span class="option-desc">{{ option.description }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="semesterStartDate" class="form-label">Ngày bắt đầu</label>
+          <input
+            id="semesterStartDate"
+            type="date"
+            class="form-input"
+            [ngModel]="form.startDate"
+            name="startDate"
+            (ngModelChange)="startDateChange.emit($event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="semesterEndDate" class="form-label">Ngày kết thúc</label>
+          <input
+            id="semesterEndDate"
+            type="date"
+            class="form-input"
+            [ngModel]="form.endDate"
+            name="endDate"
+            (ngModelChange)="endDateChange.emit($event)"
+          />
+        </div>
+      </div>
+
+      <label class="lock-checkbox">
+        <input
+          type="checkbox"
+          [ngModel]="form.isLocked"
+          name="isLocked"
+          (ngModelChange)="isLockedChange.emit($event)"
+        />
+        Khóa học kỳ sau khi lưu
+      </label>
+
+      <div class="modal-form-actions">
+        <button type="button" class="modal-btn-cancel" (click)="close.emit()">Hủy</button>
+        <button type="submit" class="modal-btn-save" [disabled]="isSaving">
+          {{ isSaving ? 'Đang lưu...' : 'Lưu học kỳ' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

@@ -1,0 +1,13 @@
+// ==============================================
+// IACT STYLES - Main Export
+// ==============================================
+// Import all style modules
+
+@use 'theme';
+@use 'variables';
+@use 'global';
+
+// Export individual modules for granular imports
+@forward 'theme';
+@forward 'variables';
+@forward 'global';

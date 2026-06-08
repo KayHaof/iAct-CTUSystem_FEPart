@@ -104,3 +104,33 @@ export interface ActivityTimeResponse {
   endDate: string;
   location: string;
 }
+
+export interface PointSummary {
+  studentId: number;
+  studentCode: string;
+  studentName: string;
+  semesterId: number;
+  semesterName: string;
+  totalPoint: number;
+  maxPoint: number;
+  percentage: number;
+  status: 'excellent' | 'good' | 'warning' | 'danger';
+}
+
+export interface CategoryPoint {
+  categoryId: number;
+  categoryName: string;
+  maxPoint: number;
+  earnedPoint: number;
+  children?: CategoryPoint[];
+}
+
+export interface PointDetail {
+  activityId: number;
+  activityTitle: string;
+  categoryId: number;
+  categoryName: string;
+  earnedPoint: number;
+  awardedAt: string;
+  proofStatus: number;
+}

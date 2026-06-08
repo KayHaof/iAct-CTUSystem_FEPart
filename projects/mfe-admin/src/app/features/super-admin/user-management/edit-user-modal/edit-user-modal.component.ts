@@ -74,7 +74,7 @@ export class EditUserModalComponent {
 
     this.adminUserService.getMajorsByDepartment(Number(deptId)).subscribe({
       next: (res: ApiResponse<MajorInfo[]>) => {
-        const result = res.result as unknown as MajorInfo[] | { data?: MajorInfo[] };
+        const result = res.data as unknown as MajorInfo[] | { data?: MajorInfo[] };
         this.majors.set(Array.isArray(result) ? result : result?.data || []);
       },
       error: () => this.majors.set([]),
@@ -92,7 +92,7 @@ export class EditUserModalComponent {
 
     this.adminUserService.getClassesByMajor(Number(majorId)).subscribe({
       next: (res: ApiResponse<ClassInfo[]>) => {
-        const result = res.result as unknown as ClassInfo[] | { data?: ClassInfo[] };
+        const result = res.data as unknown as ClassInfo[] | { data?: ClassInfo[] };
         this.classesForEdit.set(Array.isArray(result) ? result : result?.data || []);
       },
       error: () => this.classesForEdit.set([]),

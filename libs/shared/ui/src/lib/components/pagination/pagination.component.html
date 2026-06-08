@@ -1,44 +1,39 @@
-<div
-  class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"
->
-  <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-    <div class="flex items-center justify-between gap-3 sm:justify-start">
-      <p class="text-sm font-medium text-slate-600">
+<div class="pagination-wrapper" [class.dark]="theme() === 'dark'">
+  <div class="pagination-info">
+    <div class="info-row">
+      <p class="info-text">
         <span class="hidden sm:inline">Đang xem </span>
-        <span class="font-bold text-slate-900">{{ startItem() }}</span>
-        <span class="text-slate-400">-</span>
-        <span class="font-bold text-slate-900">{{ endItem() }}</span>
-        <span class="text-slate-400"> / </span>
-        <span class="font-bold text-slate-900">{{ totalItems() }}</span>
+        <span class="info-highlight">{{ startItem() }}</span>
+        <span class="info-separator">-</span>
+        <span class="info-highlight">{{ endItem() }}</span>
+        <span class="info-separator"> / </span>
+        <span class="info-highlight">{{ totalItems() }}</span>
         <span class="hidden sm:inline"> mục</span>
       </p>
 
-      <div class="relative">
+      <div class="page-size-dropdown">
         <button
           type="button"
-          class="inline-flex min-w-20 items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100"
+          class="page-size-trigger"
           aria-haspopup="listbox"
           [attr.aria-expanded]="isDropdownOpen()"
           (click)="isDropdownOpen.set(!isDropdownOpen())"
           (blur)="onBlur()"
         >
           {{ pageSize() }}
-          <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+          <i class="bi bi-chevron-down dropdown-icon"></i>
         </button>
 
         @if (isDropdownOpen()) {
           <div
-            class="absolute bottom-full left-0 z-50 mb-2 w-24 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
+            class="page-size-menu"
             role="listbox"
           >
             @for (size of pageSizeOptions(); track size) {
               <button
                 type="button"
-                class="block w-full px-3 py-2 text-left text-sm font-bold transition"
-                [class.bg-blue-50]="size === pageSize()"
-                [class.text-blue-700]="size === pageSize()"
-                [class.text-slate-600]="size !== pageSize()"
-                [class.hover:bg-slate-50]="size !== pageSize()"
+                class="page-size-option"
+                [class.active]="size === pageSize()"
                 (click)="selectPageSize(size)"
               >
                 {{ size }} mục
@@ -50,37 +45,27 @@
     </div>
   </div>
 
-  <div class="max-w-full overflow-x-auto custom-scrollbar-hidden">
-    <nav
-      class="inline-flex min-w-max items-center gap-1 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm"
-      aria-label="Phân trang"
-    >
+  <div class="pagination-nav">
+    <nav class="nav-container" aria-label="Phân trang">
       <button
         type="button"
-        class="pagination-nav-button"
+        class="nav-button nav-prev"
         title="Trang trước"
         [disabled]="currentPage() === 1"
         (click)="prevPage()"
       >
         <span class="sr-only">Trang trước</span>
-        <i class="bi bi-chevron-left text-sm"></i>
+        <i class="bi bi-chevron-left"></i>
       </button>
 
       @for (page of pages(); track $index) {
         @if (page === '...') {
-          <span class="inline-flex h-9 min-w-9 items-center justify-center px-2 text-sm font-bold text-slate-400">
-            ...
-          </span>
+          <span class="nav-ellipsis">...</span>
         } @else {
           <button
             type="button"
-            class="inline-flex h-9 min-w-9 items-center justify-center rounded-xl px-3 text-sm font-bold transition"
-            [class.bg-blue-600]="page === currentPage()"
-            [class.text-white]="page === currentPage()"
-            [class.shadow-sm]="page === currentPage()"
-            [class.text-slate-600]="page !== currentPage()"
-            [class.hover:bg-blue-50]="page !== currentPage()"
-            [class.hover:text-blue-700]="page !== currentPage()"
+            class="nav-page"
+            [class.active]="page === currentPage()"
             [attr.aria-current]="page === currentPage() ? 'page' : null"
             (click)="onPageClick(page)"
           >
@@ -91,13 +76,13 @@
 
       <button
         type="button"
-        class="pagination-nav-button"
+        class="nav-button nav-next"
         title="Trang sau"
         [disabled]="currentPage() === totalPages() || totalPages() === 0"
         (click)="nextPage()"
       >
         <span class="sr-only">Trang sau</span>
-        <i class="bi bi-chevron-right text-sm"></i>
+        <i class="bi bi-chevron-right"></i>
       </button>
     </nav>
   </div>

@@ -40,8 +40,8 @@ export class ModerationFiltersComponent implements OnInit {
   loadDepartments() {
     this.moderationService.getAllDepartments().subscribe({
       next: (res: ApiResponse<PageDTO<Department>>) => {
-        if (res.result && res.result.data) {
-          this.departments.set(res.result.data);
+        if (res.data && res.data.data) {
+          this.departments.set(res.data.data);
         }
       },
     });

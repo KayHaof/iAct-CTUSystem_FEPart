@@ -1,11 +1,24 @@
-export interface Activity {
+export type Activity = ActivityItem;
+
+export interface ActivityItem {
   id: string;
   title: string;
   date: string;
-  time: string;
-  location: string;
-  status: 'UPCOMING' | 'PENDING' | 'COMPLETED';
-  actionRequired?: 'CHECK_IN' | 'SUBMIT_PROOF' | 'NONE';
+  time?: string;
+  location?: string;
+  status: 'UPCOMING' | 'PENDING' | 'COMPLETED' | 'active' | 'upcoming';
+  actionRequired?: 'CHECK_IN' | 'SUBMIT_PROOF' | 'REGISTER' | 'NONE';
+  department?: string;
+  thumbBg?: string;
+  thumbIcon?: string;
+  badgeClass?: string;
+}
+
+export interface ProofItem {
+  id: string;
+  title: string;
+  date: string;
+  deadline?: string;
 }
 
 export interface CriteriaScore {
@@ -20,8 +33,8 @@ export interface DashboardData {
   rank: string;
   socialDays: number;
   upcomingCount: number;
-  activities: Activity[];
-  pendingProofs: Activity[];
-  featuredActivities: Activity[];
+  activities: ActivityItem[];
+  pendingProofs: ProofItem[];
+  featuredActivities: ActivityItem[];
   criteriaScores: CriteriaScore[];
 }

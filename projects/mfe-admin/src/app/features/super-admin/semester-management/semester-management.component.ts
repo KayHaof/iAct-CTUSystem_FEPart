@@ -9,8 +9,15 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { AlertService, ConfirmService, PaginationComponent } from '@my-mfe/ui';
+import {
+  AlertService,
+  ConfirmDialogComponent,
+  ConfirmService,
+  PaginationComponent,
+} from '@my-mfe/ui';
 
+import { SemesterFiltersComponent } from './components/semester-filters/semester-filters.component';
+import { SemesterFormModalComponent } from './components/semester-form-modal/semester-form-modal.component';
 import { MasterDataService } from '../services/master-data.service';
 import {
   SemesterFilters,
@@ -38,7 +45,14 @@ type SelectOption<T> = {
 @Component({
   selector: 'app-semester-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    PaginationComponent,
+    ConfirmDialogComponent,
+    SemesterFiltersComponent,
+    SemesterFormModalComponent,
+  ],
   templateUrl: './semester-management.component.html',
   styleUrls: ['./semester-management.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -81,12 +95,28 @@ export class SemesterManagementComponent implements OnInit {
     { label: 'Đang áp dụng', value: true, description: 'Đặt làm học kỳ hiện hành' },
   ];
 
-  public activeSemester = computed(() => this.semesters().find((semester) => semester.isActive) || null);
-  public lockedCount = computed(() => this.semesters().filter((semester) => semester.isLocked).length);
-  public openCount = computed(() => this.semesters().filter((semester) => !semester.isLocked).length);
+  public activeSemester = computed(
+    () => this.semesters().find((semester) => semester.isActive) || null,
+  );
+  public lockedCount = computed(
+    () => this.semesters().filter((semester) => semester.isLocked).length,
+  );
+  public openCount = computed(
+    () => this.semesters().filter((semester) => !semester.isLocked).length,
+  );
   public pagedSemesters = computed(() => {
     const start = (this.currentPage() - 1) * this.pageSize();
     return this.semesters().slice(start, start + this.pageSize());
+  });
+
+  public filterDropdown = computed<'activeFilter' | 'lockedFilter' | null>(() => {
+    const dropdown = this.openDropdown();
+    return dropdown === 'activeFilter' || dropdown === 'lockedFilter' ? dropdown : null;
+  });
+
+  public formDropdown = computed<import('./components/semester-form-modal/semester-form-modal.component').SemesterFormDropdownKey | null>(() => {
+    const dropdown = this.openDropdown();
+    return dropdown === 'statusForm' ? dropdown : null;
   });
 
   ngOnInit(): void {
@@ -101,7 +131,7 @@ export class SemesterManagementComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (response) => {
-          this.semesters.set(response.result || []);
+          this.semesters.set(response.data || []);
           this.normalizeCurrentPage();
         },
         error: () => this.alertService.error('Không thể tải danh sách học kỳ.'),
@@ -219,26 +249,22 @@ export class SemesterManagementComponent implements OnInit {
     });
   }
 
-  async activateSemester(semester: SemesterResponse): Promise<void> {
-    const confirmed = await this.confirmService.confirmAction({
+  activateSemester(semester: SemesterResponse): void {
+    this.confirmService.confirm({
       title: 'Kích hoạt học kỳ',
       message: `Học kỳ "${this.getSemesterName(semester)}" sẽ trở thành học kỳ đang áp dụng.`,
-      variant: 'primary',
       confirmText: 'Kích hoạt',
       cancelText: 'Hủy',
-      focusCancel: false,
-    });
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.masterDataService.activateSemester(semester.id).subscribe({
-      next: () => {
-        this.alertService.success('Đã kích hoạt học kỳ.');
-        this.loadSemesters();
+      type: 'info',
+      onConfirm: () => {
+        this.masterDataService.activateSemester(semester.id).subscribe({
+          next: () => {
+            this.alertService.success('Đã kích hoạt học kỳ.');
+            this.loadSemesters();
+          },
+          error: () => this.alertService.error('Không thể kích hoạt học kỳ.'),
+        });
       },
-      error: () => this.alertService.error('Không thể kích hoạt học kỳ.'),
     });
   }
 
@@ -256,37 +282,40 @@ export class SemesterManagementComponent implements OnInit {
     });
   }
 
-  async deleteSemester(semester: SemesterResponse): Promise<void> {
+  deleteSemester(semester: SemesterResponse): void {
     if (semester.isLocked) {
       this.alertService.warning('Không thể xóa học kỳ đã khóa.');
       return;
     }
 
-    const confirmed = await this.confirmService.danger(
-      'Xóa học kỳ',
-      `Bạn có chắc chắn muốn xóa "${this.getSemesterName(semester)}"?`,
-      'Xóa',
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.masterDataService.deleteSemester(semester.id).subscribe({
-      next: () => {
-        this.alertService.success('Đã xóa học kỳ.');
-        this.loadSemesters();
+    this.confirmService.danger({
+      title: 'Xóa học kỳ',
+      message: `Bạn có chắc chắn muốn xóa "${this.getSemesterName(semester)}"?`,
+      confirmText: 'Xóa',
+      onConfirm: () => {
+        this.masterDataService.deleteSemester(semester.id).subscribe({
+          next: () => {
+            this.alertService.success('Đã xóa học kỳ.');
+            this.loadSemesters();
+          },
+          error: () => this.alertService.error('Không thể xóa học kỳ này.'),
+        });
       },
-      error: () => this.alertService.error('Không thể xóa học kỳ này.'),
     });
   }
 
   getActiveFilterLabel(): string {
-    return this.activeFilterOptions.find((option) => option.value === this.filters().active)?.label || 'Tất cả';
+    return (
+      this.activeFilterOptions.find((option) => option.value === this.filters().active)?.label ||
+      'Tất cả'
+    );
   }
 
   getLockedFilterLabel(): string {
-    return this.lockedFilterOptions.find((option) => option.value === this.filters().locked)?.label || 'Tất cả';
+    return (
+      this.lockedFilterOptions.find((option) => option.value === this.filters().locked)?.label ||
+      'Tất cả'
+    );
   }
 
   getStatusFormLabel(): string {

@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin, of, Observable } from 'rxjs';
@@ -37,6 +37,7 @@ export class ActivityCreateComponent implements OnInit {
   private cloudinaryService = inject(CloudinaryService);
   private userService = inject(UserService);
   private categoryService = inject(CategoryService);
+  http = inject(HttpClient);
 
   isEditMode = signal<boolean>(false);
   activityId = signal<number | null>(null);
@@ -50,6 +51,7 @@ export class ActivityCreateComponent implements OnInit {
   selectedOrganizer = signal<OrganizerMock | null>(null);
   isSearchingOrganizer = signal<boolean>(false);
   searchOrganizerError = signal<string | null>(null);
+  isGeneratingAI = signal<boolean>(false);
 
   categories = signal<CategoryResponse[]>([]);
 
@@ -86,11 +88,11 @@ export class ActivityCreateComponent implements OnInit {
   fetchCategories() {
     this.categoryService.getAllCategoriesFlat().subscribe({
       next: (res) => {
-        if (res.code === 200 && res.result) {
-          this.categories.set(res.result);
+        if (res.code === 200 && res.data) {
+          this.categories.set(res.data);
         }
       },
-      error: (err) => console.error('Lỗi khi tải danh mục tiêu chí:', err),
+      error: (err) => console.error('Loi khi tai danh muc tieu chi:', err),
     });
   }
 
@@ -153,14 +155,14 @@ export class ActivityCreateComponent implements OnInit {
               id: act.organizer.id,
               name: act.organizer.name,
               username: '...',
-              email: 'Đang lấy thông tin chi tiết...',
-              fullName: act.organizer.name || 'Người phụ trách',
+              email: 'Dang lay thong tin chi tiet...',
+              fullName: act.organizer.name || 'Nguoi phu trach',
               avatarUrl: null,
             });
 
             this.userService.getUserById(act.organizer.id).subscribe({
               next: (response: ApiResponse<UserInfo>) => {
-                const user = response.result;
+                const user = response.data;
                 if (user) {
                   this.selectedOrganizer.update((prev) => ({
                     ...(prev || { id: user.id }),
@@ -171,13 +173,13 @@ export class ActivityCreateComponent implements OnInit {
                   }));
                 }
               },
-              error: (err: HttpErrorResponse) => console.error('Không thể lấy chi tiết User:', err),
+              error: (err: HttpErrorResponse) => console.error('Khong the lay chi tiet User:', err),
             });
           }
         },
         error: (err: HttpErrorResponse) => {
-          console.error('Lỗi khi tải hoạt động:', err);
-          this.alertService.error('Không tìm thấy hoạt động này!');
+          console.error('Loi khi tai hoat dong:', err);
+          this.alertService.error('Khong tim thay hoat dong nay!');
           this.goBack();
         },
       });
@@ -188,7 +190,6 @@ export class ActivityCreateComponent implements OnInit {
     return dateStr.substring(0, 16);
   }
 
-  // --- QUẢN LÝ ĐIỂM RÈN LUYỆN ---
   get benefits() { return this.activityForm.get('benefits') as FormArray; }
   addBenefit() {
     this.benefits.push(this.fb.group({
@@ -199,7 +200,6 @@ export class ActivityCreateComponent implements OnInit {
   }
   removeBenefit(index: number) { this.benefits.removeAt(index); }
 
-  // --- QUẢN LÝ LỊCH TRÌNH NHIỀU BUỔI ---
   get schedules() { return this.activityForm.get('schedules') as FormArray; }
   addSchedule() {
     this.schedules.push(this.fb.group({
@@ -210,7 +210,6 @@ export class ActivityCreateComponent implements OnInit {
     }));
   }
   removeSchedule(index: number) { this.schedules.removeAt(index); }
-
 
   formatDateTime = (dtStr: string): string => {
     if (!dtStr) return '';
@@ -252,13 +251,13 @@ export class ActivityCreateComponent implements OnInit {
 
   searchOrganizer(email: string) {
     if (!email || email.trim() === '') {
-      this.searchOrganizerError.set('Vui lòng nhập email!');
+      this.searchOrganizerError.set('Vui long nhap email!');
       return;
     }
 
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email.trim())) {
-      this.searchOrganizerError.set('Định dạng email không hợp lệ!');
+      this.searchOrganizerError.set('Dinh dang email khong hop le!');
       return;
     }
 
@@ -270,9 +269,9 @@ export class ActivityCreateComponent implements OnInit {
       .pipe(finalize(() => this.isSearchingOrganizer.set(false)))
       .subscribe({
         next: (response: ApiResponse<UserInfo>) => {
-          const user = response.result;
+          const user = response.data;
           if (!user) {
-            this.searchOrganizerError.set('Email này không tồn tại trong hệ thống!');
+            this.searchOrganizerError.set('Email nay khong ton tai trong he thong!');
             return;
           }
           this.selectedOrganizer.set({
@@ -285,7 +284,7 @@ export class ActivityCreateComponent implements OnInit {
           });
         },
         error: (err: HttpErrorResponse) => {
-          this.searchOrganizerError.set(err.error?.message || 'Email này không tồn tại!');
+          this.searchOrganizerError.set(err.error?.message || 'Email nay khong ton tai!');
         },
       });
   }
@@ -300,16 +299,15 @@ export class ActivityCreateComponent implements OnInit {
     const isFormValid = this.activityForm.valid;
     const hasOrganizer = !!currentOrganizer;
 
-    // KIỂM TRA LỖI KHI GỬI DUYỆT
     if (finalStatus !== 3) {
       if (!isFormValid) {
         this.activityForm.markAllAsTouched();
-        this.alertService.error('Vui lòng điền đầy đủ các thông tin bắt buộc để gửi duyệt!');
+        this.alertService.error('Vui long dien day du cac thong tin bat buoc de gui duyet!');
         return;
       }
 
       if (!hasOrganizer) {
-        this.alertService.error('Vui lòng tìm và chọn người phụ trách hoạt động!');
+        this.alertService.error('Vui long tim va chon nguoi phu trach hoat dong!');
         return;
       }
 
@@ -319,19 +317,18 @@ export class ActivityCreateComponent implements OnInit {
       const actEnd = new Date(data.end_date);
 
       if (regEnd <= regStart) {
-        this.alertService.error('Thời gian đóng đăng ký phải sau thời gian mở!');
+        this.alertService.error('Thoi gian dong dang ky phai sau thoi gian mo!');
         return;
       }
       if (actStart <= regEnd) {
-        this.alertService.error('Thời gian tổ chức phải sau khi đã đóng đăng ký!');
+        this.alertService.error('Thoi gian to chuc phai sau khi da dong dang ky!');
         return;
       }
       if (actEnd <= actStart) {
-        this.alertService.error('Thời gian kết thúc phải sau thời gian bắt đầu!');
+        this.alertService.error('Thoi gian ket thuc phai sau thoi gian bat dau!');
         return;
       }
 
-      //  VALIDATION CHO LỊCH TRÌNH CHI TIẾT (SCHEDULES)
       if (data.schedules && data.schedules.length > 0) {
         for (let i = 0; i < data.schedules.length; i++) {
           const s = data.schedules[i];
@@ -339,11 +336,11 @@ export class ActivityCreateComponent implements OnInit {
           const sEnd = new Date(s.end_time);
 
           if (sEnd <= sStart) {
-            this.alertService.error(`Lỗi tại [${s.title}]: Thời gian kết thúc phải sau bắt đầu!`);
+            this.alertService.error(`Loi tai [${s.title}]: Thoi gian ket thuc phai sau bat dau!`);
             return;
           }
           if (sStart < actStart || sEnd > actEnd) {
-            this.alertService.error(`Lỗi tại [${s.title}]: Thời gian buổi này phải nằm trong khung thời gian tổ chức chung của hoạt động!`);
+            this.alertService.error(`Loi tai [${s.title}]: Thoi gian buoi nay phai nam trong khung thoi gian chung!`);
             return;
           }
         }
@@ -352,7 +349,7 @@ export class ActivityCreateComponent implements OnInit {
     } else {
       if (!data.title || data.title.trim() === '') {
         this.activityForm.get('title')?.markAsTouched();
-        this.alertService.error('Bản nháp ít nhất phải có Tên hoạt động!');
+        this.alertService.error('Ban nhap it nhat phai co Ten hoat dong!');
         return;
       }
     }
@@ -373,8 +370,8 @@ export class ActivityCreateComponent implements OnInit {
         : of(typeof thumbVal === 'string' ? thumbVal : null);
 
     const successMsg = this.isEditMode()
-      ? (finalStatus === 0 ? 'Đã cập nhật và gửi yêu cầu duyệt!' : 'Cập nhật bản nháp thành công!')
-      : (finalStatus === 0 ? 'Đã gửi yêu cầu tạo hoạt động!' : 'Lưu nháp thành công!');
+      ? (finalStatus === 0 ? 'Da cap nhat va gui yeu cau duyet!' : 'Cap nhat ban nhap thanh cong!')
+      : (finalStatus === 0 ? 'Da gui yeu cau tao hoat dong!' : 'Luu nhap thanh cong!');
 
     forkJoin([uploadCover$, uploadThumb$])
       .pipe(
@@ -385,7 +382,6 @@ export class ActivityCreateComponent implements OnInit {
             type: b.type ?? undefined,
           }));
 
-          //  MAP LỊCH TRÌNH CHI TIẾT ĐỂ GỬI BE
           const mappedSchedules = (data.schedules || []).map((s: any) => ({
             title: s.title,
             startTime: this.formatDateTime(s.start_time),
@@ -423,12 +419,36 @@ export class ActivityCreateComponent implements OnInit {
             return this.activityService.createActivity(payload);
           }
         }),
-        this.alertService.observe(successMsg, 'Lỗi Server: Không thể lưu hoạt động!'),
+        this.alertService.observe(successMsg, 'Loi Server: Khong the luu hoat dong!'),
         finalize(() => this.isUploading.set(false)),
       )
       .subscribe({
         next: () => setTimeout(() => this.goBack(), 1500),
-        error: (err) => console.error('Chi tiết lỗi:', err),
+        error: (err) => console.error('Chi tiet loi:', err),
+      });
+  }
+
+  generateWithAI(): void {
+    const title = this.activityForm.get('title')?.value;
+    if (!title) {
+      this.alertService.warning('Vui long nhap ten hoat dong truoc khi tao noi dung AI!');
+      return;
+    }
+    this.isGeneratingAI.set(true);
+    const prompt = `Tao noi dung chi tiet cho hoat dong: "${title}". Bao gom muc dich, loi ich, lich trinh, yeu cau tham gia.`;
+    this.http.post<ApiResponse<string>>('http://localhost:8080/activity/api/v1/activities/ai-generate', { prompt })
+      .subscribe({
+        next: (res) => {
+          this.isGeneratingAI.set(false);
+          if (res.data) {
+            this.activityForm.patchValue({ content: res.data });
+            this.alertService.success('Da tao noi dung bang AI!');
+          }
+        },
+        error: () => {
+          this.isGeneratingAI.set(false);
+          this.alertService.error('Loi khi tao noi dung AI. Vui long thu lai.');
+        },
       });
   }
 }

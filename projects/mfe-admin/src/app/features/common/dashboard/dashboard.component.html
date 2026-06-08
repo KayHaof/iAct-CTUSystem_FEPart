@@ -1,17 +1,198 @@
-<div class="p-6 md:p-8 bg-gray-50 min-h-screen font-sans">
-  <div class="mb-8">
-    <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard</h1>
-    <p class="text-gray-500 mt-2 font-medium">Tổng quan hoạt động và thống kê hệ thống</p>
+<div class="dashboard-page">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="dashboard-header__top">
+      <div class="dashboard-header__left">
+        <p class="dashboard-header__eyebrow">Tổng quan</p>
+        <h1 class="dashboard-header__title">Bảng điều khiển</h1>
+        <p class="dashboard-header__subtitle">Tổng quan hoạt động và thống kê hệ thống IAct</p>
+      </div>
+      <div class="dashboard-header__actions">
+        <button type="button" class="btn-admin-secondary" (click)="refresh()">
+          <i class="bi bi-arrow-clockwise"></i>
+          Tải lại
+        </button>
+        <button type="button" class="btn-admin-primary">
+          <i class="bi bi-bar-chart-fill"></i>
+          Xem báo cáo
+        </button>
+      </div>
+    </div>
   </div>
 
-  <div
-    class="bg-white p-10 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center min-h-[400px]"
-  >
-    <div
-      class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-4xl mb-4"
-    >
-      <i class="bi bi-bar-chart-fill"></i>
+  <!-- Stats Grid - 4 columns -->
+  <div class="dashboard-stats-grid">
+    <!-- Stat 1 - Total Activities -->
+    <div class="stat-card stat-card--primary">
+      <div class="stat-card__header">
+        <div class="stat-card__icon stat-card__icon--primary">
+          <i class="bi bi-calendar-event-fill"></i>
+        </div>
+        <span class="stat-card__trend stat-card__trend--up">
+          <i class="bi bi-arrow-up"></i>
+          {{ pendingActivities() > 0 ? '+' + pendingActivities() : '0' }}
+        </span>
+      </div>
+      <div class="stat-card__value">{{ totalActivities() }}</div>
+      <div class="stat-card__label">Tổng hoạt động</div>
+      <div class="stat-card__meta">
+        <span class="stat-card__dot stat-card__dot--emerald"></span>
+        <span>{{ activeActivities() }} đang diễn ra</span>
+      </div>
     </div>
-    <h3 class="text-xl font-bold text-gray-800">Khu vực biểu đồ thống kê</h3>
+
+    <!-- Stat 2 - Students -->
+    <div class="stat-card stat-card--info">
+      <div class="stat-card__header">
+        <div class="stat-card__icon stat-card__icon--info">
+          <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <span class="stat-card__trend stat-card__trend--up">
+          <i class="bi bi-arrow-up"></i>
+          {{ totalStudents() > 0 ? '+' + (totalStudents() % 100) : '0' }}
+        </span>
+      </div>
+      <div class="stat-card__value">{{ totalStudents() }}</div>
+      <div class="stat-card__label">Sinh viên tham gia</div>
+      <div class="stat-card__meta">
+        <span class="stat-card__dot stat-card__dot--emerald"></span>
+        <span>Tài khoản đã kích hoạt</span>
+      </div>
+    </div>
+
+    <!-- Stat 3 - Departments -->
+    <div class="stat-card stat-card--success">
+      <div class="stat-card__header">
+        <div class="stat-card__icon stat-card__icon--success">
+          <i class="bi bi-building-fill"></i>
+        </div>
+        <span class="stat-card__trend stat-card__trend--neutral">
+          <i class="bi bi-dash"></i> 0
+        </span>
+      </div>
+      <div class="stat-card__value">{{ totalDepartments() }}</div>
+      <div class="stat-card__label">Khoa / Đơn vị</div>
+      <div class="stat-card__meta">
+        <span class="stat-card__dot stat-card__dot--blue"></span>
+        <span>Tất cả đang hoạt động</span>
+      </div>
+    </div>
+
+    <!-- Stat 4 - Majors -->
+    <div class="stat-card stat-card--warning">
+      <div class="stat-card__header">
+        <div class="stat-card__icon stat-card__icon--warning">
+          <i class="bi bi-diagram-3-fill"></i>
+        </div>
+        <span class="stat-card__trend stat-card__trend--up">
+          <i class="bi bi-arrow-up"></i> {{ totalMajors() > 0 ? '+' + (totalMajors() % 10) : '0' }}
+        </span>
+      </div>
+      <div class="stat-card__value">{{ totalMajors() }}</div>
+      <div class="stat-card__label">Chuyên ngành</div>
+      <div class="stat-card__meta">
+        <span class="stat-card__dot stat-card__dot--blue"></span>
+        <span>Trong hệ thống</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content - 2 columns -->
+  <div class="dashboard-content-grid">
+    <!-- Recent Activities Card -->
+    <div class="content-card">
+      <div class="content-card__header">
+        <h2 class="content-card__title">
+          <i class="bi bi-clock-history"></i>
+          Hoạt động gần đây
+        </h2>
+        <a href="#" class="content-card__link"> Xem tất cả <i class="bi bi-chevron-right"></i> </a>
+      </div>
+
+      <div class="activity-list">
+        @if (isLoading()) {
+          <div class="empty-state">
+            <i class="bi bi-arrow-repeat"></i>
+            <span>Đang tải dữ liệu...</span>
+          </div>
+        } @else if (recentActivities().length === 0) {
+          <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <span>Chưa có hoạt động nào.</span>
+          </div>
+        } @else {
+          @for (item of recentActivities(); track item.id) {
+            <div class="activity-item">
+              <div class="activity-item__thumb" [style.background]="getActivityThumbBg(item)">
+                <i [class]="getActivityIcon(item)"></i>
+              </div>
+              <div class="activity-item__info">
+                <span class="activity-item__name">{{ item.title }}</span>
+                <span class="activity-item__meta"
+                  >{{ item.departmentName }} &bull; {{ getTimeAgo(item.startDate) }}</span
+                >
+              </div>
+              <span [class]="getStatusClass(item.status)">
+                {{ getStatusLabel(item.status) }}
+              </span>
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Quick Actions Card -->
+    <div class="content-card">
+      <div class="content-card__header">
+        <h2 class="content-card__title">
+          <i class="bi bi-lightning-fill"></i>
+          Thao tác nhanh
+        </h2>
+      </div>
+
+      <div class="quick-actions-grid">
+        <button type="button" class="quick-action-btn" routerLink="/faculty/activities/create">
+          <div class="quick-action-btn__icon quick-action-btn__icon--primary">
+            <i class="bi bi-plus-lg"></i>
+          </div>
+          <span class="quick-action-btn__label">Tạo hoạt động mới</span>
+        </button>
+
+        <button type="button" class="quick-action-btn" routerLink="/super-admin/moderation">
+          <div class="quick-action-btn__icon quick-action-btn__icon--success">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+          <span class="quick-action-btn__label">Duyệt hoạt động</span>
+        </button>
+
+        <button type="button" class="quick-action-btn" routerLink="/super-admin/users">
+          <div class="quick-action-btn__icon quick-action-btn__icon--info">
+            <i class="bi bi-people-fill"></i>
+          </div>
+          <span class="quick-action-btn__label">Quản lý người dùng</span>
+        </button>
+
+        <button type="button" class="quick-action-btn" routerLink="/super-admin/classes">
+          <div class="quick-action-btn__icon quick-action-btn__icon--teal">
+            <i class="bi bi-collection-fill"></i>
+          </div>
+          <span class="quick-action-btn__label">Quản lý lớp học</span>
+        </button>
+
+        <button type="button" class="quick-action-btn" routerLink="/reports">
+          <div class="quick-action-btn__icon quick-action-btn__icon--warning">
+            <i class="bi bi-graph-up"></i>
+          </div>
+          <span class="quick-action-btn__label">Xem thống kê</span>
+        </button>
+
+        <button type="button" class="quick-action-btn" routerLink="/settings">
+          <div class="quick-action-btn__icon quick-action-btn__icon--slate">
+            <i class="bi bi-gear-fill"></i>
+          </div>
+          <span class="quick-action-btn__label">Cài đặt hệ thống</span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>

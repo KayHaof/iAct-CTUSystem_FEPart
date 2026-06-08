@@ -1,0 +1,193 @@
+@if (isOpen) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="class-form-title">
+    <form class="modal-form" (ngSubmit)="save.emit()">
+      <div class="modal-form-header">
+        <div>
+          <h2 id="class-form-title" class="modal-form-title">
+            {{ editingClass ? 'Cập nhật lớp sinh hoạt' : 'Thêm lớp sinh hoạt mới' }}
+          </h2>
+          <p class="modal-form-desc">Thiết lập lớp thuộc chuyên ngành và khóa tuyển sinh tương ứng.</p>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="close.emit()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="modal-form-grid">
+        <div class="form-group">
+          <label for="className" class="form-label">Tên lớp</label>
+          <input
+            id="className"
+            type="text"
+            class="form-input"
+            required
+            placeholder="Ví dụ: KSTN2022-A"
+            [ngModel]="form.name"
+            name="name"
+            (ngModelChange)="nameChange.emit($event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="classCode" class="form-label">Mã lớp</label>
+          <input
+            id="classCode"
+            type="text"
+            class="form-input form-input-uppercase"
+            required
+            placeholder="Ví dụ: KSTN2022A"
+            [ngModel]="form.classCode"
+            name="classCode"
+            (ngModelChange)="classCodeChange.emit($event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Đơn vị quản lý</span>
+          <div class="select-field">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('departmentForm')"
+              (click)="dropdownToggle.emit('departmentForm')"
+            >
+              <span>{{ getDepartmentFormLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs"></i>
+            </button>
+            @if (isDropdownOpen('departmentForm')) {
+              <div class="select-panel" role="listbox">
+                @if (activeDepartments.length === 0) {
+                  <div class="px-3 py-3 text-sm text-slate-500">Chưa có đơn vị đang hoạt động.</div>
+                } @else {
+                  @for (dept of activeDepartments; track dept.id) {
+                    <button
+                      type="button"
+                      role="option"
+                      class="select-option"
+                      [attr.aria-selected]="form.departmentId === dept.id ? 'true' : 'false'"
+                      [class.select-option-active]="form.departmentId === dept.id"
+                      (click)="selectDepartment.emit(dept.id)"
+                    >
+                      <span class="font-bold">{{ dept.name }}</span>
+                      <span class="option-label">{{ dept.code || 'Chưa có mã' }}</span>
+                    </button>
+                  }
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Chuyên ngành</span>
+          <div class="select-field">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('majorForm')"
+              (click)="dropdownToggle.emit('majorForm')"
+            >
+              <span>{{ getMajorFormLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs"></i>
+            </button>
+            @if (isDropdownOpen('majorForm')) {
+              <div class="select-panel" role="listbox">
+                @if (activeMajorsByDepartment.length === 0) {
+                  <div class="px-3 py-3 text-sm text-slate-500">Chưa có chuyên ngành. Vui lòng chọn đơn vị trước.</div>
+                } @else {
+                  @for (major of activeMajorsByDepartment; track major.id) {
+                    <button
+                      type="button"
+                      role="option"
+                      class="select-option"
+                      [attr.aria-selected]="form.majorId === major.id ? 'true' : 'false'"
+                      [class.select-option-active]="form.majorId === major.id"
+                      (click)="selectMajor.emit(major.id)"
+                    >
+                      <span class="option-label">{{ major.name }}</span>
+                      <span class="option-desc">{{ major.code || 'Chưa có mã' }}</span>
+                    </button>
+                  }
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Khóa tuyển sinh</span>
+          <div class="select-field">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('academicYearForm')"
+              (click)="dropdownToggle.emit('academicYearForm')"
+            >
+              <span>{{ getAcademicYearFormLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs"></i>
+            </button>
+            @if (isDropdownOpen('academicYearForm')) {
+              <div class="select-panel" role="listbox">
+                @for (opt of academicYearOptions; track opt.value) {
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="form.academicYear === opt.value ? 'true' : 'false'"
+                    [class.select-option-active]="form.academicYear === opt.value"
+                    (click)="selectAcademicYear.emit(opt.value)"
+                  >
+                    <span class="option-label">{{ opt.label }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Trạng thái</span>
+          <div class="select-field">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('activeForm')"
+              (click)="dropdownToggle.emit('activeForm')"
+            >
+              <span>{{ getActiveFormLabel() }}</span>
+              <i class="bi bi-chevron-down text-xs"></i>
+            </button>
+            @if (isDropdownOpen('activeForm')) {
+              <div class="select-panel" role="listbox">
+                @for (option of activeFormOptions; track option.label) {
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="form.isActive === option.value ? 'true' : 'false'"
+                    [class.select-option-active]="form.isActive === option.value"
+                    (click)="selectActive.emit(option.value)"
+                  >
+                    <span class="option-label">{{ option.label }}</span>
+                    <span class="option-desc">{{ option.description }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-form-actions">
+        <button type="button" class="modal-btn-cancel" (click)="close.emit()">Hủy</button>
+        <button type="submit" class="modal-btn-save" [disabled]="isSaving">
+          {{ isSaving ? 'Đang lưu...' : 'Lưu lớp' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

@@ -4,82 +4,134 @@
 }
 
 .alert-toast {
-  @apply relative flex min-w-0 items-start gap-3 overflow-hidden rounded-2xl bg-white p-4 pr-3 text-slate-800 shadow-xl ring-1 ring-slate-200;
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 0.75rem;
+  overflow: hidden;
+  border-radius: 1rem;
+  padding: 1rem;
+  padding-right: 0.75rem;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
 }
 
 .alert-accent {
-  @apply absolute inset-y-0 left-0 w-1 bg-blue-500;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0.25rem;
+  background: var(--primary);
 }
 
 .alert-state {
-  @apply mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-700;
+  margin-top: 0.125rem;
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 1rem;
 }
 
 .state-dot {
-  @apply h-3 w-3 rounded-full bg-current;
+  height: 0.75rem;
+  width: 0.75rem;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .loading-ring {
-  @apply h-4 w-4 rounded-full border-2 border-blue-200 border-t-blue-600;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 50%;
+  border: 2px solid var(--primary-light);
+  border-top-color: var(--primary);
 
   animation: alert-spin 0.75s linear infinite;
 }
 
 .alert-title {
-  @apply text-sm font-black leading-5 text-slate-950;
+  font-size: 0.875rem;
+  font-weight: 900;
+  line-height: 1.25rem;
+  color: var(--text);
 }
 
 .alert-message {
-  @apply mt-1 break-words text-sm font-medium leading-5 text-slate-600;
+  margin-top: 0.25rem;
+  word-break: break-word;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--text-secondary);
 }
 
 .alert-close {
-  @apply shrink-0 rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-blue-100;
+  flex-shrink: 0;
+  border-radius: 0.75rem;
+  background: var(--bg-elevated);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--border);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
 }
 
 .alert-toast-success {
-  .alert-accent {
-    @apply bg-emerald-500;
-  }
-
+  .alert-accent { background: #22c55e; }
   .alert-state {
-    @apply bg-emerald-50 text-emerald-700;
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
   }
 }
 
 .alert-toast-error {
-  .alert-accent {
-    @apply bg-rose-500;
-  }
-
+  .alert-accent { background: #ef4444; }
   .alert-state {
-    @apply bg-rose-50 text-rose-700;
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
   }
 }
 
 .alert-toast-warning {
-  .alert-accent {
-    @apply bg-amber-500;
-  }
-
+  .alert-accent { background: #f59e0b; }
   .alert-state {
-    @apply bg-amber-50 text-amber-700;
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
   }
 }
 
 .alert-toast-info {
-  .alert-accent {
-    @apply bg-blue-500;
-  }
-
+  .alert-accent { background: var(--primary); }
   .alert-state {
-    @apply bg-blue-50 text-blue-700;
+    background: var(--primary-light);
+    color: var(--primary);
   }
 }
 
 .alert-toast-loading {
   .alert-accent {
-    @apply bg-gradient-to-b from-blue-600 to-sky-500;
+    background: linear-gradient(180deg, var(--primary), var(--info));
   }
 }
 

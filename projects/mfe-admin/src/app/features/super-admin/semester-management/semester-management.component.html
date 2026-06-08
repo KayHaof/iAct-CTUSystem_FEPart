@@ -1,215 +1,109 @@
-<section class="min-h-screen bg-slate-50 px-4 py-5 text-slate-800 md:px-6 lg:px-8">
-  <div class="mx-auto flex max-w-[1500px] flex-col gap-5">
-    <header class="semester-command-bar">
-      <div class="min-w-0">
-        <p class="eyebrow">Master data</p>
-        <h1 class="page-title">Quản lý học kỳ</h1>
-        <p class="page-description">
+<div class="sem-page">
+  <header class="sem-header">
+    <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+      <div>
+        <p class="header-eyebrow">Dữ liệu học kỳ</p>
+        <h1 class="header-title">Quản lý học kỳ</h1>
+        <p class="header-subtitle">
           Điều phối học kỳ, năm học, trạng thái áp dụng và khóa dữ liệu theo từng chu kỳ xét điểm rèn luyện.
         </p>
       </div>
-
-      <button type="button" class="semester-create-btn" (click)="openCreateForm()">
-        <span class="create-mark">+</span>
-        <span>Thêm học kỳ</span>
+      <button type="button" class="btn-create" (click)="openCreateForm()">
+        <span class="btn-create-icon">+</span>
+        Thêm học kỳ
       </button>
-    </header>
+    </div>
+  </header>
 
-    <section class="active-semester-card">
-      <div class="min-w-0">
-        <p class="eyebrow text-blue-600">Học kỳ đang áp dụng</p>
-        <h2 class="mt-1 truncate text-2xl font-black text-slate-950">
-          {{ activeSemester() ? getSemesterName(activeSemester()!) : 'Chưa có học kỳ hiện hành' }}
-        </h2>
-        <p class="mt-2 text-sm font-medium text-slate-500">
-          Tổng {{ semesters().length }} học kỳ, {{ lockedCount() }} học kỳ đã khóa, {{ openCount() }} học kỳ còn mở.
-        </p>
-      </div>
-      <div class="active-meter">
-        <span>{{ lockedCount() }}</span>
-        <small>đã khóa</small>
-      </div>
-    </section>
+  <section class="sem-hero">
+    <div class="sem-hero-content">
+      <div class="sem-hero-label">Học kỳ đang áp dụng</div>
+      <h2 class="sem-hero-name">
+        {{ activeSemester() ? getSemesterName(activeSemester()!) : 'Chưa có học kỳ hiện hành' }}
+      </h2>
+      <p class="sem-hero-meta">
+        Tổng {{ semesters().length }} học kỳ, {{ lockedCount() }} đã khóa, {{ openCount() }} còn mở.
+      </p>
+    </div>
+    <div class="sem-hero-meter">
+      <span class="meter-value">{{ lockedCount() }}</span>
+      <span class="meter-label">đã khóa</span>
+    </div>
+  </section>
 
-    <div class="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
-      <aside class="semester-side-panel">
-        <div class="panel-heading">
-          <span class="panel-kicker">Bộ lọc</span>
-          <strong>Dòng thời gian học kỳ</strong>
-        </div>
+  <div class="sem-layout">
+    <aside class="sem-sidebar">
+      <app-semester-filters
+        [filters]="filters()"
+        [openDropdown]="filterDropdown()"
+        [activeFilterOptions]="activeFilterOptions"
+        [lockedFilterOptions]="lockedFilterOptions"
+        (academicYearChange)="updateFilter('academicYear', $event)"
+        (applyFilters)="applyFilters()"
+        (resetFilters)="resetFilters()"
+        (dropdownToggle)="toggleDropdown($event)"
+        (selectActiveFilter)="selectActiveFilter($event)"
+        (selectLockedFilter)="selectLockedFilter($event)"
+      ></app-semester-filters>
+    </aside>
 
-        <div class="space-y-4">
-          <div class="space-y-2">
-            <label for="semesterAcademicYear" class="filter-label">Năm học</label>
-            <input
-              id="semesterAcademicYear"
-              type="text"
-              class="form-input"
-              placeholder="Ví dụ: 2025-2026 hoặc K50"
-              [ngModel]="filters().academicYear"
-              (ngModelChange)="updateFilter('academicYear', $event)"
-              (keyup.enter)="applyFilters()"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <span class="filter-label">Áp dụng</span>
-            <div class="relative">
-              <button
-                type="button"
-                class="select-trigger"
-                aria-haspopup="listbox"
-                [attr.aria-expanded]="isDropdownOpen('activeFilter')"
-                (click)="toggleDropdown('activeFilter')"
-              >
-                <span>{{ getActiveFilterLabel() }}</span>
-                <i class="bi bi-chevron-down text-xs text-slate-400"></i>
-              </button>
-
-              @if (isDropdownOpen('activeFilter')) {
-                <div class="select-panel" role="listbox">
-                  @for (option of activeFilterOptions; track option.value) {
-                    <button
-                      type="button"
-                      role="option"
-                      class="select-option"
-                      [attr.aria-selected]="filters().active === option.value ? 'true' : 'false'"
-                      [class.select-option-active]="filters().active === option.value"
-                      (click)="selectActiveFilter(option.value)"
-                    >
-                      <span class="font-bold">{{ option.label }}</span>
-                      <span class="text-xs opacity-80">{{ option.description }}</span>
-                    </button>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <span class="filter-label">Khóa dữ liệu</span>
-            <div class="relative">
-              <button
-                type="button"
-                class="select-trigger"
-                aria-haspopup="listbox"
-                [attr.aria-expanded]="isDropdownOpen('lockedFilter')"
-                (click)="toggleDropdown('lockedFilter')"
-              >
-                <span>{{ getLockedFilterLabel() }}</span>
-                <i class="bi bi-chevron-down text-xs text-slate-400"></i>
-              </button>
-
-              @if (isDropdownOpen('lockedFilter')) {
-                <div class="select-panel" role="listbox">
-                  @for (option of lockedFilterOptions; track option.value) {
-                    <button
-                      type="button"
-                      role="option"
-                      class="select-option"
-                      [attr.aria-selected]="filters().locked === option.value ? 'true' : 'false'"
-                      [class.select-option-active]="filters().locked === option.value"
-                      (click)="selectLockedFilter(option.value)"
-                    >
-                      <span class="font-bold">{{ option.label }}</span>
-                      <span class="text-xs opacity-80">{{ option.description }}</span>
-                    </button>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-5 grid grid-cols-2 gap-2">
-          <button type="button" class="filter-primary-btn" (click)="applyFilters()">Lọc</button>
-          <button type="button" class="filter-secondary-btn" (click)="resetFilters()">Đặt lại</button>
-        </div>
-      </aside>
-
-      <main class="semester-timeline-shell">
+    <main class="sem-main">
+      <div class="timeline-panel">
         <div class="timeline-header">
           <div>
-            <p class="eyebrow text-slate-500">Timeline</p>
-            <h2 class="text-xl font-black text-slate-950">Danh sách học kỳ</h2>
+            <p class="timeline-eyebrow">Danh sách học kỳ</p>
+            <h2 class="timeline-title">Danh sách học kỳ</h2>
           </div>
           <span class="timeline-count">{{ semesters().length }} bản ghi</span>
         </div>
 
         <div class="timeline-list">
           @if (isLoading()) {
-            <div class="empty-state">Đang tải dữ liệu...</div>
+            <div class="timeline-empty">
+              <i class="bi bi-arrow-repeat"></i>
+              <span>Đang tải dữ liệu...</span>
+            </div>
           } @else if (semesters().length === 0) {
-            <div class="empty-state">Chưa có học kỳ phù hợp.</div>
+            <div class="timeline-empty">
+              <i class="bi bi-inbox"></i>
+              <span>Chưa có học kỳ phù hợp.</span>
+            </div>
           } @else {
             @for (semester of pagedSemesters(); track semester.id) {
-              <article class="semester-timeline-item">
+              <article class="timeline-item" [class.timeline-item-active]="semester.isActive">
                 <div class="timeline-rail" [class.timeline-rail-active]="semester.isActive"></div>
 
-                <div class="min-w-0">
-                  <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                    <div class="min-w-0">
-                      <p class="text-xs font-black uppercase tracking-wide text-blue-600">
-                        {{ semester.academicYear }}
-                      </p>
-                      <h3 class="mt-1 truncate text-lg font-black text-slate-950">
-                        {{ getSemesterName(semester) }}
-                      </h3>
-                      <p class="mt-2 text-sm font-semibold text-slate-500">
+                <div class="timeline-item-content">
+                  <div class="timeline-item-top">
+                    <div class="timeline-item-meta">
+                      <span class="timeline-year-tag">{{ semester.academicYear }}</span>
+                      <h3 class="timeline-item-name">{{ getSemesterName(semester) }}</h3>
+                      <p class="timeline-item-dates">
                         {{ formatDate(semester.startDate) }} - {{ formatDate(semester.endDate) }}
                       </p>
                     </div>
 
-                    <div class="flex flex-wrap gap-2 lg:justify-end">
-                      <span
-                        class="status-badge"
-                        [ngClass]="
-                          semester.isActive
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-slate-100 text-slate-500'
-                        "
-                      >
+                    <div class="timeline-badges">
+                      <span class="status-badge" [class.status-badge-active]="semester.isActive" [class.status-badge-inactive]="!semester.isActive">
                         {{ semester.isActive ? 'Đang áp dụng' : 'Chưa áp dụng' }}
                       </span>
-                      <span
-                        class="status-badge"
-                        [ngClass]="
-                          semester.isLocked
-                            ? 'bg-rose-100 text-rose-700'
-                            : 'bg-emerald-100 text-emerald-700'
-                        "
-                      >
+                      <span class="status-badge" [class.status-badge-locked]="semester.isLocked" [class.status-badge-open]="!semester.isLocked">
                         {{ semester.isLocked ? 'Đã khóa' : 'Mở' }}
                       </span>
                     </div>
                   </div>
 
                   <div class="timeline-actions">
-                    <button
-                      type="button"
-                      class="action-btn action-activate"
-                      [disabled]="semester.isActive"
-                      (click)="activateSemester(semester)"
-                    >
+                    <button type="button" class="action-btn action-btn-activate" [disabled]="semester.isActive" (click)="activateSemester(semester)">
                       Áp dụng
                     </button>
                     <button type="button" class="action-btn" (click)="toggleLock(semester)">
                       {{ semester.isLocked ? 'Mở khóa' : 'Khóa' }}
                     </button>
-                    <button
-                      type="button"
-                      class="action-btn"
-                      [disabled]="semester.isLocked"
-                      (click)="openEditForm(semester)"
-                    >
+                    <button type="button" class="action-btn" [disabled]="semester.isLocked" (click)="openEditForm(semester)">
                       Sửa
                     </button>
-                    <button
-                      type="button"
-                      class="danger-btn"
-                      [disabled]="semester.isLocked"
-                      (click)="deleteSemester(semester)"
-                    >
+                    <button type="button" class="action-btn action-btn-danger" [disabled]="semester.isLocked" (click)="deleteSemester(semester)">
                       Xóa
                     </button>
                   </div>
@@ -223,138 +117,35 @@
           [totalItems]="semesters().length"
           [pageSize]="pageSize()"
           [currentPage]="currentPage()"
+          theme="dark"
           (pageChange)="onPageChange($event)"
           (pageSizeChange)="onPageSizeChange($event)"
         ></lib-pagination>
-      </main>
-    </div>
+      </div>
+    </main>
   </div>
+</div>
 
-  <button type="button" class="top-button" (click)="scrollToTop()">Top</button>
-</section>
+<lib-confirm-dialog></lib-confirm-dialog>
 
-@if (isFormOpen()) {
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="semester-form-title"
-  >
-    <form class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl" (ngSubmit)="saveSemester()">
-      <div class="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <h2 id="semester-form-title" class="text-xl font-black text-slate-900">
-            {{ editingSemester() ? 'Cập nhật học kỳ' : 'Thêm học kỳ mới' }}
-          </h2>
-          <p class="mt-1 text-sm text-slate-500">
-            Thông tin này được dùng cho hoạt động và xét điểm rèn luyện.
-          </p>
-        </div>
-        <button type="button" class="filter-secondary-btn" (click)="closeForm()">Đóng</button>
-      </div>
+<button type="button" class="top-button" (click)="scrollToTop()">
+  <i class="bi bi-arrow-up-circle"></i>
+</button>
 
-      <div class="grid gap-4 md:grid-cols-2">
-        <div class="space-y-2 md:col-span-2">
-          <label for="semesterName" class="form-label">Tên học kỳ</label>
-          <input
-            id="semesterName"
-            type="text"
-            class="form-input"
-            required
-            [ngModel]="form().name"
-            name="name"
-            (ngModelChange)="updateForm('name', $event)"
-          />
-        </div>
-        <div class="space-y-2">
-          <label for="semesterYear" class="form-label">Năm học</label>
-          <input
-            id="semesterYear"
-            type="text"
-            class="form-input"
-            required
-            placeholder="2025-2026"
-            [ngModel]="form().academicYear"
-            name="academicYear"
-            (ngModelChange)="updateForm('academicYear', $event)"
-          />
-        </div>
-
-        <div class="space-y-2">
-          <span class="form-label">Trạng thái</span>
-          <div class="relative">
-            <button
-              type="button"
-              class="select-trigger"
-              aria-haspopup="listbox"
-              [attr.aria-expanded]="isDropdownOpen('statusForm')"
-              (click)="toggleDropdown('statusForm')"
-            >
-              <span>{{ getStatusFormLabel() }}</span>
-              <i class="bi bi-chevron-down text-xs text-slate-400"></i>
-            </button>
-
-            @if (isDropdownOpen('statusForm')) {
-              <div class="select-panel" role="listbox">
-                @for (option of statusFormOptions; track option.label) {
-                  <button
-                    type="button"
-                    role="option"
-                    class="select-option"
-                    [attr.aria-selected]="form().isActive === option.value ? 'true' : 'false'"
-                    [class.select-option-active]="form().isActive === option.value"
-                    (click)="selectStatusForm(option.value)"
-                  >
-                    <span class="font-bold">{{ option.label }}</span>
-                    <span class="text-xs opacity-80">{{ option.description }}</span>
-                  </button>
-                }
-              </div>
-            }
-          </div>
-        </div>
-
-        <div class="space-y-2">
-          <label for="semesterStartDate" class="form-label">Ngày bắt đầu</label>
-          <input
-            id="semesterStartDate"
-            type="date"
-            class="form-input"
-            [ngModel]="form().startDate"
-            name="startDate"
-            (ngModelChange)="updateForm('startDate', $event)"
-          />
-        </div>
-        <div class="space-y-2">
-          <label for="semesterEndDate" class="form-label">Ngày kết thúc</label>
-          <input
-            id="semesterEndDate"
-            type="date"
-            class="form-input"
-            [ngModel]="form().endDate"
-            name="endDate"
-            (ngModelChange)="updateForm('endDate', $event)"
-          />
-        </div>
-      </div>
-
-      <label class="mt-4 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
-        <input
-          type="checkbox"
-          class="h-4 w-4 rounded border-slate-300 text-blue-600"
-          [ngModel]="form().isLocked"
-          name="isLocked"
-          (ngModelChange)="updateForm('isLocked', $event)"
-        />
-        Khóa học kỳ sau khi lưu
-      </label>
-
-      <div class="mt-6 flex justify-end gap-3">
-        <button type="button" class="filter-secondary-btn" (click)="closeForm()">Hủy</button>
-        <button type="submit" class="modal-primary-btn" [disabled]="isSaving()">
-          {{ isSaving() ? 'Đang lưu...' : 'Lưu học kỳ' }}
-        </button>
-      </div>
-    </form>
-  </div>
-}
+<app-semester-form-modal
+  [isOpen]="isFormOpen()"
+  [isSaving]="isSaving()"
+  [editingSemester]="editingSemester()"
+  [form]="form()"
+  [openDropdown]="formDropdown()"
+  [statusFormOptions]="statusFormOptions"
+  (close)="closeForm()"
+  (save)="saveSemester()"
+  (nameChange)="updateForm('name', $event)"
+  (academicYearChange)="updateForm('academicYear', $event)"
+  (startDateChange)="updateForm('startDate', $event)"
+  (endDateChange)="updateForm('endDate', $event)"
+  (isLockedChange)="updateForm('isLocked', $event)"
+  (dropdownToggle)="toggleDropdown($event)"
+  (selectStatus)="selectStatusForm($event)"
+></app-semester-form-modal>

@@ -5,13 +5,6 @@ import { map } from 'rxjs/operators';
 import { Activity, ActivityTimeResponse } from '../models/activity.model';
 import { PageDTO, ApiResponse } from 'interface';
 
-export interface Registration {
-  id: number;
-  status: number; // 0 = Registered, 1 = Attended, 2 = Cancelled
-  registeredAt: string;
-  cancelReason?: string | null;
-}
-
 @Injectable({
   providedIn: 'root',
 })
@@ -35,26 +28,18 @@ export class ActivityService {
 
     return this.http
       .get<ApiResponse<PageDTO<Activity>>>(this.apiUrl, { params })
-      .pipe(map((response) => response.result));
+      .pipe(map((response) => response.data as PageDTO<Activity>));
   }
 
   getActivityById(id: number | string): Observable<Activity> {
     return this.http
       .get<ApiResponse<Activity>>(`${this.apiUrl}/${id}`)
-      .pipe(map((response) => response.result));
+      .pipe(map((response) => response.data as Activity));
   }
 
   getActivityTimes(id: number | string): Observable<ActivityTimeResponse> {
     return this.http
       .get<ApiResponse<ActivityTimeResponse>>(`${this.apiUrl}/${id}/times-location`)
-      .pipe(map((response) => response.result));
-  }
-
-  registerActivity(activityId: number): Observable<ApiResponse<Registration>> {
-    return this.http.post<ApiResponse<Registration>>(`${this.apiUrl}/${activityId}/register`, {});
-  }
-
-  cancelRegistration(activityId: number): Observable<ApiResponse<Registration>> {
-    return this.http.delete<ApiResponse<Registration>>(`${this.apiUrl}/${activityId}/register`);
+      .pipe(map((response) => response.data as ActivityTimeResponse));
   }
 }

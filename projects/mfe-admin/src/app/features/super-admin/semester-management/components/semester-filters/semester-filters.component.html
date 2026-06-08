@@ -1,0 +1,92 @@
+<div class="sidebar-panel">
+  <div class="sidebar-panel-header">
+    <span class="sidebar-panel-kicker">Bộ lọc</span>
+    <strong>Đợt thời gian học kỳ</strong>
+  </div>
+
+  <div class="sidebar-filters">
+    <div class="filter-group">
+      <label for="semesterAcademicYear" class="filter-label">Năm học</label>
+      <input
+        id="semesterAcademicYear"
+        type="text"
+        class="filter-input"
+        placeholder="Ví dụ: 2025-2026 hoặc K50"
+        [ngModel]="filters.academicYear"
+        (ngModelChange)="academicYearChange.emit($event)"
+        (keyup.enter)="applyFilters.emit()"
+      />
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-label">Áp dụng</span>
+      <div class="select-field">
+        <button
+          type="button"
+          class="select-trigger"
+          aria-haspopup="listbox"
+          [attr.aria-expanded]="isDropdownOpen('activeFilter')"
+          (click)="dropdownToggle.emit('activeFilter')"
+        >
+          <span>{{ getActiveFilterLabel() }}</span>
+          <i class="bi bi-chevron-down text-xs"></i>
+        </button>
+        @if (isDropdownOpen('activeFilter')) {
+          <div class="select-panel" role="listbox">
+            @for (option of activeFilterOptions; track option.value) {
+              <button
+                type="button"
+                role="option"
+                class="select-option"
+                [attr.aria-selected]="filters.active === option.value ? 'true' : 'false'"
+                [class.select-option-active]="filters.active === option.value"
+                (click)="selectActiveFilter.emit(option.value)"
+              >
+                <span class="option-label">{{ option.label }}</span>
+                <span class="option-desc">{{ option.description }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-label">Khóa dữ liệu</span>
+      <div class="select-field">
+        <button
+          type="button"
+          class="select-trigger"
+          aria-haspopup="listbox"
+          [attr.aria-expanded]="isDropdownOpen('lockedFilter')"
+          (click)="dropdownToggle.emit('lockedFilter')"
+        >
+          <span>{{ getLockedFilterLabel() }}</span>
+          <i class="bi bi-chevron-down text-xs"></i>
+        </button>
+        @if (isDropdownOpen('lockedFilter')) {
+          <div class="select-panel" role="listbox">
+            @for (option of lockedFilterOptions; track option.value) {
+              <button
+                type="button"
+                role="option"
+                class="select-option"
+                [attr.aria-selected]="filters.locked === option.value ? 'true' : 'false'"
+                [class.select-option-active]="filters.locked === option.value"
+                (click)="selectLockedFilter.emit(option.value)"
+              >
+                <span class="option-label">{{ option.label }}</span>
+                <span class="option-desc">{{ option.description }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-filter-actions">
+    <button type="button" class="filter-btn-primary" (click)="applyFilters.emit()">Lọc</button>
+    <button type="button" class="filter-btn-reset" (click)="resetFilters.emit()">Đặt lại</button>
+  </div>
+</div>

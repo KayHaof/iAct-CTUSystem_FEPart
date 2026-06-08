@@ -92,7 +92,7 @@ export class ActivityDetailComponent implements OnInit {
 
     this.activityService.getActivityById(id).subscribe({
       next: (res: Activity | ApiResponse<Activity>) => {
-        const actData = 'result' in res ? res.result : res;
+        const actData = 'data' in res ? res.data : 'result' in res ? res.result : res;
         this.activity.set(actData as Activity);
       },
       error: () => {
@@ -104,7 +104,7 @@ export class ActivityDetailComponent implements OnInit {
 
     this.registrationService.getMyStatus(id).subscribe({
       next: (res: ApiResponse<RegistrationResponse>) =>
-        this.userRegistration.set(res.result || null),
+        this.userRegistration.set(res.data || null),
       error: () => this.userRegistration.set(null),
     });
   }
@@ -126,23 +126,23 @@ export class ActivityDetailComponent implements OnInit {
         this.alertService.info('Bạn đã điểm danh hoạt động này rồi!');
         return;
       }
-      const confirmed = await this.confirmService.confirm(
-        'Xác nhận hủy?',
-        'Bạn có chắc chắn muốn rút tên khỏi danh sách tham gia hoạt động không?',
-        'Chắc, hủy đăng ký',
-        'Không, giữ đăng ký',
-      );
+      await this.confirmService.confirm({
+        title: 'Xác nhận hủy?',
+        message: 'Bạn có chắc chắn muốn rút tên khỏi danh sách tham gia hoạt động không?',
+        confirmText: 'Chắc, hủy đăng ký',
+        cancelText: 'Không, giữ đăng ký',
+        type: 'warning',
+        onConfirm: async () => {
+          const { value: reason } = await Swal.fire({
+            title: 'Lý do hủy đăng ký',
+            input: 'text',
+            inputPlaceholder: 'Nhập lý do bận gì đó...',
+            inputValidator: (value) => (!value ? 'BTC cần biết lý do để xem xét yêu cầu!' : null),
+          });
 
-      if (confirmed) {
-        const { value: reason } = await Swal.fire({
-          title: 'Lý do hủy đăng ký',
-          input: 'text',
-          inputPlaceholder: 'Nhập lý do bận gì đó...',
-          inputValidator: (value) => (!value ? 'BTC cần biết lý do để xem xét yêu cầu!' : null),
-        });
-
-        if (reason) this.executeRegistrationAction('cancel', act.id, reason);
-      }
+          if (reason) this.executeRegistrationAction('cancel', act.id, reason);
+        },
+      });
     } else {
       if (!this.statusConfig().canRegister) return;
       this.isRegistrationModalOpen.set(true);
@@ -162,7 +162,7 @@ export class ActivityDetailComponent implements OnInit {
         next: (res: ApiResponse<RegistrationResponse>) => {
           this.alertService.success('Đã ghi nhận đăng ký của bạn!');
           this.isRegistrationModalOpen.set(false);
-          this.userRegistration.set(res.result || null);
+          this.userRegistration.set(res.data || null);
           this.fetchActivityDetails(act.id);
         },
         error: (err: HttpErrorResponse) => {
@@ -189,7 +189,7 @@ export class ActivityDetailComponent implements OnInit {
         this.alertService.success(
           action === 'register' ? 'Đã ghi nhận đăng ký của bạn!' : 'Đã hủy thành công.',
         );
-        this.userRegistration.set(res.result || null);
+        this.userRegistration.set(res.data || null);
         this.fetchActivityDetails(id);
       },
       error: (err: HttpErrorResponse) => {

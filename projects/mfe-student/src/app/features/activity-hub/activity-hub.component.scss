@@ -52,3 +52,161 @@
     }
   }
 }
+
+/* Override Tailwind with CSS variables where needed */
+.bg-slate-50 {
+  background-color: var(--bg, #f8fafc);
+}
+
+.bg-slate-100 {
+  background-color: var(--bg-input, #f1f5f9);
+}
+
+.bg-white {
+  background-color: var(--bg-surface, #ffffff);
+}
+
+.text-slate-950 {
+  color: var(--text, #0f172a);
+}
+
+.text-slate-500 {
+  color: var(--text-muted, #64748b);
+}
+
+.text-slate-600 {
+  color: var(--text-secondary, #475569);
+}
+
+.text-slate-800 {
+  color: var(--text, #0f172a);
+}
+
+.border-slate-200 {
+  border-color: var(--border, #e2e8f0);
+}
+
+.border-blue-100 {
+  border-color: rgba(37, 99, 235, 0.1);
+}
+
+.bg-blue-50 {
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.text-blue-700 {
+  color: var(--primary, #2563eb);
+}
+
+.text-blue-950 {
+  color: var(--primary-dark, #1e3a8a);
+}
+
+.bg-blue-600 {
+  background: var(--gradient-primary);
+}
+
+.border-blue-600 {
+  border-color: var(--primary, #2563eb);
+}
+
+.shadow-blue-600\/20 {
+  box-shadow: var(--shadow-primary, 0 4px 14px rgba(37, 99, 235, 0.25));
+}
+
+.hover\:border-blue-200:hover {
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.hover\:bg-blue-50:hover {
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.hover\:text-blue-700:hover {
+  color: var(--primary, #2563eb);
+}
+
+.focus\:border-blue-500:focus {
+  border-color: var(--primary, #2563eb);
+}
+
+.focus\:bg-white:focus {
+  background-color: var(--bg-surface, #ffffff);
+}
+
+.focus\:ring-blue-500\/10:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.hover\:shadow-lg:hover {
+  box-shadow: var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.08));
+}
+
+.hover\:shadow-blue-100\/50:hover {
+  box-shadow: var(--shadow-primary-light, 0 10px 25px rgba(37, 99, 235, 0.1));
+}
+
+.group-hover\:text-blue-700:hover {
+  color: var(--primary, #2563eb);
+}
+
+.bg-slate-950\/45 {
+  background-color: rgba(15, 23, 42, 0.45);
+}
+
+.text-amber-950 {
+  color: #78350f;
+}
+
+.bg-amber-400 {
+  background-color: var(--warning, #f59e0b);
+}
+
+.text-emerald-600 {
+  color: var(--success, #10b981);
+}
+
+.bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.05);
+}
+
+.text-emerald-700 {
+  color: #047857;
+}
+
+.bg-emerald-500 {
+  background-color: var(--success, #10b981);
+}
+
+.bg-rose-50 {
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.text-rose-700 {
+  color: var(--danger, #ef4444);
+}
+
+.bg-rose-500 {
+  background-color: var(--danger, #ef4444);
+}
+
+.text-rose-950 {
+  color: #881337;
+}
+
+.text-amber-500 {
+  color: var(--warning, #f59e0b);
+}
+
+.border-dashed {
+  border-style: dashed;
+}
+
+.border-slate-300 {
+  border-color: var(--border, #e2e8f0);
+}
+
+.animate-spin {
+  border-color: var(--border, #e2e8f0);
+  border-top-color: var(--primary, #2563eb);
+}

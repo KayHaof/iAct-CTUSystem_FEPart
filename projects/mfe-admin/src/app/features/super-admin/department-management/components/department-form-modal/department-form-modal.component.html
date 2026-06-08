@@ -1,0 +1,135 @@
+@if (isOpen) {
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="department-form-title">
+    <form class="modal-form" (ngSubmit)="save.emit()">
+      <div class="modal-form-header">
+        <div>
+          <h2 id="department-form-title" class="modal-form-title">
+            {{ editingDepartment ? 'Cập nhật đơn vị' : 'Thêm đơn vị mới' }}
+          </h2>
+          <p class="modal-form-desc">Thiết lập mã, tên hiển thị và trạng thái sử dụng cho Khoa/Trường/Viện.</p>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="close.emit()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="modal-form-grid">
+        <div class="form-group">
+          <label for="departmentName" class="form-label">Tên đơn vị</label>
+          <input
+            id="departmentName"
+            type="text"
+            class="form-input"
+            required
+            [ngModel]="form.name"
+            name="name"
+            (ngModelChange)="nameChange.emit($event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="departmentCode" class="form-label">Mã đơn vị</label>
+          <input
+            id="departmentCode"
+            type="text"
+            class="form-input form-input-uppercase"
+            required
+            [ngModel]="form.code"
+            name="code"
+            (ngModelChange)="codeChange.emit($event)"
+          />
+        </div>
+
+        <div class="form-group form-group-full">
+          <label for="departmentDescription" class="form-label">Mô tả</label>
+          <textarea
+            id="departmentDescription"
+            rows="4"
+            class="form-input form-input-textarea"
+            [ngModel]="form.description"
+            name="description"
+            (ngModelChange)="descriptionChange.emit($event)"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="departmentPhone" class="form-label">Số điện thoại</label>
+          <input
+            id="departmentPhone"
+            type="text"
+            class="form-input"
+            [ngModel]="form.phone"
+            name="phone"
+            (ngModelChange)="phoneChange.emit($event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="departmentAddress" class="form-label">Địa chỉ</label>
+          <input
+            id="departmentAddress"
+            type="text"
+            class="form-input"
+            [ngModel]="form.address"
+            name="address"
+            (ngModelChange)="addressChange.emit($event)"
+          />
+        </div>
+
+        <div class="form-group form-group-full">
+          <label for="departmentAvatarUrl" class="form-label">Ảnh đại diện</label>
+          <input
+            id="departmentAvatarUrl"
+            type="text"
+            class="form-input"
+            placeholder="Nhập URL ảnh nếu có"
+            [ngModel]="form.avatarUrl"
+            name="avatarUrl"
+            (ngModelChange)="avatarUrlChange.emit($event)"
+          />
+        </div>
+
+        <div class="form-group form-group-full">
+          <span class="form-label">Trạng thái</span>
+          <div class="select-field">
+            <button
+              type="button"
+              class="select-trigger"
+              aria-haspopup="listbox"
+              [attr.aria-expanded]="isDropdownOpen('activeForm')"
+              (click)="dropdownToggle.emit('activeForm')"
+            >
+              <span>{{ getActiveFormLabel() }}</span>
+              <i class="bi bi-chevron-down select-chevron"></i>
+            </button>
+
+            @if (isDropdownOpen('activeForm')) {
+              <div class="select-panel" role="listbox">
+                @for (option of activeFormOptions; track option.label) {
+                  <button
+                    type="button"
+                    role="option"
+                    class="select-option"
+                    [attr.aria-selected]="form.isActive === option.value ? 'true' : 'false'"
+                    [class.select-option-active]="form.isActive === option.value"
+                    (click)="selectActive.emit(option.value)"
+                  >
+                    <span class="option-label">{{ option.label }}</span>
+                    <span class="option-desc">{{ option.description }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-form-actions">
+        <button type="button" class="modal-btn-cancel" (click)="close.emit()">Hủy</button>
+        <button type="submit" class="modal-btn-save" [disabled]="isSaving">
+          {{ isSaving ? 'Đang lưu...' : 'Lưu đơn vị' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}
