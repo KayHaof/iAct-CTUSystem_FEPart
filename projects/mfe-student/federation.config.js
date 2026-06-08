@@ -9,6 +9,9 @@ module.exports = withNativeFederation({
 
   shared: {
     ...shareAll({ singleton: true, strictVersion: true, requiredVersion: 'auto' }),
+    '@angular/core/primitives/di': { singleton: true, strictVersion: false },
+    '@angular/core/primitives/event-dispatch': { singleton: true, strictVersion: false },
+    '@angular/core/primitives/signals': { singleton: true, strictVersion: false },
     'keycloak-angular': { singleton: true, strictVersion: true },
     'keycloak-js': { singleton: true, strictVersion: true },
     '@angular/core': { singleton: true, strictVersion: true },
@@ -30,7 +33,6 @@ module.exports = withNativeFederation({
     'rxjs/fetch',
     'rxjs/testing',
     'rxjs/webSocket',
-    // Add further packages you don't need at runtime
   ],
 
   // Please read our FAQ about sharing libs:

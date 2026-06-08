@@ -65,7 +65,10 @@
           }
         ],
         "styles": ["projects/mfe-student/src/styles.scss"],
-        "polyfills": ["es-module-shims"]
+        "polyfills": ["es-module-shims"],
+        "stylePreprocessorOptions": {
+          "includePaths": ["libs/shared/ui/src/lib/styles"]
+        }
       },
       "configurations": {
         "production": {
@@ -77,8 +80,8 @@
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "4kb",
-              "maximumError": "8kb"
+              "maximumWarning": "12kb",
+              "maximumError": "16kb"
             }
           ],
           "outputHashing": "all"

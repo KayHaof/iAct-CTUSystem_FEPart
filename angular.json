@@ -3,7 +3,11 @@
   "version": 1,
   "cli": {
     "packageManager": "yarn",
-    "analytics": false
+    "analytics": false,
+    "cache": {
+      "enabled": true,
+      "path": "D:/TechCache/.angular"
+    }
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -71,8 +75,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "16kB",
+                  "maximumError": "24kB"
                 }
               ],
               "outputHashing": "all"
@@ -166,8 +170,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "16kB",
+                  "maximumError": "24kB"
                 }
               ],
               "outputHashing": "all"

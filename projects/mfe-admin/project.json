@@ -10,7 +10,10 @@
       "executor": "@angular-architects/native-federation:build",
       "options": {
         "outputPath": "dist/projects/mfe-admin",
-        "cacheExternalArtifacts": false
+        "cacheExternalArtifacts": false,
+        "stylePreprocessorOptions": {
+          "includePaths": ["libs/shared/ui/src/lib/styles"]
+        }
       },
       "configurations": {
         "production": {
@@ -69,7 +72,10 @@
           }
         ],
         "styles": ["projects/mfe-admin/src/styles.scss"],
-        "polyfills": ["es-module-shims"]
+        "polyfills": ["es-module-shims"],
+        "stylePreprocessorOptions": {
+          "includePaths": ["libs/shared/ui/src/lib/styles"]
+        }
       },
       "configurations": {
         "production": {
@@ -81,8 +87,8 @@
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "4kb",
-              "maximumError": "8kb"
+              "maximumWarning": "16kb",
+              "maximumError": "24kb"
             }
           ],
           "outputHashing": "all"

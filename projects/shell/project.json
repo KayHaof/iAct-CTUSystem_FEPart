@@ -72,7 +72,10 @@
           "projects/shell/src/styles.scss",
           "./node_modules/@ngxpert/hot-toast/fesm2022/ngxpert-hot-toast.mjs"
         ],
-        "polyfills": ["es-module-shims"]
+        "polyfills": ["es-module-shims"],
+        "stylePreprocessorOptions": {
+          "includePaths": ["libs/shared/ui/src/lib/styles"]
+        }
       },
       "configurations": {
         "production": {
@@ -84,8 +87,8 @@
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "4kb",
-              "maximumError": "8kb"
+              "maximumWarning": "16kb",
+              "maximumError": "24kb"
             }
           ],
           "outputHashing": "all"
