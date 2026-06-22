@@ -5,7 +5,8 @@
         <p class="header-eyebrow">Dữ liệu đơn vị</p>
         <h1 class="header-title">Quản lý Khoa / Trường / Viện</h1>
         <p class="header-subtitle">
-          Chuẩn hóa thông tin đơn vị đào tạo, mã định danh và trạng thái sử dụng cho lớp, chuyên ngành và người dùng.
+          Chuẩn hóa thông tin đơn vị đào tạo, mã định danh và trạng thái sử dụng cho lớp, chuyên
+          ngành và người dùng.
         </p>
       </div>
       <button type="button" class="btn-create" (click)="openCreateForm()">
@@ -200,7 +201,7 @@
   [form]="form()"
   [openDropdown]="formDropdown()"
   [activeFormOptions]="activeFormOptions"
-  (close)="closeForm()"
+  (modalClosed)="closeForm()"
   (save)="saveDepartment()"
   (nameChange)="updateForm('name', $event)"
   (codeChange)="updateForm('code', $event)"

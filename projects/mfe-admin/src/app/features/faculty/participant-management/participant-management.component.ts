@@ -1,10 +1,17 @@
-import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule, Location, NgOptimizedImage } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
-import { ApiResponse } from 'interface';
+import { ApiResponse } from '@my-mfe/interface';
 
 import {
   PaginationComponent,
@@ -15,8 +22,8 @@ import {
 } from '@my-mfe/ui';
 import { CloudinaryPathPipe } from '@my-mfe/data-access-media';
 import { ParticipantService } from '../services/participant.service';
-import { RegistrationResponse } from 'interface';
-import { PageDTO } from 'interface';
+import { RegistrationResponse } from '@my-mfe/interface';
+import { PageDTO } from '@my-mfe/interface';
 
 @Component({
   selector: 'app-participant-management',
@@ -31,6 +38,7 @@ import { PageDTO } from 'interface';
     CloudinaryPathPipe, // Import pipe
   ],
   templateUrl: './participant-management.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ParticipantManagementComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -184,7 +192,7 @@ export class ParticipantManagementComponent implements OnInit {
             },
             error: (err: HttpErrorResponse) =>
               this.alertService.error(err.error?.message || 'Có lỗi xảy ra!'),
-        });
+          });
       },
     });
   }

@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import * as XLSX from 'xlsx';
 import { AdminUserService } from '../../services/admin-user.service';
 import { AlertService } from '@my-mfe/ui';
-import { ImportResultDto, ApiResponse } from 'interface';
+import { ImportResultDto, ApiResponse } from '@my-mfe/interface';
 
 @Component({
   selector: 'app-import-users',

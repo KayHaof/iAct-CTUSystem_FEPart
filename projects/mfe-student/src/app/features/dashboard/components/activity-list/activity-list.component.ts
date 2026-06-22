@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { DatePipe, CommonModule } from '@angular/common';
 import { Activity } from '../../models/dashboard.model';
 
@@ -8,6 +8,7 @@ import { Activity } from '../../models/dashboard.model';
   imports: [CommonModule, DatePipe],
   templateUrl: './activity-list.component.html',
   styleUrl: './activity-list.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ActivityListComponent {
   @Input() activities: Activity[] = [];

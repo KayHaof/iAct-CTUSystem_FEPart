@@ -1,8 +1,16 @@
-import { Component, input, output, signal, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Activity } from '../../../../../shared/models/activity.model';
 import { ActivityModerationService } from '../../../services/activity-moderation.service';
-import { ApiResponse } from 'interface';
+import { ApiResponse } from '@my-mfe/interface';
 
 @Component({
   selector: 'app-view-activity-modal',
@@ -10,6 +18,7 @@ import { ApiResponse } from 'interface';
   imports: [CommonModule],
   providers: [DatePipe],
   templateUrl: './view-activity-modal.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ViewActivityModalComponent implements OnInit {
   activityId = input.required<number>();

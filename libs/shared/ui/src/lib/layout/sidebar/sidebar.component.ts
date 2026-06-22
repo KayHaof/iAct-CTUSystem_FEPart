@@ -25,6 +25,8 @@ export class SidebarComponent {
   @Input() menuItems: MenuItem[] = [];
   @Input() theme: 'light' | 'dark' = 'light';
 
+  isMobileOpen = this.layoutService.isMobileMenuOpen;
+
   get isOpen() {
     return this.layoutService.isMobileMenuOpen();
   }

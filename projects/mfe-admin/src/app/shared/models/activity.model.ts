@@ -8,6 +8,7 @@ export interface BenefitDto {
 }
 
 export interface BenefitFormValue {
+  root_category_id?: number | null;
   category_id: number | null;
   point: number | null;
   type: number | null;
@@ -42,7 +43,7 @@ export interface ActivityScheduleDto {
   title: string;
   startTime: string;
   endTime: string;
-  location?: string;
+  location?: string | null;
 }
 
 export interface ActivityRequest {
@@ -55,6 +56,7 @@ export interface ActivityRequest {
   organizerId?: number | null;
   sourceLink?: string | null;
   isExternal: boolean;
+  isFaculty: boolean;
   registrationStart?: string | null;
   registrationEnd?: string | null;
   startDate?: string | null;
@@ -63,6 +65,7 @@ export interface ActivityRequest {
   coverImage?: string | null;
   thumbnail?: string | null;
   benefits?: BenefitDto[];
+  schedules?: ActivityScheduleDto[];
 }
 
 export interface Activity {

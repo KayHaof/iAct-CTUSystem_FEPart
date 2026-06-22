@@ -3,12 +3,12 @@
 }
 
 .footer-brand {
-  @apply text-3xl font-extrabold tracking-tight mb-4 inline-block;
+  @apply text-2xl sm:text-3xl font-extrabold tracking-tight mb-4 inline-block;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .footer-title {
-  @apply text-ctu-gold text-lg font-bold mb-5 uppercase tracking-wider relative inline-block;
+  @apply text-base sm:text-lg font-bold mb-5 uppercase tracking-wider relative inline-block;
 
   &::after {
     content: '';
@@ -17,10 +17,10 @@
 }
 
 .footer-link {
-  @apply text-gray-300 text-sm no-underline transition-all duration-300 flex items-center relative;
+  @apply text-gray-300 text-xs sm:text-sm no-underline transition-all duration-300 flex items-center relative;
 
   &::before {
-    content: '\F285'; // Mã Unicode của icon bi-chevron-right (Bootstrap Icons)
+    content: '\F285';
     font-family: 'bootstrap-icons';
     @apply absolute left-0 opacity-0 -translate-x-3 transition-all duration-300 text-ctu-gold text-xs;
   }
@@ -44,5 +44,14 @@
 }
 
 .footer-copyright {
-  @apply border-t border-white/10 mt-12 pt-6 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400;
+  @apply border-t border-white/10 mt-8 sm:mt-12 pt-4 sm:pt-6 flex flex-col md:flex-row justify-between items-center text-xs sm:text-sm text-gray-400;
+  gap: 0.5rem;
+
+  p:first-child {
+    text-align: center;
+
+    @media (min-width: 768px) {
+      text-align: left;
+    }
+  }
 }

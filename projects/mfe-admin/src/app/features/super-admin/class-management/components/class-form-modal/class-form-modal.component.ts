@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ViewEncapsulation,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -47,7 +54,7 @@ export class ClassFormModalComponent {
   @Input() academicYearOptions: Array<SelectOption<string>> = [];
   @Input() activeFormOptions: Array<SelectOption<boolean>> = [];
 
-  @Output() close = new EventEmitter<void>();
+  @Output() modalClosed = new EventEmitter<void>();
   @Output() save = new EventEmitter<void>();
   @Output() nameChange = new EventEmitter<string>();
   @Output() classCodeChange = new EventEmitter<string>();

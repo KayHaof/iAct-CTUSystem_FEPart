@@ -1,9 +1,0 @@
-{
-  "name": "mfe-student-e2e",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "projectType": "application",
-  "sourceRoot": "projects/mfe-student-e2e/src",
-  "implicitDependencies": ["mfe-student"],
-  "// targets": "to see all targets run: nx show project mfe-student-e2e --web",
-  "targets": {}
-}

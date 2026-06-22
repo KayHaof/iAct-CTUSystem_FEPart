@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AlertService, PaginationComponent, TableContainerComponent } from '@my-mfe/ui';
-import { ApiResponse, ClassInfo, Department, MajorInfo, PageDTO, UserInfo } from 'interface';
+import { ApiResponse, ClassInfo, Department, MajorInfo, PageDTO, UserInfo } from '@my-mfe/interface';
 import Swal from 'sweetalert2';
 
 import { AdminUserService } from '../services/admin-user.service';

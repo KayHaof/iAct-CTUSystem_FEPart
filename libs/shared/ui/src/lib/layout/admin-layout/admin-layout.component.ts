@@ -1,4 +1,11 @@
-import { Component, OnInit, computed, inject, HostBinding } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostBinding,
+  OnInit,
+  computed,
+  inject,
+} from '@angular/core';
 import {
   NavigationCancel,
   NavigationEnd,
@@ -14,6 +21,7 @@ import { LoadingBarComponent } from '../../components/loading-bar/loading-bar.co
 
 import { UserService } from '@my-mfe/auth';
 import { LoadingService } from '../../services/loading.service';
+import { LayoutService } from '../../layout/layout.service';
 
 @Component({
   selector: 'lib-app-admin-layout',
@@ -21,6 +29,7 @@ import { LoadingService } from '../../services/loading.service';
   imports: [RouterOutlet, SidebarComponent, HeaderComponent, LoadingBarComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminLayoutComponent implements OnInit {
   @HostBinding('class') hostClass = 'admin-host';
@@ -28,6 +37,9 @@ export class AdminLayoutComponent implements OnInit {
   private router = inject(Router);
   private loadingService = inject(LoadingService);
   private userService = inject(UserService);
+  private layoutService = inject(LayoutService);
+
+  isMobileMenuOpen = this.layoutService.isMobileMenuOpen;
 
   adminMenus = computed<MenuItem[]>(() => {
     const role = this.userService.currentUser()?.roleType;
@@ -37,7 +49,11 @@ export class AdminLayoutComponent implements OnInit {
         { label: 'Tổng quan', link: '/admin/dashboard', icon: 'bi bi-grid-fill' },
         { label: 'Quản lý hoạt động', link: '/admin/org/activities', icon: 'bi bi-calendar-plus' },
         { label: 'Duyệt minh chứng', link: '/admin/org/approvals', icon: 'bi bi-check2-square' },
-        { label: 'Gửi TB khẩn cấp', link: '/admin/org/activities/urgent-notification', icon: 'bi bi-megaphone-fill' },
+        {
+          label: 'Gửi TB khẩn cấp',
+          link: '/admin/org/activities/urgent-notification',
+          icon: 'bi bi-megaphone-fill',
+        },
         { label: 'Quản lý sinh viên', link: '/admin/org/students', icon: 'bi bi-people' },
       ];
     }
@@ -45,7 +61,11 @@ export class AdminLayoutComponent implements OnInit {
     if (role === 3) {
       return [
         { label: 'Tổng quan', link: '/admin/dashboard', icon: 'bi bi-grid-fill' },
-        { label: 'Quản lý người dùng', link: '/admin/user-management', icon: 'bi bi-person-video3' },
+        {
+          label: 'Quản lý người dùng',
+          link: '/admin/user-management',
+          icon: 'bi bi-person-video3',
+        },
         {
           label: 'Duyệt hoạt động',
           link: '/admin/activity-moderation',
@@ -56,7 +76,11 @@ export class AdminLayoutComponent implements OnInit {
         { label: 'Khoa/Truờng/Viện', link: '/admin/departments', icon: 'bi bi-building-fill' },
         { label: 'Chuyên ngành', link: '/admin/majors', icon: 'bi bi-mortarboard-fill' },
         { label: 'Lớp sinh hoạt', link: '/admin/classes', icon: 'bi bi-collection-fill' },
-        { label: 'Gửi TB khẩn cấp', link: '/admin/org/activities/urgent-notification', icon: 'bi bi-megaphone-fill' },
+        {
+          label: 'Gửi TB khẩn cấp',
+          link: '/admin/org/activities/urgent-notification',
+          icon: 'bi bi-megaphone-fill',
+        },
         { label: 'Cài đặt hệ thống', link: '/admin/settings', icon: 'bi bi-sliders' },
       ];
     }
@@ -78,5 +102,9 @@ export class AdminLayoutComponent implements OnInit {
         this.loadingService.hide();
       }
     });
+  }
+
+  closeMobileMenu() {
+    this.layoutService.closeMobileMenu();
   }
 }

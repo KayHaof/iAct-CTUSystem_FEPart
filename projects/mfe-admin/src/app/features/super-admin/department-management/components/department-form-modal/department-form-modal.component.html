@@ -1,14 +1,21 @@
 @if (isOpen) {
-  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="department-form-title">
+  <div
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="department-form-title"
+  >
     <form class="modal-form" (ngSubmit)="save.emit()">
       <div class="modal-form-header">
         <div>
           <h2 id="department-form-title" class="modal-form-title">
             {{ editingDepartment ? 'Cập nhật đơn vị' : 'Thêm đơn vị mới' }}
           </h2>
-          <p class="modal-form-desc">Thiết lập mã, tên hiển thị và trạng thái sử dụng cho Khoa/Trường/Viện.</p>
+          <p class="modal-form-desc">
+            Thiết lập mã, tên hiển thị và trạng thái sử dụng cho Khoa/Trường/Viện.
+          </p>
         </div>
-        <button type="button" class="modal-close-btn" (click)="close.emit()">
+        <button type="button" class="modal-close-btn" (click)="modalClosed.emit()">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
@@ -125,7 +132,7 @@
       </div>
 
       <div class="modal-form-actions">
-        <button type="button" class="modal-btn-cancel" (click)="close.emit()">Hủy</button>
+        <button type="button" class="modal-btn-cancel" (click)="modalClosed.emit()">Hủy</button>
         <button type="submit" class="modal-btn-save" [disabled]="isSaving">
           {{ isSaving ? 'Đang lưu...' : 'Lưu đơn vị' }}
         </button>

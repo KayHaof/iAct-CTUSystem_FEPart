@@ -1,4 +1,4 @@
-/* === View User Modal Styles === */
+/* === View User Modal Styles - Mobile Responsive === */
 
 .modal-overlay {
   position: fixed;
@@ -7,8 +7,13 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 1rem;
-  padding-top: 7vh;
+  padding: 0.5rem;
+  padding-top: 2vh;
+
+  @media (min-width: 640px) {
+    padding: 1rem;
+    padding-top: 7vh;
+  }
 }
 
 .modal-backdrop {

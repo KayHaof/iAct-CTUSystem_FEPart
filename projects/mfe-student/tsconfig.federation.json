@@ -1,0 +1,33 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "rootDir": "../..",
+    "types": []
+  },
+  "include": [
+    "src/**/*.ts",
+    "../../libs/shared/auth/src/index.ts",
+    "../../libs/shared/data-access-media/src/index.ts",
+    "../../libs/shared/data-access-realtime/src/index.ts",
+    "../../libs/shared/ui/src/index.ts",
+    "../../libs/features/src/index.ts",
+    "../../libs/shared/interface/src/index.ts",
+    "src/app/app.routes.ts"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx",
+    "src/test-setup.ts"
+  ]
+}

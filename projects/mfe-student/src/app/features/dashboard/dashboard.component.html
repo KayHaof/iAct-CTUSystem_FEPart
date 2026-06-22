@@ -9,7 +9,12 @@
         <p class="header-subtitle">{{ todayMessage }}</p>
       </div>
       <div class="header-actions">
-        <button type="button" class="action-btn-secondary" title="Tai lai du lieu" (click)="refresh()">
+        <button
+          type="button"
+          class="action-btn-secondary"
+          title="Tai lai du lieu"
+          (click)="refresh()"
+        >
           <i class="bi bi-arrow-clockwise"></i>
           Tai lai
         </button>
@@ -29,9 +34,7 @@
         <div class="stat-icon-wrap stat-icon-blue">
           <i class="bi bi-star-fill"></i>
         </div>
-        <div class="stat-trend stat-trend-up">
-          <i class="bi bi-arrow-up"></i> 5
-        </div>
+        <div class="stat-trend stat-trend-up"><i class="bi bi-arrow-up"></i> 5</div>
       </div>
       <div class="stat-value">{{ totalScore }}</div>
       <div class="stat-label">Diem Ren Luyen Hien Tai</div>
@@ -47,9 +50,7 @@
         <div class="stat-icon-wrap stat-icon-sky">
           <i class="bi bi-calendar-check-fill"></i>
         </div>
-        <span class="stat-trend stat-trend-up">
-          <i class="bi bi-arrow-up"></i> 3
-        </span>
+        <span class="stat-trend stat-trend-up"> <i class="bi bi-arrow-up"></i> 3 </span>
       </div>
       <div class="stat-value">{{ completedActivities }}</div>
       <div class="stat-label">Hoat Dong Da Tham Gia</div>
@@ -65,9 +66,7 @@
         <div class="stat-icon-wrap stat-icon-emerald">
           <i class="bi bi-people-fill"></i>
         </div>
-        <span class="stat-trend stat-trend-up">
-          <i class="bi bi-plus"></i> 2
-        </span>
+        <span class="stat-trend stat-trend-up"> <i class="bi bi-plus"></i> 2 </span>
       </div>
       <div class="stat-value">{{ socialDays }}</div>
       <div class="stat-label">Ngay Cong Tac Xa Hoi</div>
@@ -83,9 +82,7 @@
         <div class="stat-icon-wrap stat-icon-amber">
           <i class="bi bi-award-fill"></i>
         </div>
-        <span class="stat-trend stat-trend-neutral">
-          <i class="bi bi-dash"></i> 0
-        </span>
+        <span class="stat-trend stat-trend-neutral"> <i class="bi bi-dash"></i> 0 </span>
       </div>
       <div class="stat-value">{{ certificates }}</div>
       <div class="stat-label">Chung Chi</div>
@@ -112,13 +109,22 @@
 
         <div class="activity-list">
           @for (activity of upcomingActivitiesList; track activity.id) {
-            <div class="activity-item" (click)="onActivityClick(activity.id)">
+            <div
+              class="activity-item"
+              role="button"
+              tabindex="0"
+              (click)="onActivityClick(activity.id)"
+              (keydown.enter)="onActivityClick(activity.id)"
+              (keydown.space)="onActivityClick(activity.id); $event.preventDefault()"
+            >
               <div class="activity-thumb" [style.background]="activity.thumbBg">
                 <i [class]="activity.thumbIcon"></i>
               </div>
               <div class="activity-info">
                 <span class="activity-name">{{ activity.title }}</span>
-                <span class="activity-meta">{{ activity.department }} &bull; {{ activity.date }}</span>
+                <span class="activity-meta"
+                  >{{ activity.department }} &bull; {{ activity.date }}</span
+                >
               </div>
               @if (activity.actionRequired === 'CHECK_IN') {
                 <span class="action-badge action-badge-checkin">
@@ -131,7 +137,9 @@
                   Dang ky
                 </span>
               } @else {
-                <span class="activity-badge" [class]="activity.badgeClass">{{ activity.status }}</span>
+                <span class="activity-badge" [class]="activity.badgeClass">{{
+                  activity.status
+                }}</span>
               }
             </div>
           }
@@ -164,7 +172,9 @@
               </div>
               <div class="proof-info">
                 <span class="proof-title">{{ proof.title }}</span>
-                <span class="proof-meta">{{ proof.date }} &bull; Han nop: {{ proof.deadline }}</span>
+                <span class="proof-meta"
+                  >{{ proof.date }} &bull; Han nop: {{ proof.deadline }}</span
+                >
               </div>
               <button type="button" class="btn-submit-proof" (click)="onSubmitProof(proof.id)">
                 <i class="bi bi-upload"></i>
@@ -209,11 +219,11 @@
                 <span class="criteria-points">{{ criteria.current }}/{{ criteria.max }}</span>
               </div>
               <div class="progress-bar-bg">
-                <div 
-                  class="progress-bar-fill" 
+                <div
+                  class="progress-bar-fill"
                   [style.width.%]="(criteria.current / criteria.max) * 100"
-                  [style.background]="criteria.color">
-                </div>
+                  [style.background]="criteria.color"
+                ></div>
               </div>
             </div>
           }
@@ -227,21 +237,36 @@
         </div>
 
         <div class="quick-actions">
-          <button type="button" class="quick-action-btn" routerLink="/activity-hub" title="Tim hoat dong">
+          <button
+            type="button"
+            class="quick-action-btn"
+            routerLink="/activity-hub"
+            title="Tim hoat dong"
+          >
             <div class="quick-action-icon quick-action-icon-blue">
               <i class="bi bi-compass"></i>
             </div>
             <span>Tim hoat dong</span>
           </button>
 
-          <button type="button" class="quick-action-btn" routerLink="/my-records" title="Lich su tham gia">
+          <button
+            type="button"
+            class="quick-action-btn"
+            routerLink="/my-records"
+            title="Lich su tham gia"
+          >
             <div class="quick-action-icon quick-action-icon-emerald">
               <i class="bi bi-clock-history"></i>
             </div>
             <span>Lich su tham gia</span>
           </button>
 
-          <button type="button" class="quick-action-btn" routerLink="/submit-proof" title="Nap minh chung">
+          <button
+            type="button"
+            class="quick-action-btn"
+            routerLink="/submit-proof"
+            title="Nap minh chung"
+          >
             <div class="quick-action-icon quick-action-icon-amber">
               <i class="bi bi-cloud-upload"></i>
             </div>

@@ -1,5 +1,5 @@
 // ==============================================
-// ADMIN LAYOUT STYLES
+// ADMIN LAYOUT STYLES - Mobile Responsive
 // ==============================================
 
 :host {
@@ -12,32 +12,101 @@
 .layout-wrapper {
   display: flex;
   height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* === MOBILE MENU OPEN: prevent body scroll === */
+.mobile-menu-open {
   overflow: hidden;
 }
 
-// ==============================================
-// SIDEBAR - FIXED OVERLAY
-// ==============================================
+/* === MOBILE CLOSE BUTTON === */
+.mobile-close-btn {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 14.75rem;
+  z-index: var(--z-fixed, 200);
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 1.125rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-color: var(--danger);
+  }
+
+  @media (max-width: 767px) {
+    display: flex;
+  }
+}
+
+/* === SIDEBAR AREA === */
 .sidebar-area {
   position: fixed;
   top: 0;
   left: 0;
   height: 100vh;
+  height: 100dvh;
   width: var(--sidebar-collapsed, 80px);
   z-index: var(--z-fixed, 200);
   flex-shrink: 0;
-  transition: width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: none;
   overflow: hidden;
 
-  &:hover,
-  &:focus-within {
-    width: var(--sidebar-expanded, 280px);
+  @media (min-width: 768px) {
+    &:hover,
+    &:focus-within {
+      width: var(--sidebar-expanded, 280px);
+    }
+  }
+
+  @media (max-width: 767px) {
+    width: min(18rem, calc(100vw - 3.5rem));
+    overflow: visible;
+    pointer-events: none;
   }
 }
 
-// ==============================================
-// CONTENT AREA - PUSHED BY SIDEBAR WIDTH
-// ==============================================
+.mobile-menu-open .sidebar-area {
+  @media (max-width: 767px) {
+    pointer-events: auto;
+  }
+}
+
+/* === MOBILE BACKDROP === */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-sticky, 100);
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* === CONTENT AREA === */
 .content-area {
   flex: 1;
   display: flex;
@@ -48,6 +117,10 @@
   overflow: hidden;
   margin-left: var(--sidebar-collapsed, 80px);
   transition: margin-left 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+
+  @media (max-width: 767px) {
+    margin-left: 0;
+  }
 }
 
 .header-area {
@@ -68,5 +141,14 @@
   flex: 1;
   width: 100%;
   max-width: 100%;
-  padding: 1.5rem;
+  margin-inline: auto;
+  padding: 1rem;
+
+  @media (min-width: 640px) {
+    padding: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    padding: 1.5rem;
+  }
 }

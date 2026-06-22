@@ -1,77 +1,30 @@
 :host {
-  @apply block h-full;
+  @apply block min-h-full;
 }
-
-.error-container {
-  @apply relative flex flex-col items-center justify-center min-h-[70vh] text-center px-4 overflow-hidden;
+.error-page {
+  @apply relative flex min-h-[70vh] items-center justify-center overflow-hidden bg-slate-50 px-4 py-12 text-center sm:px-6;
 }
-
 .error-watermark {
-  @apply absolute font-black text-gray-100 select-none -z-10 leading-none;
-  font-size: 15rem;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  @apply pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[10rem] font-black leading-none text-slate-100 sm:text-[14rem];
 }
-
-.content-box {
-  @apply relative z-10 flex flex-col items-center max-w-lg;
+.content-card {
+  @apply relative z-10 flex w-full max-w-xl flex-col items-center rounded-2xl border border-slate-200 bg-white px-6 py-10 shadow-xl shadow-slate-200/70 sm:px-10;
 }
-
-.icon-wrapper {
-  @apply relative mb-6;
-
-  i.bi-hdd-network-fill {
-    @apply text-7xl text-gray-300 block;
-  }
-
-  .sub-icon {
-    @apply absolute -bottom-2 -right-2 text-4xl text-red-500 bg-white rounded-full border-4 border-white;
-    animation: pulse-red 2s infinite;
-  }
+.status-icon {
+  @apply mb-5 flex h-16 w-16 items-center justify-center rounded-2xl text-3xl;
 }
-
+.status-icon-error {
+  @apply bg-red-50 text-red-600 ring-1 ring-red-100;
+}
+.eyebrow {
+  @apply mb-2 text-sm font-semibold uppercase tracking-widest text-blue-600;
+}
 .title {
-  @apply text-3xl md:text-4xl font-bold text-gray-800 mb-3;
+  @apply mb-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl;
 }
-
-.desc {
-  @apply text-gray-500 mb-8 text-lg leading-relaxed;
+.description {
+  @apply mb-8 max-w-md text-base leading-7 text-slate-600 sm:text-lg;
 }
-
-.action-buttons {
-  @apply flex flex-wrap gap-4 justify-center;
-}
-
 .btn-primary {
-  @apply flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 cursor-pointer border-none shadow-lg shadow-red-900/20;
-  @apply bg-red-500 text-white;
-
-  &:hover {
-    @apply bg-red-600 -translate-y-1 shadow-xl;
-  }
-}
-
-.btn-secondary {
-  @apply flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 cursor-pointer border shadow-sm no-underline;
-  @apply bg-white text-gray-600 border-gray-200;
-
-  &:hover {
-    @apply bg-gray-50 text-gray-900 border-gray-300 -translate-y-1;
-  }
-}
-
-@keyframes pulse-red {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-  }
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-  }
+  @apply inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 px-6 py-3 font-semibold text-white no-underline shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:from-blue-700 hover:to-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 sm:w-auto;
 }

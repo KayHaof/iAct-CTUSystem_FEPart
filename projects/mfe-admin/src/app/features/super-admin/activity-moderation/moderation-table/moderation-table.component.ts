@@ -1,4 +1,4 @@
-import { Component, input, output, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { TableContainerComponent, PaginationComponent } from '@my-mfe/ui';
 import { Activity } from '../../../../shared/models/activity.model';
@@ -10,6 +10,7 @@ import { Activity } from '../../../../shared/models/activity.model';
   providers: [DatePipe],
   templateUrl: './moderation-table.component.html',
   styleUrls: ['./moderation-table.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModerationTableComponent {
   isLoading = input<boolean>(false);

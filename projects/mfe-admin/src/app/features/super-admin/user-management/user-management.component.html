@@ -5,7 +5,9 @@
       <div class="page-header-left">
         <p class="header-eyebrow">Super Admin</p>
         <h1 class="header-title">Quản lý người dùng</h1>
-        <p class="header-subtitle">Kiểm soát tài khoản, vai trò, trạng thái truy cập và hồ sơ người dùng hệ thống</p>
+        <p class="header-subtitle">
+          Kiểm soát tài khoản, vai trò, trạng thái truy cập và hồ sơ người dùng hệ thống
+        </p>
       </div>
       <div class="page-header-actions">
         <button
@@ -165,7 +167,11 @@
         </div>
 
         <div class="student-filter-item">
-          <label for="filterDept" class="filter-label" [class.filter-label-disabled]="!selectedFilterCohort()">
+          <label
+            for="filterDept"
+            class="filter-label"
+            [class.filter-label-disabled]="!selectedFilterCohort()"
+          >
             Trường / Khoa
           </label>
           <select
@@ -183,7 +189,11 @@
         </div>
 
         <div class="student-filter-item">
-          <label for="filterMajor" class="filter-label" [class.filter-label-disabled]="!selectedFilterDept()">
+          <label
+            for="filterMajor"
+            class="filter-label"
+            [class.filter-label-disabled]="!selectedFilterDept()"
+          >
             Chuyên ngành
           </label>
           <select
@@ -201,7 +211,11 @@
         </div>
 
         <div class="student-filter-item">
-          <label for="filterClass" class="filter-label" [class.filter-label-disabled]="!selectedFilterMajor()">
+          <label
+            for="filterClass"
+            class="filter-label"
+            [class.filter-label-disabled]="!selectedFilterMajor()"
+          >
             Lớp sinh hoạt
           </label>
           <select
@@ -227,12 +241,24 @@
       <table class="user-table">
         <thead>
           <tr>
-            <th class="th-sort" tabindex="0" role="button" (click)="onSort('studentCode')" (keydown.enter)="onSort('studentCode')">
+            <th
+              class="th-sort"
+              tabindex="0"
+              role="button"
+              (click)="onSort('studentCode')"
+              (keydown.enter)="onSort('studentCode')"
+            >
               {{ activeTab() === 'STUDENT' ? 'MSSV' : 'Username' }}
               <i class="bi bi-arrow-down-up"></i>
             </th>
             @if (activeTab() !== 'ADMIN') {
-              <th class="th-sort" tabindex="0" role="button" (click)="onSort('fullName')" (keydown.enter)="onSort('fullName')">
+              <th
+                class="th-sort"
+                tabindex="0"
+                role="button"
+                (click)="onSort('fullName')"
+                (keydown.enter)="onSort('fullName')"
+              >
                 {{ activeTab() === 'FACULTY' ? 'Tên đơn vị' : 'Họ và tên' }}
                 <i class="bi bi-arrow-down-up"></i>
               </th>
@@ -249,7 +275,10 @@
         <tbody>
           @if (isLoading()) {
             <tr>
-              <td [colSpan]="activeTab() === 'STUDENT' ? 6 : activeTab() === 'ADMIN' ? 4 : 5" class="td-empty">
+              <td
+                [colSpan]="activeTab() === 'STUDENT' ? 6 : activeTab() === 'ADMIN' ? 4 : 5"
+                class="td-empty"
+              >
                 <div class="empty-state">
                   <div class="empty-icon">
                     <i class="bi bi-arrow-repeat"></i>
@@ -258,23 +287,35 @@
                 </div>
               </td>
             </tr>
-          } @else if (activeTab() === 'STUDENT' && !selectedFilterClass() && !searchTerm().trim() && selectedStatus() === '') {
+          } @else if (
+            activeTab() === 'STUDENT' &&
+            !selectedFilterClass() &&
+            !searchTerm().trim() &&
+            selectedStatus() === ''
+          ) {
             <tr>
-              <td [colSpan]="activeTab() === 'STUDENT' ? 6 : activeTab() === 'ADMIN' ? 4 : 5" class="td-empty">
+              <td
+                [colSpan]="activeTab() === 'STUDENT' ? 6 : activeTab() === 'ADMIN' ? 4 : 5"
+                class="td-empty"
+              >
                 <div class="empty-state empty-state-large">
                   <div class="empty-icon empty-icon-lg">
                     <i class="bi bi-funnel"></i>
                   </div>
                   <h3 class="empty-title">Chọn lớp để tải danh sách sinh viên</h3>
                   <p class="empty-desc">
-                    Dữ liệu sinh viên có thể rất lớn, vui lòng chọn khóa, khoa, chuyên ngành và lớp sinh hoạt trước khi xem danh sách.
+                    Dữ liệu sinh viên có thể rất lớn, vui lòng chọn khóa, khoa, chuyên ngành và lớp
+                    sinh hoạt trước khi xem danh sách.
                   </p>
                 </div>
               </td>
             </tr>
           } @else if (sortedUsers().length === 0) {
             <tr>
-              <td [colSpan]="activeTab() === 'STUDENT' ? 6 : activeTab() === 'ADMIN' ? 4 : 5" class="td-empty">
+              <td
+                [colSpan]="activeTab() === 'STUDENT' ? 6 : activeTab() === 'ADMIN' ? 4 : 5"
+                class="td-empty"
+              >
                 <div class="empty-state">
                   <div class="empty-icon">
                     <i class="bi bi-inbox"></i>
@@ -286,24 +327,34 @@
           } @else {
             @for (user of sortedUsers() || []; track user.id) {
               <tr class="tr-data">
-                <td class="td-user-code">
+                <td
+                  class="td-user-code"
+                  [attr.data-label]="activeTab() === 'STUDENT' ? 'MSSV' : 'Username'"
+                >
                   <span class="user-code">{{ user.studentCode || user.username }}</span>
                   <span class="user-role-tag">{{ roleLabel(user.roleType) }}</span>
                 </td>
 
                 @if (activeTab() !== 'ADMIN') {
-                  <td class="td-name">{{ user.fullName || 'Chưa cập nhật' }}</td>
-                }
-
-                <td class="td-email">{{ user.email }}</td>
-
-                @if (activeTab() === 'STUDENT') {
-                  <td class="td-class">
-                    <span class="class-badge">{{ user.classCode || user.departmentName || 'Chưa phân lớp' }}</span>
+                  <td
+                    class="td-name"
+                    [attr.data-label]="activeTab() === 'FACULTY' ? 'Tên đơn vị' : 'Họ và tên'"
+                  >
+                    {{ user.fullName || 'Chưa cập nhật' }}
                   </td>
                 }
 
-                <td class="td-center">
+                <td class="td-email" data-label="Email">{{ user.email }}</td>
+
+                @if (activeTab() === 'STUDENT') {
+                  <td class="td-class" data-label="Lớp / Đơn vị">
+                    <span class="class-badge">{{
+                      user.classCode || user.departmentName || 'Chưa phân lớp'
+                    }}</span>
+                  </td>
+                }
+
+                <td class="td-center" data-label="Trạng thái">
                   <button
                     type="button"
                     (click)="toggleStatus(user)"
@@ -316,17 +367,32 @@
                   </button>
                 </td>
 
-                <td class="td-actions">
+                <td class="td-actions" data-label="Thao tác">
                   <div class="action-group">
-                    <button type="button" (click)="openViewModal(user)" class="icon-btn icon-btn-view" title="Xem hồ sơ">
+                    <button
+                      type="button"
+                      (click)="openViewModal(user)"
+                      class="icon-btn icon-btn-view"
+                      title="Xem hồ sơ"
+                    >
                       <i class="bi bi-person-vcard"></i>
                     </button>
                     @if (activeTab() === 'STUDENT') {
-                      <button type="button" (click)="editUser(user)" class="icon-btn icon-btn-edit" title="Phân lớp">
+                      <button
+                        type="button"
+                        (click)="editUser(user)"
+                        class="icon-btn icon-btn-edit"
+                        title="Phân lớp"
+                      >
                         <i class="bi bi-person-gear"></i>
                       </button>
                     }
-                    <button type="button" (click)="resetPassword(user)" class="icon-btn icon-btn-key" title="Gửi email đặt lại mật khẩu">
+                    <button
+                      type="button"
+                      (click)="resetPassword(user)"
+                      class="icon-btn icon-btn-key"
+                      title="Gửi email đặt lại mật khẩu"
+                    >
                       <i class="bi bi-key"></i>
                     </button>
                   </div>

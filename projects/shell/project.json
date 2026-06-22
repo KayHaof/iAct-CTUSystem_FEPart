@@ -37,13 +37,6 @@
     "lint": {
       "executor": "@nx/eslint:lint"
     },
-    "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
-      "options": {
-        "reportsDirectory": "../../coverage/projects/shell"
-      }
-    },
     "serve-static": {
       "continuous": true,
       "executor": "@nx/web:file-server",
@@ -70,7 +63,7 @@
         ],
         "styles": [
           "projects/shell/src/styles.scss",
-          "./node_modules/@ngxpert/hot-toast/fesm2022/ngxpert-hot-toast.mjs"
+          "./node_modules/@ngxpert/hot-toast/src/styles/styles.css"
         ],
         "polyfills": ["es-module-shims"],
         "stylePreprocessorOptions": {

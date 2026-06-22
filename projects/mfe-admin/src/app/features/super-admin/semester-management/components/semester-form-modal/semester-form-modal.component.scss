@@ -11,7 +11,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 0.5rem;
+  padding-top: 2vh;
+
+  @media (min-width: 640px) {
+    padding: 1.5rem;
+    padding-top: 6vh;
+  }
 }
 
 .modal-form {
@@ -32,12 +38,16 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.75rem 2rem 1.25rem;
+  padding: 1rem;
   border-bottom: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
   background: #ffffff;
   z-index: 1;
+
+  @media (min-width: 640px) {
+    padding: 1.75rem 2rem 1.25rem;
+  }
 }
 
 .modal-form-title {

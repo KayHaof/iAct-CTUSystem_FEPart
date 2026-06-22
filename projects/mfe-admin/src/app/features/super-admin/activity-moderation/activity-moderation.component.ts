@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AlertService } from '@my-mfe/ui';
 import { finalize } from 'rxjs';
@@ -37,6 +37,7 @@ type ModalType = 'view' | 'reject' | 'viewReason';
   ],
   templateUrl: './activity-moderation.component.html',
   styleUrls: ['./activity-moderation.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ActivityModerationComponent implements OnInit {
   private moderationService = inject(ActivityModerationService);

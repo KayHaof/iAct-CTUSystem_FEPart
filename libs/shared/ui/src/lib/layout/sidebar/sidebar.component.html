@@ -1,4 +1,10 @@
-<aside class="sidebar-container" aria-label="Thanh điều hướng chính">
+<aside
+  class="sidebar-container"
+  [class.is-mobile-open]="isMobileOpen()"
+  [class.is-light]="theme === 'light'"
+  [class.is-dark]="theme === 'dark'"
+  aria-label="Thanh điều hướng chính"
+>
   <div class="sidebar-logo">
     <div class="brand-mark" aria-hidden="true"></div>
     <div class="brand-copy">

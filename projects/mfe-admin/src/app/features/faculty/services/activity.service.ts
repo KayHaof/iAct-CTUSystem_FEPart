@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { Activity, ActivityRequest } from '../../../shared/models/activity.model';
-import { ApiResponse, PageDTO } from 'interface';
+import { ApiResponse, PageDTO } from '@my-mfe/interface';
 
 @Injectable({
   providedIn: 'root',

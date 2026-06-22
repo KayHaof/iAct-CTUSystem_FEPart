@@ -1,6 +1,13 @@
 @if (isOpen) {
   <div class="modal-overlay">
-    <div class="modal-backdrop" role="button" tabindex="0" aria-label="Đóng" (click)="close()" (keydown.enter)="close()"></div>
+    <div
+      class="modal-backdrop"
+      role="button"
+      tabindex="0"
+      aria-label="Đóng"
+      (click)="close()"
+      (keydown.enter)="close()"
+    ></div>
 
     <div class="modal-content">
       <header class="modal-header">
@@ -21,34 +28,77 @@
       <div class="modal-body">
         <section class="form-section">
           <div class="section-title">
-            <i class="bi bi-shield-lock-fill" style="color: #2563eb;"></i>
+            <i class="bi bi-shield-lock-fill" style="color: #2563eb"></i>
             Thông tin đăng nhập
           </div>
 
           <div class="form-grid">
             <div>
               <label for="addUsername" class="input-label">Tên đăng nhập</label>
-              <input id="addUsername" type="text" [(ngModel)]="newUser.username" class="input-field" placeholder="VD: b2205864" />
+              <input
+                id="addUsername"
+                type="text"
+                [(ngModel)]="newUser.username"
+                class="input-field"
+                placeholder="VD: b2205864"
+              />
             </div>
             <div>
               <label for="addEmail" class="input-label">Email</label>
-              <input id="addEmail" type="email" [(ngModel)]="newUser.email" class="input-field" placeholder="name@ctu.edu.vn" />
+              <input
+                id="addEmail"
+                type="email"
+                [(ngModel)]="newUser.email"
+                class="input-field"
+                placeholder="name@ctu.edu.vn"
+              />
             </div>
             <div>
               <label for="addPassword" class="input-label">Mật khẩu</label>
               <div class="input-wrapper">
-                <input id="addPassword" [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="newUser.password" class="input-field input-with-icon" placeholder="Nhập mật khẩu" />
-                <button type="button" (click)="togglePassword()" class="field-icon" title="Ẩn hoặc hiện mật khẩu">
-                  <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()"></i>
+                <input
+                  id="addPassword"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  [(ngModel)]="newUser.password"
+                  class="input-field input-with-icon"
+                  placeholder="Nhập mật khẩu"
+                />
+                <button
+                  type="button"
+                  (click)="togglePassword()"
+                  class="field-icon"
+                  title="Ẩn hoặc hiện mật khẩu"
+                >
+                  <i
+                    class="bi"
+                    [class.bi-eye]="!showPassword()"
+                    [class.bi-eye-slash]="showPassword()"
+                  ></i>
                 </button>
               </div>
             </div>
             <div>
               <label for="confirmPassword" class="input-label">Xác nhận mật khẩu</label>
               <div class="input-wrapper">
-                <input id="confirmPassword" [type]="showConfirmPassword() ? 'text' : 'password'" [(ngModel)]="confirmPassword" class="input-field input-with-icon" [class.input-error]="confirmPassword && newUser.password !== confirmPassword" placeholder="Nhập lại mật khẩu" />
-                <button type="button" (click)="toggleConfirmPassword()" class="field-icon" title="Ẩn hoặc hiện mật khẩu">
-                  <i class="bi" [class.bi-eye]="!showConfirmPassword()" [class.bi-eye-slash]="showConfirmPassword()"></i>
+                <input
+                  id="confirmPassword"
+                  [type]="showConfirmPassword() ? 'text' : 'password'"
+                  [(ngModel)]="confirmPassword"
+                  class="input-field input-with-icon"
+                  [class.input-error]="confirmPassword && newUser.password !== confirmPassword"
+                  placeholder="Nhập lại mật khẩu"
+                />
+                <button
+                  type="button"
+                  (click)="toggleConfirmPassword()"
+                  class="field-icon"
+                  title="Ẩn hoặc hiện mật khẩu"
+                >
+                  <i
+                    class="bi"
+                    [class.bi-eye]="!showConfirmPassword()"
+                    [class.bi-eye-slash]="showConfirmPassword()"
+                  ></i>
                 </button>
               </div>
               @if (confirmPassword && newUser.password !== confirmPassword) {
@@ -57,7 +107,11 @@
             </div>
             <div class="form-group-full">
               <label for="addRole" class="input-label">Vai trò</label>
-              <select id="addRole" [(ngModel)]="newUser.roleType" (change)="onRoleChange()" class="input-field select-field input-field-blue">
+              <select
+                id="addRole"
+                [(ngModel)]="newUser.roleType"
+                class="input-field select-field input-field-blue"
+              >
                 <option [ngValue]="0" disabled>Chọn vai trò</option>
                 <option [ngValue]="1">Sinh viên</option>
                 <option [ngValue]="2">Khoa / đơn vị</option>
@@ -70,7 +124,7 @@
         @if (newUser.roleType !== 0) {
           <section class="form-section">
             <div class="section-title">
-              <i class="bi bi-person-vcard-fill" style="color: #059669;"></i>
+              <i class="bi bi-person-vcard-fill" style="color: #059669"></i>
               Hồ sơ định danh
             </div>
 
@@ -78,15 +132,32 @@
               <div class="form-grid">
                 <div>
                   <label for="addStudentCode" class="input-label">Mã số sinh viên</label>
-                  <input id="addStudentCode" type="text" [(ngModel)]="newUser.studentCode" class="input-field input-field-uppercase" placeholder="VD: B2205864" />
+                  <input
+                    id="addStudentCode"
+                    type="text"
+                    [(ngModel)]="newUser.studentCode"
+                    class="input-field input-field-uppercase"
+                    placeholder="VD: B2205864"
+                  />
                 </div>
                 <div>
                   <label for="addStudentName" class="input-label">Họ và tên</label>
-                  <input id="addStudentName" type="text" [(ngModel)]="newUser.fullName" class="input-field" placeholder="Nhập họ và tên sinh viên" />
+                  <input
+                    id="addStudentName"
+                    type="text"
+                    [(ngModel)]="newUser.fullName"
+                    class="input-field"
+                    placeholder="Nhập họ và tên sinh viên"
+                  />
                 </div>
                 <div>
                   <label for="addDeptId" class="input-label">Trường / khoa</label>
-                  <select id="addDeptId" [(ngModel)]="newUser.departmentId" (change)="onAddDeptChange()" class="input-field select-field">
+                  <select
+                    id="addDeptId"
+                    [(ngModel)]="newUser.departmentId"
+                    (change)="onAddDeptChange()"
+                    class="input-field select-field"
+                  >
                     <option [ngValue]="null">Chọn trường / khoa</option>
                     @for (dept of departments || []; track dept.id) {
                       <option [ngValue]="dept.id">{{ dept.name }}</option>
@@ -94,8 +165,19 @@
                   </select>
                 </div>
                 <div>
-                  <label for="addMajorId" class="input-label" [style.opacity]="!newUser.departmentId ? '0.5' : '1'">Chuyên ngành</label>
-                  <select id="addMajorId" [(ngModel)]="newUser.majorId" (change)="onAddMajorChange()" [disabled]="!newUser.departmentId" class="input-field select-field">
+                  <label
+                    for="addMajorId"
+                    class="input-label"
+                    [style.opacity]="!newUser.departmentId ? '0.5' : '1'"
+                    >Chuyên ngành</label
+                  >
+                  <select
+                    id="addMajorId"
+                    [(ngModel)]="newUser.majorId"
+                    (change)="onAddMajorChange()"
+                    [disabled]="!newUser.departmentId"
+                    class="input-field select-field"
+                  >
                     <option [ngValue]="null">Chọn chuyên ngành</option>
                     @for (major of addMajors() || []; track major.id) {
                       <option [ngValue]="major.id">{{ major.name }}</option>
@@ -103,8 +185,18 @@
                   </select>
                 </div>
                 <div class="form-group-full">
-                  <label for="addClassId" class="input-label" [style.opacity]="!newUser.majorId ? '0.5' : '1'">Lớp sinh hoạt</label>
-                  <select id="addClassId" [(ngModel)]="newUser.classId" [disabled]="!newUser.majorId" class="input-field select-field input-field-emerald">
+                  <label
+                    for="addClassId"
+                    class="input-label"
+                    [style.opacity]="!newUser.majorId ? '0.5' : '1'"
+                    >Lớp sinh hoạt</label
+                  >
+                  <select
+                    id="addClassId"
+                    [(ngModel)]="newUser.classId"
+                    [disabled]="!newUser.majorId"
+                    class="input-field select-field input-field-emerald"
+                  >
                     <option [ngValue]="null">Chọn lớp sinh hoạt</option>
                     @for (cls of addClasses() || []; track cls.id) {
                       <option [ngValue]="cls.id">{{ cls.classCode || cls.name }}</option>
@@ -118,11 +210,23 @@
               <div class="form-grid">
                 <div>
                   <label for="addOrgName" class="input-label">Tên khoa / đơn vị</label>
-                  <input id="addOrgName" type="text" [(ngModel)]="newUser.fullName" class="input-field" placeholder="VD: Đoàn khoa CNTT&TT" />
+                  <input
+                    id="addOrgName"
+                    type="text"
+                    [(ngModel)]="newUser.fullName"
+                    class="input-field"
+                    placeholder="VD: Đoàn khoa CNTT&TT"
+                  />
                 </div>
                 <div>
                   <label for="addOrgDesc" class="input-label">Mô tả chức năng</label>
-                  <input id="addOrgDesc" type="text" [(ngModel)]="newUser.description" class="input-field" placeholder="Nhập mô tả ngắn" />
+                  <input
+                    id="addOrgDesc"
+                    type="text"
+                    [(ngModel)]="newUser.description"
+                    class="input-field"
+                    placeholder="Nhập mô tả ngắn"
+                  />
                 </div>
               </div>
             }
@@ -130,7 +234,13 @@
             @if (newUser.roleType === 3) {
               <div class="form-section-inline">
                 <label for="addAdminName" class="input-label">Tên hiển thị quản trị viên</label>
-                <input id="addAdminName" type="text" [(ngModel)]="newUser.fullName" class="input-field" placeholder="Nhập họ tên hoặc tên định danh" />
+                <input
+                  id="addAdminName"
+                  type="text"
+                  [(ngModel)]="newUser.fullName"
+                  class="input-field"
+                  placeholder="Nhập họ tên hoặc tên định danh"
+                />
               </div>
             }
           </section>
@@ -139,7 +249,12 @@
 
       <footer class="modal-footer">
         <button type="button" (click)="close()" class="btn-secondary">Hủy bỏ</button>
-        <button type="button" (click)="submit()" [disabled]="!isFormValid() || isSaving()" class="btn-primary">
+        <button
+          type="button"
+          (click)="submit()"
+          [disabled]="!isFormValid() || isSaving()"
+          class="btn-primary"
+        >
           @if (isSaving()) {
             <i class="bi bi-arrow-repeat spin-icon"></i>
             Đang tạo

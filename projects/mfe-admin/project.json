@@ -40,19 +40,12 @@
     "lint": {
       "executor": "@nx/eslint:lint"
     },
-    "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
-      "options": {
-        "reportsDirectory": "../../coverage/projects/mfe-admin"
-      }
-    },
     "serve-static": {
       "continuous": true,
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "mfe-admin:build",
-        "port": 4200,
+        "port": 4202,
         "staticFilePath": "dist/projects/mfe-admin/browser",
         "spa": true
       }

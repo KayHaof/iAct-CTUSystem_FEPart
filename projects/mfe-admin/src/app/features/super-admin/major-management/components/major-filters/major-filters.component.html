@@ -34,6 +34,7 @@
             <button
               type="button"
               role="option"
+              [attr.aria-selected]="filters.departmentId === ''"
               class="select-option"
               [class.select-option-active]="filters.departmentId === ''"
               (click)="selectDepartment.emit('')"
@@ -45,6 +46,7 @@
               <button
                 type="button"
                 role="option"
+                [attr.aria-selected]="filters.departmentId === department.id"
                 class="select-option"
                 [class.select-option-active]="filters.departmentId === department.id"
                 (click)="selectDepartment.emit(department.id)"
@@ -77,6 +79,7 @@
               <button
                 type="button"
                 role="option"
+                [attr.aria-selected]="filters.active === option.value"
                 class="select-option"
                 [class.select-option-active]="filters.active === option.value"
                 (click)="selectStatus.emit(option.value)"
@@ -108,6 +111,7 @@
             <button
               type="button"
               role="option"
+              [attr.aria-selected]="filters.programType === ''"
               class="select-option"
               [class.select-option-active]="filters.programType === ''"
               (click)="selectProgram.emit('')"
@@ -119,6 +123,7 @@
               <button
                 type="button"
                 role="option"
+                [attr.aria-selected]="filters.programType === option.value"
                 class="select-option"
                 [class.select-option-active]="filters.programType === option.value"
                 (click)="selectProgram.emit(option.value)"
@@ -134,7 +139,9 @@
 
     <div class="filter-actions">
       <button type="button" class="filter-btn-reset" (click)="resetFilters.emit()">Đặt lại</button>
-      <button type="button" class="filter-btn-primary" (click)="applyFilters.emit()">Tìm kiếm</button>
+      <button type="button" class="filter-btn-primary" (click)="applyFilters.emit()">
+        Tìm kiếm
+      </button>
     </div>
   </div>
 </section>

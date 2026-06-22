@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './view-reject-reason-modal.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ViewRejectReasonModalComponent {
   activityName = input<string>('Không xác định');

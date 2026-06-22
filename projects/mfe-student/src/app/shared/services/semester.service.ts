@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiResponse, Semester} from 'interface';
+import { ApiResponse, Semester} from '@my-mfe/interface';
 
 @Injectable({ providedIn: 'root' })
 export class SemesterService {

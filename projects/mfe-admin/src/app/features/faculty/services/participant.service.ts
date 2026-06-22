@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { PageDTO, ApiResponse } from 'interface';
-import { RegistrationResponse } from 'interface';
+import { PageDTO, ApiResponse } from '@my-mfe/interface';
+import { RegistrationResponse } from '@my-mfe/interface';
 
 @Injectable({
   providedIn: 'root',

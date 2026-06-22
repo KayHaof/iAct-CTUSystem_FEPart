@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiResponse, UserInfo, Department, ClassInfo, MajorInfo, PageDTO } from 'interface';
+import { ApiResponse, UserInfo, Department, ClassInfo, MajorInfo, PageDTO } from '@my-mfe/interface';
 
 export interface CreateUserDto extends Partial<UserInfo> {
   password?: string;

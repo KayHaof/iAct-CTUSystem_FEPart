@@ -12,20 +12,14 @@ module.exports = withNativeFederation({
     '@angular/core/primitives/di': { singleton: true, strictVersion: false },
     '@angular/core/primitives/event-dispatch': { singleton: true, strictVersion: false },
     '@angular/core/primitives/signals': { singleton: true, strictVersion: false },
-    'keycloak-angular': { singleton: true, strictVersion: true },
-    'keycloak-js': { singleton: true, strictVersion: true },
-    '@angular/core': { singleton: true, strictVersion: true },
-    '@angular/core/rxjs-interop': { singleton: true, strictVersion: true },
-    'angular-oauth2-oidc': {
-      singleton: true,
-      strictVersion: true,
-      requiredVersion: 'auto',
-    },
-
-    '@my-mfe/auth': { singleton: true, strictVersion: true },
-    '@my-mfe/data-access-realtime': { singleton: true, strictVersion: true },
-    '@my-mfe/data-access-media': { singleton: true, strictVersion: true },
-    '@my-mfe/ui': { singleton: true, strictVersion: true },
+    '@my-mfe/auth': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/ui': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/interface': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/data-access-media': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/data-access-realtime': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/data-access-notification': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/data-access-activity': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/student-shared': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
   },
 
   skip: [
@@ -35,13 +29,7 @@ module.exports = withNativeFederation({
     'rxjs/webSocket',
   ],
 
-  // Please read our FAQ about sharing libs:
-  // https://shorturl.at/jmzH0
-
   features: {
-    // New feature for more performance and avoiding
-    // issues with node libs. Comment this out to
-    // get the traditional behavior:
     ignoreUnusedDeps: true,
   },
 });

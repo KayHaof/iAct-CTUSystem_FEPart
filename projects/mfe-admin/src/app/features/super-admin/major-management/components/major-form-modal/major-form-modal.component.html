@@ -6,9 +6,11 @@
           <h2 id="major-form-title" class="modal-form-title">
             {{ editingMajor ? 'Cập nhật chuyên ngành' : 'Thêm chuyên ngành mới' }}
           </h2>
-          <p class="modal-form-desc">Thiết lập chuyên ngành trực thuộc đơn vị và hệ đào tạo tương ứng.</p>
+          <p class="modal-form-desc">
+            Thiết lập chuyên ngành trực thuộc đơn vị và hệ đào tạo tương ứng.
+          </p>
         </div>
-        <button type="button" class="modal-close-btn" (click)="close.emit()">
+        <button type="button" class="modal-close-btn" (click)="modalClosed.emit()">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
@@ -62,6 +64,7 @@
                     <button
                       type="button"
                       role="option"
+                      [attr.aria-selected]="form.departmentId === department.id"
                       class="select-option"
                       [class.select-option-active]="form.departmentId === department.id"
                       (click)="selectDepartment.emit(department.id)"
@@ -95,6 +98,7 @@
                   <button
                     type="button"
                     role="option"
+                    [attr.aria-selected]="form.programType === option.value"
                     class="select-option"
                     [class.select-option-active]="form.programType === option.value"
                     (click)="selectProgram.emit(option.value)"
@@ -127,6 +131,7 @@
                   <button
                     type="button"
                     role="option"
+                    [attr.aria-selected]="form.isActive === option.value"
                     class="select-option"
                     [class.select-option-active]="form.isActive === option.value"
                     (click)="selectActive.emit(option.value)"
@@ -142,7 +147,7 @@
       </div>
 
       <div class="modal-form-actions">
-        <button type="button" class="modal-btn-cancel" (click)="close.emit()">Hủy</button>
+        <button type="button" class="modal-btn-cancel" (click)="modalClosed.emit()">Hủy</button>
         <button type="submit" class="modal-btn-save" [disabled]="isSaving">
           {{ isSaving ? 'Đang lưu...' : 'Lưu chuyên ngành' }}
         </button>

@@ -7,10 +7,7 @@
   } @else if (activity(); as act) {
     <div class="admin-activity-detail">
       <!-- Nut Quay lai -->
-      <button
-        type="button"
-        class="btn-back"
-        (click)="goBack()">
+      <button type="button" class="btn-back" (click)="goBack()">
         <i class="bi bi-arrow-left"></i>
         Quay lại danh sách
       </button>
@@ -66,8 +63,14 @@
               <p class="rejection-alert__text">"{{ act.reason || 'Không có lý do cụ thể' }}"</p>
             </div>
             <div class="rejection-alert__meta">
-              <span><i class="bi bi-person-fill"></i> Người xử lý: <strong>{{ act.handledBy?.fullName || 'Hệ thống' }}</strong></span>
-              <span><i class="bi bi-clock-fill"></i> Thời gian: <strong>{{ act.handledAt | date: 'HH:mm - dd/MM/yyyy' }}</strong></span>
+              <span
+                ><i class="bi bi-person-fill"></i> Người xử lý:
+                <strong>{{ act.handledBy?.fullName || 'Hệ thống' }}</strong></span
+              >
+              <span
+                ><i class="bi bi-clock-fill"></i> Thời gian:
+                <strong>{{ act.handledAt | date: 'HH:mm - dd/MM/yyyy' }}</strong></span
+              >
             </div>
           </div>
         </div>
@@ -80,17 +83,19 @@
           <!-- Hinh anh bia -->
           <div class="admin-activity-cover">
             <img
-              [src]="act.coverImage || 'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772505926/default_activity_coverImage.jpg'"
+              [src]="
+                act.coverImage ||
+                'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772505926/default_activity_coverImage.jpg'
+              "
               alt="Ảnh bìa hoạt động"
-              class="admin-activity-cover__img" />
+              class="admin-activity-cover__img"
+            />
           </div>
 
           <!-- Mo ta -->
           @if (act.description) {
             <div class="admin-activity-description">
-              <blockquote class="admin-description-quote">
-                "{{ act.description }}"
-              </blockquote>
+              <blockquote class="admin-description-quote">"{{ act.description }}"</blockquote>
             </div>
           }
 
@@ -105,9 +110,7 @@
                   <i class="bi bi-star-fill"></i>
                   Quyền lợi sinh viên
                 </h3>
-                <span class="admin-benefits-card__total">
-                  Tổng: +{{ totalPoints() }} ĐRL
-                </span>
+                <span class="admin-benefits-card__total"> Tổng: +{{ totalPoints() }} ĐRL </span>
               </div>
               <div class="admin-benefits-list">
                 @for (benefit of act.benefits || []; track benefit.id) {
@@ -148,7 +151,10 @@
                 </div>
                 <div class="admin-info-item__content">
                   <h4>Thời gian đăng ký</h4>
-                  <p>{{ act.registrationStart | date: 'dd/MM/yyyy HH:mm' }} - {{ act.registrationEnd | date: 'dd/MM/yyyy HH:mm' }}</p>
+                  <p>
+                    {{ act.registrationStart | date: 'dd/MM/yyyy HH:mm' }} -
+                    {{ act.registrationEnd | date: 'dd/MM/yyyy HH:mm' }}
+                  </p>
                 </div>
               </div>
 
@@ -158,7 +164,10 @@
                 </div>
                 <div class="admin-info-item__content">
                   <h4>Khung thời gian tổ chức</h4>
-                  <p>{{ act.startDate | date: 'dd/MM/yyyy HH:mm' }} - {{ act.endDate | date: 'dd/MM/yyyy HH:mm' }}</p>
+                  <p>
+                    {{ act.startDate | date: 'dd/MM/yyyy HH:mm' }} -
+                    {{ act.endDate | date: 'dd/MM/yyyy HH:mm' }}
+                  </p>
                 </div>
               </div>
 
@@ -170,9 +179,15 @@
                     @for (schedule of act.schedules || []; track schedule.id) {
                       <div class="admin-schedule-item">
                         <p class="admin-schedule-item__title">{{ schedule.title }}</p>
-                        <p class="admin-schedule-item__time"><i class="bi bi-clock"></i> {{ schedule.startTime | date: 'dd/MM HH:mm' }} - {{ schedule.endTime | date: 'HH:mm' }}</p>
+                        <p class="admin-schedule-item__time">
+                          <i class="bi bi-clock"></i>
+                          {{ schedule.startTime | date: 'dd/MM HH:mm' }} -
+                          {{ schedule.endTime | date: 'HH:mm' }}
+                        </p>
                         @if (schedule.location) {
-                          <p class="admin-schedule-item__location"><i class="bi bi-geo-alt-fill"></i> {{ schedule.location }}</p>
+                          <p class="admin-schedule-item__location">
+                            <i class="bi bi-geo-alt-fill"></i> {{ schedule.location }}
+                          </p>
                         }
                       </div>
                     }
@@ -226,11 +241,17 @@
                   </div>
                   <div class="admin-stats-box__registrations">
                     <p class="admin-info-label">Ghi danh</p>
-                    <span class="admin-registration-count">{{ act.registeredCount || 0 }} <span class="admin-registration-max">/ {{ act.maxParticipants }}</span></span>
+                    <span class="admin-registration-count"
+                      >{{ act.registeredCount || 0 }}
+                      <span class="admin-registration-max">/ {{ act.maxParticipants }}</span></span
+                    >
                   </div>
                 </div>
                 <div class="admin-progress">
-                  <div class="admin-progress__fill admin-progress__fill--primary" [style.width.%]="capacityPercentage()"></div>
+                  <div
+                    class="admin-progress__fill admin-progress__fill--primary"
+                    [style.width.%]="capacityPercentage()"
+                  ></div>
                 </div>
               </div>
             </div>
@@ -241,8 +262,21 @@
 
     <!-- Modal QR Code -->
     @if (showQrModal()) {
-      <div class="admin-modal-overlay" (click)="closeQrModal()">
-        <div class="admin-modal" (click)="$event.stopPropagation()">
+      <div
+        class="admin-modal-overlay"
+        role="button"
+        tabindex="0"
+        aria-label="Đóng mã QR"
+        (click)="closeQrModal()"
+        (keydown.escape)="closeQrModal()"
+      >
+        <div
+          class="admin-modal"
+          role="dialog"
+          aria-modal="true"
+          (click)="$event.stopPropagation()"
+          (keydown)="$event.stopPropagation()"
+        >
           <button type="button" class="admin-modal__close" (click)="closeQrModal()">
             <i class="bi bi-x-lg"></i>
           </button>
@@ -250,7 +284,9 @@
             <i class="bi bi-qr-code-scan"></i>
           </div>
           <h3 class="admin-modal__title">Mã QR Điểm Danh</h3>
-          <p class="admin-modal__desc">Đưa mã này cho sinh viên quét bằng app iAct để tự động ghi nhận tham gia.</p>
+          <p class="admin-modal__desc">
+            Đưa mã này cho sinh viên quét bằng app iAct để tự động ghi nhận tham gia.
+          </p>
           <div class="admin-qr-wrapper">
             @if (isGeneratingQr()) {
               <div class="admin-qr-loading">

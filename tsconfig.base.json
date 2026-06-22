@@ -8,11 +8,15 @@
     "skipLibCheck": true,
     "paths": {
       "@my-mfe/auth": ["./libs/shared/auth/src/index.ts"],
+      "@my-mfe/ui": ["./libs/shared/ui/src/index.ts"],
+      "@my-mfe/interface": ["./libs/shared/interface/src/index.ts"],
       "@my-mfe/data-access-media": ["./libs/shared/data-access-media/src/index.ts"],
       "@my-mfe/data-access-realtime": ["./libs/shared/data-access-realtime/src/index.ts"],
-      "@my-mfe/ui": ["./libs/shared/ui/src/index.ts"],
-      "@my-mfe/features/user-profile": ["./libs/features/src/index.ts"],
-      "interface": ["./libs/shared/interface/src/index.ts"]
+      "@my-mfe/data-access-notification": ["./libs/shared/data-access-notification/src/index.ts"],
+      "@my-mfe/data-access-activity": ["./libs/shared/data-access-activity/src/index.ts"],
+      "@my-mfe/admin-shared": ["./libs/shared/admin-shared/src/index.ts"],
+      "@my-mfe/student-shared": ["./libs/shared/student-shared/src/index.ts"],
+      "@my-mfe/features/user-profile": ["./libs/features/src/index.ts"]
     }
   }
 }

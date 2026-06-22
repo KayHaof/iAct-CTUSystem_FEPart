@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CriteriaScore } from '../../models/dashboard.model';
 
@@ -8,6 +8,7 @@ import { CriteriaScore } from '../../models/dashboard.model';
   imports: [CommonModule],
   templateUrl: './criteria-chart.component.html',
   styleUrl: './criteria-chart.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CriteriaChartComponent {
   @Input() scores: CriteriaScore[] = [];

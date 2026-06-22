@@ -1,5 +1,5 @@
 // ==============================================
-// SIDEBAR STYLES
+// SIDEBAR STYLES - Mobile Drawer + Desktop Hover-Expand
 // ==============================================
 
 :host {
@@ -7,7 +7,7 @@
   height: 100%;
 }
 
-/* Sidebar container - absolute positioned to overlay content */
+/* === BASE CONTAINER === */
 .sidebar-container {
   position: absolute;
   top: 0;
@@ -15,38 +15,55 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  z-index: var(--z-sticky, 100);
+  z-index: var(--z-fixed, 200);
   background: var(--bg, #ffffff);
   border-right: 1px solid var(--border, #e2e8f0);
   color: var(--text, #0f172a);
-  transition: width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    width 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.08));
-
-  /* Desktop: collapsed (icon-only) */
-  @media (min-width: 768px) {
-    width: var(--sidebar-collapsed, 80px);
-    overflow: hidden;
-  }
-
-  /* Mobile: full width overlay */
-  @media (max-width: 767px) {
-    width: 280px;
-  }
+  overflow: hidden;
+  width: var(--sidebar-collapsed, 80px);
 }
 
-/* Desktop: expand on hover without pushing content */
+/* === THEME VARIANTS === */
+.is-light {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.is-dark {
+  background: #0f172a;
+  border-color: #1e293b;
+  color: #f1f5f9;
+}
+
+/* === DESKTOP: Hover expand (overlay content, no push) === */
 @media (min-width: 768px) {
   .sidebar-container {
     &:hover,
     &:focus-within {
       width: var(--sidebar-expanded, 280px);
-      z-index: var(--z-fixed, 200);
       box-shadow: var(--shadow-xl, 0 25px 50px -12px rgba(0, 0, 0, 0.15));
     }
   }
 }
 
-/* Logo section */
+/* === MOBILE: Drawer slide-in === */
+@media (max-width: 767px) {
+  .sidebar-container {
+    width: min(18rem, calc(100vw - 3.5rem));
+    transform: translateX(-100%);
+
+    &.is-mobile-open {
+      transform: translateX(0);
+    }
+  }
+}
+
+/* === LOGO SECTION === */
 .sidebar-logo {
   display: flex;
   align-items: center;
@@ -65,7 +82,9 @@
 }
 
 .sidebar-container:not(:hover):not(:focus-within) .sidebar-logo {
-  justify-content: center;
+  @media (min-width: 768px) {
+    justify-content: center;
+  }
 }
 
 .brand-mark {
@@ -83,7 +102,9 @@
 }
 
 .sidebar-container:not(:hover):not(:focus-within) .brand-mark {
-  margin: 0 auto;
+  @media (min-width: 768px) {
+    margin: 0 auto;
+  }
 }
 
 .brand-copy {
@@ -118,7 +139,7 @@
   color: var(--text-muted, #64748b);
 }
 
-/* Navigation */
+/* === NAVIGATION === */
 .sidebar-nav {
   display: flex;
   flex: 1;
@@ -137,7 +158,7 @@
   }
 }
 
-/* Nav items */
+/* === NAV ITEMS === */
 .nav-item,
 .logout-btn {
   position: relative;
@@ -175,12 +196,21 @@
   }
 }
 
-/* Icon-only mode on desktop */
+/* Desktop: icon-only when collapsed */
 @media (min-width: 768px) {
   .sidebar-container:not(:hover):not(:focus-within) .nav-item,
   .sidebar-container:not(:hover):not(:focus-within) .logout-btn {
     justify-content: center;
     padding: 0;
+  }
+}
+
+/* Mobile: always show icon + label, centered icon */
+@media (max-width: 767px) {
+  .nav-item,
+  .logout-btn {
+    justify-content: flex-start;
+    padding: 0 0.75rem;
   }
 }
 
@@ -196,6 +226,26 @@
     background: var(--primary, #2563eb);
     color: #ffffff;
     box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+
+    &::before {
+      opacity: 1;
+      background: #ffffff;
+    }
+  }
+}
+
+/* Dark theme nav items */
+.is-dark .nav-item {
+  color: #94a3b8;
+
+  &:hover {
+    background: rgba(37, 99, 235, 0.08);
+    color: #93c5fd;
+  }
+
+  &.active {
+    background: #2563eb;
+    color: #ffffff;
 
     &::before {
       opacity: 1;
@@ -222,6 +272,14 @@
   }
 }
 
+@media (max-width: 767px) {
+  .nav-icon {
+    width: 2rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+  }
+}
+
 .nav-item:hover .nav-icon,
 .logout-btn:hover .nav-icon {
   transform: scale(1.05);
@@ -230,7 +288,8 @@
 .nav-text {
   min-width: 0;
   white-space: nowrap;
-  opacity: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   @media (min-width: 768px) {
     .sidebar-container:not(:hover):not(:focus-within) & {
@@ -239,9 +298,17 @@
       overflow: hidden;
     }
   }
+
+  @media (max-width: 767px) {
+    opacity: 1;
+    width: auto;
+    overflow: visible;
+    text-overflow: clip;
+    flex: 1;
+  }
 }
 
-/* Footer */
+/* === FOOTER === */
 .sidebar-footer {
   border-top: 1px solid var(--border, #e2e8f0);
   padding: 0.75rem;
@@ -264,5 +331,16 @@
   &:hover {
     background: var(--danger-light, rgba(239, 68, 68, 0.12));
     color: #dc2626;
+  }
+}
+
+/* Dark theme logout */
+.is-dark .logout-btn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
   }
 }

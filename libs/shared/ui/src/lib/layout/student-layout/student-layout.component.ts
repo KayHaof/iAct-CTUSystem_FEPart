@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import {
   RouterOutlet,
   Router,
@@ -12,6 +12,7 @@ import { HeaderComponent } from '../header/header.component';
 import { FooterComponent } from '../footer/footer.component';
 import { LoadingBarComponent } from '../../components/loading-bar/loading-bar.component';
 import { LoadingService } from '../../services/loading.service';
+import { LayoutService } from '../../layout/layout.service';
 
 @Component({
   selector: 'lib-app-student-layout',
@@ -19,10 +20,14 @@ import { LoadingService } from '../../services/loading.service';
   imports: [RouterOutlet, SidebarComponent, HeaderComponent, FooterComponent, LoadingBarComponent],
   templateUrl: './student-layout.component.html',
   styleUrls: ['./student-layout.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentLayoutComponent implements OnInit {
   private router = inject(Router);
   private loadingService = inject(LoadingService);
+  private layoutService = inject(LayoutService);
+
+  isMobileMenuOpen = this.layoutService.isMobileMenuOpen;
 
   studentMenus: MenuItem[] = [
     { label: 'Tổng quan', link: '/dashboard', icon: 'bi bi-grid-fill' },
@@ -48,5 +53,9 @@ export class StudentLayoutComponent implements OnInit {
         this.loadingService.hide();
       }
     });
+  }
+
+  closeMobileMenu() {
+    this.layoutService.closeMobileMenu();
   }
 }

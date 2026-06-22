@@ -1,38 +1,21 @@
-const { withNativeFederation } = require('@angular-architects/native-federation/config');
-
-const sharedPackage = { singleton: true, strictVersion: true, requiredVersion: 'auto' };
-const sharedWorkspaceLibrary = {
-  singleton: true,
-  strictVersion: true,
-  version: '0.0.0',
-  requiredVersion: '0.0.0',
-};
+const { withNativeFederation, shareAll } = require('@angular-architects/native-federation/config');
 
 module.exports = withNativeFederation({
   name: 'shell',
 
   shared: {
-    '@angular/animations': sharedPackage,
-    '@angular/common': sharedPackage,
-    '@angular/common/http': sharedPackage,
-    '@angular/core': sharedPackage,
-    '@angular/core/rxjs-interop': sharedPackage,
-    '@angular/core/primitives/di': { ...sharedPackage, strictVersion: false },
-    '@angular/core/primitives/event-dispatch': { ...sharedPackage, strictVersion: false },
-    '@angular/core/primitives/signals': { ...sharedPackage, strictVersion: false },
-    '@angular/forms': sharedPackage,
-    '@angular/platform-browser': sharedPackage,
-    '@angular/platform-browser/animations': sharedPackage,
-    '@angular/router': sharedPackage,
-    '@angular/cdk': sharedPackage,
-    '@angular/material': sharedPackage,
-    'angular-oauth2-oidc': sharedPackage,
-    rxjs: sharedPackage,
-    'rxjs/operators': sharedPackage,
-    '@my-mfe/auth': sharedWorkspaceLibrary,
-    '@my-mfe/data-access-realtime': sharedWorkspaceLibrary,
-    '@my-mfe/data-access-media': sharedWorkspaceLibrary,
-    '@my-mfe/ui': sharedWorkspaceLibrary,
+    ...shareAll({ singleton: true, strictVersion: true, requiredVersion: 'auto' }),
+    '@angular/core/primitives/di': { singleton: true, strictVersion: false },
+    '@angular/core/primitives/event-dispatch': { singleton: true, strictVersion: false },
+    '@angular/core/primitives/signals': { singleton: true, strictVersion: false },
+    '@my-mfe/auth': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/ui': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/interface': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/data-access-media': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/data-access-realtime': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/data-access-notification': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/data-access-activity': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
+    '@my-mfe/features/user-profile': { singleton: true, strictVersion: true, version: '0.0.0', requiredVersion: '0.0.0' },
   },
 
   skip: [

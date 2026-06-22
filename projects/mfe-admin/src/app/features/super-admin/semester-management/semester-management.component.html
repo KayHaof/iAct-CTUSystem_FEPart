@@ -139,7 +139,7 @@
   [form]="form()"
   [openDropdown]="formDropdown()"
   [statusFormOptions]="statusFormOptions"
-  (close)="closeForm()"
+  (modalClosed)="closeForm()"
   (save)="saveSemester()"
   (nameChange)="updateForm('name', $event)"
   (academicYearChange)="updateForm('academicYear', $event)"

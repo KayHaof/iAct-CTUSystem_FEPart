@@ -1,11 +1,20 @@
-import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectionStrategy, ElementRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+  ElementRef,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { WebSocketService, AppNotification } from '@my-mfe/data-access-realtime';
-import { ApiResponse } from 'interface';
+import { ApiResponse } from '@my-mfe/interface';
 
 interface RegistrationQR {
   registrationId: number;
@@ -28,40 +37,72 @@ interface RegistrationQR {
   imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="min-h-screen bg-slate-50 p-6">
-      <div class="max-w-lg mx-auto">
+    <div class="w-full bg-slate-50 p-4 sm:p-6">
+      <div class="mx-auto max-w-lg">
         <!-- Header -->
         <div class="mb-6 flex items-center gap-3">
-          <button (click)="goBack()" class="p-2 rounded-lg hover:bg-slate-200 transition">
-            <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          <button
+            type="button"
+            (click)="goBack()"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl hover:bg-slate-200 transition"
+            aria-label="Quay lại"
+          >
+            <svg
+              class="w-5 h-5 text-slate-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <div>
-            <h1 class="text-xl font-bold text-slate-800">Quet QR diem danh</h1>
-            <p class="text-sm text-slate-500">Quet ma QR de diem danh hoat dong</p>
+            <p class="text-xs font-bold uppercase tracking-widest text-blue-600">Điểm danh</p>
+            <h1 class="text-xl font-bold text-slate-900 sm:text-2xl">Quét QR điểm danh</h1>
+            <p class="text-sm text-slate-500">Quét mã QR hoặc nhập mã được cung cấp.</p>
           </div>
         </div>
 
         <!-- QR Scanner -->
         @if (!qrResult()) {
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+          <div
+            class="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-6 sm:p-6"
+          >
             <div class="text-center">
-              <div class="w-64 h-64 mx-auto bg-slate-100 rounded-xl flex items-center justify-center mb-4 overflow-hidden"
-                   [class.border-2]="isScanning()"
-                   [class.border-blue-500]="isScanning()"
-                   #scannerContainer>
+              <div
+                class="mx-auto mb-4 flex aspect-square w-full max-w-64 items-center justify-center overflow-hidden rounded-2xl bg-slate-100"
+                [class.border-2]="isScanning()"
+                [class.border-blue-500]="isScanning()"
+                #scannerContainer
+              >
                 @if (isScanning()) {
                   <div class="text-center">
-                    <div class="w-48 h-48 mx-auto border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                    <p class="text-slate-500 text-sm">Dang khoi dong camera...</p>
+                    <div
+                      class="mx-auto mb-3 h-24 w-24 animate-spin rounded-full border-4 border-blue-500 border-t-transparent sm:h-32 sm:w-32"
+                    ></div>
+                    <p class="text-sm text-slate-500">Đang khởi động camera...</p>
                   </div>
                 } @else {
                   <div class="text-center">
-                    <svg class="w-16 h-16 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h1m-11 0h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    <svg
+                      class="w-16 h-16 mx-auto text-slate-300 mb-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.5"
+                        d="M12 4v1m6 11h1m-11 0h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
-                    <p class="text-slate-500 text-sm">Nhan nut ben duoi de bat camera</p>
+                    <p class="text-sm text-slate-500">Nhấn nút bên dưới để bật camera.</p>
                   </div>
                 }
               </div>
@@ -70,17 +111,29 @@ interface RegistrationQR {
                 <button
                   (click)="startScanner()"
                   [disabled]="isScanning()"
-                  class="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
+                  class="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
                   </svg>
-                  Quet QR
+                  Quét QR
                 </button>
                 <button
                   (click)="manualEntry()"
-                  class="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition">
-                  Nhap ma thu cong
+                  class="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition"
+                >
+                  Nhập mã thủ công
                 </button>
               </div>
             </div>
@@ -88,8 +141,10 @@ interface RegistrationQR {
 
           <!-- Manual Entry Form -->
           @if (showManualEntry()) {
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-              <h3 class="font-semibold text-slate-800 mb-4">Nhap ma diem danh</h3>
+            <div
+              class="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-6 sm:p-6"
+            >
+              <h3 class="mb-4 font-semibold text-slate-800">Nhập mã điểm danh</h3>
               <input
                 type="text"
                 [(ngModel)]="manualCode"
@@ -99,8 +154,9 @@ interface RegistrationQR {
               <button
                 (click)="submitManualCode()"
                 [disabled]="!manualCode || isChecking()"
-                class="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition disabled:opacity-50">
-                {{ isChecking() ? 'Dang kiem tra...' : 'Kiem tra ma' }}
+                class="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {{ isChecking() ? 'Đang kiểm tra...' : 'Kiểm tra mã' }}
               </button>
             </div>
           }
@@ -108,68 +164,111 @@ interface RegistrationQR {
 
         <!-- Check-in Success -->
         @if (qrResult()?.success) {
-          <div class="bg-white rounded-xl shadow-sm border border-green-200 p-8 text-center">
-            <div class="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          <div
+            class="rounded-2xl border border-green-200 bg-white p-5 text-center shadow-sm sm:p-8"
+          >
+            <div
+              class="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4"
+            >
+              <svg
+                class="w-10 h-10 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
-            <h2 class="text-xl font-bold text-green-700 mb-2">Diem danh thanh cong!</h2>
+            <h2 class="mb-2 text-xl font-bold text-green-700">Điểm danh thành công</h2>
             <p class="text-slate-600 mb-1">{{ qrResult()?.activityTitle }}</p>
             @if (qrResult()?.sessionName) {
               <p class="text-sm text-slate-500 mb-4">{{ qrResult()?.sessionName }}</p>
             }
-            <p class="text-sm text-slate-400">Thoi gian: {{ qrResult()?.checkedInAt | date:'HH:mm - dd/MM/yyyy' }}</p>
+            <p class="text-sm text-slate-400">
+              Thời gian: {{ qrResult()?.checkedInAt | date: 'HH:mm - dd/MM/yyyy' }}
+            </p>
             <button
               (click)="reset()"
-              class="mt-6 px-6 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition">
-              Quet tiep
+              class="mt-6 px-6 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition"
+            >
+              Quét tiếp
             </button>
           </div>
         }
 
         <!-- Check-in Error -->
         @if (qrResult() && !qrResult()?.success) {
-          <div class="bg-white rounded-xl shadow-sm border border-red-200 p-8 text-center">
-            <div class="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
-              <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          <div class="rounded-2xl border border-red-200 bg-white p-5 text-center shadow-sm sm:p-8">
+            <div
+              class="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4"
+            >
+              <svg
+                class="w-10 h-10 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </div>
-            <h2 class="text-xl font-bold text-red-700 mb-2">Diem danh that bai</h2>
+            <h2 class="mb-2 text-xl font-bold text-red-700">Điểm danh thất bại</h2>
             <p class="text-slate-600 mb-4">{{ qrResult()?.message }}</p>
             <button
               (click)="reset()"
-              class="px-6 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition">
-              Thu lai
+              class="px-6 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition"
+            >
+              Thử lại
             </button>
           </div>
         }
 
         <!-- My QR Code -->
         @if (myRegistrations().length > 0 && !qrResult()) {
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 class="font-semibold text-slate-800 mb-4">Ma QR cua toi</h3>
+          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+            <h3 class="mb-4 font-semibold text-slate-800">Mã QR của tôi</h3>
             <div class="space-y-3">
               @for (reg of myRegistrations(); track reg.registrationId) {
                 <div
                   (click)="selectRegistration(reg)"
+                  (keydown.enter)="selectRegistration(reg)"
+                  (keydown.space)="selectRegistration(reg); $event.preventDefault()"
+                  role="button"
+                  tabindex="0"
                   class="p-4 border border-slate-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition"
-                  [class.border-blue-400]="selectedRegistration()?.registrationId === reg.registrationId"
-                  [class.bg-blue-50]="selectedRegistration()?.registrationId === reg.registrationId">
+                  [class.border-blue-400]="
+                    selectedRegistration()?.registrationId === reg.registrationId
+                  "
+                  [class.bg-blue-50]="selectedRegistration()?.registrationId === reg.registrationId"
+                >
                   <p class="font-medium text-slate-700">{{ reg.activityTitle }}</p>
-                  <p class="text-sm text-slate-500 mt-1">Ma: {{ reg.checkInCode }}</p>
+                  <p class="mt-1 text-sm text-slate-500">Mã: {{ reg.checkInCode }}</p>
                 </div>
               }
             </div>
 
             @if (selectedRegistration()) {
               <div class="mt-4 p-4 bg-slate-50 rounded-lg text-center">
-                <p class="text-sm text-slate-500 mb-3">{{ selectedRegistration()!.activityTitle }}</p>
+                <p class="text-sm text-slate-500 mb-3">
+                  {{ selectedRegistration()!.activityTitle }}
+                </p>
                 <div class="bg-white p-4 rounded-lg inline-block">
-                  <img [src]="selectedRegistration()!.qrData" alt="QR Code" class="w-48 h-48 mx-auto" />
+                  <img
+                    [src]="selectedRegistration()!.qrData"
+                    alt="QR Code"
+                    class="w-48 h-48 mx-auto"
+                  />
                 </div>
-                <p class="text-xs text-slate-400 mt-2">Quet tai diem danh</p>
+                <p class="mt-2 text-xs text-slate-400">Quét tại điểm danh</p>
               </div>
             }
           </div>
@@ -178,7 +277,9 @@ interface RegistrationQR {
         <!-- Loading -->
         @if (isLoading()) {
           <div class="flex justify-center py-8">
-            <div class="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+            <div
+              class="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"
+            ></div>
           </div>
         }
       </div>
@@ -203,7 +304,13 @@ export class QrCheckinComponent implements OnInit, OnDestroy {
   manualCode = '';
   myRegistrations = signal<RegistrationQR[]>([]);
   selectedRegistration = signal<RegistrationQR | null>(null);
-  qrResult = signal<{ success: boolean; message?: string; activityTitle?: string; sessionName?: string; checkedInAt?: string } | null>(null);
+  qrResult = signal<{
+    success: boolean;
+    message?: string;
+    activityTitle?: string;
+    sessionName?: string;
+    checkedInAt?: string;
+  } | null>(null);
   private notifSub?: Subscription;
 
   ngOnInit(): void {
@@ -237,7 +344,9 @@ export class QrCheckinComponent implements OnInit, OnDestroy {
       next: (res) => {
         const regs = (res.data || []).filter((r: any) => r.status === 0 || r.status === 1);
         const qrPromises = regs.map((r: any) =>
-          this.http.get<ApiResponse<any>>(`${this.activityApiUrl}/registrations/${r.id}/qr`).toPromise()
+          this.http
+            .get<ApiResponse<any>>(`${this.activityApiUrl}/registrations/${r.id}/qr`)
+            .toPromise(),
         );
         Promise.all(qrPromises).then((results) => {
           const withQr = regs.map((r: any, i: number) => ({
@@ -271,24 +380,26 @@ export class QrCheckinComponent implements OnInit, OnDestroy {
     if (!this.manualCode) return;
     this.isChecking.set(true);
     const code = this.manualCode.trim().toUpperCase();
-    this.http.post<ApiResponse<any>>(`${this.activityApiUrl}/attendances/verify-qr`, { verifyCode: code }).subscribe({
-      next: (res) => {
-        this.isChecking.set(false);
-        this.qrResult.set({
-          success: res.code === 200,
-          message: res.message,
-          activityTitle: '',
-          checkedInAt: new Date().toISOString(),
-        });
-      },
-      error: (err) => {
-        this.isChecking.set(false);
-        this.qrResult.set({
-          success: false,
-          message: err.error?.message || 'Ma khong hop le',
-        });
-      },
-    });
+    this.http
+      .post<ApiResponse<any>>(`${this.activityApiUrl}/attendances/verify-qr`, { verifyCode: code })
+      .subscribe({
+        next: (res) => {
+          this.isChecking.set(false);
+          this.qrResult.set({
+            success: res.code === 200,
+            message: res.message,
+            activityTitle: '',
+            checkedInAt: new Date().toISOString(),
+          });
+        },
+        error: (err) => {
+          this.isChecking.set(false);
+          this.qrResult.set({
+            success: false,
+            message: err.error?.message || 'Ma khong hop le',
+          });
+        },
+      });
   }
 
   selectRegistration(reg: RegistrationQR): void {

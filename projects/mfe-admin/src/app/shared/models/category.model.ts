@@ -4,6 +4,7 @@ export interface CategoryResponse {
   code: string;
   name: string;
   maxPoint: number;
+  isActive?: boolean;
   children?: CategoryResponse[];
 }
 

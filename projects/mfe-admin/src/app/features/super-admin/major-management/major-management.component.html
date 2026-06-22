@@ -5,7 +5,8 @@
         <p class="header-eyebrow">Ma trận chương trình</p>
         <h1 class="header-title">Quản lý chuyên ngành</h1>
         <p class="header-subtitle">
-          Kết nối chuyên ngành với đơn vị phụ trách và hệ đào tạo để dữ liệu lớp, người dùng và chương trình học luôn nhất quán.
+          Kết nối chuyên ngành với đơn vị phụ trách và hệ đào tạo để dữ liệu lớp, người dùng và
+          chương trình học luôn nhất quán.
         </p>
       </div>
       <button type="button" class="btn-create" (click)="openCreateForm()">
@@ -138,10 +139,20 @@
                 </td>
                 <td class="td-right">
                   <div class="action-group">
-                    <button type="button" class="icon-btn icon-btn-edit" title="Sửa" (click)="openEditForm(major)">
+                    <button
+                      type="button"
+                      class="icon-btn icon-btn-edit"
+                      title="Sửa"
+                      (click)="openEditForm(major)"
+                    >
                       <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button type="button" class="icon-btn icon-btn-delete" title="Xóa" (click)="deleteMajor(major)">
+                    <button
+                      type="button"
+                      class="icon-btn icon-btn-delete"
+                      title="Xóa"
+                      (click)="deleteMajor(major)"
+                    >
                       <i class="bi bi-trash3"></i>
                     </button>
                   </div>
@@ -176,7 +187,7 @@
   [activeDepartments]="activeDepartments()"
   [programTypeOptions]="programTypeOptions"
   [activeFormOptions]="activeFormOptions"
-  (close)="closeForm()"
+  (modalClosed)="closeForm()"
   (save)="saveMajor()"
   (nameChange)="updateForm('name', $event)"
   (codeChange)="updateForm('code', $event)"

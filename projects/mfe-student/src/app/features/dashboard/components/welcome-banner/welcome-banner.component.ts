@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -7,11 +7,12 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   templateUrl: './welcome-banner.component.html',
   styleUrl: './welcome-banner.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WelcomeBannerComponent {
   // Input nhận nguyên xi dữ liệu từ cha truyền vào
-  @Input() name: string = 'Bạn';
-  @Input() studentCode: string = ''; // Đổi tên thành studentCode cho khớp API
+  @Input() name = 'Bạn';
+  @Input() studentCode = ''; // Đổi tên thành studentCode cho khớp API
 
   // Hàm này chỉ tính toán để hiển thị Avatar, KHÔNG sửa đổi biến this.name
   get avatarInitial(): string {

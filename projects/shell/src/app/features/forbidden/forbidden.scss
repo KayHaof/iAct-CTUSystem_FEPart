@@ -9,7 +9,7 @@
 // Số 403 nền
 .error-watermark {
   @apply absolute font-black text-gray-100 select-none -z-10 leading-none;
-  font-size: 15rem;
+  font-size: clamp(9rem, 40vw, 15rem);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -44,6 +44,11 @@
 
 .action-buttons {
   @apply flex flex-wrap gap-4 justify-center;
+
+  @media (max-width: 479px) {
+    width: 100%;
+    flex-direction: column;
+  }
 }
 
 // --- BUTTONS ---
@@ -51,6 +56,11 @@
   @apply flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 no-underline shadow-lg;
   // Nút chính màu xanh thương hiệu (để user bấm về nơi an toàn)
   @apply bg-ctu-blue text-white shadow-blue-900/20;
+
+  @media (max-width: 479px) {
+    width: 100%;
+    justify-content: center;
+  }
 
   &:hover {
     @apply bg-blue-800 -translate-y-1 shadow-xl;
@@ -60,6 +70,11 @@
 .btn-secondary {
   @apply flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 cursor-pointer border shadow-sm;
   @apply bg-white text-gray-600 border-gray-200;
+
+  @media (max-width: 479px) {
+    width: 100%;
+    justify-content: center;
+  }
 
   &:hover {
     @apply bg-gray-50 text-gray-900 border-gray-300 -translate-y-1;

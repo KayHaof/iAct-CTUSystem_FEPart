@@ -21,8 +21,15 @@
 
 .table-scroll-area {
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
   width: 100%;
   position: relative;
+
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+  }
 
   &::-webkit-scrollbar {
     height: 6px;
@@ -43,7 +50,12 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.875rem;
-    min-width: 850px;
+    min-width: 600px;
+
+    @media (max-width: 767px) {
+      font-size: 0.8125rem;
+      min-width: 500px;
+    }
 
     thead tr {
       background: var(--table-header-bg);
@@ -52,15 +64,20 @@
       z-index: 10;
 
       th {
-        padding: 1rem 1.5rem;
+        padding: 0.75rem 1rem;
         color: var(--table-header-text);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.07em;
-        font-size: 0.6875rem;
+        font-size: 0.625rem;
         border-bottom: 1px solid var(--border);
         text-align: left;
         white-space: nowrap;
+
+        @media (min-width: 640px) {
+          padding: 1rem 1.5rem;
+          font-size: 0.6875rem;
+        }
 
         &:first-child {
           border-top-left-radius: 0.5rem;
@@ -97,10 +114,14 @@
       }
 
       td {
-        padding: 1rem 1.5rem;
+        padding: 0.75rem 1rem;
         vertical-align: middle;
         color: var(--text-secondary);
         transition: all 0.2s;
+
+        @media (min-width: 640px) {
+          padding: 1rem 1.5rem;
+        }
 
         &:first-child {
           font-weight: 600;

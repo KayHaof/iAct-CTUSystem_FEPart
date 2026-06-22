@@ -1,4 +1,11 @@
-import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize, switchMap, catchError, map } from 'rxjs/operators';
@@ -8,8 +15,12 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
 
 import { AlertService } from '@my-mfe/ui';
 import { CloudinaryService } from '@my-mfe/data-access-media';
-import { ActivityRecord, RawRegistrationDto, ActivityTimeResponse } from '../../shared/models/activity.model';
-import { Semester } from 'interface';
+import {
+  ActivityRecord,
+  RawRegistrationDto,
+  ActivityTimeResponse,
+} from '../../shared/models/activity.model';
+import { Semester } from '@my-mfe/interface';
 
 import { AttendanceService, CheckInRequest } from '../../shared/services/attendance.service';
 import { RegistrationService } from '../../shared/services/registration.service';
@@ -32,6 +43,7 @@ export interface UiActivityRecord extends ActivityRecord {
   imports: [CommonModule, FormsModule, ZXingScannerModule],
   templateUrl: './my-records.component.html',
   styleUrls: ['./my-records.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MyRecordsComponent implements OnInit {
   private registrationService = inject(RegistrationService);

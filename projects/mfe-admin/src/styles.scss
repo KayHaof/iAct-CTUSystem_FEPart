@@ -9,6 +9,10 @@
 @use '../../../libs/shared/ui/src/lib/styles/variables' as *;
 @use '../../../libs/shared/ui/src/lib/styles/global' as *;
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 // ==============================================
 // ADMIN SPECIFIC TOKENS
 // ==============================================

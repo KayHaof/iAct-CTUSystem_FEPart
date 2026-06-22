@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { ModerationStats } from '../../../../shared/models/activity-moderation.model';
@@ -10,6 +10,7 @@ import { ApexChart, ApexDataLabels, ApexLegend, ApexPlotOptions, ApexTooltip } f
   imports: [CommonModule, NgApexchartsModule],
   templateUrl: './moderation-stats.component.html',
   styleUrls: ['./moderation-stats.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModerationStatsComponent {
   statsData = input<ModerationStats | null>(null);

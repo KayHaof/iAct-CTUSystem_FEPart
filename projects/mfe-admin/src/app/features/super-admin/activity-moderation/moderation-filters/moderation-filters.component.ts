@@ -1,9 +1,9 @@
-import { Component, OnInit, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModerationFilters } from '../../../../shared/models/activity-moderation.model';
 import { ActivityModerationService } from '../../services/activity-moderation.service';
-import { ApiResponse, PageDTO, Department } from 'interface';
+import { ApiResponse, PageDTO, Department } from '@my-mfe/interface';
 
 @Component({
   selector: 'app-moderation-filters',
@@ -11,6 +11,7 @@ import { ApiResponse, PageDTO, Department } from 'interface';
   imports: [CommonModule, FormsModule],
   templateUrl: './moderation-filters.component.html',
   styleUrls: ['./moderation-filters.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModerationFiltersComponent implements OnInit {
   private moderationService = inject(ActivityModerationService);

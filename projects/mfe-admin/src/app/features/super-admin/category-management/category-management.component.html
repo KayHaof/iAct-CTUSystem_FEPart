@@ -90,6 +90,7 @@
                   <button
                     type="button"
                     role="option"
+                    [attr.aria-selected]="filters().active === option.value"
                     class="select-option"
                     [class.select-option-active]="filters().active === option.value"
                     (click)="selectStatusFilter(option.value)"
@@ -121,6 +122,7 @@
                 <button
                   type="button"
                   role="option"
+                  [attr.aria-selected]="filters().parentId === ''"
                   class="select-option"
                   [class.select-option-active]="filters().parentId === ''"
                   (click)="selectParentFilter('')"
@@ -132,6 +134,7 @@
                   <button
                     type="button"
                     role="option"
+                    [attr.aria-selected]="filters().parentId === category.id"
                     class="select-option"
                     [class.select-option-active]="filters().parentId === category.id"
                     (click)="selectParentFilter(category.id)"
@@ -383,6 +386,7 @@
                 <button
                   type="button"
                   role="option"
+                  [attr.aria-selected]="form().parentId === ''"
                   class="select-option"
                   [class.select-option-active]="form().parentId === ''"
                   (click)="selectParent('')"
@@ -394,6 +398,7 @@
                   <button
                     type="button"
                     role="option"
+                    [attr.aria-selected]="form().parentId === category.id"
                     class="select-option"
                     [class.select-option-active]="form().parentId === category.id"
                     (click)="selectParent(category.id)"
@@ -425,6 +430,7 @@
                   <button
                     type="button"
                     role="option"
+                    [attr.aria-selected]="form().isActive === option.value"
                     class="select-option"
                     [class.select-option-active]="form().isActive === option.value"
                     (click)="selectActiveForm(option.value)"

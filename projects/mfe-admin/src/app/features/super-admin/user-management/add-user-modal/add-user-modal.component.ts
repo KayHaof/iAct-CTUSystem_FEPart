@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { AdminUserService } from '../../services/admin-user.service';
-import { ApiResponse, ClassInfo, Department, MajorInfo } from 'interface';
+import { ApiResponse, ClassInfo, Department, MajorInfo } from '@my-mfe/interface';
 
 export interface NewStudentForm {
   username: string;
@@ -114,8 +114,6 @@ export class AddUserModalComponent {
       error: () => this.addClasses.set([]),
     });
   }
-
-  onRoleChange() {}
 
   togglePassword() {
     this.showPassword.set(!this.showPassword());

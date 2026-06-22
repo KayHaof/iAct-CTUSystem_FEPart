@@ -36,7 +36,7 @@ export class SemesterFormModalComponent {
   @Input() openDropdown: SemesterFormDropdownKey | null = null;
   @Input() statusFormOptions: Array<SelectOption<boolean>> = [];
 
-  @Output() close = new EventEmitter<void>();
+  @Output() modalClosed = new EventEmitter<void>();
   @Output() save = new EventEmitter<void>();
   @Output() nameChange = new EventEmitter<string>();
   @Output() academicYearChange = new EventEmitter<string>();

@@ -2,7 +2,7 @@ import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { ApiResponse } from 'interface';
+import { ApiResponse } from '@my-mfe/interface';
 import { AlertService } from '@my-mfe/ui';
 
 interface UrgentNotificationRequest {
@@ -21,83 +21,100 @@ interface UrgentNotificationRequest {
   imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="min-h-screen bg-slate-50 p-6">
-      <div class="max-w-2xl mx-auto">
+    <div class="w-full bg-slate-50 p-4 sm:p-6">
+      <div class="mx-auto max-w-2xl">
         <!-- Header -->
         <div class="mb-6">
-          <h1 class="text-2xl font-bold text-slate-800">Gui thong bao khan cap</h1>
-          <p class="text-slate-500 mt-1">Gui thong bao nhanh chong den sinh vien</p>
+          <p class="mb-1 text-xs font-bold uppercase tracking-widest text-blue-600">
+            Truyền thông tức thời
+          </p>
+          <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Gửi thông báo khẩn cấp</h1>
+          <p class="mt-2 text-sm leading-6 text-slate-500">
+            Gửi thông tin quan trọng đến đúng nhóm sinh viên.
+          </p>
         </div>
 
         <!-- Form -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div class="space-y-5">
             <!-- Title -->
             <div>
-              <label class="block text-sm font-bold text-slate-700 mb-2">
-                Tieu de <span class="text-red-500">*</span>
+              <label for="urgentTitle" class="block text-sm font-bold text-slate-700 mb-2">
+                Tiêu đề <span class="text-red-500">*</span>
               </label>
               <input
                 type="text"
+                id="urgentTitle"
                 [(ngModel)]="form.title"
-                placeholder="VD: Thong bao hoat dong muon"
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none transition"
+                placeholder="Ví dụ: Thông báo thay đổi thời gian hoạt động"
+                class="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               />
             </div>
 
             <!-- Message -->
             <div>
-              <label class="block text-sm font-bold text-slate-700 mb-2">
-                Noi dung <span class="text-red-500">*</span>
+              <label for="urgentMessage" class="block text-sm font-bold text-slate-700 mb-2">
+                Nội dung <span class="text-red-500">*</span>
               </label>
               <textarea
+                id="urgentMessage"
                 [(ngModel)]="form.message"
                 rows="4"
-                placeholder="Viet noi dung thong bao..."
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none transition resize-none"
+                placeholder="Viết nội dung thông báo..."
+                class="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               ></textarea>
             </div>
 
             <!-- Priority -->
             <div>
-              <label class="block text-sm font-bold text-slate-700 mb-2">Muc do uu tien</label>
-              <div class="flex gap-3">
-                <label class="flex-1 flex items-center gap-2 p-3 border border-slate-200 rounded-xl cursor-pointer transition hover:border-blue-400"
-                       [class.border-blue-400]="form.priority === 1"
-                       [class.bg-blue-50]="form.priority === 1">
+              <span class="mb-2 block text-sm font-bold text-slate-700">Mức độ ưu tiên</span>
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <label
+                  class="flex-1 flex items-center gap-2 p-3 border border-slate-200 rounded-xl cursor-pointer transition hover:border-blue-400"
+                  [class.border-blue-400]="form.priority === 1"
+                  [class.bg-blue-50]="form.priority === 1"
+                >
                   <input type="radio" [(ngModel)]="form.priority" [value]="1" class="w-4 h-4" />
-                  <span class="text-sm font-medium">Binh thuong</span>
+                  <span class="text-sm font-medium">Bình thường</span>
                 </label>
-                <label class="flex-1 flex items-center gap-2 p-3 border border-slate-200 rounded-xl cursor-pointer transition hover:border-orange-400"
-                       [class.border-orange-400]="form.priority === 2"
-                       [class.bg-orange-50]="form.priority === 2">
+                <label
+                  class="flex-1 flex items-center gap-2 p-3 border border-slate-200 rounded-xl cursor-pointer transition hover:border-orange-400"
+                  [class.border-orange-400]="form.priority === 2"
+                  [class.bg-orange-50]="form.priority === 2"
+                >
                   <input type="radio" [(ngModel)]="form.priority" [value]="2" class="w-4 h-4" />
-                  <span class="text-sm font-medium">Khan cap</span>
+                  <span class="text-sm font-medium">Khẩn cấp</span>
                 </label>
               </div>
             </div>
 
             <!-- Target Type -->
             <div>
-              <label class="block text-sm font-bold text-slate-700 mb-2">Gui den</label>
-              <select
-                [(ngModel)]="form.targetType"
-                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none transition"
+              <label for="urgentTarget" class="mb-2 block text-sm font-bold text-slate-700"
+                >Gửi đến</label
               >
-                <option value="ALL_DEPARTMENT">Toan bo sinh vien</option>
-                <option value="ACTIVITY">Sinh vien dang ky hoat dong</option>
-                <option value="CLASS">Theo lop hoc</option>
+              <select
+                id="urgentTarget"
+                [(ngModel)]="form.targetType"
+                class="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              >
+                <option value="ALL_DEPARTMENT">Toàn bộ sinh viên</option>
+                <option value="ACTIVITY">Sinh viên đăng ký hoạt động</option>
+                <option value="CLASS">Theo lớp học</option>
               </select>
             </div>
 
             <!-- Activity ID (if ACTIVITY) -->
             @if (form.targetType === 'ACTIVITY') {
               <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">Ma hoat dong</label>
+                <label for="urgentActivity" class="mb-2 block text-sm font-bold text-slate-700"
+                  >Mã hoạt động</label
+                >
                 <input
+                  id="urgentActivity"
                   type="number"
                   [(ngModel)]="form.activityId"
-                  placeholder="Nhap ma hoat dong"
+                  placeholder="Nhập mã hoạt động"
                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none transition"
                 />
               </div>
@@ -106,11 +123,14 @@ interface UrgentNotificationRequest {
             <!-- Class ID (if CLASS) -->
             @if (form.targetType === 'CLASS') {
               <div>
-                <label class="block text-sm font-bold text-slate-700 mb-2">Ma lop</label>
+                <label for="urgentClass" class="mb-2 block text-sm font-bold text-slate-700"
+                  >Mã lớp</label
+                >
                 <input
+                  id="urgentClass"
                   type="number"
                   [(ngModel)]="form.targetId"
-                  placeholder="Nhap ma lop"
+                  placeholder="Nhập mã lớp"
                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none transition"
                 />
               </div>
@@ -118,26 +138,37 @@ interface UrgentNotificationRequest {
           </div>
 
           <!-- Actions -->
-          <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-slate-100">
+          <div
+            class="mt-6 flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-end"
+          >
             <button
               type="button"
               (click)="cancel()"
-              class="px-5 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 transition">
-              Huy bo
+              class="min-h-11 rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-800"
+            >
+              Hủy bỏ
             </button>
             <button
               type="button"
               (click)="send()"
               [disabled]="isSending() || !isValid()"
-              class="px-6 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2">
+              class="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
               @if (isSending()) {
-                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Dang gui...
+                <div
+                  class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                ></div>
+                Đang gửi...
               } @else {
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
                 </svg>
-                Gui thong bao
+                Gửi thông báo
               }
             </button>
           </div>
@@ -145,28 +176,51 @@ interface UrgentNotificationRequest {
 
         <!-- Recent Notifications -->
         @if (recentResults().length > 0) {
-          <div class="mt-6 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 class="text-sm font-bold text-slate-700 mb-4">Ket qua gui gan day</h3>
+          <div class="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+            <h3 class="mb-4 text-sm font-bold text-slate-700">Kết quả gửi gần đây</h3>
             <div class="space-y-3">
               @for (r of recentResults(); track r.title) {
-                <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                  <div class="w-8 h-8 rounded-full flex items-center justify-center" [class]="r.count > 0 ? 'bg-green-100' : 'bg-red-100'">
+                <div class="flex min-w-0 items-center gap-3 rounded-xl bg-slate-50 p-3">
+                  <div
+                    class="w-8 h-8 rounded-full flex items-center justify-center"
+                    [class]="r.count > 0 ? 'bg-green-100' : 'bg-red-100'"
+                  >
                     @if (r.count > 0) {
-                      <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      <svg
+                        class="w-4 h-4 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                     } @else {
-                      <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      <svg
+                        class="w-4 h-4 text-red-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     }
                   </div>
-                  <div>
+                  <div class="min-w-0 flex-1">
                     <p class="text-sm font-medium text-slate-700">{{ r.title }}</p>
-                    <p class="text-xs text-slate-500">{{ r.message }}</p>
+                    <p class="truncate text-xs text-slate-500">{{ r.message }}</p>
                   </div>
                   @if (r.count > 0) {
-                    <span class="ml-auto text-sm font-bold text-green-600">{{ r.count }} SV</span>
+                    <span class="shrink-0 text-sm font-bold text-green-600">{{ r.count }} SV</span>
                   }
                 </div>
               }

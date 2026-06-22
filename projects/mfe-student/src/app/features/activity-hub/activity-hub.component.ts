@@ -15,7 +15,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PaginationComponent } from '@my-mfe/ui';
 import { ActivityService } from '../../shared/services/activity.service';
 import { Activity } from '../../shared/models/activity.model';
-import { PageDTO } from 'interface';
+import { PageDTO } from '@my-mfe/interface';
 
 @Component({
   selector: 'app-activity-hub',

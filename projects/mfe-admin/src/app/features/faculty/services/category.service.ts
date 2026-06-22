@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiResponse} from 'interface';
-import { CategoryResponse, CategoryRequest } from '../../../shared/models/category.model'; // Đổi đường dẫn cho đúng nha
+import { ApiResponse } from '@my-mfe/interface';
+import { CategoryResponse, CategoryRequest } from '../../../shared/models/category.model';
 
 @Injectable({
   providedIn: 'root',
@@ -15,8 +15,9 @@ export class CategoryService {
     return this.http.get<ApiResponse<CategoryResponse[]>>(this.API_URL);
   }
 
-  getAllCategoriesTree(): Observable<ApiResponse<CategoryResponse[]>> {
-    return this.http.get<ApiResponse<CategoryResponse[]>>(`${this.API_URL}/tree`);
+  getAllCategoriesTree(active = true): Observable<ApiResponse<CategoryResponse[]>> {
+    const params = new HttpParams().set('active', String(active));
+    return this.http.get<ApiResponse<CategoryResponse[]>>(`${this.API_URL}/tree`, { params });
   }
 
   getCategoryById(id: number): Observable<ApiResponse<CategoryResponse>> {

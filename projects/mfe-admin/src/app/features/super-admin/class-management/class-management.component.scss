@@ -5,11 +5,21 @@
 .class-page {
   background-color: #f8fafc;
   min-height: 100vh;
-  padding: 1.5rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
   font-family: 'Inter', system-ui, sans-serif;
+
+  @media (min-width: 640px) {
+    padding: 1.25rem;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    padding: 1.5rem;
+    gap: 1.25rem;
+  }
 }
 
 /* === Page Header === */

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
@@ -12,6 +12,7 @@ import Swal from 'sweetalert2';
   imports: [CommonModule, RouterOutlet],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit {
   private router = inject(Router);
@@ -73,11 +74,13 @@ export class AppComponent implements OnInit {
     setTimeout(() => {
       const currentUrl = this.router.url;
       if (currentUrl.includes('code=') || currentUrl.includes('iss=')) {
-        this.router.navigate([], {
-          queryParams: { code: null, state: null, session_state: null, iss: null },
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        }).then();
+        this.router
+          .navigate([], {
+            queryParams: { code: null, state: null, session_state: null, iss: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          })
+          .then();
       }
     }, 100);
   }

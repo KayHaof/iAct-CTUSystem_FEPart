@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Activity, ActivityTimeResponse } from '../models/activity.model';
-import { PageDTO, ApiResponse } from 'interface';
+import { PageDTO, ApiResponse } from '@my-mfe/interface';
 
 @Injectable({
   providedIn: 'root',

@@ -8,7 +8,7 @@
           </h2>
           <p class="modal-form-desc">Thông tin này được dùng cho hoạt động và xét điểm rèn luyện.</p>
         </div>
-        <button type="button" class="modal-close-btn" (click)="close.emit()">
+        <button type="button" class="modal-close-btn" (click)="modalClosed.emit()">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
@@ -110,7 +110,7 @@
       </label>
 
       <div class="modal-form-actions">
-        <button type="button" class="modal-btn-cancel" (click)="close.emit()">Hủy</button>
+        <button type="button" class="modal-btn-cancel" (click)="modalClosed.emit()">Hủy</button>
         <button type="submit" class="modal-btn-save" [disabled]="isSaving">
           {{ isSaving ? 'Đang lưu...' : 'Lưu học kỳ' }}
         </button>

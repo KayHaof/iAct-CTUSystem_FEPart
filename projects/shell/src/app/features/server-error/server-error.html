@@ -1,24 +1,17 @@
-<div class="error-container">
-  <div class="error-watermark">500</div>
-
-  <div class="content-box">
-    <div class="icon-wrapper">
+<main class="error-page" aria-labelledby="server-error-title">
+  <div class="error-watermark" aria-hidden="true">500</div>
+  <section class="content-card">
+    <div class="status-icon status-icon-error" aria-hidden="true">
       <i class="bi bi-hdd-network-fill"></i>
-      <i class="bi bi-x-circle-fill sub-icon"></i>
     </div>
-
-    <h2 class="title">Máy chủ gặp sự cố!</h2>
-
-    <p class="desc">
-      Hệ thống đang gặp lỗi kỹ thuật nội bộ và không thể xử lý yêu cầu của bạn lúc này.
-      <br />Vui lòng thử tải lại trang hoặc quay lại sau ít phút.
+    <p class="eyebrow">Lỗi hệ thống</p>
+    <h1 id="server-error-title" class="title">Máy chủ đang gặp sự cố</h1>
+    <p class="description">
+      Hệ thống chưa thể xử lý yêu cầu của bạn lúc này. Vui lòng thử lại sau hoặc trở về Dashboard để
+      tiếp tục.
     </p>
-
-    <div class="action-buttons">
-      <a routerLink="/dashboard" class="btn-primary">
-        <i class="bi bi-house-door-fill"></i>
-        Về Dashboard
-      </a>
-    </div>
-  </div>
-</div>
+    <a [routerLink]="dashboardUrl()" class="btn-primary"
+      ><i class="bi bi-speedometer2" aria-hidden="true"></i>Về Dashboard</a
+    >
+  </section>
+</main>

@@ -10,7 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UserInfo } from 'interface';
+import { UserInfo } from '@my-mfe/interface';
 import { UserService } from '@my-mfe/auth';
 
 @Component({

@@ -16,7 +16,7 @@ import { ActivityService } from '../../../shared/services/activity.service';
 import { RegistrationService } from '../../../shared/services/registration.service';
 import { AlertService, ConfirmService } from '@my-mfe/ui';
 import { Activity } from '../../../shared/models/activity.model';
-import { RegistrationResponse, ApiResponse } from 'interface';
+import { RegistrationResponse, ApiResponse } from '@my-mfe/interface';
 import { ActivityRegistrationModalComponent } from '../activity-form/activity-registration-modal.component';
 
 @Component({

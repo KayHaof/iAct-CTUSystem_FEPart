@@ -1,4 +1,4 @@
-import { Component, input, inject, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
@@ -11,6 +11,7 @@ import { LayoutService } from '../layout.service';
   imports: [CommonModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent {
   theme = input<'light' | 'dark'>('light');

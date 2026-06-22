@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiResponse } from 'interface';
+import { ApiResponse } from '@my-mfe/interface';
 
 export interface ProofSubmissionRequest {
   activityId: number;

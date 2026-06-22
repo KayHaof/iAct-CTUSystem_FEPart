@@ -24,12 +24,6 @@
       }
     },
     {
-      "plugin": "@nx/playwright/plugin",
-      "options": {
-        "targetName": "e2e"
-      }
-    },
-    {
       "plugin": "@nx/eslint/plugin",
       "options": {
         "targetName": "lint"
@@ -38,20 +32,19 @@
   ],
   "generators": {
     "@nx/angular:application": {
-      "e2eTestRunner": "playwright",
       "linter": "eslint",
       "style": "scss",
-      "unitTestRunner": "vitest-analog"
+      "unitTestRunner": "none"
     },
     "@nx/angular:remote": {
       "style": "scss",
       "linter": "eslint",
-      "unitTestRunner": "vitest-analog",
-      "e2eTestRunner": "playwright"
+      "unitTestRunner": "none",
+      "e2eTestRunner": "none"
     },
     "@nx/angular:library": {
       "linter": "eslint",
-      "unitTestRunner": "vitest-analog"
+      "unitTestRunner": "none"
     },
     "@nx/angular:component": {
       "style": "css"
@@ -71,10 +64,6 @@
         "{workspaceRoot}/.eslintignore",
         "{workspaceRoot}/eslint.config.mjs"
       ]
-    },
-    "@nx/vitest:test": {
-      "cache": true,
-      "inputs": ["default", "^production"]
     }
   }
 }

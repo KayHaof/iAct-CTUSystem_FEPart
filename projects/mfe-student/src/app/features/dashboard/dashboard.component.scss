@@ -1,23 +1,41 @@
 .student-dashboard {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   background: var(--bg, #f8fafc);
   min-height: calc(100vh - 4rem);
+
+  @media (min-width: 640px) {
+    padding: 1.25rem;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
 }
 
-/* === Page Header === */
+/* === Page Header - Responsive === */
 .dashboard-header {
   background: var(--bg-surface, #ffffff);
   border-radius: var(--radius-2xl, 1rem);
   border: 1px solid var(--border, #e2e8f0);
   border-top: 4px solid;
   border-image: var(--gradient-primary) 1;
-  padding: 1.75rem 2rem;
+  padding: 1rem;
   box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04));
+
+  @media (min-width: 640px) {
+    padding: 1.25rem 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    padding: 1.75rem 2rem;
+  }
 }
 
 .header-content {
@@ -36,7 +54,7 @@
 }
 
 .header-title {
-  font-size: 1.75rem;
+  font-size: 1.375rem;
   font-weight: 900;
   color: var(--text, #0f172a);
   margin: 0;
@@ -45,6 +63,14 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+
+  @media (min-width: 640px) {
+    font-size: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    font-size: 1.75rem;
+  }
 }
 
 .header-subtitle {
@@ -130,11 +156,19 @@
   background: var(--bg-surface, #ffffff);
   border-radius: var(--radius-xl, 1rem);
   border: 1px solid var(--border, #e2e8f0);
-  padding: 1.5rem;
+  padding: 1rem;
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04));
+
+  @media (min-width: 640px) {
+    padding: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    padding: 1.5rem;
+  }
 
   &:hover {
     border-color: rgba(37, 99, 235, 0.3);
@@ -274,11 +308,16 @@
 /* === Dashboard Body === */
 .dashboard-body {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
 
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr;
+  @media (min-width: 640px) {
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1.5rem;
   }
 }
 
@@ -286,7 +325,11 @@
 .side-column {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
+
+  @media (min-width: 640px) {
+    gap: 1.25rem;
+  }
 }
 
 /* === Activity Panel === */

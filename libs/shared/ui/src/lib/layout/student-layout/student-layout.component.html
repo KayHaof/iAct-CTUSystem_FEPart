@@ -1,5 +1,24 @@
-<div class="layout-wrapper">
-  <lib-sidebar class="sidebar-area" [menuItems]="studentMenus"></lib-sidebar>
+<div class="layout-wrapper" [class.mobile-menu-open]="isMobileMenuOpen()">
+  <!-- Mobile Backdrop Overlay -->
+  @if (isMobileMenuOpen()) {
+    <div
+      class="sidebar-backdrop"
+      (click)="closeMobileMenu()"
+      (keydown.escape)="closeMobileMenu()"
+      tabindex="-1"
+      aria-hidden="true"
+    ></div>
+    <button
+      class="mobile-close-btn"
+      type="button"
+      (click)="closeMobileMenu()"
+      aria-label="Dong menu"
+    >
+      <i class="bi bi-x-lg"></i>
+    </button>
+  }
+
+  <lib-sidebar class="sidebar-area" [menuItems]="studentMenus" theme="light"></lib-sidebar>
 
   <div class="content-area">
     <lib-header class="header-area"></lib-header>
@@ -7,7 +26,7 @@
     <lib-loading-bar></lib-loading-bar>
 
     <main class="main-scrollable">
-      <div class="page-content">
+      <div class="page-content iact-page">
         <router-outlet></router-outlet>
       </div>
 

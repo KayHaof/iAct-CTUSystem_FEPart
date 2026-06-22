@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -7,16 +7,17 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   templateUrl: './stats-card.component.html',
   styleUrl: './stats-card.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatsCardComponent {
-  @Input() title: string = '';
+  @Input() title = '';
   @Input() value: string | number = 0;
-  @Input() subtext: string = '';
+  @Input() subtext = '';
 
   // Mấy cái màu sắc động này giữ ở Input để tái sử dụng linh hoạt
-  @Input() iconBgClass: string = 'bg-blue-50 text-blue-600';
-  @Input() subtextColorClass: string = 'text-gray-400';
+  @Input() iconBgClass = 'bg-blue-50 text-blue-600';
+  @Input() subtextColorClass = 'text-gray-400';
 
-  @Input() showProgress: boolean = false;
-  @Input() progress: number = 0;
+  @Input() showProgress = false;
+  @Input() progress = 0;
 }

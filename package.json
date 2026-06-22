@@ -10,7 +10,6 @@
     "start:student": "yarn nx serve mfe-student",
     "start:admin": "yarn nx serve mfe-admin",
     "build:all": "yarn nx run-many --target=build --all",
-    "test:all": "yarn nx run-many --target=test --all",
     "lint:all": "yarn nx run-many --target=lint --all",
     "graph": "yarn nx graph"
   },
@@ -60,8 +59,6 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@analogjs/vite-plugin-angular": "~2.1.2",
-    "@analogjs/vitest-angular": "~2.1.2",
     "@angular-architects/native-federation": "21.0.4",
     "@angular-devkit/build-angular": "^21.1.0",
     "@angular-devkit/core": "^21.1.0",
@@ -75,34 +72,23 @@
     "@nx/eslint": "^22.5.4",
     "@nx/eslint-plugin": "^22.5.4",
     "@nx/js": "^22.5.4",
-    "@nx/playwright": "^22.4.5",
-    "@nx/vite": "^22.5.4",
-    "@nx/vitest": "^22.5.4",
     "@nx/web": "^22.5.4",
-    "@playwright/test": "^1.36.0",
     "@schematics/angular": "^21.1.0",
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
     "@types/node": "20.19.9",
     "@typescript-eslint/utils": "^8.40.0",
-    "@vitest/coverage-v8": "^4.0.0",
-    "@vitest/ui": "^4.0.8",
     "angular-eslint": "^21.0.1",
     "autoprefixer": "^10.4.24",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
-    "eslint-plugin-playwright": "^1.6.2",
-    "hono": "^4.11.7",
-    "jsdom": "^27.1.0",
     "ng-packagr": "^21.1.0",
     "nx": "^22.4.5",
     "postcss": "^8.5.6",
     "prettier": "~3.6.2",
     "tailwindcss": "^3.4.1",
     "typescript": "~5.9.2",
-    "typescript-eslint": "^8.40.0",
-    "vite": "^7.0.0",
-    "vitest": "^4.0.8"
+    "typescript-eslint": "^8.40.0"
   }
 }

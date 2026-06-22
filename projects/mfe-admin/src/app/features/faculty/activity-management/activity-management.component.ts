@@ -1,4 +1,11 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -14,6 +21,7 @@ import { AlertService, ConfirmService } from '@my-mfe/ui';
   imports: [CommonModule],
   templateUrl: './activity-management.component.html',
   styleUrls: ['./activity-management.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ActivityManagementComponent implements OnInit {
   private route = inject(ActivatedRoute);

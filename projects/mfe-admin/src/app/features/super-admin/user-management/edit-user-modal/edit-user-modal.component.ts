@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiResponse, ClassInfo, Department, MajorInfo, UserInfo } from 'interface';
+import { ApiResponse, ClassInfo, Department, MajorInfo, UserInfo } from '@my-mfe/interface';
 import { AdminUserService } from '../../services/admin-user.service';
 
 @Component({

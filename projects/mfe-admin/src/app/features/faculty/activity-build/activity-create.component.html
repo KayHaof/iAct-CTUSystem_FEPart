@@ -1,377 +1,1083 @@
-<div class="fixed inset-0 bg-gray-50 z-50 overflow-y-auto animate-fade-in-up">
-  <div class="bg-white px-6 py-4 flex justify-between items-center border-b border-gray-100 sticky top-0 z-20 shadow-sm">
-    <div class="flex items-center gap-3">
-      <button (click)="goBack()" class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition shadow-sm">
-        <i class="bi bi-arrow-left text-xl"></i>
-      </button>
-      <div>
-        <h2 class="text-xl font-bold text-gray-800 leading-tight">
-          {{ isEditMode() ? 'Chinh sua Hoat dong' : 'Dang ky Hoat dong moi' }}
-        </h2>
-      </div>
-    </div>
-    <div class="flex gap-3">
-      @if (!isEditMode() || currentStatus() === 3) {
-        <button type="button" (click)="onSubmit(3)" class="px-5 py-2.5 font-semibold text-gray-600 hover:text-gray-800 transition">
-          Luu nhap
-        </button>
-      }
+<div class="min-h-full bg-slate-50 animate-fade-in-up">
+  <header class="border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
+    <div class="mx-auto flex w-full max-w-content items-center gap-3">
       <button
         type="button"
-        (click)="onSubmit(currentStatus() === 3 ? 0 : currentStatus())"
-        class="px-6 py-2.5 text-white font-bold rounded-xl shadow-lg transition flex items-center gap-2"
-        [ngClass]="isEditMode() && currentStatus() !== 3 ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'"
+        (click)="goBack()"
+        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        aria-label="Quay lại"
       >
-        <i class="bi" [ngClass]="isEditMode() && currentStatus() !== 3 ? 'bi-save-fill' : 'bi-send-fill'"></i>
-        {{ isEditMode() && currentStatus() !== 3 ? 'Cap nhat thay doi' : 'Gui duyet' }}
+        <i class="bi bi-arrow-left text-xl"></i>
       </button>
+
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-2">
+          <h1 class="truncate text-xl font-bold text-slate-900 sm:text-2xl">
+            {{ isEditMode() ? 'Chỉnh sửa hoạt động' : 'Đăng ký hoạt động mới' }}
+          </h1>
+          @if (isEditMode()) {
+            <span
+              class="rounded-full px-2.5 py-1 text-xs font-semibold"
+              [ngClass]="
+                currentStatus() === 3 ? 'bg-slate-100 text-slate-600' : 'bg-blue-50 text-blue-700'
+              "
+            >
+              {{ currentStatus() === 3 ? 'Bản nháp' : 'Đang chờ duyệt' }}
+            </span>
+          }
+        </div>
+        <p class="mt-1 text-sm text-slate-500">
+          Hoàn thành từng bước để nội dung bài đăng rõ ràng và chính xác.
+        </p>
+      </div>
     </div>
-  </div>
+  </header>
 
-  <div class="max-w-7xl mx-auto py-10 px-6 relative">
+  <main id="activity-wizard" class="mx-auto w-full max-w-content px-4 py-5 sm:px-6 lg:px-8">
     @if (isLoadingData()) {
-      <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm min-h-[50vh]">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <p class="text-gray-500 font-medium">Dang tai thong tin hoat dong...</p>
+      <div
+        class="flex min-h-96 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white"
+        role="status"
+      >
+        <div
+          class="h-12 w-12 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600"
+        ></div>
+        <p class="mt-4 font-medium text-slate-500">Đang tải thông tin hoạt động...</p>
       </div>
-    }
-
-    <form [formGroup]="activityForm" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div class="lg:col-span-2 space-y-8">
-
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-          <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-8">
-            <i class="bi bi-info-circle-fill text-blue-500"></i> Thong tin tong quan
-          </h3>
-          <div class="space-y-6">
-            <div>
-              <label for="title" class="block text-sm font-bold text-gray-700 mb-2">Ten hoat dong <span class="text-red-500">*</span></label>
-              <input id="title" type="text" formControlName="title" placeholder="Vi du: Hoi thao Nghien cuu Khoa hoc 2026" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition" />
-            </div>
-            <div>
-              <label for="description" class="block text-sm font-bold text-gray-700 mb-2">Mo ta ngan</label>
-              <input id="description" type="text" formControlName="description" placeholder="Tom tat ngan gon ve hoat dong..." class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition" />
-            </div>
-            <div>
-              <label for="content" class="block text-sm font-bold text-gray-700 mb-2">Noi dung chi tiet</label>
-              <textarea id="content" formControlName="content" rows="8" placeholder="Viet noi dung day du tai day..." class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"></textarea>
-              <div class="flex items-center gap-2 mt-2">
-                <button type="button" (click)="generateWithAI()"
-                  [disabled]="isGeneratingAI()"
-                  class="mt-2 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition flex items-center gap-2 disabled:opacity-50 bg-blue-50 rounded-lg hover:bg-blue-100">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3M1 9l4.586-4.586a2 2 0 012.828 0l2.172 2.172a2 2 0 010 2.828L8 10H1z"/>
-                  </svg>
-                  {{ isGeneratingAI() ? 'Dang tao...' : 'Tao noi dung bang AI' }}
-                </button>
-              </div>
-            </div>
-            <div>
-              <label for="source_link" class="block text-sm font-bold text-gray-700 mb-2">Link nguon (neu co)</label>
-              <input id="source_link" type="url" formControlName="source_link" placeholder="https://..." class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition" />
-            </div>
+    } @else {
+      <section class="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-surface sm:p-5">
+        <div class="mb-4 flex items-center justify-between gap-3 lg:hidden">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-blue-600">
+              Bước {{ currentStep() }} / 4
+            </p>
+            <h2 class="mt-1 font-bold text-slate-900">
+              {{ wizardSteps[currentStep() - 1].label }}
+            </h2>
           </div>
+          <span class="text-sm font-semibold text-slate-500">{{ stepProgress() }}%</span>
         </div>
 
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-          <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-8">
-            <i class="bi bi-alarm-fill text-orange-500"></i> Lich trinh Hoat dong
-          </h3>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="p-5 bg-orange-50 rounded-2xl border border-orange-100">
-              <div class="flex items-center gap-2 text-orange-700 font-bold text-sm mb-4"><i class="bi bi-pencil-square"></i> Thoi gian Dang ky chung</div>
-              <div class="space-y-4">
-                <div>
-                  <label for="registration_start" class="block text-xs font-bold text-orange-600 mb-1">Mo dang ky <span class="text-red-500">*</span></label>
-                  <input id="registration_start" type="datetime-local" formControlName="registration_start" class="w-full px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-orange-500 outline-none text-sm shadow-sm" />
-                </div>
-                <div>
-                  <label for="registration_end" class="block text-xs font-bold text-orange-600 mb-1">Dong dang ky <span class="text-red-500">*</span></label>
-                  <input id="registration_end" type="datetime-local" formControlName="registration_end" class="w-full px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-orange-500 outline-none text-sm shadow-sm" />
-                </div>
-              </div>
-            </div>
-            <div class="p-5 bg-blue-50 rounded-2xl border border-blue-100">
-              <div class="flex items-center gap-2 text-blue-700 font-bold text-sm mb-4"><i class="bi bi-play-circle-fill"></i> Thoi gian To chuc chung</div>
-              <div class="space-y-4">
-                <div>
-                  <label for="start_date" class="block text-xs font-bold text-blue-600 mb-1">Bat dau <span class="text-red-500">*</span></label>
-                  <input id="start_date" type="datetime-local" formControlName="start_date" class="w-full px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-blue-500 outline-none text-sm shadow-sm" />
-                </div>
-                <div>
-                  <label for="end_date" class="block text-xs font-bold text-blue-600 mb-1">Ket thuc <span class="text-red-500">*</span></label>
-                  <input id="end_date" type="datetime-local" formControlName="end_date" class="w-full px-4 py-2.5 rounded-xl border-none focus:ring-2 focus:ring-blue-500 outline-none text-sm shadow-sm" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="border-t border-gray-100 pt-6">
-            <div class="flex justify-between items-center mb-5">
-              <div>
-                <h4 class="text-sm font-bold text-gray-800 flex items-center gap-2">
-                  <i class="bi bi-list-task text-blue-500"></i> Chia nho lich trinh
-                </h4>
-                <p class="text-xs text-gray-500 mt-1">Danh cho cac hoat dong co nhieu buoi to chuc.</p>
-              </div>
-              <button type="button" (click)="addSchedule()" class="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition flex items-center gap-1 shrink-0">
-                <i class="bi bi-plus-circle-fill"></i> Them buoi
-              </button>
-            </div>
-
-            <div formArrayName="schedules" class="space-y-4">
-              @for (schedule of schedules.controls; track schedule; let i = $index) {
-                <div [formGroupName]="i" class="p-4 bg-gray-50 rounded-2xl border border-gray-100 relative group transition hover:border-blue-200 hover:shadow-sm">
-                  <button type="button" (click)="removeSchedule(i)" class="absolute -top-2 -right-2 w-6 h-6 bg-white border border-red-200 text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-red-50" title="Xoa buoi nay">
-                    <i class="bi bi-x font-bold"></i>
-                  </button>
-
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="md:col-span-2 flex gap-4">
-                      <div class="flex-1">
-                        <label [for]="'s_title_' + i" class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Ten buoi <span class="text-red-500">*</span></label>
-                        <input [id]="'s_title_' + i" type="text" formControlName="title" placeholder="VD: Buoi 1: Le khai mac" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm bg-white" />
-                      </div>
-                      <div class="flex-1">
-                        <label [for]="'s_loc_' + i" class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Dia diem rieng</label>
-                        <input [id]="'s_loc_' + i" type="text" formControlName="location" placeholder="De trong neu giong lich chung..." class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm bg-white" />
-                      </div>
-                    </div>
-                    <div>
-                      <label [for]="'s_start_' + i" class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Bat dau <span class="text-red-500">*</span></label>
-                      <input [id]="'s_start_' + i" type="datetime-local" formControlName="start_time" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm bg-white" />
-                    </div>
-                    <div>
-                      <label [for]="'s_end_' + i" class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Ket thuc <span class="text-red-500">*</span></label>
-                      <input [id]="'s_end_' + i" type="datetime-local" formControlName="end_time" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm bg-white" />
-                    </div>
-                  </div>
-                </div>
-              }
-
-              @if (schedules.length === 0) {
-                <div class="text-center py-4 border-2 border-dashed border-gray-200 rounded-xl">
-                  <p class="text-xs text-gray-400 font-medium">Hoat dong nay chi to chuc mot khung gio duy nhat.</p>
-                </div>
-              }
-            </div>
-          </div>
+        <div class="mb-4 h-2 overflow-hidden rounded-full bg-slate-100 lg:hidden">
+          <div
+            class="h-full rounded-full bg-gradient-to-r from-blue-600 to-sky-500 transition-all duration-300"
+            [style.width.%]="stepProgress()"
+          ></div>
         </div>
 
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-          <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-8">
-            <i class="bi bi-images text-purple-500"></i> Hinh anh truyen thong
-          </h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="space-y-3">
-              <label for="coverInput" class="block text-sm font-bold text-gray-700">Anh Bia (Cover)</label>
-              <div role="button" tabindex="0" (click)="triggerInput('coverInput')" (keydown.enter)="triggerInput('coverInput')" (drop)="onFileDropped($event, 'cover')" (dragover)="onDragOver($event)" class="group relative border-2 border-dashed border-gray-300 rounded-2xl h-56 flex flex-col items-center justify-center text-center hover:bg-gray-50 hover:border-purple-400 transition cursor-pointer overflow-hidden outline-none focus:ring-2 focus:ring-purple-500">
-                <input type="file" id="coverInput" class="hidden" accept="image/*" (change)="onFileSelected($event, 'cover')" />
-                @if (coverPreview()) {
-                  <img [src]="coverPreview()" alt="Cover" class="absolute inset-0 w-full h-full object-cover" />
-                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                    <span class="text-white font-bold text-sm bg-purple-600 px-4 py-2 rounded-full shadow-lg">Thay doi anh</span>
-                  </div>
-                } @else {
-                  <div class="p-4 flex flex-col items-center">
-                    <i class="bi bi-cloud-arrow-up text-purple-300 text-4xl mb-3 group-hover:scale-110 transition"></i>
-                    <p class="text-sm font-bold text-gray-600">Click hoac Keo tha anh</p>
-                    <p class="text-xs text-gray-400 mt-1">Ti le 16:9 (Khuyen dung: 1200x675px)</p>
-                  </div>
-                }
-              </div>
-            </div>
-
-            <div class="space-y-3">
-              <label for="thumbInput" class="block text-sm font-bold text-gray-700">Anh Thu nho (Thumbnail)</label>
-              <div role="button" tabindex="0" (click)="triggerInput('thumbInput')" (keydown.enter)="triggerInput('thumbInput')" (drop)="onFileDropped($event, 'thumbnail')" (dragover)="onDragOver($event)" class="group relative border-2 border-dashed border-gray-300 rounded-2xl h-56 flex flex-col items-center justify-center text-center hover:bg-gray-50 hover:border-blue-400 transition cursor-pointer overflow-hidden outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="file" id="thumbInput" class="hidden" accept="image/*" (change)="onFileSelected($event, 'thumbnail')" />
-                @if (thumbPreview()) {
-                  <img [src]="thumbPreview()" alt="Thumbnail" class="absolute inset-0 w-full h-full object-cover" />
-                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                    <span class="text-white font-bold text-sm bg-blue-600 px-4 py-2 rounded-full shadow-lg">Thay doi anh</span>
-                  </div>
-                } @else {
-                  <div class="p-4 flex flex-col items-center">
-                    <i class="bi bi-aspect-ratio text-blue-300 text-4xl mb-3 group-hover:scale-110 transition"></i>
-                    <p class="text-sm font-bold text-gray-600">Click hoac Keo tha anh</p>
-                    <p class="text-xs text-gray-400 mt-1">Ti le 1:1 (Khuyen dung: 500x500px)</p>
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="space-y-8">
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <h3 class="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
-            <i class="bi bi-person-badge-fill text-blue-500"></i> Nguoi phu trach
-          </h3>
-          @if (!selectedOrganizer()) {
-            <div class="space-y-2">
-              <label for="organizerEmail" class="block text-xs font-bold text-gray-500 uppercase tracking-wider">
-                Tim theo Email <span class="text-red-500">*</span>
-              </label>
-              <div class="flex gap-2">
-                <input
-                  id="organizerEmail"
-                  #emailInput
-                  type="email"
-                  placeholder="Nhap email..."
-                  (keydown.enter)="$event.preventDefault(); searchOrganizer(emailInput.value)"
-                  class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm"
-                />
-                <button
-                  type="button"
-                  (click)="searchOrganizer(emailInput.value)"
-                  [disabled]="isSearchingOrganizer()"
-                  class="px-4 py-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition font-bold disabled:opacity-50"
+        <ol class="grid grid-cols-4 gap-2" aria-label="Các bước tạo bài đăng">
+          @for (step of wizardSteps; track step.id) {
+            <li>
+              <button
+                type="button"
+                (click)="goToStep(step.id)"
+                [disabled]="!canNavigateToStep(step.id)"
+                [attr.aria-label]="'Bước ' + step.id + ': ' + step.label"
+                class="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border px-2 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed"
+                [ngClass]="
+                  currentStep() === step.id
+                    ? 'border-blue-600 bg-blue-50 text-blue-700'
+                    : isStepCompleted(step.id)
+                      ? 'border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-300'
+                      : 'border-slate-200 bg-white text-slate-400'
+                "
+                [attr.aria-current]="currentStep() === step.id ? 'step' : null"
+              >
+                <span
+                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                  [ngClass]="currentStep() === step.id ? 'bg-blue-600 text-white' : 'bg-white'"
                 >
-                  @if (isSearchingOrganizer()) {
-                    <i class="bi bi-arrow-repeat animate-spin"></i>
-                  } @else {
-                    <i class="bi bi-search"></i>
-                  }
-                </button>
-              </div>
-              @if (searchOrganizerError()) {
-                <p class="text-xs text-red-500 mt-2">
-                  <i class="bi bi-exclamation-circle"></i> {{ searchOrganizerError() }}
+                  <i
+                    class="bi"
+                    [ngClass]="isStepCompleted(step.id) ? 'bi-check-lg' : step.icon"
+                  ></i>
+                </span>
+                <span class="hidden min-w-0 lg:block">
+                  <span class="block text-xs font-semibold">Bước {{ step.id }}</span>
+                  <span class="block truncate text-sm font-bold">{{ step.label }}</span>
+                  <span class="mt-0.5 block truncate text-xs font-normal text-slate-500">
+                    {{ step.description }}
+                  </span>
+                </span>
+              </button>
+            </li>
+          }
+        </ol>
+      </section>
+
+      <form [formGroup]="activityForm" class="mx-auto w-full max-w-5xl">
+        @if (currentStep() === 1) {
+          <div class="space-y-5">
+            <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-surface sm:p-6">
+              <div class="mb-5">
+                <p class="text-xs font-bold uppercase tracking-wider text-blue-600">Bước 1</p>
+                <h2 class="mt-1 text-xl font-bold text-slate-900">Thông tin bài đăng</h2>
+                <p class="mt-1 text-sm text-slate-500">
+                  Cung cấp nội dung giúp người xem hiểu nhanh mục tiêu của hoạt động.
                 </p>
-              }
-            </div>
-          } @else {
-            <div class="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 flex justify-between items-center group transition hover:bg-blue-50">
-              <div class="flex items-center gap-3">
-                <img
-                  [src]="
-                    selectedOrganizer()?.avatarUrl ||
-                    'https://ui-avatars.com/api/?name=' +
-                      (selectedOrganizer()?.name || selectedOrganizer()?.fullName || selectedOrganizer()?.username || 'User') +
-                      '&background=0D8ABC&color=fff'
-                  "
-                  alt="avatar"
-                  class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm"
-                />
-                <div class="overflow-hidden">
-                  <p class="text-sm font-bold text-gray-800 truncate" [title]="selectedOrganizer()?.name || selectedOrganizer()?.fullName || selectedOrganizer()?.username">
-                    {{ selectedOrganizer()?.name || selectedOrganizer()?.fullName || selectedOrganizer()?.username }}
-                  </p>
-                  <p class="text-xs text-gray-500 truncate" [title]="selectedOrganizer()?.email || 'Dai dien To chuc / Khoa'">
-                    {{ selectedOrganizer()?.email || 'Dai dien To chuc / Khoa' }}
-                  </p>
+              </div>
+
+              <div class="space-y-5">
+                <div>
+                  <label for="title" class="mb-2 block text-sm font-bold text-slate-700">
+                    Tên hoạt động <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="title"
+                    type="text"
+                    formControlName="title"
+                    placeholder="Ví dụ: Hội thảo Nghiên cứu khoa học 2026"
+                    class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                  @if (activityForm.get('title')?.touched && activityForm.get('title')?.invalid) {
+                    <p class="mt-1.5 text-sm text-red-600">Vui lòng nhập tên hoạt động.</p>
+                  }
                 </div>
+
+                <div>
+                  <label for="description" class="mb-2 block text-sm font-bold text-slate-700">
+                    Mô tả ngắn
+                  </label>
+                  <input
+                    id="description"
+                    type="text"
+                    formControlName="description"
+                    placeholder="Tóm tắt ngắn gọn về hoạt động..."
+                    class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+
+                <div>
+                  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <label for="content" class="text-sm font-bold text-slate-700">
+                      Nội dung chi tiết
+                    </label>
+                    <button
+                      type="button"
+                      (click)="generateWithAI()"
+                      [disabled]="isGeneratingAI()"
+                      class="flex min-h-10 items-center gap-2 rounded-xl bg-blue-50 px-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:opacity-50"
+                    >
+                      <i
+                        class="bi"
+                        [ngClass]="isGeneratingAI() ? 'bi-arrow-repeat animate-spin' : 'bi-stars'"
+                      ></i>
+                      {{ isGeneratingAI() ? 'Đang tạo...' : 'Tạo nội dung bằng AI' }}
+                    </button>
+                  </div>
+                  <textarea
+                    id="content"
+                    formControlName="content"
+                    rows="8"
+                    placeholder="Viết nội dung đầy đủ tại đây..."
+                    class="w-full resize-y rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label for="source_link" class="mb-2 block text-sm font-bold text-slate-700">
+                    Liên kết nguồn (nếu có)
+                  </label>
+                  <input
+                    id="source_link"
+                    type="url"
+                    formControlName="source_link"
+                    placeholder="https://..."
+                    class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-surface sm:p-5">
+                <h3 class="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900">
+                  <i class="bi bi-person-badge-fill text-blue-500"></i> Người phụ trách
+                </h3>
+                @if (!selectedOrganizer()) {
+                  <div>
+                    <label
+                      for="organizerEmail"
+                      class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500"
+                    >
+                      Tìm theo Email <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex gap-2">
+                      <input
+                        id="organizerEmail"
+                        #emailInput
+                        type="email"
+                        placeholder="Nhập Email..."
+                        (keydown.enter)="$event.preventDefault(); searchOrganizer(emailInput.value)"
+                        class="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      />
+                      <button
+                        type="button"
+                        (click)="searchOrganizer(emailInput.value)"
+                        [disabled]="isSearchingOrganizer()"
+                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 transition hover:bg-blue-100 disabled:opacity-50"
+                        aria-label="Tìm người phụ trách"
+                      >
+                        <i
+                          class="bi"
+                          [ngClass]="
+                            isSearchingOrganizer() ? 'bi-arrow-repeat animate-spin' : 'bi-search'
+                          "
+                        ></i>
+                      </button>
+                    </div>
+                    @if (searchOrganizerError()) {
+                      <p class="mt-2 text-sm text-red-600">{{ searchOrganizerError() }}</p>
+                    }
+                  </div>
+                } @else {
+                  <div
+                    class="flex items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4"
+                  >
+                    <div class="flex min-w-0 items-center gap-3">
+                      @if (selectedOrganizer()?.avatarUrl) {
+                        <img
+                          [src]="selectedOrganizer()?.avatarUrl"
+                          alt="Ảnh đại diện người phụ trách"
+                          class="h-11 w-11 shrink-0 rounded-full object-cover"
+                        />
+                      } @else {
+                        <span
+                          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-blue-600"
+                        >
+                          <i class="bi bi-person-fill"></i>
+                        </span>
+                      }
+                      <div class="min-w-0">
+                        <p class="truncate font-bold text-slate-900">
+                          {{
+                            selectedOrganizer()?.fullName ||
+                              selectedOrganizer()?.name ||
+                              selectedOrganizer()?.username
+                          }}
+                        </p>
+                        <p class="truncate text-sm text-slate-500">
+                          {{ selectedOrganizer()?.email || 'Đại diện đơn vị tổ chức' }}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      (click)="removeOrganizer()"
+                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                      aria-label="Gỡ người phụ trách"
+                    >
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                }
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-surface sm:p-5">
+                <h3 class="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900">
+                  <i class="bi bi-images text-blue-500"></i> Hình ảnh truyền thông
+                </h3>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <p class="mb-2 text-sm font-semibold text-slate-700">Ảnh bìa</p>
+                    <div
+                      role="button"
+                      tabindex="0"
+                      (click)="triggerInput('coverInput')"
+                      (keydown.enter)="triggerInput('coverInput')"
+                      (drop)="onFileDropped($event, 'cover')"
+                      (dragover)="onDragOver($event)"
+                      class="group relative flex aspect-video cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-center outline-none transition hover:border-blue-400 focus:ring-2 focus:ring-blue-500"
+                    >
+                      <input
+                        id="coverInput"
+                        type="file"
+                        class="hidden"
+                        accept="image/*"
+                        (change)="onFileSelected($event, 'cover')"
+                      />
+                      @if (coverPreview()) {
+                        <img
+                          [src]="coverPreview()"
+                          alt="Ảnh bìa hoạt động"
+                          class="absolute inset-0 h-full w-full object-cover"
+                        />
+                      } @else {
+                        <span class="p-2 text-xs font-semibold text-slate-500">
+                          <i class="bi bi-cloud-arrow-up mb-1 block text-xl text-blue-400"></i>
+                          Chọn ảnh bìa
+                        </span>
+                      }
+                    </div>
+                  </div>
+
+                  <div>
+                    <p class="mb-2 text-sm font-semibold text-slate-700">Ảnh thu nhỏ</p>
+                    <div
+                      role="button"
+                      tabindex="0"
+                      (click)="triggerInput('thumbInput')"
+                      (keydown.enter)="triggerInput('thumbInput')"
+                      (drop)="onFileDropped($event, 'thumbnail')"
+                      (dragover)="onDragOver($event)"
+                      class="group relative mx-auto flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-center outline-none transition hover:border-blue-400 focus:ring-2 focus:ring-blue-500"
+                    >
+                      <input
+                        id="thumbInput"
+                        type="file"
+                        class="hidden"
+                        accept="image/*"
+                        (change)="onFileSelected($event, 'thumbnail')"
+                      />
+                      @if (thumbPreview()) {
+                        <img
+                          [src]="thumbPreview()"
+                          alt="Ảnh thu nhỏ của hoạt động"
+                          class="absolute inset-0 h-full w-full object-cover"
+                        />
+                      } @else {
+                        <span class="p-2 text-xs font-semibold text-slate-500">
+                          <i class="bi bi-cloud-arrow-up mb-1 block text-xl text-blue-400"></i>
+                          Chọn ảnh
+                        </span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        }
+
+        @if (currentStep() === 2) {
+          <div class="space-y-5">
+            <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-surface sm:p-6">
+              <div class="mb-5">
+                <p class="text-xs font-bold uppercase tracking-wider text-blue-600">Bước 2</p>
+                <h2 class="mt-1 text-xl font-bold text-slate-900">Thời gian và tổ chức</h2>
+                <p class="mt-1 text-sm text-slate-500">
+                  Thiết lập thời gian đăng ký, tổ chức và phạm vi của hoạt động.
+                </p>
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div class="rounded-2xl border border-orange-100 bg-orange-50 p-4">
+                  <h3 class="mb-4 flex items-center gap-2 font-bold text-orange-700">
+                    <i class="bi bi-pencil-square"></i> Thời gian đăng ký
+                  </h3>
+                  <div class="space-y-4">
+                    <div>
+                      <label
+                        for="registration_start"
+                        class="mb-1.5 block text-sm font-semibold text-slate-700"
+                      >
+                        Mở đăng ký <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="registration_start"
+                        type="datetime-local"
+                        formControlName="registration_start"
+                        class="w-full rounded-xl border border-orange-200 bg-white px-3 py-2.5 outline-none focus:ring-2 focus:ring-orange-300"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for="registration_end"
+                        class="mb-1.5 block text-sm font-semibold text-slate-700"
+                      >
+                        Đóng đăng ký <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="registration_end"
+                        type="datetime-local"
+                        formControlName="registration_end"
+                        class="w-full rounded-xl border border-orange-200 bg-white px-3 py-2.5 outline-none focus:ring-2 focus:ring-orange-300"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                  <h3 class="mb-4 flex items-center gap-2 font-bold text-blue-700">
+                    <i class="bi bi-calendar-event"></i> Thời gian tổ chức
+                  </h3>
+                  <div class="space-y-4">
+                    <div>
+                      <label
+                        for="start_date"
+                        class="mb-1.5 block text-sm font-semibold text-slate-700"
+                      >
+                        Bắt đầu <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="start_date"
+                        type="datetime-local"
+                        formControlName="start_date"
+                        class="w-full rounded-xl border border-blue-200 bg-white px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-300"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for="end_date"
+                        class="mb-1.5 block text-sm font-semibold text-slate-700"
+                      >
+                        Kết thúc <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="end_date"
+                        type="datetime-local"
+                        formControlName="end_date"
+                        class="w-full rounded-xl border border-blue-200 bg-white px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-300"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="grid grid-cols-1 gap-5 lg:grid-cols-5">
+              <div
+                class="rounded-2xl border border-slate-200 bg-white p-4 shadow-surface sm:p-5 lg:col-span-2"
+              >
+                <h3 class="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900">
+                  <i class="bi bi-geo-alt-fill text-blue-500"></i> Thiết lập tổ chức
+                </h3>
+                <div class="space-y-4">
+                  <div>
+                    <label for="location" class="mb-2 block text-sm font-bold text-slate-700">
+                      Địa điểm tổ chức <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="location"
+                      type="text"
+                      formControlName="location"
+                      placeholder="Ví dụ: Hội trường Rùa"
+                      class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="max_participants"
+                      class="mb-2 block text-sm font-bold text-slate-700"
+                    >
+                      Sức chứa <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="max_participants"
+                      type="number"
+                      min="1"
+                      formControlName="max_participants"
+                      placeholder="Ví dụ: 200"
+                      class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </div>
+                  <label class="flex cursor-pointer items-center gap-3 rounded-xl bg-slate-50 p-4">
+                    <input
+                      type="checkbox"
+                      formControlName="is_external"
+                      class="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span class="text-sm font-semibold text-slate-700">Hoạt động ngoài trường</span>
+                  </label>
+
+                  @if (!activityForm.get('is_external')?.value) {
+                    <fieldset class="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                      <legend class="px-1 text-xs font-bold uppercase tracking-wider text-blue-700">
+                        Phạm vi tổ chức
+                      </legend>
+                      <div class="mt-2 grid grid-cols-2 gap-2">
+                        <label
+                          class="flex cursor-pointer items-center gap-2 rounded-lg bg-white p-3"
+                        >
+                          <input
+                            type="radio"
+                            formControlName="is_faculty"
+                            [value]="false"
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span class="text-sm font-semibold">Cấp Trường</span>
+                        </label>
+                        <label
+                          class="flex cursor-pointer items-center gap-2 rounded-lg bg-white p-3"
+                        >
+                          <input
+                            type="radio"
+                            formControlName="is_faculty"
+                            [value]="true"
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span class="text-sm font-semibold">Cấp Khoa</span>
+                        </label>
+                      </div>
+                    </fieldset>
+                  }
+                </div>
+              </div>
+
+              <div
+                class="rounded-2xl border border-slate-200 bg-white p-4 shadow-surface sm:p-5 lg:col-span-3"
+              >
+                <div class="mb-4 flex items-start justify-between gap-3">
+                  <div>
+                    <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                      <i class="bi bi-list-task text-blue-500"></i> Lịch trình chi tiết
+                    </h3>
+                    <p class="mt-1 text-sm text-slate-500">
+                      Thêm các buổi nếu hoạt động có nhiều phiên.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="addSchedule()"
+                    class="flex min-h-10 shrink-0 items-center gap-2 rounded-xl bg-blue-50 px-3 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
+                  >
+                    <i class="bi bi-plus-lg"></i> Thêm buổi
+                  </button>
+                </div>
+
+                <div formArrayName="schedules" class="max-h-[32rem] space-y-3 overflow-y-auto pr-1">
+                  @if (schedules.length === 0) {
+                    <div
+                      class="rounded-xl border-2 border-dashed border-slate-200 px-4 py-8 text-center"
+                    >
+                      <i class="bi bi-calendar2 text-2xl text-slate-300"></i>
+                      <p class="mt-2 text-sm text-slate-500">Chưa có lịch trình chi tiết.</p>
+                    </div>
+                  }
+
+                  @for (schedule of schedules.controls; track schedule; let i = $index) {
+                    <div
+                      [formGroupName]="i"
+                      class="relative rounded-xl border border-slate-200 bg-slate-50 p-4"
+                    >
+                      <button
+                        type="button"
+                        (click)="removeSchedule(i)"
+                        class="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                        [attr.aria-label]="'Xóa buổi ' + (i + 1)"
+                      >
+                        <i class="bi bi-trash3"></i>
+                      </button>
+                      <p class="mb-3 pr-10 text-sm font-bold text-slate-700">Buổi {{ i + 1 }}</p>
+                      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                          <label
+                            [for]="'schedule_title_' + i"
+                            class="mb-1 block text-xs font-semibold text-slate-600"
+                          >
+                            Tên buổi <span class="text-red-500">*</span>
+                          </label>
+                          <input
+                            [id]="'schedule_title_' + i"
+                            type="text"
+                            formControlName="title"
+                            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            [for]="'schedule_location_' + i"
+                            class="mb-1 block text-xs font-semibold text-slate-600"
+                          >
+                            Địa điểm riêng
+                          </label>
+                          <input
+                            [id]="'schedule_location_' + i"
+                            type="text"
+                            formControlName="location"
+                            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            [for]="'schedule_start_' + i"
+                            class="mb-1 block text-xs font-semibold text-slate-600"
+                          >
+                            Bắt đầu <span class="text-red-500">*</span>
+                          </label>
+                          <input
+                            [id]="'schedule_start_' + i"
+                            type="datetime-local"
+                            formControlName="start_time"
+                            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            [for]="'schedule_end_' + i"
+                            class="mb-1 block text-xs font-semibold text-slate-600"
+                          >
+                            Kết thúc <span class="text-red-500">*</span>
+                          </label>
+                          <input
+                            [id]="'schedule_end_' + i"
+                            type="datetime-local"
+                            formControlName="end_time"
+                            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </section>
+          </div>
+        }
+
+        @if (currentStep() === 3) {
+          <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-surface sm:p-6">
+            <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-blue-600">Bước 3</p>
+                <h2 class="mt-1 text-xl font-bold text-slate-900">Cấu hình quyền lợi</h2>
+                <p class="mt-1 text-sm text-slate-500">
+                  Thiết lập điểm rèn luyện hoặc giấy chứng nhận cho người tham gia.
+                </p>
               </div>
               <button
                 type="button"
-                (click)="removeOrganizer()"
-                class="text-gray-400 hover:text-red-500 p-2 transition flex-shrink-0"
-                title="Go bo"
+                (click)="addBenefit()"
+                [disabled]="!hasCompleteRootCategories()"
+                class="flex min-h-11 items-center gap-2 rounded-xl bg-blue-50 px-4 font-bold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <i class="bi bi-x-circle-fill text-lg"></i>
+                <i class="bi bi-plus-lg"></i> Thêm quyền lợi
               </button>
             </div>
-          }
-        </div>
 
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <h3 class="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
-            <i class="bi bi-geo-alt-fill text-green-500"></i> Cai dat Hoat dong
-          </h3>
-          <div class="space-y-5">
-            <div>
-              <label for="location" class="block text-sm font-bold text-gray-700 mb-2">Dia diem to chuc <span class="text-red-500">*</span></label>
-              <div class="relative">
-                <i class="bi bi-building absolute left-4 top-3.5 text-gray-400"></i>
-                <input id="location" type="text" formControlName="location" placeholder="Hoi truong Rua..." class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition" />
+            @if (!hasCompleteRootCategories()) {
+              <div
+                class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+              >
+                Hệ thống chưa cấu hình đầy đủ 5 nhóm tiêu chí I, II, III, IV và V. Vui lòng liên hệ
+                quản trị viên trước khi thêm quyền lợi.
               </div>
-            </div>
+            }
 
-            <div>
-              <label for="max_participants" class="block text-sm font-bold text-gray-700 mb-2">Suc chua (So nguoi) <span class="text-red-500">*</span></label>
-              <div class="relative">
-                <i class="bi bi-people absolute left-4 top-3.5 text-gray-400"></i>
-                <input id="max_participants" type="number" formControlName="max_participants" placeholder="Vi du: 200" class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition" />
-              </div>
-            </div>
-
-            <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-              <input id="is_external" type="checkbox" formControlName="is_external" class="w-5 h-5 rounded text-blue-600 border-gray-300 focus:ring-blue-500" />
-              <label for="is_external" class="text-sm font-bold text-gray-700 cursor-pointer">Hoat dong ngoai truong</label>
-            </div>
-
-            @if (!activityForm.get('is_external')?.value) {
-              <div class="p-5 bg-blue-50/30 rounded-2xl border border-blue-100 space-y-4 animate-fade-in">
-                <p class="block text-xs font-bold text-blue-600 uppercase tracking-wider">Pham vi to chuc <span class="text-red-500">*</span></p>
-                <div class="flex gap-4">
-                  <label class="flex-1 flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm">
-                    <input type="radio" formControlName="is_faculty" [value]="0" class="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                    <span class="text-sm font-bold text-gray-700">Cap Truong</span>
-                  </label>
-                  <label class="flex-1 flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm">
-                    <input type="radio" formControlName="is_faculty" [value]="1" class="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                    <span class="text-sm font-bold text-gray-700">Cap Khoa</span>
-                  </label>
+            <div formArrayName="benefits" class="max-h-[32rem] space-y-3 overflow-y-auto pr-1">
+              @if (benefits.length === 0) {
+                <div
+                  class="rounded-2xl border-2 border-dashed border-slate-200 px-4 py-12 text-center"
+                >
+                  <i class="bi bi-award text-3xl text-slate-300"></i>
+                  <h3 class="mt-3 font-bold text-slate-700">Hoạt động chưa có quyền lợi</h3>
+                  <p class="mt-1 text-sm text-slate-500">
+                    Bạn có thể bỏ qua bước này hoặc thêm tiêu chí phù hợp.
+                  </p>
                 </div>
-              </div>
-            }
-          </div>
-        </div>
+              }
 
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <div class="flex justify-between items-center mb-5">
-            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i class="bi bi-star-fill text-yellow-400"></i> Diem ren luyen</h3>
-            <button type="button" (click)="addBenefit()" class="px-3 py-1.5 bg-yellow-50 text-yellow-700 text-xs font-bold rounded-lg hover:bg-yellow-100 transition flex items-center gap-1">
-              <i class="bi bi-plus-circle-fill"></i> Them tieu chi
-            </button>
-          </div>
-
-          <div formArrayName="benefits" class="space-y-4">
-            @if (benefits.length === 0) {
-              <div class="text-center py-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                <i class="bi bi-emoji-frown text-2xl text-gray-300 mb-2 block"></i>
-                <p class="text-sm text-gray-500 font-medium">Chua co diem ren luyen nao duoc cau hinh.</p>
-              </div>
-            }
-
-            @for (benefit of benefits.controls; track benefit; let i = $index) {
-              <div [formGroupName]="i" class="p-4 bg-gray-50 rounded-2xl border border-gray-100 relative group transition hover:border-yellow-200 hover:shadow-sm">
-                <button type="button" (click)="removeBenefit(i)" class="absolute -top-2 -right-2 w-6 h-6 bg-white border border-red-200 text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-red-50" title="Xoa tieu chi nay"><i class="bi bi-x font-bold"></i></button>
-
-                <div class="space-y-3">
-                  <div>
-                    <label [for]="'category_id_' + i" class="block text-xs font-bold text-gray-600 mb-1">Thuoc tieu chi <span class="text-red-500">*</span></label>
-                    <select [id]="'category_id_' + i" formControlName="category_id" class="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none transition bg-white text-sm">
-                      <option [ngValue]="null" disabled>-- Chon tieu chi danh gia --</option>
-                      @for (cat of categories(); track cat.id) {
-                        <option [ngValue]="cat.id">[{{ cat.code }}] {{ cat.name }} (Toi da: {{ cat.maxPoint }}d)</option>
+              @for (benefit of benefits.controls; track benefit; let i = $index) {
+                <div
+                  [formGroupName]="i"
+                  class="relative rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5"
+                >
+                  <button
+                    type="button"
+                    (click)="removeBenefit(i)"
+                    class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                    [attr.aria-label]="'Xóa quyền lợi ' + (i + 1)"
+                  >
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                  <p class="mb-4 pr-12 font-bold text-slate-800">Quyền lợi {{ i + 1 }}</p>
+                  <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <div>
+                      <label
+                        [for]="'root_category_id_' + i"
+                        class="mb-2 block text-sm font-bold text-slate-700"
+                      >
+                        Nhóm tiêu chí lớn <span class="text-red-500">*</span>
+                      </label>
+                      <select
+                        [id]="'root_category_id_' + i"
+                        formControlName="root_category_id"
+                        (change)="onRootCategoryChange(i)"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 outline-none focus:ring-2 focus:ring-blue-100"
+                      >
+                        <option [ngValue]="null" disabled>-- Chọn nhóm I - V --</option>
+                        @for (rootCategory of rootCategories(); track rootCategory.id) {
+                          <option [ngValue]="rootCategory.id">
+                            {{ getRootCategoryLabel(rootCategory) }}
+                          </option>
+                        }
+                      </select>
+                      @if (
+                        benefit.get('root_category_id')?.touched &&
+                        benefit.get('root_category_id')?.invalid
+                      ) {
+                        <p class="mt-1.5 text-sm text-red-600">Vui lòng chọn nhóm tiêu chí lớn.</p>
                       }
-                    </select>
-                  </div>
-
-                  <div class="flex gap-3">
-                    <div class="flex-1">
-                      <label [for]="'point_' + i" class="block text-xs font-bold text-gray-600 mb-1">So diem <span class="text-red-500">*</span></label>
-                      <input [id]="'point_' + i" type="number" formControlName="point" placeholder="VD: 5" class="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none transition text-sm" />
                     </div>
 
-                    <div class="flex-1">
-                      <label [for]="'type_' + i" class="block text-xs font-bold text-gray-600 mb-1">Loai</label>
-                      <select [id]="'type_' + i" formControlName="type" class="w-full px-3 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none transition bg-white text-sm">
-                        <option [ngValue]="1">Cong diem DRL</option>
-                        <option [ngValue]="2">Cap giay chung nhan</option>
+                    <div>
+                      <label
+                        [for]="'category_id_' + i"
+                        class="mb-2 block text-sm font-bold text-slate-700"
+                      >
+                        Tiêu chí đánh giá <span class="text-red-500">*</span>
+                      </label>
+                      <select
+                        [id]="'category_id_' + i"
+                        formControlName="category_id"
+                        (change)="onBenefitCategoryChange(i)"
+                        [disabled]="!benefit.get('root_category_id')?.value"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 outline-none focus:ring-2 focus:ring-blue-100"
+                      >
+                        <option [ngValue]="null" disabled>-- Chọn tiêu chí --</option>
+                        @for (
+                          option of getCategoryOptions(benefit.get('root_category_id')?.value);
+                          track option.category.id
+                        ) {
+                          <option [ngValue]="option.category.id" [disabled]="!option.selectable">
+                            {{ getCategoryOptionLabel(option) }}
+                          </option>
+                        }
+                      </select>
+                      @if (
+                        benefit.get('category_id')?.touched && benefit.get('category_id')?.invalid
+                      ) {
+                        <p class="mt-1.5 text-sm text-red-600">Vui lòng chọn tiêu chí nhỏ nhất.</p>
+                      }
+                    </div>
+
+                    <div>
+                      <label
+                        [for]="'point_' + i"
+                        class="mb-2 block text-sm font-bold text-slate-700"
+                      >
+                        Số điểm <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        [id]="'point_' + i"
+                        type="number"
+                        min="0"
+                        [max]="getSelectedCategoryMaxPoint(i)"
+                        formControlName="point"
+                        [disabled]="!benefit.get('category_id')?.value"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 outline-none focus:ring-2 focus:ring-blue-100"
+                      />
+                      @if (getSelectedCategoryMaxPoint(i) !== null) {
+                        <p class="mt-1.5 text-sm font-medium text-blue-700">
+                          Giới hạn: 0 - {{ getSelectedCategoryMaxPoint(i) }} điểm
+                        </p>
+                      }
+                      @if (benefit.get('point')?.touched && benefit.get('point')?.hasError('min')) {
+                        <p class="mt-1.5 text-sm text-red-600">Điểm không được âm.</p>
+                      }
+                      @if (benefit.get('point')?.touched && benefit.get('point')?.hasError('max')) {
+                        <p class="mt-1.5 text-sm text-red-600">
+                          Điểm không được vượt quá {{ getSelectedCategoryMaxPoint(i) }}.
+                        </p>
+                      }
+                    </div>
+
+                    <div>
+                      <label
+                        [for]="'type_' + i"
+                        class="mb-2 block text-sm font-bold text-slate-700"
+                      >
+                        Loại quyền lợi
+                      </label>
+                      <select
+                        [id]="'type_' + i"
+                        formControlName="type"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 outline-none focus:ring-2 focus:ring-blue-100"
+                      >
+                        <option [ngValue]="1">Cộng điểm rèn luyện</option>
+                        <option [ngValue]="2">Cấp giấy chứng nhận</option>
                       </select>
                     </div>
                   </div>
                 </div>
-              </div>
+              }
+            </div>
+          </section>
+        }
+
+        @if (currentStep() === 4) {
+          <div class="space-y-5">
+            <section
+              class="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-600 to-sky-500 p-5 text-white shadow-lg sm:p-6"
+            >
+              <p class="text-xs font-bold uppercase tracking-wider text-blue-100">Bước 4</p>
+              <h2 class="mt-1 text-2xl font-bold">Xác nhận thông tin bài đăng</h2>
+              <p class="mt-2 max-w-2xl text-sm text-blue-50">
+                Kiểm tra lại nội dung bên dưới. Bạn có thể quay lại từng bước để chỉnh sửa trước khi
+                gửi đăng bài.
+              </p>
+            </section>
+
+            <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-surface">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                  <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <i class="bi bi-file-earmark-text text-blue-500"></i> Bài đăng
+                  </h3>
+                  <button
+                    type="button"
+                    (click)="goToStep(1)"
+                    class="text-sm font-bold text-blue-700 hover:text-blue-800"
+                  >
+                    Chỉnh sửa
+                  </button>
+                </div>
+                <dl class="space-y-3 text-sm">
+                  <div>
+                    <dt class="text-slate-500">Tên hoạt động</dt>
+                    <dd class="mt-1 font-bold text-slate-900">
+                      {{ activityForm.get('title')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Mô tả ngắn</dt>
+                    <dd class="mt-1 text-slate-700">
+                      {{ activityForm.get('description')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Nội dung</dt>
+                    <dd class="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap text-slate-700">
+                      {{ activityForm.get('content')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Người phụ trách</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{
+                        selectedOrganizer()?.fullName ||
+                          selectedOrganizer()?.name ||
+                          selectedOrganizer()?.email ||
+                          'Chưa chọn'
+                      }}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+
+              <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-surface">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                  <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <i class="bi bi-calendar-event text-blue-500"></i> Thời gian và tổ chức
+                  </h3>
+                  <button
+                    type="button"
+                    (click)="goToStep(2)"
+                    class="text-sm font-bold text-blue-700 hover:text-blue-800"
+                  >
+                    Chỉnh sửa
+                  </button>
+                </div>
+                <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt class="text-slate-500">Mở đăng ký</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ formatDisplayDate(activityForm.get('registration_start')?.value) }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Đóng đăng ký</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ formatDisplayDate(activityForm.get('registration_end')?.value) }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Bắt đầu</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ formatDisplayDate(activityForm.get('start_date')?.value) }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Kết thúc</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ formatDisplayDate(activityForm.get('end_date')?.value) }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Địa điểm</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ activityForm.get('location')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Sức chứa</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ activityForm.get('max_participants')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div class="sm:col-span-2">
+                    <dt class="text-slate-500">Phạm vi</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">{{ getActivityScopeLabel() }}</dd>
+                  </div>
+                </dl>
+              </section>
+
+              <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-surface">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                  <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <i class="bi bi-list-task text-blue-500"></i> Lịch trình
+                  </h3>
+                  <button
+                    type="button"
+                    (click)="goToStep(2)"
+                    class="text-sm font-bold text-blue-700 hover:text-blue-800"
+                  >
+                    Chỉnh sửa
+                  </button>
+                </div>
+                @if (schedules.length === 0) {
+                  <p class="text-sm text-slate-500">Không có lịch trình chi tiết.</p>
+                } @else {
+                  <div class="max-h-48 space-y-2 overflow-y-auto">
+                    @for (schedule of schedules.controls; track schedule; let i = $index) {
+                      <div class="rounded-xl bg-slate-50 p-3 text-sm">
+                        <p class="font-bold text-slate-800">{{ schedule.get('title')?.value }}</p>
+                        <p class="mt-1 text-slate-500">
+                          {{ formatDisplayDate(schedule.get('start_time')?.value) }} -
+                          {{ formatDisplayDate(schedule.get('end_time')?.value) }}
+                        </p>
+                        @if (schedule.get('location')?.value) {
+                          <p class="mt-1 text-slate-500">{{ schedule.get('location')?.value }}</p>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </section>
+
+              <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-surface">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                  <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <i class="bi bi-award text-blue-500"></i> Quyền lợi
+                  </h3>
+                  <button
+                    type="button"
+                    (click)="goToStep(3)"
+                    class="text-sm font-bold text-blue-700 hover:text-blue-800"
+                  >
+                    Chỉnh sửa
+                  </button>
+                </div>
+                @if (benefits.length === 0) {
+                  <p class="text-sm text-slate-500">Hoạt động không cấu hình quyền lợi.</p>
+                } @else {
+                  <div class="max-h-48 space-y-2 overflow-y-auto">
+                    @for (benefit of benefits.controls; track benefit; let i = $index) {
+                      <div class="rounded-xl bg-slate-50 p-3 text-sm">
+                        <p class="font-bold text-slate-800">
+                          {{ getCategoryPathLabel(benefit.get('category_id')?.value) }}
+                        </p>
+                        <p class="mt-1 text-slate-500">
+                          {{ benefit.get('point')?.value }} /
+                          {{ getSelectedCategoryMaxPoint(i) }} điểm -
+                          {{ getBenefitTypeLabel(benefit.get('type')?.value) }}
+                        </p>
+                      </div>
+                    }
+                  </div>
+                }
+              </section>
+            </div>
+
+            @if (coverPreview() || thumbPreview()) {
+              <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-surface">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                  <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <i class="bi bi-images text-blue-500"></i> Hình ảnh
+                  </h3>
+                  <button
+                    type="button"
+                    (click)="goToStep(1)"
+                    class="text-sm font-bold text-blue-700 hover:text-blue-800"
+                  >
+                    Chỉnh sửa
+                  </button>
+                </div>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  @if (coverPreview()) {
+                    <img
+                      [src]="coverPreview()"
+                      alt="Ảnh bìa hoạt động"
+                      class="aspect-video w-full rounded-xl object-cover"
+                    />
+                  }
+                  @if (thumbPreview()) {
+                    <img
+                      [src]="thumbPreview()"
+                      alt="Ảnh thu nhỏ hoạt động"
+                      class="h-36 w-36 rounded-xl object-cover"
+                    />
+                  }
+                </div>
+              </section>
             }
           </div>
-        </div>
-      </div>
-    </form>
-  </div>
+        }
+      </form>
+
+      @if (canSave()) {
+        <footer
+          class="sticky bottom-0 z-20 mx-auto mt-5 flex w-full max-w-5xl flex-col gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-floating backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div class="flex items-center gap-2">
+            @if (currentStep() > 1) {
+              <button
+                type="button"
+                (click)="goToPreviousStep()"
+                [disabled]="isSaving()"
+                class="flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                <i class="bi bi-arrow-left"></i> Quay lại
+              </button>
+            }
+            <p class="hidden text-sm text-slate-500 md:block">
+              Bước {{ currentStep() }} / 4: {{ wizardSteps[currentStep() - 1].label }}
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+            @if (!isEditMode() || currentStatus() === 3) {
+              <button
+                type="button"
+                (click)="onSubmit(3)"
+                [disabled]="isSaving()"
+                class="min-h-11 rounded-xl border border-blue-200 bg-blue-50 px-4 font-bold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {{
+                  isSaving() ? 'Đang lưu...' : isEditMode() ? 'Lưu lại bản nháp' : 'Lưu bản nháp'
+                }}
+              </button>
+            }
+
+            @if (currentStep() < 4) {
+              <button
+                type="button"
+                (click)="goToNextStep()"
+                [disabled]="isSaving()"
+                class="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 px-5 font-bold text-white shadow-lg transition hover:from-blue-700 hover:to-sky-600 disabled:opacity-50"
+              >
+                Tiếp tục <i class="bi bi-arrow-right"></i>
+              </button>
+            } @else {
+              <button
+                type="button"
+                (click)="onSubmit(currentStatus() === 3 ? 0 : currentStatus())"
+                [disabled]="isSaving()"
+                class="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 px-5 font-bold text-white shadow-lg transition hover:from-blue-700 hover:to-sky-600 disabled:opacity-50"
+              >
+                <i class="bi bi-send-fill"></i>
+                {{
+                  isSaving()
+                    ? 'Đang xử lý...'
+                    : isEditMode() && currentStatus() !== 3
+                      ? 'Lưu thay đổi'
+                      : 'Gửi đăng bài'
+                }}
+              </button>
+            }
+          </div>
+        </footer>
+      }
+    }
+  </main>
 </div>

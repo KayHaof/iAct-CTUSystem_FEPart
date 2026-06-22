@@ -6,7 +6,14 @@
 
   <div class="list-body">
     @for (item of activities; track item.id) {
-      <div class="activity-item group" (click)="itemClick.emit(item.id)">
+      <div
+        class="activity-item group"
+        role="button"
+        tabindex="0"
+        (click)="itemClick.emit(item.id)"
+        (keydown.enter)="itemClick.emit(item.id)"
+        (keydown.space)="itemClick.emit(item.id); $event.preventDefault()"
+      >
         <div class="date-box">
           <span class="month">{{ item.date | date: 'MMM' }}</span>
           <span class="day">{{ item.date | date: 'dd' }}</span>

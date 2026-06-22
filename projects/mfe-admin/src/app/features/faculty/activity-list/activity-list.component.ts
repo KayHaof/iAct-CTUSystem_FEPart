@@ -1,15 +1,21 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 
-import { PaginationComponent, AlertService, ConfirmService, TableContainerComponent, PageHeaderComponent } from '@my-mfe/ui';
-import { CloudinaryPathPipe} from '@my-mfe/data-access-media';
+import {
+  PaginationComponent,
+  AlertService,
+  ConfirmService,
+  TableContainerComponent,
+  PageHeaderComponent,
+} from '@my-mfe/ui';
+import { CloudinaryPathPipe } from '@my-mfe/data-access-media';
 import { Activity } from '../../../shared/models/activity.model';
 import { ActivityService } from '../services/activity.service';
-import { PageDTO } from 'interface';
+import { PageDTO } from '@my-mfe/interface';
 
 @Component({
   selector: 'app-activity-list',
@@ -25,6 +31,7 @@ import { PageDTO } from 'interface';
     CloudinaryPathPipe,
   ],
   templateUrl: './activity-list.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ActivityListComponent implements OnInit {
   private router = inject(Router);
