@@ -1,5 +1,10 @@
-<div class="absolute inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-  <div class="sticky top-0 left-0 w-full h-screen flex items-center justify-center p-4 sm:p-6">
+<div
+  class="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm"
+  aria-labelledby="modal-title"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="flex h-full w-full items-stretch justify-center p-3 sm:p-5">
     <div
       class="absolute inset-0 cursor-pointer"
       (click)="onClose()"
@@ -7,141 +12,492 @@
       tabindex="0"
       aria-label="Đóng cửa sổ"
       (keydown.enter)="onClose()"
-      (keydown.space)="onClose(); $event.preventDefault()">
-    </div>
-    <div class="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-fade-in-up z-10">
-      <div class="shrink-0 px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white z-20">
-        <h3 class="text-xl font-black text-slate-800 tracking-tight">Chi tiết hoạt động</h3>
-        <button
-          (click)="onClose()"
-          class="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 hover:rotate-90 transition-all duration-300">
-          <i class="bi bi-x-lg font-bold"></i>
-        </button>
+      (keydown.space)="onClose(); $event.preventDefault()"
+    ></div>
+
+    <div
+      class="relative z-10 flex h-[calc(100vh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:h-[calc(100vh-2.5rem)]"
+    >
+      <div class="shrink-0 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
+        <div class="flex items-start justify-between gap-4">
+          <div class="min-w-0">
+            <p class="text-xs font-bold uppercase tracking-wide text-blue-700">
+              Thông tin kiểm duyệt
+            </p>
+            <h3 id="modal-title" class="mt-1 truncate text-lg font-black text-slate-900 sm:text-xl">
+              Chi tiết hoạt động
+            </h3>
+          </div>
+          <div class="flex shrink-0 items-center gap-2">
+            @if (activity(); as headerAct) {
+              <span
+                class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold"
+                [ngClass]="statusClasses(headerAct.status)"
+              >
+                {{ statusLabel(headerAct.status) }}
+              </span>
+            }
+            <button
+              type="button"
+              (click)="onClose()"
+              class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-rose-100 hover:text-rose-600"
+              aria-label="Đóng cửa sổ"
+            >
+              <i class="bi bi-x-lg text-sm font-bold"></i>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8 bg-slate-50/50">
-
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-50 p-4 sm:p-6">
         @if (isLoading()) {
           <div class="flex flex-col items-center justify-center py-24">
-            <div class="relative w-14 h-14 mb-5">
-              <div class="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
-              <div class="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+            <div class="relative mb-5 h-14 w-14">
+              <div class="absolute inset-0 rounded-full border-4 border-blue-100"></div>
+              <div
+                class="absolute inset-0 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"
+              ></div>
             </div>
-            <p class="text-sm font-bold text-slate-500 tracking-wide animate-pulse">Đang tải dữ liệu hoạt động...</p>
+            <p class="text-sm font-bold tracking-wide text-slate-500 animate-pulse">
+              Đang tải dữ liệu hoạt động...
+            </p>
           </div>
         } @else if (activity(); as act) {
-          @if (act.coverImage) {
-            <div class="w-full h-56 md:h-72 rounded-3xl overflow-hidden mb-8 shadow-sm border border-slate-200 relative group">
-              <img [src]="act.coverImage" alt="Cover" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
-              <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent"></div>
-            </div>
-          }
-
-          <!-- Thông tin cơ bản -->
-          <div class="flex flex-col sm:flex-row items-start gap-5 mb-8 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden shrink-0 border border-slate-100 shadow-inner bg-slate-50">
-              @if (act.thumbnail) {
-                <img [src]="act.thumbnail" alt="Thumb" class="w-full h-full object-cover">
-              } @else {
-                <i class="bi bi-image text-slate-300 text-3xl flex items-center justify-center h-full"></i>
-              }
-            </div>
-            <div class="flex-1">
-              <h2 class="text-2xl sm:text-3xl font-black text-slate-800 leading-tight mb-3">{{ act.title }}</h2>
-              <div class="flex flex-wrap gap-2 text-xs font-bold">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl border border-indigo-100/50">
-                  <i class="bi bi-diagram-3-fill"></i> {{ act.departmentName || 'Cấp Trường' }}
-                </span>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100/50">
-                  <i class="bi bi-people-fill"></i> Tối đa: {{ act.maxParticipants }} SV
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-              <h4 class="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-wider mb-5 border-b border-slate-100 pb-3">
-                <i class="bi bi-clock-history text-indigo-500 text-lg"></i> Thời gian & Địa điểm
-              </h4>
-              <div class="space-y-4 text-sm font-medium text-slate-600">
-                <div class="flex items-start gap-3">
-                  <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 mt-0.5"><i class="bi bi-calendar-event"></i></div>
-                  <div>
-                    <p class="text-xs text-slate-400 font-bold mb-0.5">Thời gian tổ chức</p>
-                    <p class="text-slate-700 font-bold">{{ act.startDate | date:'dd/MM/yyyy' }} <span class="text-slate-400 font-normal mx-1">đến</span> {{ act.endDate | date:'dd/MM/yyyy' }}</p>
+          <div class="space-y-5">
+            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div class="relative h-40 bg-slate-200 sm:h-52 lg:h-60">
+                @if (act.coverImage) {
+                  <img
+                    [src]="act.coverImage"
+                    alt="Ảnh bìa hoạt động"
+                    class="h-full w-full object-cover"
+                  />
+                  <div
+                    class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent"
+                  ></div>
+                } @else {
+                  <div
+                    class="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400"
+                  >
+                    <i class="bi bi-image text-4xl"></i>
                   </div>
-                </div>
-                <div class="flex items-start gap-3">
-                  <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center shrink-0 mt-0.5"><i class="bi bi-pencil-square"></i></div>
-                  <div>
-                    <p class="text-xs text-slate-400 font-bold mb-0.5">Thời gian đăng ký</p>
-                    <p class="text-slate-700 font-bold">{{ act.registrationStart | date:'dd/MM/yyyy' }} <span class="text-slate-400 font-normal mx-1">đến</span> {{ act.registrationEnd | date:'dd/MM/yyyy' }}</p>
-                  </div>
-                </div>
-                <div class="flex items-start gap-3">
-                  <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center shrink-0 mt-0.5"><i class="bi bi-geo-alt-fill"></i></div>
-                  <div>
-                    <p class="text-xs text-slate-400 font-bold mb-0.5">Địa điểm chính</p>
-                    <p class="text-slate-700 font-bold leading-relaxed">{{ act.location || 'Chưa cập nhật' }}</p>
+                }
+
+                <div class="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                  <div class="flex items-end gap-4">
+                    <div
+                      class="hidden h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/70 bg-white shadow-sm sm:block"
+                    >
+                      @if (act.thumbnail) {
+                        <img
+                          [src]="act.thumbnail"
+                          alt="Ảnh thu nhỏ hoạt động"
+                          class="h-full w-full object-cover"
+                        />
+                      } @else {
+                        <div
+                          class="flex h-full w-full items-center justify-center bg-slate-100 text-slate-300"
+                        >
+                          <i class="bi bi-image text-2xl"></i>
+                        </div>
+                      }
+                    </div>
+                    <div class="min-w-0 text-white">
+                      <h2 class="break-words text-2xl font-black leading-tight sm:text-3xl">
+                        {{ act.title }}
+                      </h2>
+                      <p class="mt-2 line-clamp-2 max-w-4xl text-sm font-medium text-white/90">
+                        {{ act.description || 'Chưa có mô tả ngắn.' }}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <!-- Cột Quyền lợi & Điểm -->
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-              <h4 class="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-wider mb-5 border-b border-slate-100 pb-3">
-                <i class="bi bi-gift-fill text-indigo-500 text-lg"></i> Quyền lợi (Benefits)
-              </h4>
-              @if (act.benefits && act.benefits.length > 0) {
-                <ul class="space-y-3">
-                  @for (benefit of act.benefits; track benefit.id) {
-                    <li class="flex justify-between items-center p-3.5 rounded-2xl border border-indigo-100/60 bg-indigo-50/30 hover:bg-indigo-50 transition-colors">
-                      <span class="text-sm font-bold text-slate-700 flex items-center gap-2">
-                        <i class="bi bi-check-circle-fill text-indigo-400"></i>
-                        {{ benefit.name || 'Tiêu chí #' + benefit.categoryId }}
-                      </span>
-                      <span class="px-3 py-1 bg-indigo-500 text-white text-xs font-black rounded-lg">+{{ benefit.point }} Pts</span>
-                    </li>
-                  }
-                </ul>
-              } @else {
-                <div class="flex flex-col items-center justify-center py-6 text-center">
-                  <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-2"><i class="bi bi-slash-circle text-xl"></i></div>
-                  <p class="text-sm font-bold text-slate-400">Chưa thiết lập điểm số</p>
+            <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Mã hoạt động</p>
+                <p class="mt-1 text-lg font-black text-slate-900">#{{ act.id }}</p>
+                <p class="mt-1 text-xs font-semibold text-slate-500">
+                  Học kỳ: {{ act.semesterId || 'Chưa cập nhật' }}
+                </p>
+              </div>
+              <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-xs font-bold uppercase tracking-wide text-slate-400">
+                  Số lượng tham gia
+                </p>
+                <p class="mt-1 text-lg font-black text-slate-900">
+                  {{ act.registeredCount ?? 0 }} / {{ act.maxParticipants || 'Không giới hạn' }}
+                </p>
+                <p class="mt-1 text-xs font-semibold text-slate-500">Sinh viên đã đăng ký</p>
+              </div>
+              <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Phạm vi</p>
+                <p class="mt-1 text-lg font-black text-slate-900">{{ scopeLabel(act) }}</p>
+                <p class="mt-1 break-words text-xs font-semibold text-slate-500">
+                  {{ act.departmentName || 'Cấp Trường' }}
+                </p>
+              </div>
+              <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-xs font-bold uppercase tracking-wide text-slate-400">
+                  Loại hoạt động
+                </p>
+                <p class="mt-1 text-lg font-black text-slate-900">{{ activityTypeLabel(act) }}</p>
+                <p class="mt-1 text-xs font-semibold text-slate-500">
+                  Trạng thái: {{ statusLabel(act.status) }}
+                </p>
+              </div>
+            </section>
+
+            <section class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h4
+                  class="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-sm font-black uppercase tracking-wide text-slate-800"
+                >
+                  <i class="bi bi-building text-blue-600"></i>
+                  Đơn vị tổ chức
+                </h4>
+                <div class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">Người tổ chức</p>
+                    <p class="mt-1 break-words font-bold text-slate-800">
+                      {{ act.organizer?.fullName || 'Chưa cập nhật' }}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">Mã người tổ chức</p>
+                    <p class="mt-1 font-bold text-slate-800">
+                      {{ act.organizer?.id || 'Chưa cập nhật' }}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">Đơn vị</p>
+                    <p class="mt-1 break-words font-bold text-slate-800">
+                      {{ act.departmentName || 'Cấp Trường' }}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">Mã đơn vị</p>
+                    <p class="mt-1 font-bold text-slate-800">
+                      {{ act.departmentId ?? act.organizer?.departmentId ?? 'Không có' }}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">Ngày tạo</p>
+                    <p class="mt-1 font-bold text-slate-800">
+                      {{
+                        act.createdAt ? (act.createdAt | date: 'dd/MM/yyyy HH:mm') : 'Chưa cập nhật'
+                      }}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">Người tạo</p>
+                    <p class="mt-1 break-words font-bold text-slate-800">
+                      {{ act.createdBy?.fullName || act.createdBy?.username || 'Chưa cập nhật' }}
+                    </p>
+                  </div>
                 </div>
-              }
-            </div>
-          </div>
+              </div>
 
-          <!-- Nội dung mô tả -->
-          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-            <h4 class="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-wider mb-5 border-b border-slate-100 pb-3">
-              <i class="bi bi-card-text text-indigo-500 text-lg"></i> Nội dung chi tiết
-            </h4>
-            <div class="prose prose-sm prose-slate max-w-none text-slate-600 font-medium whitespace-pre-wrap leading-relaxed">
-              {{ act.content || act.description || 'Không có nội dung chi tiết.' }}
-            </div>
-          </div>
+              <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h4
+                  class="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-sm font-black uppercase tracking-wide text-slate-800"
+                >
+                  <i class="bi bi-clock-history text-blue-600"></i>
+                  Thời gian và địa điểm
+                </h4>
+                <div class="space-y-4 text-sm">
+                  <div class="flex items-start gap-3">
+                    <div
+                      class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600"
+                    >
+                      <i class="bi bi-calendar-event"></i>
+                    </div>
+                    <div>
+                      <p class="text-xs font-bold text-slate-400">Thời gian tổ chức</p>
+                      <p class="mt-1 font-bold text-slate-800">
+                        {{
+                          act.startDate
+                            ? (act.startDate | date: 'dd/MM/yyyy HH:mm')
+                            : 'Chưa cập nhật'
+                        }}
+                        <span class="mx-1 font-medium text-slate-400">đến</span>
+                        {{
+                          act.endDate ? (act.endDate | date: 'dd/MM/yyyy HH:mm') : 'Chưa cập nhật'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <div
+                      class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600"
+                    >
+                      <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <div>
+                      <p class="text-xs font-bold text-slate-400">Thời gian đăng ký</p>
+                      <p class="mt-1 font-bold text-slate-800">
+                        {{
+                          act.registrationStart
+                            ? (act.registrationStart | date: 'dd/MM/yyyy HH:mm')
+                            : 'Chưa cập nhật'
+                        }}
+                        <span class="mx-1 font-medium text-slate-400">đến</span>
+                        {{
+                          act.registrationEnd
+                            ? (act.registrationEnd | date: 'dd/MM/yyyy HH:mm')
+                            : 'Chưa cập nhật'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <div
+                      class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-600"
+                    >
+                      <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <div>
+                      <p class="text-xs font-bold text-slate-400">Địa điểm chính</p>
+                      <p class="mt-1 break-words font-bold leading-relaxed text-slate-800">
+                        {{ act.location || 'Chưa cập nhật' }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
 
+            <section class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h4
+                  class="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-sm font-black uppercase tracking-wide text-slate-800"
+                >
+                  <i class="bi bi-list-task text-blue-600"></i>
+                  Lịch trình chi tiết
+                </h4>
+                @if (act.schedules && act.schedules.length > 0) {
+                  <div class="max-h-72 space-y-3 overflow-y-auto pr-1">
+                    @for (schedule of act.schedules; track schedule.id || schedule.title) {
+                      <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="break-words font-bold text-slate-900">{{ schedule.title }}</p>
+                        <p class="mt-2 text-sm font-semibold text-slate-600">
+                          {{ schedule.startTime | date: 'dd/MM/yyyy HH:mm' }}
+                          <span class="mx-1 text-slate-400">đến</span>
+                          {{ schedule.endTime | date: 'dd/MM/yyyy HH:mm' }}
+                        </p>
+                        <p class="mt-1 break-words text-sm font-medium text-slate-500">
+                          {{ schedule.location || act.location || 'Chưa cập nhật địa điểm' }}
+                        </p>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div
+                    class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center text-sm font-bold text-slate-400"
+                  >
+                    Chưa có lịch trình chi tiết.
+                  </div>
+                }
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h4
+                  class="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-sm font-black uppercase tracking-wide text-slate-800"
+                >
+                  <i class="bi bi-gift-fill text-blue-600"></i>
+                  Quyền lợi và điểm rèn luyện
+                </h4>
+                @if (act.benefits && act.benefits.length > 0) {
+                  <div class="max-h-72 space-y-3 overflow-y-auto pr-1">
+                    @for (benefit of act.benefits; track benefit.id || benefit.categoryId) {
+                      <div class="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                        <div class="flex items-start justify-between gap-3">
+                          <p
+                            class="min-w-0 break-words text-sm font-bold leading-relaxed text-slate-800"
+                          >
+                            {{
+                              benefit.categoryName ||
+                                benefit.name ||
+                                'Tiêu chí #' + benefit.categoryId
+                            }}
+                          </p>
+                          <span
+                            class="shrink-0 rounded-lg bg-blue-600 px-3 py-1 text-xs font-black text-white"
+                            >+{{ benefit.point ?? 0 }} điểm</span
+                          >
+                        </div>
+                        <div class="mt-3 flex flex-wrap gap-2 text-xs font-bold text-slate-500">
+                          <span class="rounded-lg bg-white px-2.5 py-1 ring-1 ring-slate-200"
+                            >Mã tiêu chí: {{ benefit.categoryId || 'N/A' }}</span
+                          >
+                          <span class="rounded-lg bg-white px-2.5 py-1 ring-1 ring-slate-200"
+                            >Loại: {{ benefit.type ?? 'N/A' }}</span
+                          >
+                        </div>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div
+                    class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center text-sm font-bold text-slate-400"
+                  >
+                    Chưa thiết lập điểm số.
+                  </div>
+                }
+              </div>
+            </section>
+
+            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h4
+                class="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-sm font-black uppercase tracking-wide text-slate-800"
+              >
+                <i class="bi bi-card-text text-blue-600"></i>
+                Nội dung hoạt động
+              </h4>
+              <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p class="text-xs font-bold uppercase tracking-wide text-slate-400">Mô tả ngắn</p>
+                  <p
+                    class="mt-2 whitespace-pre-wrap break-words text-sm font-semibold leading-relaxed text-slate-700"
+                  >
+                    {{ act.description || 'Chưa có mô tả ngắn.' }}
+                  </p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p class="text-xs font-bold uppercase tracking-wide text-slate-400">
+                    Nội dung chi tiết
+                  </p>
+                  <div
+                    class="mt-2 max-h-80 overflow-y-auto whitespace-pre-wrap break-words pr-1 text-sm font-medium leading-relaxed text-slate-700"
+                  >
+                    {{ act.content || 'Không có nội dung chi tiết.' }}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h4
+                  class="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-sm font-black uppercase tracking-wide text-slate-800"
+                >
+                  <i class="bi bi-link-45deg text-blue-600"></i>
+                  Liên kết và mã QR
+                </h4>
+                <div class="space-y-3 text-sm">
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">Liên kết nguồn</p>
+                    @if (act.sourceLink) {
+                      <a
+                        [href]="act.sourceLink"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="mt-1 block break-all font-bold text-blue-700 hover:text-blue-800 hover:underline"
+                      >
+                        {{ act.sourceLink }}
+                      </a>
+                    } @else {
+                      <p class="mt-1 font-bold text-slate-500">Không có</p>
+                    }
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">QR code token</p>
+                    <p
+                      class="mt-1 break-all rounded-lg bg-slate-50 px-3 py-2 font-mono text-xs font-bold text-slate-700 ring-1 ring-slate-200"
+                    >
+                      {{ act.qrCodeToken || 'Chưa có token' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h4
+                  class="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 text-sm font-black uppercase tracking-wide text-slate-800"
+                >
+                  <i class="bi bi-shield-check text-blue-600"></i>
+                  Thông tin xử lý
+                </h4>
+                <div class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">Trạng thái</p>
+                    <p class="mt-1 font-bold text-slate-800">{{ statusLabel(act.status) }}</p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">Thời điểm xử lý</p>
+                    <p class="mt-1 font-bold text-slate-800">
+                      {{
+                        act.handledAt ? (act.handledAt | date: 'dd/MM/yyyy HH:mm') : 'Chưa xử lý'
+                      }}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">Người xử lý</p>
+                    <p class="mt-1 break-words font-bold text-slate-800">
+                      {{ act.handledBy?.fullName || act.handledBy?.username || 'Chưa xử lý' }}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-bold text-slate-400">Lý do</p>
+                    <p class="mt-1 break-words font-bold text-slate-800">
+                      {{ act.reason || 'Không có' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
         } @else {
           <div class="flex flex-col items-center justify-center py-20 text-center">
-            <i class="bi bi-exclamation-triangle-fill text-4xl text-amber-400 mb-3"></i>
-            <h3 class="text-lg font-black text-slate-700">Không tìm thấy dữ liệu!</h3>
-            <p class="text-sm text-slate-500 font-medium mt-1">Vui lòng thử lại sau.</p>
+            <i class="bi bi-exclamation-triangle-fill mb-3 text-4xl text-amber-400"></i>
+            <h3 class="text-lg font-black text-slate-700">Không tìm thấy dữ liệu</h3>
+            <p class="mt-1 text-sm font-medium text-slate-500">Vui lòng thử lại sau.</p>
           </div>
         }
       </div>
 
-      <div class="shrink-0 px-6 py-4 border-t border-slate-100 bg-white flex justify-end z-20">
-        <button
-          (click)="onClose()"
-          class="px-8 py-2.5 rounded-xl font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition-colors text-sm">
-          Đóng cửa sổ
-        </button>
+      <div class="shrink-0 border-t border-slate-200 bg-white px-5 py-4 sm:px-6">
+        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p class="text-xs font-semibold text-slate-500">
+            @if (activity(); as footerAct) {
+              Trạng thái hiện tại: {{ statusLabel(footerAct.status) }}
+            } @else {
+              Đang chờ dữ liệu hoạt động
+            }
+          </p>
+          <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              (click)="onClose()"
+              class="rounded-xl border border-slate-200 bg-slate-100 px-6 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-200"
+            >
+              Đóng cửa sổ
+            </button>
+            @if (activity(); as footerAct) {
+              @if (footerAct.status === 0) {
+                <button
+                  type="button"
+                  (click)="onReject()"
+                  class="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm shadow-rose-100 transition-colors hover:bg-rose-700"
+                >
+                  <i class="bi bi-x-circle"></i>
+                  Từ chối
+                </button>
+                <button
+                  type="button"
+                  (click)="onApprove()"
+                  class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm shadow-emerald-100 transition-colors hover:bg-emerald-700"
+                >
+                  <i class="bi bi-check-circle"></i>
+                  Duyệt
+                </button>
+              }
+            }
+          </div>
+        </div>
       </div>
-
     </div>
   </div>
 </div>

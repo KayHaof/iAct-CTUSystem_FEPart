@@ -142,8 +142,8 @@
                     <p class="truncate max-w-[250px]" [title]="item.departmentName">
                       <span class="font-bold text-slate-600">Đơn vị:</span> {{ item.departmentName || 'Chưa cập nhật' }}
                     </p>
-                    <p class="truncate max-w-[250px]" [title]="item.organizer?.name || item.createdBy?.fullName">
-                      <span class="font-bold text-slate-600">Phụ trách:</span> {{ item.organizer?.name || item.createdBy?.fullName || 'Chưa phân công' }}
+                    <p class="truncate max-w-[250px]" [title]="item.organizer?.fullName || item.createdBy?.fullName">
+                      <span class="font-bold text-slate-600">Phụ trách:</span> {{ item.organizer?.fullName || item.createdBy?.fullName || 'Chưa phân công' }}
                     </p>
                   </div>
                 </div>

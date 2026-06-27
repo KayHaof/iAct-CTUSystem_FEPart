@@ -49,7 +49,7 @@ export interface Activity {
 
   organizer?: {
     id: number;
-    name: string;
+    fullName: string;
     departmentId?: number | null;
     representativeId?: number | null;
   };

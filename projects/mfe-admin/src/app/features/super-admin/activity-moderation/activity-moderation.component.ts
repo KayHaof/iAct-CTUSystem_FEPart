@@ -187,6 +187,16 @@ export class ActivityModerationComponent implements OnInit {
     this.toggleModal('view', true);
   }
 
+  handleViewApprove(activity: Activity): void {
+    this.toggleModal('view', false);
+    this.onApproveActivity(activity);
+  }
+
+  handleViewReject(activity: Activity): void {
+    this.toggleModal('view', false);
+    this.openRejectModal(activity);
+  }
+
   openViewReasonModal(activity: Activity): void {
     this.selectedActivityForAction.set(activity);
     this.toggleModal('viewReason', true);

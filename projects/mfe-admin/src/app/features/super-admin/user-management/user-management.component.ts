@@ -1,9 +1,23 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AlertService, PaginationComponent, TableContainerComponent } from '@my-mfe/ui';
-import { ApiResponse, ClassInfo, Department, MajorInfo, PageDTO, UserInfo } from '@my-mfe/interface';
+import {
+  ApiResponse,
+  ClassInfo,
+  Department,
+  MajorInfo,
+  PageDTO,
+  UserInfo,
+} from '@my-mfe/interface';
 import Swal from 'sweetalert2';
 
 import { AdminUserService } from '../services/admin-user.service';
@@ -62,15 +76,16 @@ export class UserManagementComponent implements OnInit {
   isViewModalOpen = signal(false);
   viewingUser = signal<UserInfo | null>(null);
   isAddModalOpen = signal(false);
+  isCreatingUser = signal(false);
 
   cohorts = [
-    { label: 'K46 (2020)', value: '46' },
-    { label: 'K47 (2021)', value: '47' },
-    { label: 'K48 (2022)', value: '48' },
-    { label: 'K49 (2023)', value: '49' },
-    { label: 'K50 (2024)', value: '50' },
-    { label: 'K51 (2025)', value: '51' },
-    { label: 'K52 (2026)', value: '52' },
+    { label: 'K46 (2020)', value: 'K46' },
+    { label: 'K47 (2021)', value: 'K47' },
+    { label: 'K48 (2022)', value: 'K48' },
+    { label: 'K49 (2023)', value: 'K49' },
+    { label: 'K50 (2024)', value: 'K50' },
+    { label: 'K51 (2025)', value: 'K51' },
+    { label: 'K52 (2026)', value: 'K52' },
   ];
   selectedFilterCohort = signal('');
   selectedFilterDept = signal<number | ''>('');
@@ -120,6 +135,7 @@ export class UserManagementComponent implements OnInit {
   }
 
   closeAddModal() {
+    this.isCreatingUser.set(false);
     this.isAddModalOpen.set(false);
   }
 
@@ -401,6 +417,8 @@ export class UserManagementComponent implements OnInit {
     classId?: number | null;
     description?: string;
   }) {
+    if (this.isCreatingUser()) return;
+
     const nameParts = newUserData.fullName.trim().split(/\s+/);
     const firstName = nameParts[0] || newUserData.fullName.trim();
     const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
@@ -417,9 +435,12 @@ export class UserManagementComponent implements OnInit {
       description: newUserData.description?.trim() || undefined,
     };
 
+    this.isCreatingUser.set(true);
+
     this.adminUserService.registerUser(payload).subscribe({
       next: () => {
         this.alertService.success(`Tạo tài khoản ${payload.username} thành công!`);
+        this.isCreatingUser.set(false);
         this.closeAddModal();
         this.loadUsers();
         this.loadCounts();
@@ -435,6 +456,7 @@ export class UserManagementComponent implements OnInit {
           }
         }
         this.alertService.error(errorMsg);
+        this.isCreatingUser.set(false);
       },
     });
   }
@@ -478,7 +500,10 @@ export class UserManagementComponent implements OnInit {
     if (pageData && !Array.isArray(pageData)) {
       return {
         data: (pageData as PageDTO<UserInfo>).data || [],
-        total: (pageData as PageDTO<UserInfo>).totalRows ?? (pageData as PageDTO<UserInfo>).data?.length ?? 0,
+        total:
+          (pageData as PageDTO<UserInfo>).totalRows ??
+          (pageData as PageDTO<UserInfo>).data?.length ??
+          0,
       };
     }
 

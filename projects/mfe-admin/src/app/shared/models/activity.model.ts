@@ -2,6 +2,7 @@ export interface BenefitDto {
   id?: number;
   type?: number;
   categoryId?: number;
+  categoryName?: string;
   point?: number;
   name?: string;
   description?: string;
@@ -26,10 +27,9 @@ export interface UserDto {
 
 export interface OrganizerMock {
   id: number;
-  name?: string;
+  fullName?: string;
   username?: string;
   email?: string;
-  fullName?: string;
   avatarUrl?: string | null;
 }
 
@@ -85,22 +85,24 @@ export interface Activity {
   startDate: string;
   endDate: string;
   semesterId: number;
-  departmentName: string;
+  departmentId?: number | null;
+  departmentName: string | null;
   organizer?: {
     id: number;
-    name: string;
-    departmentId?: number;
+    fullName: string;
+    departmentId?: number | null;
+    representativeId?: number | null;
   };
   qrCodeToken: string | null;
   status: number;
-  createdBy?: UserDto;
+  createdBy?: UserDto | null;
   benefits?: BenefitDto[];
   registeredCount?: number;
   createdAt?: string;
 
   schedules?: ActivityScheduleDto[];
 
-  handledAt: Date;
+  handledAt?: string | Date | null;
   handledBy?: UserDto | null;
-  reason?: string;
+  reason?: string | null;
 }

@@ -23,6 +23,8 @@ import { ApiResponse } from '@my-mfe/interface';
 export class ViewActivityModalComponent implements OnInit {
   activityId = input.required<number>();
   modalClosed = output<void>();
+  approve = output<Activity>();
+  reject = output<Activity>();
 
   private moderationService = inject(ActivityModerationService);
 
@@ -48,5 +50,53 @@ export class ViewActivityModalComponent implements OnInit {
 
   onClose() {
     this.modalClosed.emit();
+  }
+
+  onApprove(): void {
+    const currentActivity = this.activity();
+    if (currentActivity) {
+      this.approve.emit(currentActivity);
+    }
+  }
+
+  onReject(): void {
+    const currentActivity = this.activity();
+    if (currentActivity) {
+      this.reject.emit(currentActivity);
+    }
+  }
+
+  statusLabel(status: number | null | undefined): string {
+    switch (status) {
+      case 1:
+        return 'Đã duyệt';
+      case 2:
+        return 'Từ chối';
+      case 0:
+        return 'Chờ duyệt';
+      default:
+        return 'Không xác định';
+    }
+  }
+
+  statusClasses(status: number | null | undefined): string {
+    switch (status) {
+      case 1:
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 2:
+        return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 0:
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      default:
+        return 'bg-slate-50 text-slate-600 border-slate-200';
+    }
+  }
+
+  scopeLabel(activity: Activity): string {
+    return activity.isFaculty ? 'Cấp Khoa' : 'Cấp Trường';
+  }
+
+  activityTypeLabel(activity: Activity): string {
+    return activity.isExternal ? 'Hoạt động ngoài hệ thống' : 'Hoạt động nội bộ';
   }
 }

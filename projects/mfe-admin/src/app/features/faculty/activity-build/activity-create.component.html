@@ -252,7 +252,6 @@
                         <p class="truncate font-bold text-slate-900">
                           {{
                             selectedOrganizer()?.fullName ||
-                              selectedOrganizer()?.name ||
                               selectedOrganizer()?.username
                           }}
                         </p>
@@ -721,7 +720,6 @@
                         [id]="'category_id_' + i"
                         formControlName="category_id"
                         (change)="onBenefitCategoryChange(i)"
-                        [disabled]="!benefit.get('root_category_id')?.value"
                         class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 outline-none focus:ring-2 focus:ring-blue-100"
                       >
                         <option [ngValue]="null" disabled>-- Chọn tiêu chí --</option>
@@ -754,7 +752,6 @@
                         min="0"
                         [max]="getSelectedCategoryMaxPoint(i)"
                         formControlName="point"
-                        [disabled]="!benefit.get('category_id')?.value"
                         class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 outline-none focus:ring-2 focus:ring-blue-100"
                       />
                       @if (getSelectedCategoryMaxPoint(i) !== null) {
@@ -846,7 +843,6 @@
                     <dd class="mt-1 font-semibold text-slate-800">
                       {{
                         selectedOrganizer()?.fullName ||
-                          selectedOrganizer()?.name ||
                           selectedOrganizer()?.email ||
                           'Chưa chọn'
                       }}

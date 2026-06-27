@@ -205,13 +205,7 @@ export class ActivityCreateComponent implements OnInit {
           if (act.benefits && act.benefits.length > 0) {
             this.benefits.clear();
             act.benefits.forEach((benefit: BenefitDto) => {
-              const benefitGroup = this.fb.group({
-                root_category_id: [null, Validators.required],
-                category_id: [benefit.categoryId, Validators.required],
-                point: [benefit.point, [Validators.required, Validators.min(0)]],
-                type: [benefit.type || 1, Validators.required],
-              });
-              this.benefits.push(benefitGroup);
+              this.benefits.push(this.createBenefitGroup(benefit));
             });
             this.hydrateBenefitSelections();
           }
@@ -233,12 +227,12 @@ export class ActivityCreateComponent implements OnInit {
           if (act.thumbnail) this.thumbPreview.set(act.thumbnail);
 
           if (act.organizer?.id) {
+            const organizerFullName = act.organizer.fullName || 'Người phụ trách';
             this.selectedOrganizer.set({
               id: act.organizer.id,
-              name: act.organizer.name,
               username: '...',
               email: 'Đang lấy thông tin chi tiết...',
-              fullName: act.organizer.name || 'Người phụ trách',
+              fullName: organizerFullName,
               avatarUrl: null,
             });
 
@@ -281,14 +275,7 @@ export class ActivityCreateComponent implements OnInit {
       this.alertService.error('Hệ thống chưa cấu hình đầy đủ 5 nhóm tiêu chí I, II, III, IV và V.');
       return;
     }
-    this.benefits.push(
-      this.fb.group({
-        root_category_id: [null, Validators.required],
-        category_id: [null, Validators.required],
-        point: [null, [Validators.required, Validators.min(0)]],
-        type: [1, Validators.required],
-      }),
-    );
+    this.benefits.push(this.createBenefitGroup());
   }
   removeBenefit(index: number) {
     this.benefits.removeAt(index);
@@ -296,15 +283,31 @@ export class ActivityCreateComponent implements OnInit {
 
   onRootCategoryChange(index: number): void {
     const benefit = this.benefits.at(index);
-    benefit.get('category_id')?.reset(null);
-    benefit.get('point')?.reset(null);
+    const rootCategoryId = benefit.get('root_category_id')?.value as number | null;
+    const categoryControl = benefit.get('category_id');
+    const pointControl = benefit.get('point');
+
+    categoryControl?.reset(null);
+    pointControl?.reset(null);
+    pointControl?.disable();
+    if (rootCategoryId) {
+      categoryControl?.enable();
+    } else {
+      categoryControl?.disable();
+    }
     this.applyPointValidators(index, null);
   }
 
   onBenefitCategoryChange(index: number): void {
     const benefit = this.benefits.at(index);
     const categoryId = benefit.get('category_id')?.value as number | null;
-    benefit.get('point')?.reset(null);
+    const pointControl = benefit.get('point');
+    pointControl?.reset(null);
+    if (categoryId) {
+      pointControl?.enable();
+    } else {
+      pointControl?.disable();
+    }
     this.applyPointValidators(index, categoryId);
   }
 
@@ -435,7 +438,6 @@ export class ActivityCreateComponent implements OnInit {
           }
           this.selectedOrganizer.set({
             id: user.id,
-            name: user.fullName || user.username,
             username: user.username,
             email: user.email,
             fullName: user.fullName || user.username,
@@ -551,6 +553,18 @@ export class ActivityCreateComponent implements OnInit {
     pointControl?.updateValueAndValidity();
   }
 
+  private createBenefitGroup(benefit?: BenefitDto): FormGroup {
+    return this.fb.group({
+      root_category_id: [null, Validators.required],
+      category_id: [{ value: benefit?.categoryId ?? null, disabled: true }, Validators.required],
+      point: [
+        { value: benefit?.point ?? null, disabled: true },
+        [Validators.required, Validators.min(0)],
+      ],
+      type: [benefit?.type || 1, Validators.required],
+    });
+  }
+
   private hydrateBenefitSelections(): void {
     if (!this.categoryTree().length) return;
     this.benefits.controls.forEach((benefit, index) => {
@@ -558,7 +572,14 @@ export class ActivityCreateComponent implements OnInit {
       if (!categoryId) return;
       const path = this.findCategoryPath(categoryId);
       const rootCategory = path[0];
+      if (!rootCategory) {
+        benefit.get('category_id')?.disable();
+        benefit.get('point')?.disable();
+        return;
+      }
       benefit.get('root_category_id')?.setValue(rootCategory?.id || null, { emitEvent: false });
+      benefit.get('category_id')?.enable({ emitEvent: false });
+      benefit.get('point')?.enable({ emitEvent: false });
       this.applyPointValidators(index, categoryId);
     });
   }
@@ -697,7 +718,7 @@ export class ActivityCreateComponent implements OnInit {
       return;
     }
 
-    const data = this.activityForm.value;
+    const data = this.activityForm.getRawValue();
     const currentOrganizer = this.selectedOrganizer();
     const finalStatus = requestedStatus;
 

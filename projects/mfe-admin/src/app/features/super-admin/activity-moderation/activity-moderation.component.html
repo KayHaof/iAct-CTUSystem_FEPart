@@ -47,6 +47,8 @@
 @if (modalStates().view && selectedActivityForAction()) {
   <app-view-activity-modal
     [activityId]="selectedActivityForAction()!.id"
+    (approve)="handleViewApprove($event)"
+    (reject)="handleViewReject($event)"
     (modalClosed)="toggleModal('view', false)">
   </app-view-activity-modal>
 }

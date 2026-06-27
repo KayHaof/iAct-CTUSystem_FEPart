@@ -437,6 +437,7 @@
 <app-add-user-modal
   [isOpen]="isAddModalOpen()"
   [departments]="departments()"
+  [isSaving]="isCreatingUser()"
   (closeModal)="closeAddModal()"
   (saveUser)="handleSaveNewUser($event)"
 ></app-add-user-modal>

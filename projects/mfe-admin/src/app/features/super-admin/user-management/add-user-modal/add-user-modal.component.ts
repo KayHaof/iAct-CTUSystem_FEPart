@@ -43,7 +43,8 @@ export class AddUserModalComponent {
 
   private _isOpen = false;
 
-  isSaving = signal(false);
+  @Input() isSaving = false;
+
   addMajors = signal<MajorInfo[]>([]);
   addClasses = signal<ClassInfo[]>([]);
   showPassword = signal(false);
@@ -57,7 +58,6 @@ export class AddUserModalComponent {
     this._isOpen = value;
     if (!value) {
       this.resetForm();
-      this.isSaving.set(false);
     }
   }
 
@@ -151,8 +151,7 @@ export class AddUserModalComponent {
   }
 
   submit() {
-    if (!this.isFormValid()) return;
-    this.isSaving.set(true);
+    if (!this.isFormValid() || this.isSaving) return;
     this.saveUser.emit({ ...this.newUser });
   }
 

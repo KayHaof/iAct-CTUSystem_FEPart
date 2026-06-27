@@ -252,10 +252,10 @@
         <button
           type="button"
           (click)="submit()"
-          [disabled]="!isFormValid() || isSaving()"
+          [disabled]="!isFormValid() || isSaving"
           class="btn-primary"
         >
-          @if (isSaving()) {
+          @if (isSaving) {
             <i class="bi bi-arrow-repeat spin-icon"></i>
             Đang tạo
           } @else {
