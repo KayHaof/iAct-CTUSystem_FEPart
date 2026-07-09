@@ -14,6 +14,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Activity } from '../../../shared/models/activity.model';
 import { ActivityService } from '../services/activity.service';
 import { AlertService, ConfirmService } from '@my-mfe/ui';
+import { ApiResponse } from '@my-mfe/interface';
 
 @Component({
   selector: 'app-activity-management',
@@ -138,8 +139,8 @@ export class ActivityManagementComponent implements OnInit {
       .getQrCode(act.id)
       .pipe(finalize(() => this.isGeneratingQr.set(false)))
       .subscribe({
-        next: (res: any) => {
-          this.qrCodeImage.set(res.data);
+        next: (res: ApiResponse<string>) => {
+          this.qrCodeImage.set(res.data ?? null);
         },
         error: (err: HttpErrorResponse) => {
           console.error('Lỗi khi tải mã QR:', err);

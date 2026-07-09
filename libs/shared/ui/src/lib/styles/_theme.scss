@@ -106,6 +106,13 @@
   --content-max-width: #{$content-max-width};
   --page-gutter: clamp(1rem, 2vw, 2rem);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  // Student page typography contract
+  --student-title-size: clamp(1.75rem, 1.15rem + 1.4vw, 2rem);
+  --student-title-line: 1.18;
+  --student-title-weight: 850;
+  --student-eyebrow-size: 0.75rem;
+  --student-subtitle-size: 0.9375rem;
 }
 
 // === Backward Compatibility - theme-* aliases ===

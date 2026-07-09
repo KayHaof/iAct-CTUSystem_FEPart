@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 
 import { UserService } from '@my-mfe/auth';
 import { LayoutService } from '../layout.service';
+import { NotificationBellComponent } from '../../components/notification-bell/notification-bell.component';
 
 @Component({
   selector: 'lib-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NotificationBellComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

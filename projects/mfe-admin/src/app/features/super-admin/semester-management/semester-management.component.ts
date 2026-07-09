@@ -114,7 +114,10 @@ export class SemesterManagementComponent implements OnInit {
     return dropdown === 'activeFilter' || dropdown === 'lockedFilter' ? dropdown : null;
   });
 
-  public formDropdown = computed<import('./components/semester-form-modal/semester-form-modal.component').SemesterFormDropdownKey | null>(() => {
+  public formDropdown = computed<
+    | import('./components/semester-form-modal/semester-form-modal.component').SemesterFormDropdownKey
+    | null
+  >(() => {
     const dropdown = this.openDropdown();
     return dropdown === 'statusForm' ? dropdown : null;
   });

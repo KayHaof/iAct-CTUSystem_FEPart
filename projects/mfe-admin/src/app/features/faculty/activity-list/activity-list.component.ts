@@ -13,9 +13,17 @@ import {
   PageHeaderComponent,
 } from '@my-mfe/ui';
 import { CloudinaryPathPipe } from '@my-mfe/data-access-media';
+import { NotificationService } from '@my-mfe/data-access-notification';
 import { Activity } from '../../../shared/models/activity.model';
 import { ActivityService } from '../services/activity.service';
-import { PageDTO } from '@my-mfe/interface';
+import { ParticipantService } from '../services/participant.service';
+import { PageDTO, RegistrationResponse, UrgentNotificationRequest } from '@my-mfe/interface';
+
+interface ActivityNotificationForm {
+  title: string;
+  message: string;
+  priority: 1 | 2 | 3;
+}
 
 @Component({
   selector: 'app-activity-list',
@@ -36,6 +44,8 @@ import { PageDTO } from '@my-mfe/interface';
 export class ActivityListComponent implements OnInit {
   private router = inject(Router);
   private activityService = inject(ActivityService);
+  private participantService = inject(ParticipantService);
+  private notificationService = inject(NotificationService);
   private alertService = inject(AlertService);
   private confirmService = inject(ConfirmService);
 
@@ -50,6 +60,15 @@ export class ActivityListComponent implements OnInit {
   totalRows = signal(0);
   totalPage = signal(0);
   activities = signal<Activity[]>([]);
+  selectedNotificationActivity = signal<Activity | null>(null);
+  isSendingNotification = signal(false);
+  recipientCountPreview = signal<number | null>(null);
+
+  notificationForm: ActivityNotificationForm = {
+    title: '',
+    message: '',
+    priority: 2,
+  };
 
   private searchTimeout?: ReturnType<typeof setTimeout>;
 
@@ -148,6 +167,114 @@ export class ActivityListComponent implements OnInit {
 
   editActivity(id: number): void {
     this.router.navigate(['/admin/org/activities/edit', id]);
+  }
+
+  openNotificationModal(activity: Activity): void {
+    if (activity.status !== 1) {
+      this.alertService.warning('Chỉ có thể gửi thông báo cho hoạt động đã được duyệt.');
+      return;
+    }
+
+    this.selectedNotificationActivity.set(activity);
+    this.recipientCountPreview.set(activity.registeredCount ?? null);
+    this.notificationForm = {
+      title: `Thông báo về hoạt động: ${activity.title}`,
+      message: '',
+      priority: 2,
+    };
+  }
+
+  closeNotificationModal(): void {
+    if (this.isSendingNotification()) {
+      return;
+    }
+
+    this.selectedNotificationActivity.set(null);
+    this.recipientCountPreview.set(null);
+    this.notificationForm = {
+      title: '',
+      message: '',
+      priority: 2,
+    };
+  }
+
+  canSendNotification(): boolean {
+    return !!(
+      this.selectedNotificationActivity() &&
+      this.notificationForm.title.trim() &&
+      this.notificationForm.message.trim() &&
+      !this.isSendingNotification()
+    );
+  }
+
+  sendActivityNotification(): void {
+    const activity = this.selectedNotificationActivity();
+    if (!activity || !this.canSendNotification()) {
+      return;
+    }
+
+    const pageSize = Math.max(activity.registeredCount || 0, activity.maxParticipants || 0, 1000);
+    this.isSendingNotification.set(true);
+
+    this.participantService
+      .getParticipantsByActivity(activity.id, '', 'ALL', 1, pageSize)
+      .subscribe({
+        next: (response) => {
+          const participants = response.data?.data || [];
+          const recipientIds = this.getActiveRecipientIds(participants);
+
+          if (recipientIds.length === 0) {
+            this.isSendingNotification.set(false);
+            this.alertService.warning(
+              'Hoạt động này chưa có sinh viên đăng ký hợp lệ để nhận thông báo.',
+            );
+            return;
+          }
+
+          const payload: UrgentNotificationRequest = {
+            title: this.notificationForm.title.trim(),
+            message: this.notificationForm.message.trim(),
+            priority: this.notificationForm.priority,
+            targetType: 'ACTIVITY',
+            targetId: activity.id,
+            activityId: activity.id,
+            userIds: recipientIds,
+          };
+
+          this.notificationService.sendUrgentNotification(payload).subscribe({
+            next: (res) => {
+              const count = res.data ?? res.result ?? recipientIds.length;
+              this.alertService.success(`Đã gửi thông báo đến ${count} sinh viên đăng ký.`);
+              this.isSendingNotification.set(false);
+              this.closeNotificationModal();
+            },
+            error: (err: HttpErrorResponse) => {
+              this.isSendingNotification.set(false);
+              this.alertService.error(
+                err.error?.message || 'Không thể gửi thông báo. Vui lòng thử lại.',
+              );
+            },
+          });
+        },
+        error: (err: HttpErrorResponse) => {
+          this.isSendingNotification.set(false);
+          this.alertService.error(
+            err.error?.message || 'Không thể tải danh sách sinh viên đã đăng ký.',
+          );
+        },
+      });
+  }
+
+  private getActiveRecipientIds(participants: RegistrationResponse[]): string[] {
+    return [
+      ...new Set(
+        participants
+          .filter((participant) => participant.status !== 2)
+          .map((participant) => participant.studentId)
+          .filter((studentId): studentId is number => typeof studentId === 'number')
+          .map((studentId) => studentId.toString()),
+      ),
+    ];
   }
 
   async deleteActivity(id: number): Promise<void> {

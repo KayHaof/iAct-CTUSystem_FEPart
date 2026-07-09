@@ -1,7 +1,42 @@
-import { Component, OnInit, signal, ChangeDetectionStrategy, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { UserService } from '@my-mfe/auth';
+
 import { DashboardService, RecentActivity } from './dashboard.service';
+
+interface DashboardCopy {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  roleLabel: string;
+  recentTitle: string;
+  recentLink: string;
+  primaryAction: QuickAction;
+}
+
+interface DashboardStatCard {
+  label: string;
+  value: number;
+  meta: string;
+  icon: string;
+  tone: 'primary' | 'success' | 'info' | 'warning' | 'slate';
+}
+
+interface QuickAction {
+  label: string;
+  description: string;
+  icon: string;
+  link: string;
+  tone: 'primary' | 'success' | 'info' | 'warning' | 'teal' | 'slate';
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -12,16 +47,190 @@ import { DashboardService, RecentActivity } from './dashboard.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
-  private dashboardService = inject(DashboardService);
+  private readonly dashboardService = inject(DashboardService);
+  private readonly userService = inject(UserService);
 
-  isLoading = signal(true);
-  recentActivities = signal<RecentActivity[]>([]);
-  totalActivities = signal(0);
-  activeActivities = signal(0);
-  pendingActivities = signal(0);
-  totalStudents = signal(0);
-  totalDepartments = signal(0);
-  totalMajors = signal(0);
+  readonly isLoading = signal(true);
+  readonly recentActivities = signal<RecentActivity[]>([]);
+  readonly totalActivities = signal(0);
+  readonly activeActivities = signal(0);
+  readonly pendingActivities = signal(0);
+  readonly totalStudents = signal(0);
+  readonly totalDepartments = signal(0);
+  readonly totalMajors = signal(0);
+
+  readonly isAdminRole = computed(() => this.userService.currentUser()?.roleType === 3);
+
+  readonly dashboardCopy = computed<DashboardCopy>(() => {
+    if (this.isAdminRole()) {
+      return {
+        eyebrow: 'Quản trị hệ thống',
+        title: 'Tổng quan vận hành toàn trường',
+        subtitle: 'Theo dõi dữ liệu nền, hoạt động cần duyệt và các cấu hình dùng chung của iAct.',
+        roleLabel: 'Admin',
+        recentTitle: 'Hoạt động cần theo dõi',
+        recentLink: '/admin/activity-moderation',
+        primaryAction: {
+          label: 'Duyệt hoạt động',
+          description: 'Xem các đề xuất từ đơn vị',
+          icon: 'bi bi-check2-circle',
+          link: '/admin/activity-moderation',
+          tone: 'success',
+        },
+      };
+    }
+
+    return {
+      eyebrow: 'Ban tổ chức',
+      title: 'Tổng quan hoạt động của đơn vị',
+      subtitle:
+        'Theo dõi hoạt động đang phụ trách, trạng thái duyệt và thao tác vận hành hằng ngày.',
+      roleLabel: 'BTC / Đơn vị',
+      recentTitle: 'Hoạt động của đơn vị',
+      recentLink: '/admin/org/activities',
+      primaryAction: {
+        label: 'Tạo hoạt động',
+        description: 'Khởi tạo bản nháp hoặc gửi duyệt',
+        icon: 'bi bi-plus-lg',
+        link: '/admin/org/activities/create',
+        tone: 'primary',
+      },
+    };
+  });
+
+  readonly statCards = computed<DashboardStatCard[]>(() => {
+    if (this.isAdminRole()) {
+      return [
+        {
+          label: 'Sinh viên',
+          value: this.totalStudents(),
+          meta: 'Tài khoản sinh viên trong hệ thống',
+          icon: 'bi bi-mortarboard-fill',
+          tone: 'info',
+        },
+        {
+          label: 'Chờ duyệt',
+          value: this.pendingActivities(),
+          meta: 'Hoạt động đơn vị gửi lên',
+          icon: 'bi bi-hourglass-split',
+          tone: 'warning',
+        },
+        {
+          label: 'Khoa / đơn vị',
+          value: this.totalDepartments(),
+          meta: 'Đơn vị đào tạo đang quản lý',
+          icon: 'bi bi-building-fill',
+          tone: 'success',
+        },
+        {
+          label: 'Chuyên ngành',
+          value: this.totalMajors(),
+          meta: 'Cấu trúc đào tạo đã khai báo',
+          icon: 'bi bi-diagram-3-fill',
+          tone: 'slate',
+        },
+      ];
+    }
+
+    return [
+      {
+        label: 'Hoạt động phụ trách',
+        value: this.totalActivities(),
+        meta: 'Tổng số hoạt động của đơn vị',
+        icon: 'bi bi-calendar-event-fill',
+        tone: 'primary',
+      },
+      {
+        label: 'Đang diễn ra',
+        value: this.activeActivities(),
+        meta: 'Cần theo dõi đăng ký và tham gia',
+        icon: 'bi bi-broadcast-pin',
+        tone: 'success',
+      },
+      {
+        label: 'Chờ duyệt',
+        value: this.pendingActivities(),
+        meta: 'Đang chờ admin duyệt cấp trường',
+        icon: 'bi bi-hourglass-split',
+        tone: 'warning',
+      },
+      {
+        label: 'Cập nhật gần đây',
+        value: this.recentActivities().length,
+        meta: 'Hoạt động có thay đổi mới',
+        icon: 'bi bi-clock-history',
+        tone: 'info',
+      },
+    ];
+  });
+
+  readonly quickActions = computed<QuickAction[]>(() => {
+    if (this.isAdminRole()) {
+      return [
+        {
+          label: 'Quản lý người dùng',
+          description: 'Tài khoản, vai trò và hồ sơ',
+          icon: 'bi bi-person-video3',
+          link: '/admin/user-management',
+          tone: 'info',
+        },
+        this.dashboardCopy().primaryAction,
+        {
+          label: 'Học kỳ',
+          description: 'Mở khóa và cấu hình kỳ',
+          icon: 'bi bi-calendar-range',
+          link: '/admin/semesters',
+          tone: 'primary',
+        },
+        {
+          label: 'Danh mục DRL',
+          description: 'Nhóm tiêu chí và điểm',
+          icon: 'bi bi-diagram-3-fill',
+          link: '/admin/categories',
+          tone: 'teal',
+        },
+        {
+          label: 'Đơn vị đào tạo',
+          description: 'Khoa, Trường, Viện',
+          icon: 'bi bi-building-fill',
+          link: '/admin/departments',
+          tone: 'success',
+        },
+        {
+          label: 'Lớp sinh hoạt',
+          description: 'Lớp, khóa và chuyên ngành',
+          icon: 'bi bi-collection-fill',
+          link: '/admin/classes',
+          tone: 'slate',
+        },
+      ];
+    }
+
+    return [
+      this.dashboardCopy().primaryAction,
+      {
+        label: 'Quản lý hoạt động',
+        description: 'Danh sách, bản nháp và chỉnh sửa',
+        icon: 'bi bi-calendar-plus',
+        link: '/admin/org/activities',
+        tone: 'success',
+      },
+      {
+        label: 'Duyệt minh chứng',
+        description: 'Xử lý tham gia của sinh viên',
+        icon: 'bi bi-patch-check-fill',
+        link: '/admin/org/activities',
+        tone: 'warning',
+      },
+      {
+        label: 'Thông báo',
+        description: 'Theo dõi phản hồi từ hệ thống',
+        icon: 'bi bi-bell-fill',
+        link: '/admin/notifications',
+        tone: 'info',
+      },
+    ];
+  });
 
   ngOnInit(): void {
     this.loadData();
@@ -53,37 +262,26 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  getActivityThumbBg(activity: RecentActivity): string {
-    const colors = [
-      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-      'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-      'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-      'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-      'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-    ];
-    const index = activity.id % colors.length;
-    return colors[index];
-  }
-
   getActivityIcon(activity: RecentActivity): string {
-    if (activity.status === 1) return 'bi bi-hourglass-split';
+    if (activity.status === 0) return 'bi bi-hourglass-split';
+    if (activity.status === 1) return 'bi bi-broadcast-pin';
     if (activity.status === 2) return 'bi bi-check-circle';
     if (activity.status === 3) return 'bi bi-x-circle';
     return 'bi bi-calendar-event';
   }
 
-  getBadgeStyle(status: number): string {
-    return '';
-  }
-
   getStatusClass(status: number): string {
     switch (status) {
-      case 0: return 'badge-status badge-status--pending';
-      case 1: return 'badge-status badge-status--active';
-      case 2: return 'badge-status badge-status--ended';
-      case 3: return 'badge-status badge-status--rejected';
-      default: return 'badge-status badge-status--pending';
+      case 0:
+        return 'badge-status badge-status--pending';
+      case 1:
+        return 'badge-status badge-status--active';
+      case 2:
+        return 'badge-status badge-status--ended';
+      case 3:
+        return 'badge-status badge-status--rejected';
+      default:
+        return 'badge-status badge-status--pending';
     }
   }
 
@@ -104,6 +302,7 @@ export class DashboardComponent implements OnInit {
 
   getTimeAgo(dateStr: string): string {
     if (!dateStr) return '';
+
     const date = new Date(dateStr);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -114,6 +313,7 @@ export class DashboardComponent implements OnInit {
     if (diffHours < 24) return `${diffHours} giờ trước`;
     if (diffDays === 1) return '1 ngày trước';
     if (diffDays < 7) return `${diffDays} ngày trước`;
+
     return date.toLocaleDateString('vi-VN');
   }
 }

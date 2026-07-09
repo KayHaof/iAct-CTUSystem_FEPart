@@ -6,6 +6,7 @@
 export * from './lib/services/alert.service';
 export * from './lib/services/loading.service';
 export * from './lib/services/confirm.service';
+export * from './lib/services/notification-facade.service';
 
 // Components
 export * from './lib/components/loading-bar/loading-bar.component';
@@ -15,6 +16,8 @@ export * from './lib/components/table-container/table-container.component';
 export * from './lib/components/alert-snackbar/alert-snackbar.component';
 export * from './lib/components/confirm-dialog/confirm-dialog.component';
 export * from './lib/components/status-badge/status-badge.component';
+export * from './lib/components/notification-bell/notification-bell.component';
+export * from './lib/components/notification-center/notification-center.component';
 
 // Layouts
 export * from './lib/layout/admin-layout/admin-layout.component';

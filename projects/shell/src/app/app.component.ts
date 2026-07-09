@@ -49,7 +49,7 @@ export class AppComponent implements OnInit {
         }
 
         // --- BẬT WEBSOCKET KÈM DỌN DẸP ---
-        this.webSocketService.initConnection();
+        this.webSocketService.initConnection(userInfo.id);
         const wsSubscription = this.webSocketService
           .watchUserNotification(userInfo.id)
           .subscribe((notification: AppNotification) => {

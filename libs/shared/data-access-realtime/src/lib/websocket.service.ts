@@ -3,54 +3,71 @@ import { RxStomp } from '@stomp/rx-stomp';
 import { IMessage } from '@stomp/stompjs';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-
-export interface AppNotification {
-  id: number;
-  userId: number;
-  title: string;
-  message: string;
-  type: number;
-  activityId?: number;
-  isRead: boolean;
-  createdAt: string;
-}
+import { NotificationItem } from '@my-mfe/interface';
 
 @Injectable({
   providedIn: 'root',
 })
 export class WebSocketService extends RxStomp {
+  private currentBrokerUrl: string | null = null;
+
   constructor() {
     super();
   }
 
-  initConnection(): void {
+  /** Khởi tạo kết nối WebSocket, truyền userId trong query string */
+  initConnection(userId?: number): void {
+    const base = 'ws://localhost:8080/internal/notifications/ws';
+    const url = userId ? `${base}?userId=${userId}` : base;
+
+    if (this.currentBrokerUrl === url && this.active) {
+      return;
+    }
+
+    if (this.active) {
+      this.deactivate();
+    }
+
     this.configure({
-      brokerURL: 'ws://localhost:8080/internal/notifications/ws',
+      brokerURL: url,
       heartbeatIncoming: 0,
       heartbeatOutgoing: 20000,
       reconnectDelay: 15000,
     });
 
+    this.currentBrokerUrl = url;
     this.activate();
   }
 
-  watchUserNotification(userId: number): Observable<AppNotification> {
+  /** Subscribe notification cá nhân: /topic/user/{userId} */
+  watchUserNotification(userId: number): Observable<NotificationItem> {
     return this.watch(`/topic/user/${userId}`).pipe(
-      map((message: IMessage) => {
-        const data = JSON.parse(message.body);
-
-        // Trả về object với type AppNotification
-        return {
-          id: data.id,
-          userId: data.userId,
-          title: data.title,
-          message: data.message,
-          type: data.type,
-          activityId: data.activityId,
-          isRead: data.isRead,
-          createdAt: data.createdAt,
-        } as AppNotification;
-      }),
+      map((message: IMessage) => this.parseNotification(message)),
     );
+  }
+
+  /** Subscribe notification broadcast/public: /topic/notifications */
+  watchBroadcastNotification(): Observable<NotificationItem> {
+    return this.watch('/topic/notifications').pipe(
+      map((message: IMessage) => this.parseNotification(message)),
+    );
+  }
+
+  private parseNotification(message: IMessage): NotificationItem {
+    const data = JSON.parse(message.body);
+
+    return {
+      id: data.id,
+      userId: data.userId,
+      title: data.title,
+      message: data.message,
+      type: data.type ?? 2,
+      activityId: data.activityId,
+      isRead: data.isRead ?? false,
+      readAt: data.readAt,
+      createdAt: data.createdAt,
+      sourceEventId: data.sourceEventId,
+      sourceTopic: data.sourceTopic,
+    };
   }
 }

@@ -1,98 +1,87 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
-export interface Notification {
-  id: number;
-  userId: number;
-  title: string;
-  message: string;
-  type: number;
-  activityId?: number;
-  isRead: boolean;
-  createdAt: string;
-}
-
-export interface PageDTO<T> {
-  pageNumber: number;
-  totalPage: number;
-  totalRows: number;
-  data: T[];
-}
-
-export interface ApiResponse<T> {
-  code: number;
-  message?: string;
-  data?: T;
-  timestamp?: number;
-}
-
-export interface UrgentNotificationRequest {
-  title: string;
-  message: string;
-  priority?: number;
-  targetType: 'ALL_DEPARTMENT' | 'ACTIVITY' | 'CLASS';
-  targetId?: number;
-  activityId?: number;
-  userIds?: string[];
-}
+import {
+  ApiResponse,
+  NotificationItem,
+  NotificationPage,
+  NotificationQuery,
+  UrgentNotificationRequest,
+} from '@my-mfe/interface';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NotificationService {
   private baseUrl = 'http://localhost:8080';
   private apiUrl = `${this.baseUrl}/notification/api/v1`;
   private http = inject(HttpClient);
 
-  getNotifications(params?: {
-    page?: number;
-    size?: number;
-    isRead?: boolean;
-  }): Observable<ApiResponse<PageDTO<Notification>>> {
-    let httpParams = new HttpParams();
-    if (params?.page) httpParams = httpParams.set('page', params.page.toString());
-    if (params?.size) httpParams = httpParams.set('size', params.size.toString());
-    if (params?.isRead !== undefined) {
-      httpParams = httpParams.set('isRead', params.isRead.toString());
+  /** GET /notifications?page=&size=&isRead= */
+  getNotifications(
+    query?: NotificationQuery,
+  ): Observable<ApiResponse<NotificationPage>> {
+    let params = new HttpParams();
+    if (query?.page !== undefined) {
+      params = params.set('page', query.page.toString());
+    }
+    if (query?.size !== undefined) {
+      params = params.set('size', query.size.toString());
+    }
+    if (query?.isRead !== undefined) {
+      params = params.set('isRead', query.isRead.toString());
     }
 
-    return this.http.get<ApiResponse<PageDTO<Notification>>>(
+    return this.http.get<ApiResponse<NotificationPage>>(
       `${this.apiUrl}/notifications`,
-      { params: httpParams }
+      { params },
     );
   }
 
+  /** GET /notifications/count-unread */
   getUnreadCount(): Observable<ApiResponse<number>> {
     return this.http.get<ApiResponse<number>>(
-      `${this.apiUrl}/notifications/count-unread`
+      `${this.apiUrl}/notifications/count-unread`,
     );
   }
 
+  /** GET /notifications/{id} */
+  getNotificationById(id: number): Observable<ApiResponse<NotificationItem>> {
+    return this.http.get<ApiResponse<NotificationItem>>(
+      `${this.apiUrl}/notifications/${id}`,
+    );
+  }
+
+  /** PUT /notifications/{id}/read */
   markAsRead(id: number): Observable<ApiResponse<void>> {
     return this.http.put<ApiResponse<void>>(
       `${this.apiUrl}/notifications/${id}/read`,
-      {}
+      {},
     );
   }
 
+  /** PUT /notifications/read-all */
   markAllAsRead(): Observable<ApiResponse<void>> {
     return this.http.put<ApiResponse<void>>(
       `${this.apiUrl}/notifications/read-all`,
-      {}
+      {},
     );
   }
 
-  getNotificationById(id: number): Observable<ApiResponse<Notification>> {
-    return this.http.get<ApiResponse<Notification>>(
-      `${this.apiUrl}/notifications/${id}`
+  /** DELETE /notifications/{id} */
+  deleteNotification(id: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(
+      `${this.apiUrl}/notifications/${id}`,
     );
   }
 
-  sendUrgentNotification(request: UrgentNotificationRequest): Observable<ApiResponse<number>> {
+  /** POST /notifications/urgent */
+  sendUrgentNotification(
+    request: UrgentNotificationRequest,
+  ): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(
       `${this.apiUrl}/notifications/urgent`,
-      request
+      request,
     );
   }
 }

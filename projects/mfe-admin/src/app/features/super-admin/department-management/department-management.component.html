@@ -111,13 +111,21 @@
       <span>Chưa có đơn vị phù hợp.</span>
     </div>
   } @else {
-    <section class="dept-card-grid">
+    <section class="dept-record-list" aria-label="Danh sách Khoa / Trường / Viện">
+      <div class="dept-record-header" aria-hidden="true">
+        <span>Đơn vị</span>
+        <span>Trạng thái</span>
+        <span>Liên hệ</span>
+        <span>Chuyên ngành</span>
+        <span>Ngày tạo</span>
+        <span>Thao tác</span>
+      </div>
       @for (department of departments(); track department.id) {
-        <article class="dept-card">
-          <div class="dept-card-top">
-            <div class="dept-card-title-area">
+        <article class="dept-record">
+          <div class="dept-record-top">
+            <div class="dept-record-title-area">
               <span class="dept-code-badge">{{ department.code || 'Chưa có mã' }}</span>
-              <h2 class="dept-card-name">{{ department.name }}</h2>
+              <h2 class="dept-record-name">{{ department.name }}</h2>
             </div>
             <button
               type="button"
@@ -131,11 +139,11 @@
             </button>
           </div>
 
-          <p class="dept-card-desc">
+          <p class="dept-record-desc">
             {{ department.description || 'Chưa có mô tả cho đơn vị này.' }}
           </p>
 
-          <div class="dept-card-contact">
+          <div class="dept-record-contact">
             <div class="contact-item">
               <i class="bi bi-telephone-fill"></i>
               <span>{{ department.phone || 'Chưa cập nhật' }}</span>
@@ -146,7 +154,7 @@
             </div>
           </div>
 
-          <div class="dept-card-footer">
+          <div class="dept-record-footer">
             <div class="major-count-pill">
               <i class="bi bi-layers-fill"></i>
               <span>{{ getMajorCount(department.id) }}</span>
@@ -155,7 +163,7 @@
             <span class="created-date">{{ formatDate(department.createdAt) }}</span>
           </div>
 
-          <div class="dept-card-actions">
+          <div class="dept-record-actions">
             <button
               type="button"
               class="icon-btn icon-btn-edit"

@@ -48,13 +48,7 @@ export class AdminLayoutComponent implements OnInit {
       return [
         { label: 'Tổng quan', link: '/admin/dashboard', icon: 'bi bi-grid-fill' },
         { label: 'Quản lý hoạt động', link: '/admin/org/activities', icon: 'bi bi-calendar-plus' },
-        { label: 'Duyệt minh chứng', link: '/admin/org/approvals', icon: 'bi bi-check2-square' },
-        {
-          label: 'Gửi TB khẩn cấp',
-          link: '/admin/org/activities/urgent-notification',
-          icon: 'bi bi-megaphone-fill',
-        },
-        { label: 'Quản lý sinh viên', link: '/admin/org/students', icon: 'bi bi-people' },
+        { label: 'Thông báo', link: '/admin/notifications', icon: 'bi bi-bell-fill' },
       ];
     }
 
@@ -76,11 +70,7 @@ export class AdminLayoutComponent implements OnInit {
         { label: 'Khoa/Truờng/Viện', link: '/admin/departments', icon: 'bi bi-building-fill' },
         { label: 'Chuyên ngành', link: '/admin/majors', icon: 'bi bi-mortarboard-fill' },
         { label: 'Lớp sinh hoạt', link: '/admin/classes', icon: 'bi bi-collection-fill' },
-        {
-          label: 'Gửi TB khẩn cấp',
-          link: '/admin/org/activities/urgent-notification',
-          icon: 'bi bi-megaphone-fill',
-        },
+        { label: 'Thông báo', link: '/admin/notifications', icon: 'bi bi-bell-fill' },
         { label: 'Cài đặt hệ thống', link: '/admin/settings', icon: 'bi bi-sliders' },
       ];
     }

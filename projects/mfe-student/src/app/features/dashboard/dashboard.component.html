@@ -1,184 +1,109 @@
-<!-- Student Dashboard - Modern Design -->
 <div class="student-dashboard">
-  <!-- Page Header with Gradient Accent -->
   <header class="dashboard-header">
-    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-      <div class="header-content">
-        <p class="header-eyebrow">Xin chao</p>
-        <h1 class="header-title">{{ userName }}</h1>
-        <p class="header-subtitle">{{ todayMessage }}</p>
+    <div class="dashboard-header__content">
+      <div class="dashboard-header__main">
+        <p class="dashboard-header__eyebrow iact-student-eyebrow">Tổng quan sinh viên</p>
+        <h1 class="dashboard-header__title iact-student-title">Xin chào, {{ studentName() }}</h1>
+        <p class="dashboard-header__subtitle iact-student-subtitle">{{ studentMeta() }}</p>
       </div>
-      <div class="header-actions">
-        <button
-          type="button"
-          class="action-btn-secondary"
-          title="Tai lai du lieu"
-          (click)="refresh()"
-        >
+
+      <div class="dashboard-header__actions">
+        <button type="button" class="action-btn action-btn--secondary" (click)="refresh()">
           <i class="bi bi-arrow-clockwise"></i>
-          Tai lai
+          <span>Tải lại</span>
         </button>
-        <button type="button" class="action-btn-primary" routerLink="/activity-hub">
+        <a class="action-btn action-btn--primary" routerLink="/activity-hub">
           <i class="bi bi-compass"></i>
-          Khám phá hoat dong
-        </button>
+          <span>Tìm hoạt động</span>
+        </a>
       </div>
     </div>
   </header>
 
-  <!-- Stats Grid - 4 columns -->
-  <section class="stats-grid">
-    <!-- Card 1: DiemRenLuyen -->
-    <article class="stat-card stat-card--primary">
-      <div class="stat-card-header">
-        <div class="stat-icon-wrap stat-icon-blue">
-          <i class="bi bi-star-fill"></i>
+  <section class="stats-grid" aria-label="Chỉ số cá nhân">
+    @for (stat of stats; track stat.label) {
+      <article class="stat-card" [ngClass]="'stat-card--' + stat.tone">
+        <span class="stat-card__icon" [ngClass]="'stat-card__icon--' + stat.tone">
+          <i [class]="stat.icon"></i>
+        </span>
+        <div class="stat-card__body">
+          <span class="stat-card__label">{{ stat.label }}</span>
+          <strong class="stat-card__value">{{ stat.value }}</strong>
+          <span class="stat-card__meta">{{ stat.meta }}</span>
         </div>
-        <div class="stat-trend stat-trend-up"><i class="bi bi-arrow-up"></i> 5</div>
-      </div>
-      <div class="stat-value">{{ totalScore }}</div>
-      <div class="stat-label">Diem Ren Luyen Hien Tai</div>
-      <div class="stat-meta">
-        <span class="stat-meta-dot stat-dot-emerald"></span>
-        <span>Xep hang: {{ rank }}</span>
-      </div>
-    </article>
-
-    <!-- Card 2: So Hoat Dong -->
-    <article class="stat-card">
-      <div class="stat-card-header">
-        <div class="stat-icon-wrap stat-icon-sky">
-          <i class="bi bi-calendar-check-fill"></i>
-        </div>
-        <span class="stat-trend stat-trend-up"> <i class="bi bi-arrow-up"></i> 3 </span>
-      </div>
-      <div class="stat-value">{{ completedActivities }}</div>
-      <div class="stat-label">Hoat Dong Da Tham Gia</div>
-      <div class="stat-meta">
-        <span class="stat-meta-dot stat-dot-blue"></span>
-        <span>{{ upcomingActivities }} sap toi</span>
-      </div>
-    </article>
-
-    <!-- Card 3: So Ngay Cong Tac -->
-    <article class="stat-card">
-      <div class="stat-card-header">
-        <div class="stat-icon-wrap stat-icon-emerald">
-          <i class="bi bi-people-fill"></i>
-        </div>
-        <span class="stat-trend stat-trend-up"> <i class="bi bi-plus"></i> 2 </span>
-      </div>
-      <div class="stat-value">{{ socialDays }}</div>
-      <div class="stat-label">Ngay Cong Tac Xa Hoi</div>
-      <div class="stat-meta">
-        <span class="stat-meta-dot stat-dot-emerald"></span>
-        <span>Tinh lam 10 ngay</span>
-      </div>
-    </article>
-
-    <!-- Card 4: Chung Chi -->
-    <article class="stat-card">
-      <div class="stat-card-header">
-        <div class="stat-icon-wrap stat-icon-amber">
-          <i class="bi bi-award-fill"></i>
-        </div>
-        <span class="stat-trend stat-trend-neutral"> <i class="bi bi-dash"></i> 0 </span>
-      </div>
-      <div class="stat-value">{{ certificates }}</div>
-      <div class="stat-label">Chung Chi</div>
-      <div class="stat-meta">
-        <span class="stat-meta-dot stat-dot-amber"></span>
-        <span>Chua co chung chi</span>
-      </div>
-    </article>
+      </article>
+    }
   </section>
 
-  <!-- Main Content: 2 Column Layout -->
   <section class="dashboard-body">
-    <!-- Left Column: Activities -->
     <div class="main-column">
-      <!-- Upcoming Activities -->
-      <article class="activity-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">Hoat dong sap toi</h2>
-          <a routerLink="/activity-hub" class="panel-link">
-            Xem tat ca
+      <article class="panel panel--activities">
+        <div class="panel__header">
+          <div>
+            <p class="panel__eyebrow">Lịch hoạt động</p>
+            <h2 class="panel__title iact-student-section-title">Việc cần theo dõi</h2>
+          </div>
+          <a routerLink="/activity-hub" class="panel__link">
+            Xem tất cả
             <i class="bi bi-chevron-right"></i>
           </a>
         </div>
 
         <div class="activity-list">
           @for (activity of upcomingActivitiesList; track activity.id) {
-            <div
-              class="activity-item"
-              role="button"
-              tabindex="0"
-              (click)="onActivityClick(activity.id)"
-              (keydown.enter)="onActivityClick(activity.id)"
-              (keydown.space)="onActivityClick(activity.id); $event.preventDefault()"
-            >
-              <div class="activity-thumb" [style.background]="activity.thumbBg">
+            <button type="button" class="activity-item" (click)="onActivityClick(activity.id)">
+              <span class="activity-item__icon" [ngClass]="'activity-item__icon--' + activity.tone">
                 <i [class]="activity.thumbIcon"></i>
-              </div>
-              <div class="activity-info">
-                <span class="activity-name">{{ activity.title }}</span>
-                <span class="activity-meta"
-                  >{{ activity.department }} &bull; {{ activity.date }}</span
-                >
-              </div>
-              @if (activity.actionRequired === 'CHECK_IN') {
-                <span class="action-badge action-badge-checkin">
-                  <i class="bi bi-qr-code-scan"></i>
-                  Check-in
+              </span>
+              <span class="activity-item__content">
+                <span class="activity-item__title">{{ activity.title }}</span>
+                <span class="activity-item__meta">
+                  {{ activity.department }} • {{ activity.date }}
                 </span>
-              } @else if (activity.actionRequired === 'REGISTER') {
-                <span class="action-badge action-badge-register">
-                  <i class="bi bi-plus-circle"></i>
-                  Dang ky
-                </span>
-              } @else {
-                <span class="activity-badge" [class]="activity.badgeClass">{{
-                  activity.status
-                }}</span>
-              }
-            </div>
+              </span>
+              <span
+                class="activity-item__badge"
+                [ngClass]="'activity-item__badge--' + activity.tone"
+              >
+                {{ activity.actionLabel }}
+              </span>
+            </button>
           }
 
           @if (upcomingActivitiesList.length === 0) {
             <div class="empty-state">
               <i class="bi bi-calendar-x"></i>
-              <p>Chua co hoat dong sap toi</p>
-              <a routerLink="/activity-hub" class="btn-link">Tim hoat dong ngay</a>
+              <p>Chưa có hoạt động sắp tới.</p>
+              <a routerLink="/activity-hub">Tìm hoạt động phù hợp</a>
             </div>
           }
         </div>
       </article>
 
-      <!-- Pending Proofs -->
-      <article class="proof-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">
-            <i class="bi bi-file-earmark-arrow-up"></i>
-            Hoat dong can nop minh chung
-          </h2>
-          <span class="pending-count">{{ pendingProofs.length }} cho xu ly</span>
+      <article class="panel">
+        <div class="panel__header">
+          <div>
+            <p class="panel__eyebrow">Minh chứng</p>
+            <h2 class="panel__title iact-student-section-title">Hoạt động cần bổ sung hồ sơ</h2>
+          </div>
+          <span class="pending-count">{{ pendingProofs.length }} cần xử lý</span>
         </div>
 
         <div class="proof-list">
           @for (proof of pendingProofs; track proof.id) {
             <div class="proof-item">
-              <div class="proof-icon">
+              <span class="proof-item__icon">
                 <i class="bi bi-hourglass-split"></i>
-              </div>
-              <div class="proof-info">
-                <span class="proof-title">{{ proof.title }}</span>
-                <span class="proof-meta"
-                  >{{ proof.date }} &bull; Han nop: {{ proof.deadline }}</span
-                >
-              </div>
-              <button type="button" class="btn-submit-proof" (click)="onSubmitProof(proof.id)">
+              </span>
+              <span class="proof-item__content">
+                <span class="proof-item__title">{{ proof.title }}</span>
+                <span class="proof-item__meta">
+                  Ngày tham gia: {{ proof.date }} • Hạn nộp: {{ proof.deadline }}
+                </span>
+              </span>
+              <button type="button" class="proof-item__action" (click)="onSubmitProof(proof.id)">
                 <i class="bi bi-upload"></i>
-                Nap minh chung
+                <span>Nộp</span>
               </button>
             </div>
           }
@@ -186,101 +111,83 @@
           @if (pendingProofs.length === 0) {
             <div class="empty-state">
               <i class="bi bi-check-circle"></i>
-              <p>Ban da nap day du minh chung</p>
+              <p>Bạn đã nộp đầy đủ minh chứng.</p>
             </div>
           }
         </div>
       </article>
     </div>
 
-    <!-- Right Column: Quick Actions & Progress -->
-    <div class="side-column">
-      <!-- Score Progress -->
-      <article class="progress-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">Tien do diem ren luyen</h2>
+    <aside class="side-column">
+      <article class="panel">
+        <div class="panel__header">
+          <div>
+            <p class="panel__eyebrow">Điểm rèn luyện</p>
+            <h2 class="panel__title iact-student-section-title">Tiến độ hiện tại</h2>
+          </div>
+          <a routerLink="/point-management" class="panel__link">
+            Chi tiết
+            <i class="bi bi-chevron-right"></i>
+          </a>
         </div>
 
-        <div class="score-display">
-          <div class="circle-progress">
-            <div class="inner-circle">
-              <span class="score-value">{{ totalScore }}</span>
-              <span class="score-max">/ {{ maxScore }}</span>
+        <div class="score-summary">
+          <div class="score-ring" [style.--progress]="scorePercentage">
+            <div class="score-ring__inner">
+              <strong>{{ totalScore }}</strong>
+              <span>/ {{ maxScore }}</span>
             </div>
           </div>
-          <div class="score-percentage">{{ scorePercentage }}%</div>
+          <div class="score-summary__text">
+            <span>{{ scorePercentage }}%</span>
+            <strong>Xếp loại {{ rank }}</strong>
+          </div>
         </div>
 
         <div class="criteria-list">
           @for (criteria of criteriaScores; track criteria.name) {
             <div class="criteria-item">
-              <div class="criteria-header">
-                <span class="criteria-name">{{ criteria.name }}</span>
-                <span class="criteria-points">{{ criteria.current }}/{{ criteria.max }}</span>
+              <div class="criteria-item__header">
+                <span>{{ criteria.name }}</span>
+                <strong>{{ criteria.current }}/{{ criteria.max }}</strong>
               </div>
-              <div class="progress-bar-bg">
-                <div
-                  class="progress-bar-fill"
+              <div class="criteria-item__bar">
+                <span
                   [style.width.%]="(criteria.current / criteria.max) * 100"
                   [style.background]="criteria.color"
-                ></div>
+                ></span>
               </div>
             </div>
           }
         </div>
       </article>
 
-      <!-- Quick Actions -->
-      <article class="actions-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">Thao tac nhanh</h2>
+      <article class="panel">
+        <div class="panel__header">
+          <div>
+            <p class="panel__eyebrow">Lối tắt</p>
+            <h2 class="panel__title iact-student-section-title">Thao tác nhanh</h2>
+          </div>
         </div>
 
         <div class="quick-actions">
-          <button
-            type="button"
-            class="quick-action-btn"
-            routerLink="/activity-hub"
-            title="Tim hoat dong"
-          >
-            <div class="quick-action-icon quick-action-icon-blue">
-              <i class="bi bi-compass"></i>
-            </div>
-            <span>Tim hoat dong</span>
-          </button>
-
-          <button
-            type="button"
-            class="quick-action-btn"
-            routerLink="/my-records"
-            title="Lich su tham gia"
-          >
-            <div class="quick-action-icon quick-action-icon-emerald">
-              <i class="bi bi-clock-history"></i>
-            </div>
-            <span>Lich su tham gia</span>
-          </button>
-
-          <button
-            type="button"
-            class="quick-action-btn"
-            routerLink="/submit-proof"
-            title="Nap minh chung"
-          >
-            <div class="quick-action-icon quick-action-icon-amber">
-              <i class="bi bi-cloud-upload"></i>
-            </div>
-            <span>Nap minh chung</span>
-          </button>
-
-          <button type="button" class="quick-action-btn" title="Huong dan">
-            <div class="quick-action-icon quick-action-icon-slate">
-              <i class="bi bi-question-circle"></i>
-            </div>
-            <span>Huong dan</span>
-          </button>
+          @for (action of quickActions; track action.label) {
+            <a
+              class="quick-action"
+              [ngClass]="'quick-action--' + action.tone"
+              [routerLink]="action.link"
+            >
+              <span class="quick-action__icon">
+                <i [class]="action.icon"></i>
+              </span>
+              <span class="quick-action__text">
+                <span class="quick-action__label">{{ action.label }}</span>
+                <span class="quick-action__description">{{ action.description }}</span>
+              </span>
+            </a>
+          }
         </div>
       </article>
-    </div>
+    </aside>
   </section>
 </div>

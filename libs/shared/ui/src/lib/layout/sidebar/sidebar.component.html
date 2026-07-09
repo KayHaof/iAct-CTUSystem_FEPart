@@ -5,13 +5,18 @@
   [class.is-dark]="theme === 'dark'"
   aria-label="Thanh điều hướng chính"
 >
-  <div class="sidebar-logo">
+  <a
+    class="sidebar-logo"
+    [routerLink]="homeLink"
+    (click)="handleNavigation($event)"
+    title="Về trang tổng quan"
+  >
     <div class="brand-mark" aria-hidden="true"></div>
     <div class="brand-copy">
       <span class="logo-text">iAct CTU</span>
       <span class="logo-subtitle">Quản lý hoạt động</span>
     </div>
-  </div>
+  </a>
 
   <nav class="sidebar-nav" aria-label="Danh mục điều hướng">
     @for (item of menuItems; track item.label) {

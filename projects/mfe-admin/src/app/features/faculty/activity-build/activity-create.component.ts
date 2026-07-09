@@ -26,7 +26,7 @@ import {
   ActivityScheduleDto,
   BenefitDto,
   BenefitFormValue,
-  OrganizerMock,
+  OrganizerOption,
 } from '../../../shared/models/activity.model';
 import { CategoryResponse } from '../../../shared/models/category.model';
 
@@ -108,7 +108,7 @@ export class ActivityCreateComponent implements OnInit {
   thumbPreview = signal<string | null>(null);
   isUploading = signal<boolean>(false);
 
-  selectedOrganizer = signal<OrganizerMock | null>(null);
+  selectedOrganizer = signal<OrganizerOption | null>(null);
   isSearchingOrganizer = signal<boolean>(false);
   searchOrganizerError = signal<string | null>(null);
   isGeneratingAI = signal<boolean>(false);

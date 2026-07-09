@@ -1,0 +1,75 @@
+.proof-panel {
+  border-color: #dbe4f0;
+}
+
+.proof-panel__header {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.proof-panel__icon {
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.08);
+}
+
+.proof-panel__eyebrow {
+  letter-spacing: 0.11em;
+}
+
+.proof-panel__title {
+  line-height: 1.2;
+}
+
+.proof-panel__eyebrow + h2 + div {
+  display: none;
+}
+
+.proof-status-filter {
+  min-width: min(100%, 28rem);
+}
+
+.proof-status-filter > button,
+.proof-status-filter__item {
+  min-height: 2.75rem;
+  white-space: nowrap;
+  border-radius: 0.65rem;
+}
+
+.proof-status-filter > button {
+  padding-inline: 0.8rem;
+}
+
+.proof-status-filter__count {
+  display: inline-flex;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0 0.35rem;
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.proof-status-filter__count--active {
+  background: #fffbeb;
+}
+
+.proof-panel__refresh {
+  min-width: 8rem;
+}
+
+@media (max-width: 640px) {
+  .proof-status-filter {
+    min-width: 100%;
+  }
+
+  .proof-status-filter__item {
+    padding-inline: 0.5rem;
+  }
+
+  .proof-status-filter > button {
+    padding-inline: 0.45rem;
+  }
+}

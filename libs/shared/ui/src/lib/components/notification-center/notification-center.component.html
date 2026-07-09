@@ -1,0 +1,316 @@
+<div class="notification-center-page" [class.nc-role-student]="roleContext() === 'student'">
+  <!-- Page Header -->
+  <div class="nc-page-header">
+    <div class="nc-page-header-inner">
+      <div class="nc-header-text">
+        <p class="nc-page-kicker">
+          <i class="bi bi-bell-fill"></i>
+          Trung tâm thông báo
+        </p>
+        <h1 class="nc-page-title">Thông báo</h1>
+        <p class="nc-page-subtitle">{{ subtitle() }}</p>
+      </div>
+      @if (facade.hasUnread()) {
+        <button class="nc-mark-all-btn" type="button" (click)="markAllAsRead()">
+          <i class="bi bi-check2-all"></i>
+          Đánh dấu tất cả đã đọc
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Controls: Tabs + Search -->
+  <div class="nc-controls">
+    <div class="nc-controls-inner">
+      <!-- Tabs -->
+      <div class="nc-tabs" role="tablist">
+        @for (tab of tabs; track tab.key) {
+          <button
+            class="nc-tab"
+            role="tab"
+            type="button"
+            [class.nc-tab-active]="activeTab() === tab.key"
+            [attr.aria-selected]="activeTab() === tab.key"
+            (click)="switchTab(tab.key)"
+          >
+            {{ tab.label }}
+            @if (tab.key === 'unread' && facade.hasUnread()) {
+              <span class="nc-tab-badge">{{ facade.unreadCount() }}</span>
+            }
+          </button>
+        }
+      </div>
+
+      <!-- Search -->
+      <div class="nc-search-wrap">
+        <i class="bi bi-search nc-search-icon"></i>
+        <input
+          type="text"
+          class="nc-search-input"
+          placeholder="Tìm kiếm thông báo..."
+          [value]="searchQuery()"
+          (input)="onSearchInput($event)"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content: List + Detail -->
+  <div class="nc-content">
+    <div class="nc-content-inner">
+      <!-- List Column -->
+      <div class="nc-list-col">
+        @if (facade.loading()) {
+          <!-- Skeleton Loading -->
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <div class="nc-skeleton-card">
+              <div class="nc-skeleton-icon"></div>
+              <div class="nc-skeleton-body">
+                <div class="nc-skeleton-line nc-skeleton-w60"></div>
+                <div class="nc-skeleton-line nc-skeleton-w90"></div>
+                <div class="nc-skeleton-line nc-skeleton-w40"></div>
+              </div>
+            </div>
+          }
+        } @else if (facade.error()) {
+          <!-- Error State -->
+          <div class="nc-empty-state">
+            <div class="nc-empty-icon nc-empty-icon-error">
+              <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <p class="nc-empty-title">{{ facade.error() }}</p>
+            <button class="nc-retry-btn" (click)="loadPage(1)">
+              <i class="bi bi-arrow-clockwise"></i>
+              Thử lại
+            </button>
+          </div>
+        } @else if (filteredNotifications().length === 0) {
+          <!-- Empty State -->
+          <div class="nc-empty-state">
+            <div class="nc-empty-icon">
+              <i class="bi bi-bell-slash"></i>
+            </div>
+            <p class="nc-empty-title">Hiện chưa có thông báo mới</p>
+            <p class="nc-empty-desc">Thông báo mới sẽ xuất hiện tại đây khi có cập nhật.</p>
+          </div>
+        } @else {
+          <!-- Notification Cards -->
+          @for (item of filteredNotifications(); track item.id) {
+            <div
+              class="nc-card"
+              [class.nc-card-unread]="!item.isRead"
+              [class.nc-card-selected]="facade.selectedNotification()?.id === item.id"
+              (click)="selectNotification(item)"
+              tabindex="0"
+              role="button"
+              [attr.aria-label]="item.title"
+            >
+              <div class="nc-card-icon" [ngClass]="getTypeConfig(item.type).bgClass">
+                <i
+                  [ngClass]="
+                    getTypeConfig(item.type).icon + ' ' + getTypeConfig(item.type).colorClass
+                  "
+                ></i>
+              </div>
+
+              <div class="nc-card-body">
+                <div class="nc-card-top">
+                  <h4 class="nc-card-title">{{ item.title }}</h4>
+                  <span
+                    class="nc-type-badge"
+                    [ngClass]="[
+                      getTypeConfig(item.type).bgClass,
+                      getTypeConfig(item.type).colorClass,
+                    ]"
+                  >
+                    {{ getTypeConfig(item.type).label }}
+                  </span>
+                </div>
+                <p class="nc-card-message">{{ item.message }}</p>
+                <div class="nc-card-meta">
+                  <span class="nc-card-time">
+                    <i class="bi bi-clock"></i>
+                    {{ formatTime(item.createdAt) }}
+                  </span>
+                  @if (item.activityId) {
+                    <span class="nc-card-activity">
+                      <i class="bi bi-calendar3"></i>
+                      HD #{{ item.activityId }}
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <!-- Row Actions -->
+              <div class="nc-card-actions">
+                @if (!item.isRead) {
+                  <button
+                    class="nc-action-btn"
+                    title="Đánh dấu đã đọc"
+                    (click)="markReadSingle(item, $event)"
+                  >
+                    <i class="bi bi-check2"></i>
+                  </button>
+                }
+                <button
+                  class="nc-action-btn nc-action-delete"
+                  title="Xóa"
+                  (click)="deleteNotification(item, $event)"
+                >
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+
+              @if (!item.isRead) {
+                <span class="nc-unread-indicator"></span>
+              }
+            </div>
+          }
+
+          <!-- Pagination -->
+          @if (facade.totalPages() > 1) {
+            <div class="nc-pagination">
+              <button
+                class="nc-page-btn"
+                [disabled]="facade.currentPage() <= 1"
+                (click)="loadPage(facade.currentPage() - 1)"
+              >
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              @for (p of pages; track p) {
+                <button
+                  class="nc-page-btn"
+                  [class.nc-page-active]="p === facade.currentPage()"
+                  (click)="loadPage(p)"
+                >
+                  {{ p }}
+                </button>
+              }
+              <button
+                class="nc-page-btn"
+                [disabled]="facade.currentPage() >= facade.totalPages()"
+                (click)="loadPage(facade.currentPage() + 1)"
+              >
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Detail Preview Column (desktop) -->
+      <div class="nc-detail-col">
+        @if (facade.detailLoading()) {
+          <div class="nc-detail-panel">
+            <div class="nc-skeleton-card nc-skeleton-card-plain">
+              <div class="nc-skeleton-body">
+                <div class="nc-skeleton-line nc-skeleton-w60 nc-skeleton-line-title"></div>
+                <div class="nc-skeleton-line nc-skeleton-w90"></div>
+                <div class="nc-skeleton-line nc-skeleton-w90"></div>
+                <div class="nc-skeleton-line nc-skeleton-w40"></div>
+              </div>
+            </div>
+          </div>
+        } @else if (facade.selectedNotification(); as n) {
+          <div class="nc-detail-panel">
+            <div class="nc-detail-header">
+              <span
+                class="nc-detail-type-badge"
+                [ngClass]="[getTypeConfig(n.type).bgClass, getTypeConfig(n.type).colorClass]"
+              >
+                <i [ngClass]="getTypeConfig(n.type).icon"></i>
+                {{ getTypeConfig(n.type).label }}
+              </span>
+              @if (n.isRead) {
+                <span class="nc-detail-read-status nc-read">
+                  <i class="bi bi-check2-circle"></i>
+                  Đã đọc
+                </span>
+              } @else {
+                <span class="nc-detail-read-status nc-unread">
+                  <i class="bi bi-circle-fill"></i>
+                  Chưa đọc
+                </span>
+              }
+            </div>
+
+            <h2 class="nc-detail-title">{{ n.title }}</h2>
+
+            <div class="nc-detail-meta">
+              <span>
+                <i class="bi bi-clock"></i>
+                {{ formatDateTime(n.createdAt) }}
+              </span>
+              @if (n.readAt) {
+                <span>
+                  <i class="bi bi-eye"></i>
+                  Đọc lúc {{ formatDateTime(n.readAt) }}
+                </span>
+              }
+            </div>
+
+            <div class="nc-detail-body">
+              <p>{{ n.message }}</p>
+            </div>
+
+            <!-- Activity Link -->
+            @if (n.activityId) {
+              <div class="nc-detail-activity">
+                <i class="bi bi-calendar3"></i>
+                <span
+                  >Hoạt động liên quan: <strong>#{{ n.activityId }}</strong></span
+                >
+              </div>
+            }
+
+            <!-- Admin-only metadata -->
+            @if (isAdmin && (n.sourceTopic || n.sourceEventId)) {
+              <div class="nc-detail-tech">
+                <h4 class="nc-detail-tech-title">
+                  <i class="bi bi-code-square"></i>
+                  Thông tin kỹ thuật
+                </h4>
+                @if (n.sourceTopic) {
+                  <div class="nc-detail-tech-row">
+                    <span class="nc-detail-tech-label">Source Topic</span>
+                    <code class="nc-detail-tech-value">{{ n.sourceTopic }}</code>
+                  </div>
+                }
+                @if (n.sourceEventId) {
+                  <div class="nc-detail-tech-row">
+                    <span class="nc-detail-tech-label">Event ID</span>
+                    <code class="nc-detail-tech-value">{{ n.sourceEventId }}</code>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- CTA Actions -->
+            <div class="nc-detail-actions">
+              @if (n.activityId) {
+                <button class="nc-cta-primary" (click)="openNotification(n)">
+                  <i class="bi bi-box-arrow-up-right"></i>
+                  Xem hoạt động
+                </button>
+              }
+              <button class="nc-cta-secondary" (click)="facade.selectedNotification.set(null)">
+                Quay lại danh sách
+              </button>
+            </div>
+          </div>
+        } @else {
+          <!-- No selection placeholder -->
+          <div class="nc-detail-empty">
+            <div class="nc-detail-empty-icon">
+              <i class="bi bi-envelope-open"></i>
+            </div>
+            <p class="nc-detail-empty-title">Chọn một thông báo</p>
+            <p class="nc-detail-empty-desc">Nhấn vào thông báo bên trái để xem chi tiết</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <lib-confirm-dialog></lib-confirm-dialog>
+</div>

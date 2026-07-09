@@ -9,7 +9,12 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { AlertService, ConfirmDialogComponent, ConfirmService, PaginationComponent } from '@my-mfe/ui';
+import {
+  AlertService,
+  ConfirmDialogComponent,
+  ConfirmService,
+  PaginationComponent,
+} from '@my-mfe/ui';
 
 import { DepartmentFormModalComponent } from './components/department-form-modal/department-form-modal.component';
 import { MasterDataService } from '../services/master-data.service';
@@ -41,7 +46,13 @@ type SelectOption<T> = {
 @Component({
   selector: 'app-department-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, ConfirmDialogComponent, PaginationComponent, DepartmentFormModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ConfirmDialogComponent,
+    PaginationComponent,
+    DepartmentFormModalComponent,
+  ],
   templateUrl: './department-management.component.html',
   styleUrls: ['./department-management.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -98,7 +109,10 @@ export class DepartmentManagementComponent implements OnInit {
   });
   public departmentsWithMajors = computed(() => this.majorCountMap().size);
 
-  public formDropdown = computed<import('./components/department-form-modal/department-form-modal.component').DepartmentFormDropdownKey | null>(() => {
+  public formDropdown = computed<
+    | import('./components/department-form-modal/department-form-modal.component').DepartmentFormDropdownKey
+    | null
+  >(() => {
     const dropdown = this.openDropdown();
     return dropdown === 'activeForm' ? dropdown : null;
   });

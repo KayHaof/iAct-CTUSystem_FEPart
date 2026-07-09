@@ -15,6 +15,8 @@ export interface AttendanceResponse {
   id: number;
   registrationId: number;
   checkinTime: string;
+  checkoutTime?: string;
+  attendanceStatus?: string;
   method: number;
   message: string;
 }
@@ -28,5 +30,9 @@ export class AttendanceService {
 
   checkIn(request: CheckInRequest): Observable<ApiResponse<AttendanceResponse>> {
     return this.http.post<ApiResponse<AttendanceResponse>>(`${this.apiUrl}/check-in`, request);
+  }
+
+  checkOut(request: CheckInRequest): Observable<ApiResponse<AttendanceResponse>> {
+    return this.http.post<ApiResponse<AttendanceResponse>>(`${this.apiUrl}/check-out`, request);
   }
 }

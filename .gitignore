@@ -49,5 +49,6 @@ Thumbs.db
 vitest.config.*.timestamp*
 
 .nx
+.nx-cache
 
 *.log

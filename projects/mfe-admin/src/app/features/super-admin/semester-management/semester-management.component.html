@@ -5,7 +5,8 @@
         <p class="header-eyebrow">Dữ liệu học kỳ</p>
         <h1 class="header-title">Quản lý học kỳ</h1>
         <p class="header-subtitle">
-          Điều phối học kỳ, năm học, trạng thái áp dụng và khóa dữ liệu theo từng chu kỳ xét điểm rèn luyện.
+          Điều phối học kỳ, năm học, trạng thái áp dụng và khóa dữ liệu theo từng chu kỳ xét điểm
+          rèn luyện.
         </p>
       </div>
       <button type="button" class="btn-create" (click)="openCreateForm()">
@@ -84,26 +85,49 @@
                     </div>
 
                     <div class="timeline-badges">
-                      <span class="status-badge" [class.status-badge-active]="semester.isActive" [class.status-badge-inactive]="!semester.isActive">
+                      <span
+                        class="status-badge"
+                        [class.status-badge-active]="semester.isActive"
+                        [class.status-badge-inactive]="!semester.isActive"
+                      >
                         {{ semester.isActive ? 'Đang áp dụng' : 'Chưa áp dụng' }}
                       </span>
-                      <span class="status-badge" [class.status-badge-locked]="semester.isLocked" [class.status-badge-open]="!semester.isLocked">
+                      <span
+                        class="status-badge"
+                        [class.status-badge-locked]="semester.isLocked"
+                        [class.status-badge-open]="!semester.isLocked"
+                      >
                         {{ semester.isLocked ? 'Đã khóa' : 'Mở' }}
                       </span>
                     </div>
                   </div>
 
                   <div class="timeline-actions">
-                    <button type="button" class="action-btn action-btn-activate" [disabled]="semester.isActive" (click)="activateSemester(semester)">
+                    <button
+                      type="button"
+                      class="action-btn action-btn-activate"
+                      [disabled]="semester.isActive"
+                      (click)="activateSemester(semester)"
+                    >
                       Áp dụng
                     </button>
                     <button type="button" class="action-btn" (click)="toggleLock(semester)">
                       {{ semester.isLocked ? 'Mở khóa' : 'Khóa' }}
                     </button>
-                    <button type="button" class="action-btn" [disabled]="semester.isLocked" (click)="openEditForm(semester)">
+                    <button
+                      type="button"
+                      class="action-btn"
+                      [disabled]="semester.isLocked"
+                      (click)="openEditForm(semester)"
+                    >
                       Sửa
                     </button>
-                    <button type="button" class="action-btn action-btn-danger" [disabled]="semester.isLocked" (click)="deleteSemester(semester)">
+                    <button
+                      type="button"
+                      class="action-btn action-btn-danger"
+                      [disabled]="semester.isLocked"
+                      (click)="deleteSemester(semester)"
+                    >
                       Xóa
                     </button>
                   </div>

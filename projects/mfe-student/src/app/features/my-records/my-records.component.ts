@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, switchMap, catchError, map } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 import { BarcodeFormat } from '@zxing/library';
@@ -40,7 +41,7 @@ export interface UiActivityRecord extends ActivityRecord {
 @Component({
   selector: 'app-my-records',
   standalone: true,
-  imports: [CommonModule, FormsModule, ZXingScannerModule],
+  imports: [CommonModule, FormsModule, ZXingScannerModule, RouterLink],
   templateUrl: './my-records.component.html',
   styleUrls: ['./my-records.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,6 +54,8 @@ export class MyRecordsComponent implements OnInit {
   private alertService = inject(AlertService);
   private cloudinaryService = inject(CloudinaryService);
   private activityService = inject(ActivityService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   // --- STATE QUẢN LÝ GIAO DIỆN ---
   semesters = signal<Semester[]>([]);
@@ -81,10 +84,21 @@ export class MyRecordsComponent implements OnInit {
   selectedFileName = signal<string>('');
 
   activities = signal<UiActivityRecord[]>([]);
+  private pendingProofActivityId: number | null = null;
+  private hasHandledProofRoute = false;
 
   allowedFormats = [BarcodeFormat.QR_CODE];
 
   ngOnInit() {
+    const proofActivityId =
+      this.route.snapshot.queryParamMap.get('proofActivityId') ||
+      this.route.snapshot.queryParamMap.get('activityId');
+    this.pendingProofActivityId = proofActivityId ? Number(proofActivityId) : null;
+
+    if (this.pendingProofActivityId) {
+      this.currentTab.set('ONGOING');
+    }
+
     this.fetchSemesters();
   }
 
@@ -165,7 +179,6 @@ export class MyRecordsComponent implements OnInit {
                   id: item.id,
                   activityId: item.activityId,
                   title: item.activityTitle || 'Chưa có tên',
-                  points: item.points || 0,
                   startDate: times?.startDate || item.registeredAt,
                   realStartDate: realStart,
                   realEndDate: realEnd,
@@ -177,8 +190,13 @@ export class MyRecordsComponent implements OnInit {
                   organizer: 'Đoàn - Hội',
                   status: item.status,
                   proofStatus: item.proofStatus || 0,
+                  checkoutAt: item.checkoutAt,
+                  attendanceStatus: item.attendanceStatus,
+                  participationStatus: item.participationStatus,
+                  canSubmitProof: item.canSubmitProof,
+                  nextAction: item.nextAction,
                   cancelReason: item.cancelReason || '',
-                  point: item.point || 0,
+                  point: item.point ?? null,
                 } as UiActivityRecord;
               });
             }),
@@ -189,12 +207,40 @@ export class MyRecordsComponent implements OnInit {
       .subscribe({
         next: (mappedData) => {
           this.activities.set(mappedData);
+          this.openProofFromRoute(mappedData);
         },
         error: () => {
           this.alertService.error('Không thể tải danh sách hoạt động!');
           this.activities.set([]);
         },
       });
+  }
+
+  private openProofFromRoute(records: UiActivityRecord[]): void {
+    if (!this.pendingProofActivityId || this.hasHandledProofRoute) {
+      return;
+    }
+
+    this.hasHandledProofRoute = true;
+    const target = records.find((act) => act.activityId === this.pendingProofActivityId);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { proofActivityId: null, activityId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+
+    if (!target) {
+      this.alertService.error('Không tìm thấy hoạt động cần nộp minh chứng.');
+      return;
+    }
+
+    const targetTab = this.getUiTabStatus(target);
+    if (targetTab) {
+      this.currentTab.set(targetTab);
+    }
+
+    this.openModal(target, 'PROOF');
   }
 
   onFilterChange() {
@@ -211,18 +257,33 @@ export class MyRecordsComponent implements OnInit {
   getUiTabStatus(act: UiActivityRecord): TabMode | null {
     const now = new Date();
 
-    if (act.status === 2 || (act.status === 1 && act.proofStatus === 2) || act.isMissed) {
+    if (
+      act.participationStatus === 'CANCELLED' ||
+      act.participationStatus === 'COMPLETED' ||
+      act.participationStatus === 'MISSED' ||
+      act.status === 2 ||
+      (act.status === 1 && act.proofStatus === 2) ||
+      act.isMissed
+    ) {
       return 'COMPLETED';
     }
 
-    if (act.status === 1 && act.proofStatus === 1) {
+    if (
+      act.participationStatus === 'PROOF_PENDING' ||
+      (act.status === 1 && act.proofStatus === 1)
+    ) {
       return 'PROOF_SUBMITTED';
     }
 
     const isHappeningNow =
       act.realStartDate && act.realEndDate && now >= act.realStartDate && now <= act.realEndDate;
 
-    const needsProofAction = act.status === 1 && (act.proofStatus === 0 || act.proofStatus === 3);
+    const needsProofAction =
+      act.canSubmitProof === true ||
+      act.participationStatus === 'CHECKED_IN' ||
+      act.participationStatus === 'CHECKED_OUT' ||
+      act.participationStatus === 'PROOF_REJECTED' ||
+      (act.status === 1 && (act.proofStatus === 0 || act.proofStatus === 3));
     if (needsProofAction || (act.status === 0 && isHappeningNow)) {
       return 'ONGOING';
     }
@@ -238,17 +299,93 @@ export class MyRecordsComponent implements OnInit {
     return this.activities().filter((act) => this.getUiTabStatus(act) === this.currentTab());
   });
 
-  totalPoints = computed(() => {
-    return this.activities()
-      .filter((act) => act.status === 1 && act.proofStatus === 2)
-      .reduce((sum, act) => sum + act.point, 0);
-  });
-
   changeTab(tab: TabMode) {
     this.currentTab.set(tab);
   }
 
+  tabCount(tab: TabMode): number {
+    return this.activities().filter((act) => this.getUiTabStatus(act) === tab).length;
+  }
+
+  getAttendanceLabel(activity: UiActivityRecord): string {
+    if (activity.status === 2 || activity.participationStatus === 'CANCELLED') {
+      return 'Đã hủy';
+    }
+
+    if (activity.isMissed || activity.participationStatus === 'MISSED') {
+      return 'Đã bỏ lỡ';
+    }
+
+    if (activity.nextAction === 'CHECK_OUT') {
+      return 'Đã check-in';
+    }
+
+    if (activity.status === 1) {
+      return 'Đã check-out';
+    }
+
+    return 'Chưa điểm danh';
+  }
+
+  getProofLabel(activity: UiActivityRecord): string {
+    if (activity.status === 2 || activity.isMissed) {
+      return 'Không áp dụng';
+    }
+
+    if (activity.proofStatus === 1) {
+      return 'Chờ duyệt';
+    }
+
+    if (activity.proofStatus === 2) {
+      return 'Đã duyệt';
+    }
+
+    if (activity.proofStatus === 3) {
+      return 'Bị từ chối';
+    }
+
+    return activity.status === 1 ? 'Cần nộp' : 'Chưa đến bước';
+  }
+
+  getRecordNote(activity: UiActivityRecord): string {
+    if (activity.cancelReason) {
+      return activity.cancelReason;
+    }
+
+    if (activity.isStartingSoon && this.currentTab() === 'REGISTERED') {
+      return 'Sắp diễn ra';
+    }
+
+    if (activity.nextAction === 'CHECK_OUT') {
+      return 'Cần check-out';
+    }
+
+    if (this.canOpenProof(activity)) {
+      return activity.proofStatus === 3 ? 'Cần nộp lại minh chứng' : 'Cần bổ sung minh chứng';
+    }
+
+    return '';
+  }
+
+  canOpenProof(activity: UiActivityRecord | null | undefined): boolean {
+    return (
+      !!activity &&
+      (activity.canSubmitProof === true ||
+        (activity.status === 1 && (activity.proofStatus === 0 || activity.proofStatus === 3)))
+    );
+  }
+
   openModal(activity: UiActivityRecord, mode: 'SCAN' | 'PROOF' | 'INFO' = 'INFO') {
+    if (
+      mode === 'PROOF' &&
+      !this.canOpenProof(activity) &&
+      activity.proofStatus !== 1 &&
+      activity.proofStatus !== 2
+    ) {
+      this.alertService.error('Bạn cần hoàn tất check-out trước khi nộp minh chứng.');
+      return;
+    }
+
     this.selectedActivity.set(activity);
     this.modalMode.set(mode);
     this.isModalOpen.set(true);
@@ -309,41 +446,52 @@ export class MyRecordsComponent implements OnInit {
       verifyCode: this.manualCode().trim(),
     };
 
-    this.attendanceService
-      .checkIn(request)
-      .pipe(finalize(() => this.isSubmittingCheckIn.set(false)))
-      .subscribe({
-        next: (res) => {
-          const successMsg = res.message || 'Điểm danh thành công!';
-          this.alertService.success(successMsg);
-          this.fetchMyRecords();
+    const attendanceRequest =
+      act.nextAction === 'CHECK_OUT'
+        ? this.attendanceService.checkOut(request)
+        : this.attendanceService.checkIn(request);
 
-          if (successMsg.toLowerCase().includes('check-out')) {
-            const currentAct = this.selectedActivity();
-            if (currentAct) {
-              this.selectedActivity.set({
-                ...currentAct,
-                status: 1,
-                proofStatus: 0,
-              });
-              this.isScanning.set(false);
-              this.manualCode.set('');
+    attendanceRequest.pipe(finalize(() => this.isSubmittingCheckIn.set(false))).subscribe({
+      next: (res) => {
+        const successMsg = res.message || 'Điểm danh thành công!';
+        this.alertService.success(successMsg);
+        this.fetchMyRecords();
 
-              this.modalMode.set('PROOF');
-            }
-          } else {
-            this.closeModal();
+        if (res.data?.attendanceStatus === 'CHECKED_OUT') {
+          const currentAct = this.selectedActivity();
+          if (currentAct) {
+            this.selectedActivity.set({
+              ...currentAct,
+              status: 1,
+              attendanceStatus: 'CHECKED_OUT',
+              participationStatus: 'CHECKED_OUT',
+              proofStatus: 0,
+              canSubmitProof: true,
+              nextAction: 'SUBMIT_PROOF',
+            });
+            this.isScanning.set(false);
+            this.manualCode.set('');
+
+            this.modalMode.set('PROOF');
           }
-        },
-        error: (err) => {
-          this.alertService.error(err.error?.message || 'Mã điểm danh không hợp lệ!');
-        },
-      });
+        } else {
+          this.closeModal();
+        }
+      },
+      error: (err) => {
+        this.alertService.error(err.error?.message || 'Mã điểm danh không hợp lệ!');
+      },
+    });
   }
 
   submitProofData() {
     const act = this.selectedActivity();
     if (!act) return;
+
+    if (!this.canOpenProof(act)) {
+      this.alertService.error('Bạn cần hoàn tất check-out trước khi nộp minh chứng.');
+      return;
+    }
 
     const fileToUpload = this.selectedFile();
     const textUrl = this.proofImageUrl().trim();
@@ -382,7 +530,7 @@ export class MyRecordsComponent implements OnInit {
       .pipe(finalize(() => this.isSubmittingProof.set(false)))
       .subscribe({
         next: () => {
-          this.alertService.success('Đã nộp minh chứng thành công! Vui lòng chờ cố vấn duyệt.');
+          this.alertService.success('Đã nộp minh chứng thành công! Vui lòng chờ BTC duyệt.');
           this.closeModal();
           this.fetchMyRecords();
         },

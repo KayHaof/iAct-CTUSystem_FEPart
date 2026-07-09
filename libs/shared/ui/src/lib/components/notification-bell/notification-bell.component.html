@@ -1,0 +1,115 @@
+<div class="notification-bell-root">
+  <!-- Bell Button -->
+  <button
+    class="bell-btn"
+    type="button"
+    aria-label="Thông báo"
+    [attr.aria-expanded]="facade.dropdownOpen()"
+    (click)="facade.toggleDropdown()"
+    (keydown.escape)="facade.closeDropdown()"
+  >
+    <i class="bi bi-bell"></i>
+    @if (facade.hasUnread()) {
+      <span class="bell-badge" aria-label="Số thông báo chưa đọc">
+        {{ facade.displayBadge() }}
+      </span>
+      <span class="bell-ping"></span>
+    }
+  </button>
+
+  <!-- Dropdown Panel -->
+  @if (facade.dropdownOpen()) {
+    <div
+      class="dropdown-panel"
+      role="dialog"
+      aria-label="Thông báo"
+      (keydown.escape)="facade.closeDropdown()"
+    >
+      <!-- Dropdown Header -->
+      <div class="dropdown-header">
+        <div class="dropdown-header-left">
+          <h3 class="dropdown-title">Thông báo</h3>
+          @if (facade.hasUnread()) {
+            <span class="dropdown-count">{{ facade.unreadCount() }} chưa đọc</span>
+          }
+        </div>
+        @if (facade.hasUnread()) {
+          <button
+            class="mark-all-btn"
+            type="button"
+            (click)="facade.markAllRead()"
+            title="Đánh dấu tất cả đã đọc"
+          >
+            <i class="bi bi-check2-all"></i>
+            <span class="mark-all-label">Đọc hết</span>
+          </button>
+        }
+      </div>
+
+      <!-- Dropdown Body -->
+      <div class="dropdown-body">
+        @if (facade.dropdownLoading()) {
+          <!-- Skeleton Loading -->
+          @for (i of [1, 2, 3]; track i) {
+            <div class="skeleton-item">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-text"></div>
+              </div>
+            </div>
+          }
+        } @else if (facade.dropdownNotifications().length === 0) {
+          <!-- Empty State -->
+          <div class="dropdown-empty">
+            <div class="dropdown-empty-icon">
+              <i class="bi bi-bell-slash"></i>
+            </div>
+            <p class="dropdown-empty-title">Chưa có thông báo</p>
+            <p class="dropdown-empty-desc">Thông báo mới sẽ xuất hiện tại đây</p>
+          </div>
+        } @else {
+          <!-- Notification List -->
+          @for (item of facade.dropdownNotifications(); track item.id) {
+            <button
+              class="notif-item"
+              type="button"
+              [class.notif-unread]="!item.isRead"
+              (click)="facade.openNotification(item)"
+            >
+              <div
+                class="notif-icon-wrap"
+                [ngClass]="getTypeConfig(item.type).bgClass"
+              >
+                <i [ngClass]="getTypeConfig(item.type).icon + ' ' + getTypeConfig(item.type).colorClass"></i>
+              </div>
+              <div class="notif-content">
+                <p class="notif-title">{{ item.title }}</p>
+                <p class="notif-message">{{ item.message }}</p>
+                <span class="notif-time">
+                  <i class="bi bi-clock"></i>
+                  {{ formatTime(item.createdAt) }}
+                </span>
+              </div>
+              @if (!item.isRead) {
+                <span class="notif-unread-dot" aria-label="Chưa đọc"></span>
+              }
+            </button>
+          }
+        }
+      </div>
+
+      <!-- Dropdown Footer -->
+      <div class="dropdown-footer">
+        <button
+          class="view-all-btn"
+          type="button"
+          (click)="facade.goToCenter()"
+        >
+          Xem tất cả thông báo
+          <i class="bi bi-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+</div>

@@ -1,526 +1,328 @@
-<div class="w-full bg-slate-50 p-4 font-sans text-slate-800 selection:bg-blue-200 sm:p-6 lg:p-5">
-  <div class="max-w-7xl mx-auto">
-    <div
-      class="mb-8 flex flex-col items-start justify-between gap-5 sm:mb-10 sm:flex-row sm:items-center sm:gap-6"
-    >
-      <div>
-        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Hoạt động của tôi</h1>
-        <p class="text-slate-500 text-sm mt-1">
-          Quản lý các sự kiện đã đăng ký, lịch sử điểm danh và điểm rèn luyện.
-        </p>
-      </div>
+<div class="records-page">
+  <section class="records-header">
+    <div>
+      <p class="records-header__eyebrow iact-student-eyebrow">Hồ sơ tham gia</p>
+      <h1 class="iact-student-title">Hoạt động của tôi</h1>
+      <p class="records-header__description iact-student-subtitle">
+        Theo dõi đăng ký, điểm danh và minh chứng theo từng hoạt động.
+      </p>
+    </div>
 
-      <div
-        class="w-full transform rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-5 py-4 text-left shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] sm:w-auto sm:px-7 sm:py-5 sm:text-right"
+  </section>
+
+  <section class="records-toolbar" aria-label="Bộ lọc hoạt động">
+    <label class="semester-filter" for="semesterSelect">
+      <span>Học kỳ</span>
+      <select id="semesterSelect" [(ngModel)]="selectedSemesterId" (change)="onFilterChange()">
+        <option [ngValue]="null">Tất cả học kỳ</option>
+        @for (sem of semesters(); track sem.id) {
+          <option [ngValue]="sem.id">{{ sem.semesterName }} ({{ sem.academicYear }})</option>
+        }
+      </select>
+      <i class="bi bi-chevron-expand" aria-hidden="true"></i>
+    </label>
+
+    <div class="records-tabs" role="tablist" aria-label="Trạng thái hoạt động">
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="currentTab() === 'REGISTERED'"
+        [class.is-active]="currentTab() === 'REGISTERED'"
+        (click)="changeTab('REGISTERED')"
       >
-        <p class="text-[11px] text-blue-100 font-bold uppercase tracking-widest mb-1 opacity-90">
-          Tổng điểm tích lũy
-        </p>
-        <div class="flex items-baseline gap-1 justify-end">
-          <p class="text-4xl font-black text-white leading-none">{{ totalPoints() }}</p>
-          <span class="text-blue-200 font-bold text-sm">điểm</span>
-        </div>
-      </div>
+        <i class="bi bi-bookmark-check" aria-hidden="true"></i>
+        Đã đăng ký
+        <span>{{ tabCount('REGISTERED') }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="currentTab() === 'ONGOING'"
+        [class.is-active]="currentTab() === 'ONGOING'"
+        (click)="changeTab('ONGOING')"
+      >
+        <i class="bi bi-activity" aria-hidden="true"></i>
+        Đang xử lý
+        <span>{{ tabCount('ONGOING') }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="currentTab() === 'PROOF_SUBMITTED'"
+        [class.is-active]="currentTab() === 'PROOF_SUBMITTED'"
+        (click)="changeTab('PROOF_SUBMITTED')"
+      >
+        <i class="bi bi-file-earmark-check" aria-hidden="true"></i>
+        Chờ duyệt
+        <span>{{ tabCount('PROOF_SUBMITTED') }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="currentTab() === 'COMPLETED'"
+        [class.is-active]="currentTab() === 'COMPLETED'"
+        (click)="changeTab('COMPLETED')"
+      >
+        <i class="bi bi-check2-circle" aria-hidden="true"></i>
+        Hoàn thành
+        <span>{{ tabCount('COMPLETED') }}</span>
+      </button>
     </div>
-    <div class="flex flex-wrap items-center gap-4 mb-8 relative z-10">
-      <div class="relative group">
-        <label
-          for="semesterSelect"
-          class="absolute -top-2 left-3 bg-slate-50 px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest z-10"
-          >Chọn Học kỳ</label
-        >
-        <select
-          id="semesterSelect"
-          [(ngModel)]="selectedSemesterId"
-          (change)="onFilterChange()"
-          class="relative w-full sm:w-[240px] appearance-none bg-white border border-slate-200 text-slate-700 text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none font-semibold shadow-sm hover:border-blue-300 transition-colors cursor-pointer"
-        >
-          <option [ngValue]="null">Tất cả các học kỳ</option>
-          @for (sem of semesters(); track sem.id) {
-            <option [ngValue]="sem.id">{{ sem.semesterName }} ({{ sem.academicYear }})</option>
-          }
-        </select>
-        <div
-          class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400 group-hover:text-blue-500 transition-colors"
-        >
-          <i class="bi bi-chevron-expand"></i>
-        </div>
+  </section>
+
+  @if (isLoadingData()) {
+    <section class="records-loading" aria-live="polite">
+      <span></span>
+      <p>Đang tải danh sách hoạt động...</p>
+    </section>
+  } @else {
+    <section class="records-table" aria-label="Danh sách hoạt động tham gia">
+      <div class="records-table__head" aria-hidden="true">
+        <span>Hoạt động</span>
+        <span>Thời gian & địa điểm</span>
+        <span>Điểm danh</span>
+        <span>Minh chứng</span>
+        <span>Thao tác</span>
       </div>
-    </div>
-    <div class="flex mb-10 overflow-x-auto custom-scrollbar pb-2">
-      <div class="inline-flex bg-slate-200/60 p-1.5 rounded-2xl gap-1">
-        <!-- Tab 1: Đã đăng ký -->
-        <button
-          (click)="changeTab('REGISTERED')"
-          [ngClass]="
-            currentTab() === 'REGISTERED'
-              ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-900/5'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
-          "
-          class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap"
-        >
-          Đã đăng ký
-        </button>
 
-        <!-- Tab 2: Đang diễn ra -->
-        <button
-          (click)="changeTab('ONGOING')"
-          [ngClass]="
-            currentTab() === 'ONGOING'
-              ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-900/5'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
-          "
-          class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap"
-        >
-          Đang diễn ra
-          @if (currentTab() === 'ONGOING') {
-            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-          }
-        </button>
-
-        <!-- Tab 3: Đã nộp minh chứng -->
-        <button
-          (click)="changeTab('PROOF_SUBMITTED')"
-          [ngClass]="
-            currentTab() === 'PROOF_SUBMITTED'
-              ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-900/5'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
-          "
-          class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap"
-        >
-          Đã nộp minh chứng
-        </button>
-
-        <!-- Tab 4: Đã hoàn thành -->
-        <button
-          (click)="changeTab('COMPLETED')"
-          [ngClass]="
-            currentTab() === 'COMPLETED'
-              ? 'bg-white text-blue-700 shadow-sm ring-1 ring-slate-900/5'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
-          "
-          class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap"
-        >
-          Đã hoàn thành
-        </button>
-      </div>
-    </div>
-
-    @if (isLoadingData()) {
-      <div class="py-32 flex flex-col items-center justify-center text-blue-500">
-        <div
-          class="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4 shadow-lg"
-        ></div>
-        <p class="font-bold text-sm text-slate-500 animate-pulse">Đang tải dữ liệu...</p>
-      </div>
-    } @else {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="records-table__body">
         @for (act of filteredActivities(); track act.id) {
-          <div
-            class="group bg-white rounded-[24px] shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-slate-200/80 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full relative overflow-hidden"
+          <article
+            class="activity-record"
+            [class.is-locked]="act.status === 2 || act.isMissed"
+            [class.needs-action]="act.nextAction === 'CHECK_OUT' || canOpenProof(act)"
           >
-            <a
-              [href]="'/activity-hub/detail/' + act.activityId"
-              class="absolute inset-0 z-0 cursor-pointer"
-              aria-label="Xem chi tiết hoạt động"
-            ></a>
-            <div
-              class="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-2xl group-hover:from-blue-100 transition-colors z-0 pointer-events-none"
-            ></div>
-            @if (act.isStartingSoon && currentTab() === 'REGISTERED') {
-              <div
-                class="absolute top-3 left-3 bg-rose-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md flex items-center gap-1.5 z-20 animate-pulse pointer-events-none"
-              >
-                <i class="bi bi-alarm-fill"></i> Sắp diễn ra
+            <div class="activity-record__main">
+              <div class="activity-record__icon" aria-hidden="true">
+                @if (act.status === 2 || act.isMissed) {
+                  <i class="bi bi-lock"></i>
+                } @else if (act.nextAction === 'CHECK_OUT') {
+                  <i class="bi bi-box-arrow-right"></i>
+                } @else if (canOpenProof(act)) {
+                  <i class="bi bi-cloud-upload"></i>
+                } @else {
+                  <i class="bi bi-calendar-event"></i>
+                }
               </div>
-            } @else if (act.isMissed) {
-              <div
-                class="absolute top-3 left-3 bg-slate-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md flex items-center gap-1.5 z-20 pointer-events-none"
-              >
-                <i class="bi bi-calendar-x-fill"></i> Đã bỏ lỡ
-              </div>
-            }
 
-            <div class="relative z-10 flex flex-col flex-grow p-6 pointer-events-none pt-10">
-              <div class="flex justify-between items-start mb-4 gap-4">
-                <h3
-                  class="font-extrabold text-[17px] leading-snug group-hover:text-blue-700 transition-colors"
-                  [ngClass]="
-                    act.status === 2
-                      ? 'text-slate-400 line-through decoration-slate-300'
-                      : 'text-slate-900'
-                  "
-                >
-                  {{ act.title }}
-                </h3>
-                <span
-                  class="text-xs font-black px-2.5 py-1 rounded-lg whitespace-nowrap"
-                  [ngClass]="
-                    act.status === 2
-                      ? 'bg-slate-100 text-slate-400'
-                      : 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-700/10'
-                  "
-                >
-                  +{{ act.point || 0 }} điểm
-                </span>
-              </div>
-              <div class="space-y-2 mb-5" [ngClass]="{ 'opacity-50 grayscale': act.status === 2 }">
-                <div class="flex items-center gap-2.5 text-sm text-slate-600 font-medium">
-                  <i class="bi bi-clock text-blue-500 opacity-80"></i>
-                  <span class="truncate">{{
-                    act.realStartDate || act.startDate | date: 'dd/MM/yyyy • HH:mm'
-                  }}</span>
-                </div>
-                <div
-                  class="flex items-center gap-2.5 text-sm text-slate-600 font-medium"
-                  [title]="act.location"
-                >
-                  <i class="bi bi-geo-alt text-rose-500 opacity-80"></i>
-                  <span class="truncate">{{ act.location }}</span>
-                </div>
-              </div>
-              <div
-                class="bg-slate-50/80 rounded-2xl p-3.5 mb-6"
-                [ngClass]="{ 'opacity-50 grayscale': act.status === 2 }"
-              >
-                <div class="flex flex-col gap-2">
-                  <div
-                    class="flex justify-between items-center text-xs font-bold text-slate-500 border-b border-slate-200/60 pb-2"
-                  >
-                    <span>Lịch sử điểm danh</span>
-                    @if (act.status === 1) {
-                      <span class="text-emerald-600 flex items-center gap-1"
-                        ><i class="bi bi-check-circle-fill"></i> Thành công</span
-                      >
-                    } @else if (act.status === 0) {
-                      <span class="text-amber-600 flex items-center gap-1"
-                        ><i class="bi bi-dash-circle-fill"></i> Chưa điểm danh</span
-                      >
-                    } @else {
-                      <span class="text-slate-400">Đã hủy</span>
-                    }
-                  </div>
-
-                  @if (act.status === 1) {
-                    <div
-                      class="flex justify-between items-center text-[13px] font-medium text-slate-700 pt-1"
-                    >
-                      <span>Thời gian:</span>
-                      <span class="font-bold text-slate-900">{{
-                        act.attendedAt | date: 'dd/MM/yyyy • HH:mm'
-                      }}</span>
-                    </div>
+              <div class="activity-record__title">
+                <a [routerLink]="['/activity-hub/detail', act.activityId]">{{ act.title }}</a>
+                <div class="activity-record__meta">
+                  <span>#{{ act.activityId }}</span>
+                  @if (getRecordNote(act)) {
+                    <span class="activity-record__note">{{ getRecordNote(act) }}</span>
                   }
                 </div>
               </div>
-
-              <div class="mt-auto mb-5">
-                @if (act.status === 2) {
-                  <div
-                    class="bg-slate-50 text-slate-500 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-slate-200"
-                    [title]="act.cancelReason ? 'Lý do: ' + act.cancelReason : ''"
-                  >
-                    <span class="w-2 h-2 rounded-full bg-slate-400"></span> ĐÃ HỦY ({{
-                      act.cancelReason
-                    }})
-                  </div>
-                } @else if (act.status === 1 && act.proofStatus === 0) {
-                  <div
-                    class="bg-amber-50 text-amber-700 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-amber-600/20"
-                  >
-                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> THIẾU MINH
-                    CHỨNG
-                  </div>
-                } @else if (act.status === 1 && act.proofStatus === 1) {
-                  <div
-                    class="bg-blue-50 text-blue-600 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-blue-600/20"
-                  >
-                    <i class="bi bi-hourglass-split animate-spin-slow"></i> CHỜ DUYỆT MINH CHỨNG
-                  </div>
-                } @else if (act.status === 1 && act.proofStatus === 2) {
-                  <div
-                    class="bg-emerald-50 text-emerald-700 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-emerald-600/20"
-                  >
-                    <i class="bi bi-shield-check text-sm"></i> ĐÃ HOÀN THÀNH
-                  </div>
-                } @else if (act.status === 1 && act.proofStatus === 3) {
-                  <div
-                    class="bg-rose-50 text-rose-700 text-[11px] font-bold px-3 py-2 rounded-xl flex items-center gap-2 ring-1 ring-inset ring-rose-600/20"
-                  >
-                    <i class="bi bi-exclamation-triangle-fill"></i> BỊ TỪ CHỐI (CẦN NỘP LẠI)
-                  </div>
-                }
-              </div>
             </div>
 
-            <div
-              class="relative z-20 px-6 pb-6 mt-auto border-t border-slate-100 pt-4 bg-slate-50/30"
-            >
+            <div class="activity-record__cell activity-record__schedule">
+              <span class="mobile-label">Thời gian & địa điểm</span>
+              <strong>{{ act.realStartDate || act.startDate | date: 'dd/MM/yyyy HH:mm' }}</strong>
+              <small [title]="act.location">
+                <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                {{ act.location }}
+              </small>
+            </div>
+
+            <div class="activity-record__cell">
+              <span class="mobile-label">Điểm danh</span>
+              <span
+                class="status-pill"
+                [class.status-pill--success]="act.status === 1"
+                [class.status-pill--warning]="act.status === 0 && !act.isMissed"
+                [class.status-pill--muted]="act.status === 2 || act.isMissed"
+              >
+                {{ getAttendanceLabel(act) }}
+              </span>
+              @if (act.attendedAt) {
+                <small>{{ act.attendedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+              }
+            </div>
+
+            <div class="activity-record__cell">
+              <span class="mobile-label">Minh chứng</span>
+              <span
+                class="status-pill"
+                [class.status-pill--warning]="act.proofStatus === 0 && act.status === 1"
+                [class.status-pill--info]="act.proofStatus === 1"
+                [class.status-pill--success]="act.proofStatus === 2"
+                [class.status-pill--danger]="act.proofStatus === 3"
+                [class.status-pill--muted]="(act.status !== 1 && act.status !== 2) || act.isMissed"
+              >
+                {{ getProofLabel(act) }}
+              </span>
+            </div>
+
+            <div class="activity-record__actions">
               @if (act.status === 2 || act.isMissed) {
-                <button
-                  disabled
-                  class="w-full bg-slate-100 text-slate-400 font-bold py-3 rounded-xl text-[13px] cursor-not-allowed border border-slate-200"
-                >
-                  <i class="bi bi-lock-fill mr-1"></i> Đã khóa
+                <button type="button" class="btn-action btn-action--disabled" disabled>
+                  <i class="bi bi-lock-fill" aria-hidden="true"></i>
+                  Đã khóa
                 </button>
               } @else if (act.status === 0 && currentTab() === 'ONGOING') {
                 <button
+                  type="button"
+                  class="btn-action btn-action--primary"
                   (click)="openModal(act, 'SCAN')"
-                  class="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md hover:shadow-blue-500/20 font-bold py-3 rounded-xl text-[13px] transition-all flex items-center justify-center gap-2"
                 >
-                  <i class="bi bi-qr-code-scan"></i> Check-in Sự kiện
+                  <i class="bi bi-qr-code-scan" aria-hidden="true"></i>
+                  Check-in
                 </button>
-              } @else if (act.status === 1 && (act.proofStatus === 0 || act.proofStatus === 3)) {
-                <div class="flex gap-2">
+              } @else if (act.nextAction === 'CHECK_OUT' || canOpenProof(act)) {
+                @if (act.nextAction === 'CHECK_OUT') {
                   <button
+                    type="button"
+                    class="btn-action btn-action--checkout"
                     (click)="openModal(act, 'SCAN')"
-                    class="flex-1 bg-teal-500 hover:bg-teal-600 text-white shadow-sm hover:shadow-md hover:shadow-teal-500/20 font-bold py-3 rounded-xl text-[13px] transition-all flex items-center justify-center gap-1"
                   >
-                    <i class="bi bi-box-arrow-right"></i> Check-out
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                    Check-out
                   </button>
+                }
+                @if (canOpenProof(act)) {
                   <button
+                    type="button"
+                    class="btn-action btn-action--primary"
                     (click)="openModal(act, 'PROOF')"
-                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md hover:shadow-blue-500/20 font-bold py-3 rounded-xl text-[13px] transition-all flex items-center justify-center gap-1"
                   >
-                    <i class="bi bi-cloud-upload"></i> Nộp M.Chứng
+                    <i class="bi bi-cloud-upload" aria-hidden="true"></i>
+                    Nộp minh chứng
                   </button>
-                </div>
+                }
               } @else {
                 <a
-                  [href]="'/activity-hub/detail/' + act.activityId"
-                  class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-[13px] transition-all"
+                  class="btn-action btn-action--ghost"
+                  [routerLink]="['/activity-hub/detail', act.activityId]"
                 >
-                  Chi tiết hoạt động <i class="bi bi-arrow-right-short text-lg leading-none"></i>
+                  <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                  Chi tiết
                 </a>
               }
             </div>
-          </div>
+          </article>
         } @empty {
-          <div
-            class="col-span-full py-24 flex flex-col items-center justify-center text-center bg-white rounded-[32px] border-2 border-dashed border-slate-200"
-          >
-            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-              <i class="bi bi-inboxes text-3xl text-slate-300"></i>
-            </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-1">Không có hoạt động nào</h3>
-            <p class="text-slate-500 text-sm max-w-sm">
-              Chưa có dữ liệu cho học kỳ hoặc trạng thái bạn đang chọn. Hãy thử thay đổi bộ lọc nhé.
-            </p>
+          <div class="records-empty">
+            <span><i class="bi bi-inboxes" aria-hidden="true"></i></span>
+            <h2>Không có hoạt động nào</h2>
+            <p>Chưa có dữ liệu phù hợp với học kỳ hoặc trạng thái đang chọn.</p>
           </div>
         }
       </div>
-    }
-  </div>
+    </section>
+  }
 
   @if (isModalOpen() && selectedActivity()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-fade-in">
-      <div
-        class="absolute inset-0 bg-slate-900/40 backdrop-blur-md cursor-pointer"
+    <div class="records-modal">
+      <button
+        type="button"
+        class="records-modal__backdrop"
         (click)="closeModal()"
-        (keydown.enter)="closeModal()"
-        tabindex="0"
-        role="button"
-        aria-label="Đóng modal"
-      ></div>
+        aria-label="Đóng cửa sổ thao tác"
+      ></button>
 
-      <div
-        class="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl transform flex-col overflow-hidden rounded-3xl bg-white shadow-2xl transition-all animate-slide-up"
-      >
-        <div
-          class="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-slate-100/80 bg-white/80 px-4 py-4 backdrop-blur-sm sm:px-8 sm:py-6"
-        >
-          <h2 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-            @if (modalMode() === 'SCAN') {
-              <i
-                class="bi bi-geo-alt-fill"
-                [ngClass]="selectedActivity()?.status === 0 ? 'text-blue-500' : 'text-teal-500'"
-              ></i>
-              {{ selectedActivity()?.status === 0 ? 'Check-in Sự kiện' : 'Check-out Sự kiện' }}
-            } @else if (modalMode() === 'PROOF') {
-              <i class="bi bi-file-earmark-text-fill text-blue-500"></i> Quản lý Minh chứng
-            } @else {
-              <i class="bi bi-info-circle-fill text-blue-500"></i> Thông tin Hoạt động
-            }
-          </h2>
-          <button
-            (click)="closeModal()"
-            class="text-slate-400 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 w-9 h-9 rounded-full flex items-center justify-center transition-all transform active:scale-90"
-          >
-            <i class="bi bi-x-lg"></i>
+      <section class="records-modal__panel" role="dialog" aria-modal="true">
+        <header class="records-modal__header">
+          <div>
+            <p>
+              @if (modalMode() === 'SCAN') {
+                Điểm danh hoạt động
+              } @else if (modalMode() === 'PROOF') {
+                Minh chứng tham gia
+              } @else {
+                Thông tin hoạt động
+              }
+            </p>
+            <h2>{{ selectedActivity()?.title }}</h2>
+          </div>
+          <button type="button" class="icon-button" (click)="closeModal()" aria-label="Đóng">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
-        </div>
+        </header>
 
-        <div
-          class="custom-scrollbar flex-1 overflow-y-auto bg-slate-50/30 px-4 py-5 sm:px-8 sm:py-8"
-        >
-          <div
-            class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm mb-8 relative overflow-hidden"
-          >
-            <div
-              class="absolute left-0 top-0 bottom-0 w-1.5"
-              [ngClass]="
-                modalMode() === 'SCAN' && selectedActivity()?.status === 1
-                  ? 'bg-teal-500'
-                  : 'bg-blue-500'
-              "
-            ></div>
-            <h3 class="text-[19px] font-extrabold text-slate-900 mb-3 pl-2">
-              {{ selectedActivity()?.title }}
-            </h3>
-            <div
-              class="text-[13px] text-slate-500 font-medium grid grid-cols-1 sm:grid-cols-2 gap-3 pl-2"
-            >
-              <p class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg">
-                <i class="bi bi-clock text-slate-400"></i> ĐK:
-                {{
-                  selectedActivity()?.realStartDate || selectedActivity()?.startDate
-                    | date: 'dd/MM/yyyy HH:mm'
-                }}
-              </p>
-              <p class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg">
-                <i class="bi bi-person-badge text-slate-400"></i> MSSV:
-                {{ selectedActivity()?.studentCode || 'Chưa cập nhật' }}
-              </p>
-            </div>
+        <div class="records-modal__content custom-scrollbar">
+          <div class="modal-summary">
+            <span>
+              <i class="bi bi-clock" aria-hidden="true"></i>
+              {{
+                selectedActivity()?.realStartDate || selectedActivity()?.startDate
+                  | date: 'dd/MM/yyyy HH:mm'
+              }}
+            </span>
+            <span>
+              <i class="bi bi-person-badge" aria-hidden="true"></i>
+              {{ selectedActivity()?.studentCode || 'Chưa cập nhật MSSV' }}
+            </span>
           </div>
 
           @if (modalMode() === 'SCAN') {
-            <div
-              class="bg-white border-2 rounded-3xl p-6 sm:p-8 text-center shadow-sm relative overflow-hidden transition-all"
-              [ngClass]="selectedActivity()?.status === 0 ? 'border-blue-100' : 'border-teal-100'"
-            >
+            <section class="scan-panel">
               @if (!isScanning()) {
-                <div
-                  class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3"
-                  [ngClass]="
-                    selectedActivity()?.status === 0
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'bg-teal-50 text-teal-600'
-                  "
-                >
-                  <i class="bi bi-qr-code-scan text-3xl"></i>
-                </div>
-
-                <h4 class="font-bold text-slate-900 text-lg mb-2">
+                <span class="scan-panel__icon">
+                  <i class="bi bi-qr-code-scan" aria-hidden="true"></i>
+                </span>
+                <h3>
                   {{
-                    selectedActivity()?.status === 0 ? 'Ghi nhận Check-in' : 'Ghi nhận Check-out'
+                    selectedActivity()?.status === 0 ? 'Ghi nhận check-in' : 'Ghi nhận check-out'
                   }}
-                </h4>
-                <p class="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
-                  Vui lòng quét mã QR tại quầy sự kiện hoặc nhập mã thủ công do Ban tổ chức cung
-                  cấp.
-                </p>
+                </h3>
+                <p>Quét QR tại quầy sự kiện hoặc nhập mã do Ban tổ chức cung cấp.</p>
 
                 <button
+                  type="button"
+                  class="btn-action btn-action--primary"
                   (click)="isScanning.set(true)"
-                  class="mx-auto mb-6 flex w-full min-w-0 transform items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-bold shadow-md transition-all active:scale-95 sm:w-auto sm:min-w-[15rem]"
-                  [ngClass]="
-                    selectedActivity()?.status === 0
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20 hover:shadow-blue-500/30'
-                      : 'bg-teal-500 hover:bg-teal-600 text-white shadow-teal-500/20 hover:shadow-teal-500/30'
-                  "
                 >
-                  <i class="bi bi-camera-video text-lg"></i>
-                  {{ selectedActivity()?.status === 0 ? 'Quét QR Check-in' : 'Quét QR Check-out' }}
+                  <i class="bi bi-camera-video" aria-hidden="true"></i>
+                  {{ selectedActivity()?.status === 0 ? 'Quét QR check-in' : 'Quét QR check-out' }}
                 </button>
 
-                <div class="relative flex items-center py-2 mb-6 max-w-sm mx-auto">
-                  <div class="flex-grow border-t border-slate-200"></div>
-                  <span
-                    class="flex-shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase tracking-widest"
-                    >Hoặc</span
-                  >
-                  <div class="flex-grow border-t border-slate-200"></div>
-                </div>
-
-                <div
-                  class="max-w-sm mx-auto bg-slate-50 p-2 rounded-2xl ring-1 ring-inset ring-slate-200"
-                >
-                  <div class="flex">
-                    <input
-                      type="text"
-                      [(ngModel)]="manualCode"
-                      placeholder="Nhập mã code..."
-                      class="flex-1 bg-transparent border-none px-4 text-sm font-semibold focus:ring-0 outline-none uppercase font-mono tracking-widest text-center placeholder:text-slate-400 placeholder:normal-case placeholder:tracking-normal placeholder:font-normal"
-                    />
+                <div class="manual-code">
+                  <span>Hoặc nhập mã</span>
+                  <div>
+                    <input type="text" [(ngModel)]="manualCode" placeholder="Nhập mã điểm danh" />
                     <button
+                      type="button"
                       (click)="submitManualCode()"
                       [disabled]="isSubmittingCheckIn() || !manualCode()"
-                      class="bg-slate-800 text-white px-6 rounded-xl text-sm font-bold hover:bg-slate-900 disabled:bg-slate-300 disabled:opacity-50 h-12 transition-all shadow-md"
+                      aria-label="Gửi mã điểm danh"
                     >
                       @if (isSubmittingCheckIn()) {
-                        <div
-                          class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"
-                        ></div>
+                        <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
                       } @else {
-                        <i class="bi bi-send-fill"></i>
+                        <i class="bi bi-send-fill" aria-hidden="true"></i>
                       }
                     </button>
                   </div>
                 </div>
               } @else {
-                <div class="animate-fade-in-up">
-                  <div class="flex justify-between items-center mb-4">
-                    <h4 class="font-bold text-slate-900">Đưa mã QR vào khung hình</h4>
-                    <button
-                      (click)="isScanning.set(false)"
-                      class="text-rose-500 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
-                    >
-                      <i class="bi bi-x-circle-fill"></i> Hủy quét
-                    </button>
-                  </div>
+                <div class="scanner-header">
+                  <h3>Đưa mã QR vào khung hình</h3>
+                  <button type="button" (click)="isScanning.set(false)">
+                    <i class="bi bi-x-circle" aria-hidden="true"></i>
+                    Hủy quét
+                  </button>
+                </div>
 
-                  <div
-                    class="relative rounded-2xl overflow-hidden bg-slate-900 border-4 border-slate-800 shadow-inner aspect-square max-w-xs mx-auto flex items-center justify-center"
-                  >
-                    <zxing-scanner
-                      (scanSuccess)="onScanSuccess($event)"
-                      [formats]="allowedFormats"
-                      class="absolute inset-0 w-full h-full object-cover"
-                    >
-                    </zxing-scanner>
-
-                    <div
-                      class="pointer-events-none absolute inset-0 z-10 border-[2.5rem] border-black/40"
-                    ></div>
-                    <div
-                      class="absolute w-48 h-48 border-2 border-white/50 rounded-xl pointer-events-none z-20"
-                    >
-                      <div
-                        class="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-emerald-400 rounded-tl-lg"
-                      ></div>
-                      <div
-                        class="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-emerald-400 rounded-tr-lg"
-                      ></div>
-                      <div
-                        class="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-emerald-400 rounded-bl-lg"
-                      ></div>
-                      <div
-                        class="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-emerald-400 rounded-br-lg"
-                      ></div>
-                      <div
-                        class="w-full h-0.5 bg-emerald-400/80 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-scan-line"
-                      ></div>
-                    </div>
-                  </div>
-                  <p class="text-xs text-slate-500 mt-4 animate-pulse">
-                    Hệ thống sẽ tự động điểm danh khi nhận diện được mã.
-                  </p>
+                <div class="scanner-frame">
+                  <zxing-scanner
+                    (scanSuccess)="onScanSuccess($event)"
+                    [formats]="allowedFormats"
+                    class="scanner-frame__camera"
+                  ></zxing-scanner>
+                  <span class="scanner-frame__target"></span>
+                  <span class="scanner-frame__line"></span>
                 </div>
               }
-            </div>
+            </section>
           }
 
           @if (modalMode() === 'PROOF') {
-            @if (selectedActivity()?.proofStatus === 0 || selectedActivity()?.proofStatus === 3) {
-              <div class="space-y-6 animate-fade-in-up">
+            @if (canOpenProof(selectedActivity())) {
+              <section class="proof-form">
                 <div
-                  class="group relative cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed p-5 text-center transition-all sm:p-8"
-                  [ngClass]="
-                    isDragging()
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-slate-300 hover:border-blue-500 bg-white hover:bg-blue-50/50'
-                  "
+                  class="proof-upload"
+                  [class.is-dragging]="isDragging()"
                   (dragover)="onDragOver($event)"
                   (dragleave)="onDragLeave($event)"
                   (drop)="onDrop($event)"
@@ -535,172 +337,102 @@
                     type="file"
                     #fileInput
                     class="hidden"
-                    accept="image/jpeg, image/png, application/pdf"
+                    accept="image/jpeg, image/png"
                     (change)="onFileSelected($event)"
                   />
 
                   @if (previewUrl()) {
-                    <div
-                      class="relative w-full h-40 rounded-xl overflow-hidden mb-3 bg-slate-100 flex items-center justify-center shadow-inner"
-                    >
-                      <img
-                        [src]="previewUrl()"
-                        alt="Preview"
-                        class="w-full h-full object-contain absolute inset-0"
-                      />
-
+                    <figure class="proof-preview">
+                      <img [src]="previewUrl()" alt="Ảnh minh chứng đã chọn" />
                       <button
+                        type="button"
                         (click)="removeFile($event)"
-                        (keydown.enter)="removeFile($event)"
-                        class="absolute top-2 right-2 bg-rose-500/90 hover:bg-rose-600 text-white w-8 h-8 rounded-full flex items-center justify-center transition-transform hover:scale-110 shadow-md"
+                        aria-label="Xóa ảnh đã chọn"
                       >
-                        <i class="bi bi-trash-fill"></i>
+                        <i class="bi bi-trash-fill" aria-hidden="true"></i>
                       </button>
-                    </div>
-                    <p class="text-[13px] font-bold text-blue-700 truncate px-2">
-                      {{ selectedFileName() }}
-                    </p>
+                    </figure>
+                    <strong>{{ selectedFileName() }}</strong>
                   } @else {
-                    <div
-                      class="w-14 h-14 bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 group-hover:scale-110 rounded-full flex items-center justify-center mx-auto mb-4 transition-all duration-300 pointer-events-none"
-                    >
-                      <i class="bi bi-cloud-arrow-up text-2xl"></i>
-                    </div>
-                    <h4 class="text-[15px] font-bold text-slate-800 mb-1 pointer-events-none">
-                      Nhấn hoặc kéo thả ảnh vào đây
-                    </h4>
-                    <p class="text-[12px] text-slate-400 mb-4 pointer-events-none">
-                      Hỗ trợ JPG, PNG (Tối đa 5MB)
-                    </p>
-
-                    <div
-                      class="relative max-w-md mx-auto"
-                      (click)="$event.stopPropagation()"
-                      (keydown.enter)="$event.stopPropagation()"
-                      (keydown.space)="$event.stopPropagation()"
-                      tabindex="0"
-                      role="presentation"
-                    >
-                      <div
-                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                      >
-                        <i class="bi bi-link-45deg text-slate-400"></i>
-                      </div>
-                      <input
-                        type="text"
-                        [(ngModel)]="proofImageUrl"
-                        placeholder="Hoặc dán link ảnh trực tiếp vào đây..."
-                        class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-shadow"
-                      />
-                    </div>
+                    <span><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i></span>
+                    <h3>Chọn hoặc kéo ảnh minh chứng vào đây</h3>
+                    <p>Hỗ trợ JPG, PNG. Dung lượng tối đa 5MB.</p>
                   }
                 </div>
 
-                <div
-                  class="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-500"
-                >
+                <label class="proof-link">
+                  <span>Link ảnh minh chứng</span>
+                  <input
+                    type="text"
+                    [(ngModel)]="proofImageUrl"
+                    [disabled]="!!selectedFile()"
+                    placeholder="Dán link ảnh nếu không tải file"
+                  />
+                </label>
+
+                <label class="proof-note">
+                  <span>Nhận xét của sinh viên</span>
                   <textarea
                     [(ngModel)]="proofDescription"
-                    rows="3"
-                    placeholder="Bạn đã học được gì từ hoạt động này? (Không bắt buộc)"
-                    class="w-full bg-transparent border-none p-4 text-[14px] outline-none resize-none placeholder-slate-400 font-medium text-slate-700"
+                    rows="4"
+                    placeholder="Mô tả ngắn minh chứng hoặc cảm nhận sau hoạt động"
                   ></textarea>
-                </div>
-              </div>
+                </label>
+              </section>
             } @else {
-              <div
-                class="bg-white border border-slate-100 shadow-sm rounded-3xl p-10 text-center relative overflow-hidden"
-              >
-                <div class="absolute inset-0 bg-gradient-to-b from-transparent to-blue-50/30"></div>
-                <div class="relative z-10">
-                  <div
-                    class="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner"
-                  >
-                    <i class="bi bi-check2-circle text-4xl"></i>
-                  </div>
-                  <h4 class="font-extrabold text-slate-900 text-[20px] mb-2">
-                    Đã ghi nhận minh chứng
-                  </h4>
-                  <p class="text-[14px] text-slate-500 max-w-sm mx-auto leading-relaxed">
-                    {{
-                      selectedActivity()?.proofStatus === 1
-                        ? 'Hồ sơ của bạn đang được Cố vấn học tập xem xét. Vui lòng quay lại sau.'
-                        : 'Tuyệt vời! Minh chứng của bạn hợp lệ và đã được duyệt thành công.'
-                    }}
-                  </p>
-                </div>
-              </div>
+              <section class="proof-state">
+                <span><i class="bi bi-check2-circle" aria-hidden="true"></i></span>
+                <h3>Đã ghi nhận minh chứng</h3>
+                <p>
+                  {{
+                    selectedActivity()?.proofStatus === 1
+                      ? 'Minh chứng của bạn đang chờ Ban tổ chức duyệt.'
+                      : 'Minh chứng đã được duyệt và hoạt động đã hoàn thành.'
+                  }}
+                </p>
+              </section>
             }
           }
         </div>
 
-        <div
-          class="mt-auto flex flex-col items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/50 px-4 py-4 sm:flex-row sm:px-8 sm:py-5"
-        >
-          <div class="flex items-center w-full sm:w-auto">
-            @if (modalMode() === 'PROOF' && selectedActivity()?.status === 1) {
-              <div
-                class="px-3 py-1.5 rounded-lg flex items-center gap-2 font-bold text-xs"
-                [ngClass]="{
-                  'bg-amber-100 text-amber-700': selectedActivity()?.proofStatus === 0,
-                  'bg-blue-100 text-blue-700': selectedActivity()?.proofStatus === 1,
-                  'bg-emerald-100 text-emerald-700': selectedActivity()?.proofStatus === 2,
-                  'bg-rose-100 text-rose-700': selectedActivity()?.proofStatus === 3,
-                }"
-              >
-                <span
-                  class="w-1.5 h-1.5 rounded-full"
-                  [ngClass]="{
-                    'bg-amber-500 animate-pulse': selectedActivity()?.proofStatus === 0,
-                    'bg-blue-500': selectedActivity()?.proofStatus === 1,
-                    'bg-emerald-500': selectedActivity()?.proofStatus === 2,
-                    'bg-rose-500': selectedActivity()?.proofStatus === 3,
-                  }"
-                ></span>
-                {{
-                  selectedActivity()?.proofStatus === 0
-                    ? 'CHƯA NỘP'
-                    : selectedActivity()?.proofStatus === 1
-                      ? 'ĐANG CHỜ DUYỆT'
-                      : selectedActivity()?.proofStatus === 2
-                        ? 'ĐÃ DUYỆT'
-                        : 'BỊ TỪ CHỐI'
-                }}
-              </div>
-            } @else {
-              <div></div>
-            }
-          </div>
-
-          <div class="flex gap-3 w-full sm:w-auto">
-            <button
-              (click)="closeModal()"
-              class="flex-1 sm:flex-none px-6 py-3 text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-all"
+        <footer class="records-modal__footer">
+          @if (modalMode() === 'PROOF' && selectedActivity()?.status === 1) {
+            <span
+              class="status-pill"
+              [class.status-pill--warning]="selectedActivity()?.proofStatus === 0"
+              [class.status-pill--info]="selectedActivity()?.proofStatus === 1"
+              [class.status-pill--success]="selectedActivity()?.proofStatus === 2"
+              [class.status-pill--danger]="selectedActivity()?.proofStatus === 3"
             >
+              {{ selectedActivity() ? getProofLabel(selectedActivity()!) : '' }}
+            </span>
+          } @else {
+            <span></span>
+          }
+
+          <div>
+            <button type="button" class="btn-action btn-action--ghost" (click)="closeModal()">
               Đóng
             </button>
-
-            @if (
-              modalMode() === 'PROOF' &&
-              (selectedActivity()?.proofStatus === 0 || selectedActivity()?.proofStatus === 3)
-            ) {
+            @if (modalMode() === 'PROOF' && canOpenProof(selectedActivity())) {
               <button
+                type="button"
+                class="btn-action btn-action--primary"
                 (click)="submitProofData()"
                 [disabled]="isSubmittingProof()"
-                class="flex min-w-[8.75rem] flex-1 items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-blue-500/20 transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400 sm:flex-none sm:px-8"
               >
                 @if (isSubmittingProof()) {
-                  <div
-                    class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"
-                  ></div>
+                  <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
+                  Đang gửi
                 } @else {
-                  <i class="bi bi-send-fill mr-2"></i> Gửi duyệt
+                  <i class="bi bi-send-fill" aria-hidden="true"></i>
+                  Gửi duyệt
                 }
               </button>
             }
           </div>
-        </div>
-      </div>
+        </footer>
+      </section>
     </div>
   }
 </div>

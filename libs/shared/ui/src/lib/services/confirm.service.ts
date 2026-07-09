@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { ConfirmDialogConfig, ConfirmType } from '../components/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogConfig } from '../components/confirm-dialog/confirm-dialog.component';
 
 @Injectable({
   providedIn: 'root'

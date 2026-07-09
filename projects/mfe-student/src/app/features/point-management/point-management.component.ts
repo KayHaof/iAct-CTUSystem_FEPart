@@ -1,26 +1,46 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 import { SemesterService } from '../../shared/services/semester.service';
 import { ApiResponse, Semester } from '@my-mfe/interface';
 
-interface CategoryPoint {
-  categoryId: number;
-  categoryName: string;
-  maxPoint: number;
-  earnedPoint: number;
-  children?: CategoryPoint[];
+interface RuleCategoryResponse {
+  id?: number;
+  categoryId?: number;
+  code?: string;
+  categoryCode?: string;
+  name?: string;
+  categoryName?: string;
+  maxPoint?: number;
+  earnedPoint?: number;
+  percentage?: number;
+  parentId?: number | null;
+  level?: number;
+  isActive?: boolean;
+  children?: RuleCategoryResponse[];
 }
 
-interface PointDetail {
-  activityId: number;
-  activityTitle: string;
-  categoryId: number;
-  categoryName: string;
-  earnedPoint: number;
-  awardedAt: string;
-  proofStatus: number;
+interface PointContribution {
+  activityId?: number;
+  activityTitle?: string;
+  activityName?: string;
+  categoryId?: number;
+  categoryName?: string;
+  earnedPoint?: number;
+  awardedAt?: string;
+  attendedAt?: string;
+  proofStatus?: number;
 }
 
 interface PointSummary {
@@ -32,291 +52,102 @@ interface PointSummary {
   totalPoint: number;
   maxPoint: number;
   percentage: number;
-  status: 'excellent' | 'good' | 'warning' | 'danger';
+  status: PointStatus;
+  categoryBreakdown?: RuleCategoryResponse[];
+  warnings?: string[];
 }
 
 interface PointDetailsResponse {
-  categories: CategoryPoint[];
-  details: PointDetail[];
+  totalPoint?: number;
+  maxPoint?: number;
+  categories?: RuleCategoryResponse[];
+  details?: PointContribution[];
 }
+
+interface UiCategory {
+  id: number;
+  code: string;
+  name: string;
+  maxPoint: number;
+  earnedPoint: number;
+  percentage: number;
+  cappedEarnedPoint: number;
+  remainingPoint: number;
+  isLeaf: boolean;
+  children: UiCategory[];
+}
+
+interface CategoryRow extends UiCategory {
+  depth: number;
+}
+
+type PointStatus = 'excellent' | 'good' | 'warning' | 'danger' | 'unknown';
 
 @Component({
   selector: 'app-point-management',
   standalone: true,
   imports: [CommonModule, RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="w-full bg-slate-50 p-4 sm:p-6">
-      <div class="mx-auto max-w-6xl">
-        <!-- Header -->
-        <div class="mb-6">
-          <p class="mb-1 text-xs font-bold uppercase tracking-widest text-blue-600">
-            Kết quả cá nhân
-          </p>
-          <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Điểm rèn luyện</h1>
-          <p class="mt-2 text-sm leading-6 text-slate-500">
-            Theo dõi tổng điểm và chi tiết theo từng tiêu chí.
-          </p>
-        </div>
-
-        <!-- Semester Selector -->
-        <div class="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-6">
-          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-            <label for="pointSemester" class="text-sm font-medium text-slate-700">Học kỳ:</label>
-            <select
-              id="pointSemester"
-              [value]="selectedSemesterId()"
-              (change)="onSemesterChange($event)"
-              class="min-h-11 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:w-auto"
-            >
-              @for (sem of semesters(); track sem.id) {
-                <option [value]="sem.id">{{ sem.semesterName }} ({{ sem.academicYear }})</option>
-              }
-            </select>
-          </div>
-        </div>
-
-        <!-- Summary Cards -->
-        @if (summary()) {
-          <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6 sm:mb-6">
-            <!-- Diem tong -->
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-              <div class="flex items-center justify-between mb-4">
-                <span class="text-slate-500 text-sm">Tong diem</span>
-                <span
-                  class="text-xs font-medium px-2 py-1 rounded-full"
-                  [class]="getStatusBadge(summary()!.status)"
-                >
-                  {{ getStatusLabel(summary()!.status) }}
-                </span>
-              </div>
-              <div class="text-3xl font-bold" [class]="getScoreColor(summary()!.percentage)">
-                {{ summary()!.totalPoint }}
-                <span class="text-lg text-slate-400 font-normal">/ {{ summary()!.maxPoint }}</span>
-              </div>
-              <div class="mt-3">
-                <div class="w-full bg-slate-200 rounded-full h-2">
-                  <div
-                    class="h-2 rounded-full transition-all"
-                    [class]="getProgressBarColor(summary()!.percentage)"
-                    [style.width.%]="summary()!.percentage"
-                  ></div>
-                </div>
-                <p class="text-xs text-slate-400 mt-1">
-                  {{ summary()!.percentage | number: '1.1-1' }}%
-                </p>
-              </div>
-            </div>
-
-            <!-- Thong tin SV -->
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-              <span class="text-slate-500 text-sm">Thong tin sinh vien</span>
-              <div class="mt-3 space-y-2">
-                <p class="text-slate-700">
-                  <span class="font-medium">Ma SV:</span> {{ summary()!.studentCode }}
-                </p>
-                <p class="text-slate-700">
-                  <span class="font-medium">Ten:</span> {{ summary()!.studentName }}
-                </p>
-                <p class="text-slate-700">
-                  <span class="font-medium">Hoc ky:</span> {{ summary()!.semesterName }}
-                </p>
-              </div>
-            </div>
-
-            <!-- Chi so -->
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-              <span class="text-slate-500 text-sm">Chi so</span>
-              <div class="mt-3">
-                @if (summary()!.percentage >= 90) {
-                  <div class="flex items-center gap-2 text-green-600">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span class="font-medium">Xuat sac!</span>
-                  </div>
-                } @else if (summary()!.percentage >= 70) {
-                  <div class="flex items-center gap-2 text-blue-600">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span class="font-medium">Tot!</span>
-                  </div>
-                } @else if (summary()!.percentage >= 50) {
-                  <div class="flex items-center gap-2 text-yellow-600">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      />
-                    </svg>
-                    <span class="font-medium">Can co gang them!</span>
-                  </div>
-                } @else {
-                  <div class="flex items-center gap-2 text-red-600">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span class="font-medium">Yeu!</span>
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- Loading -->
-        @if (isLoading()) {
-          <div class="flex justify-center py-12">
-            <div
-              class="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"
-            ></div>
-          </div>
-        }
-
-        <!-- Categories Breakdown -->
-        @if (!isLoading() && categories().length > 0) {
-          <div
-            class="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-6 sm:p-6"
-          >
-            <h2 class="mb-4 text-lg font-semibold text-slate-800">Điểm theo tiêu chí</h2>
-            <div class="space-y-4">
-              @for (cat of categories(); track cat.categoryId) {
-                <div class="border border-slate-100 rounded-lg p-4">
-                  <div class="mb-2 flex items-start justify-between gap-3 sm:items-center">
-                    <span class="min-w-0 break-words font-medium text-slate-700">{{
-                      cat.categoryName
-                    }}</span>
-                    <span class="shrink-0 text-sm font-medium text-slate-600">
-                      {{ cat.earnedPoint }} / {{ cat.maxPoint }} điểm
-                    </span>
-                  </div>
-                  <div class="w-full bg-slate-100 rounded-full h-2">
-                    <div
-                      class="h-2 rounded-full"
-                      [class]="getCatProgressColor(cat.earnedPoint, cat.maxPoint)"
-                      [style.width.%]="
-                        cat.maxPoint > 0 ? (cat.earnedPoint / cat.maxPoint) * 100 : 0
-                      "
-                    ></div>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- Activity Details -->
-        @if (!isLoading() && details().length > 0) {
-          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-            <h2 class="mb-4 text-lg font-semibold text-slate-800">Chi tiết điểm theo hoạt động</h2>
-            <div
-              class="iact-scroll-region -mx-4 px-4 sm:mx-0 sm:px-0"
-              tabindex="0"
-              aria-label="Bảng chi tiết điểm rèn luyện"
-            >
-              <table class="min-w-[42.5rem] w-full text-sm">
-                <thead>
-                  <tr class="border-b border-slate-200">
-                    <th class="px-4 py-3 text-left font-medium text-slate-600">Hoạt động</th>
-                    <th class="px-4 py-3 text-left font-medium text-slate-600">Tiêu chí</th>
-                    <th class="px-4 py-3 text-center font-medium text-slate-600">Điểm</th>
-                    <th class="px-4 py-3 text-left font-medium text-slate-600">Ngày nhận</th>
-                    <th class="px-4 py-3 text-center font-medium text-slate-600">
-                      Trạng thái minh chứng
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (detail of details(); track detail.activityId + '-' + detail.categoryId) {
-                    <tr class="border-b border-slate-100 hover:bg-slate-50">
-                      <td class="py-3 px-4 text-slate-700">{{ detail.activityTitle }}</td>
-                      <td class="py-3 px-4 text-slate-600">{{ detail.categoryName }}</td>
-                      <td class="py-3 px-4 text-center font-medium text-blue-600">
-                        {{ detail.earnedPoint }}
-                      </td>
-                      <td class="py-3 px-4 text-slate-500">
-                        {{ detail.awardedAt | date: 'dd/MM/yyyy' }}
-                      </td>
-                      <td class="py-3 px-4 text-center">
-                        <span
-                          class="px-2 py-1 rounded-full text-xs font-medium"
-                          [class]="getProofStatusClass(detail.proofStatus)"
-                        >
-                          {{ getProofStatusLabel(detail.proofStatus) }}
-                        </span>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        }
-
-        <!-- Empty State -->
-        @if (!isLoading() && !summary() && categories().length === 0) {
-          <div
-            class="rounded-2xl border border-slate-200 bg-white px-4 py-12 text-center shadow-sm sm:p-12"
-          >
-            <svg
-              class="w-16 h-16 mx-auto text-slate-300 mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="1.5"
-                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-              />
-            </svg>
-            <h3 class="mb-2 text-lg font-medium text-slate-600">Chưa có điểm rèn luyện</h3>
-            <p class="text-slate-400">Tham gia hoạt động để tích lũy điểm rèn luyện.</p>
-            <a
-              routerLink="/activity-hub"
-              class="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
-            >
-              Tìm hoạt động
-            </a>
-          </div>
-        }
-      </div>
-    </div>
-  `,
+  templateUrl: './point-management.component.html',
+  styleUrl: './point-management.component.scss',
 })
 export class PointManagementComponent implements OnInit {
   private http = inject(HttpClient);
   private semesterService = inject(SemesterService);
   private baseUrl = 'http://localhost:8080';
+  private apiUrl = `${this.baseUrl}/activity/api/v1`;
 
   summary = signal<PointSummary | null>(null);
-  categories = signal<CategoryPoint[]>([]);
-  details = signal<PointDetail[]>([]);
+  categories = signal<UiCategory[]>([]);
+  details = signal<PointContribution[]>([]);
   semesters = signal<Semester[]>([]);
   selectedSemesterId = signal<number>(0);
+  isSemesterMenuOpen = signal(false);
+  selectedRootCategoryId = signal<number | null>(null);
   isLoading = signal(true);
+
+  readonly totalEarned = computed(() => this.sumEarned(this.categories()));
+  readonly totalMax = computed(() => this.sumMax(this.categories()));
+  readonly remainingPoint = computed(() => Math.max(this.totalMax() - this.totalEarned(), 0));
+  readonly totalPercentage = computed(() =>
+    this.calculatePercentage(this.totalEarned(), this.totalMax()),
+  );
+  readonly currentStatus = computed<PointStatus>(() => this.resolveStatus(this.totalPercentage()));
+  readonly rootCategoryCount = computed(() => this.categories().length);
+  readonly categoryCount = computed(() => this.countCategories(this.categories()));
+  readonly leafCategoryCount = computed(() => this.countLeafCategories(this.categories()));
+  readonly categoryRows = computed(() => this.flattenCategoryRows(this.categories()));
+  readonly selectedRootCategory = computed(() => {
+    const categories = this.categories();
+    const selectedId = this.selectedRootCategoryId();
+    return categories.find((category) => category.id === selectedId) || categories[0] || null;
+  });
+  readonly selectedRootCategoryRows = computed(() => {
+    const root = this.selectedRootCategory();
+    return root ? this.flattenCategoryRows([root]) : [];
+  });
+  readonly selectedSemesterLabel = computed(() => {
+    const selectedId = this.selectedSemesterId();
+    const semester = this.semesters().find((item) => item.id === selectedId);
+    return semester ? this.formatSemesterLabel(semester) : 'Chưa chọn học kỳ';
+  });
 
   ngOnInit(): void {
     this.loadSemesters();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.isSemesterMenuOpen()) {
+      return;
+    }
+
+    const target = event.target as Element | null;
+    if (target?.closest('.semester-select')) {
+      return;
+    }
+
+    this.closeSemesterMenu();
   }
 
   loadSemesters(): void {
@@ -325,12 +156,11 @@ export class PointManagementComponent implements OnInit {
         const list = res.data || [];
         this.semesters.set(list);
         const active = list.find((s: Semester) => s.isActive);
-        if (active) {
-          this.selectedSemesterId.set(active.id);
-          this.loadPointData(active.id);
-        } else if (list.length > 0) {
-          this.selectedSemesterId.set(list[0].id);
-          this.loadPointData(list[0].id);
+        const selected = active || list[0];
+
+        if (selected) {
+          this.selectedSemesterId.set(selected.id);
+          this.loadPointData(selected.id);
         } else {
           this.isLoading.set(false);
         }
@@ -345,114 +175,297 @@ export class PointManagementComponent implements OnInit {
     this.loadPointData(id);
   }
 
+  toggleSemesterMenu(): void {
+    this.isSemesterMenuOpen.update((isOpen) => !isOpen);
+  }
+
+  closeSemesterMenu(): void {
+    this.isSemesterMenuOpen.set(false);
+  }
+
+  selectSemester(semester: Semester): void {
+    if (semester.id === this.selectedSemesterId()) {
+      this.closeSemesterMenu();
+      return;
+    }
+
+    this.selectedSemesterId.set(semester.id);
+    this.closeSemesterMenu();
+    this.loadPointData(semester.id);
+  }
+
   loadPointData(semesterId: number): void {
     this.isLoading.set(true);
-    const apiUrl = `${this.baseUrl}/activity/api/v1`;
 
-    this.http
-      .get<ApiResponse<PointSummary>>(`${apiUrl}/student-points/summary`, {
-        params: { semesterId: semesterId.toString() },
-      })
-      .subscribe({
-        next: (res) => this.summary.set(res.data ?? null),
-        error: () => this.summary.set(null),
-      });
+    forkJoin({
+      summary: this.http
+        .get<ApiResponse<PointSummary>>(`${this.apiUrl}/student-points/summary`, {
+          params: { semesterId: semesterId.toString() },
+        })
+        .pipe(catchError(() => of(null))),
+      details: this.http
+        .get<ApiResponse<PointDetailsResponse>>(`${this.apiUrl}/student-points/details`, {
+          params: { semesterId: semesterId.toString() },
+        })
+        .pipe(catchError(() => of(null))),
+      rules: this.http
+        .get<ApiResponse<RuleCategoryResponse[]>>(`${this.apiUrl}/student-points/categories`, {
+          params: { semesterId: semesterId.toString() },
+        })
+        .pipe(catchError(() => of(null))),
+    })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe(({ summary, details, rules }) => {
+        const summaryData = summary?.data ?? null;
+        const detailsData = details?.data ?? null;
+        const ruleCategories = rules?.data || [];
+        const detailCategories = detailsData?.categories || [];
+        const breakdown = summaryData?.categoryBreakdown || [];
 
-    this.http
-      .get<ApiResponse<PointDetailsResponse>>(`${apiUrl}/student-points/details`, {
-        params: { semesterId: semesterId.toString() },
-      })
-      .subscribe({
-        next: (res) => {
-          if (res.data) {
-            this.categories.set(res.data.categories || []);
-            this.details.set(res.data.details || []);
-          }
-        },
-        error: () => undefined,
-        complete: () => this.isLoading.set(false),
+        const earnedByCategory = this.buildEarnedPointMap([...detailCategories, ...breakdown]);
+        const sourceTree = ruleCategories.length > 0 ? ruleCategories : detailCategories;
+
+        this.summary.set(summaryData);
+        const normalizedCategories = this.normalizeCategoryTree(sourceTree, earnedByCategory);
+        this.categories.set(normalizedCategories);
+        this.ensureSelectedRootCategory(normalizedCategories);
+        this.details.set(detailsData?.details || this.flattenContributions(detailCategories));
       });
   }
 
-  getStatusBadge(status: string): string {
+  getStatusLabel(status: PointStatus): string {
     switch (status) {
       case 'excellent':
-        return 'bg-green-100 text-green-700';
+        return 'Xuất sắc';
       case 'good':
-        return 'bg-blue-100 text-blue-700';
+        return 'Tốt';
       case 'warning':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'Trung bình';
       case 'danger':
-        return 'bg-red-100 text-red-700';
+        return 'Yếu';
       default:
-        return 'bg-slate-100 text-slate-700';
+        return 'Chưa xác định';
     }
   }
 
-  getStatusLabel(status: string): string {
+  getStatusIcon(status: PointStatus): string {
     switch (status) {
       case 'excellent':
-        return 'Xuat sac';
+        return 'bi-trophy-fill';
       case 'good':
-        return 'Tot';
+        return 'bi-check-circle-fill';
       case 'warning':
-        return 'Trung binh';
+        return 'bi-exclamation-triangle-fill';
       case 'danger':
-        return 'Yeu';
+        return 'bi-x-circle-fill';
       default:
-        return 'Khong xac dinh';
+        return 'bi-dash-circle-fill';
     }
   }
 
-  getScoreColor(pct: number): string {
-    if (pct >= 90) return 'text-green-600';
-    if (pct >= 70) return 'text-blue-600';
-    if (pct >= 50) return 'text-yellow-600';
-    return 'text-red-600';
+  getStatusTone(status: PointStatus): string {
+    switch (status) {
+      case 'excellent':
+        return 'success';
+      case 'good':
+        return 'info';
+      case 'warning':
+        return 'warning';
+      case 'danger':
+        return 'danger';
+      default:
+        return 'muted';
+    }
   }
 
-  getProgressBarColor(pct: number): string {
-    if (pct >= 90) return 'bg-green-500';
-    if (pct >= 70) return 'bg-blue-500';
-    if (pct >= 50) return 'bg-yellow-500';
-    return 'bg-red-500';
+  getCategoryStatus(category: UiCategory): PointStatus {
+    if (category.maxPoint <= 0) return 'unknown';
+    return this.resolveStatus(category.percentage);
   }
 
-  getCatProgressColor(earned: number, max: number): string {
-    const pct = max > 0 ? (earned / max) * 100 : 0;
-    if (pct >= 90) return 'bg-green-500';
-    if (pct >= 70) return 'bg-blue-500';
-    if (pct >= 50) return 'bg-yellow-500';
-    return 'bg-red-500';
-  }
-
-  getProofStatusClass(status: number): string {
+  getProofStatusLabel(status?: number): string {
     switch (status) {
       case 0:
-        return 'bg-slate-100 text-slate-600';
+        return 'Chưa nộp';
       case 1:
-        return 'bg-yellow-100 text-yellow-700';
+        return 'Chờ duyệt';
       case 2:
-        return 'bg-green-100 text-green-700';
+        return 'Đã duyệt';
       case 3:
-        return 'bg-red-100 text-red-700';
+        return 'Bị từ chối';
       default:
-        return 'bg-slate-100 text-slate-600';
+        return 'Không rõ';
     }
   }
 
-  getProofStatusLabel(status: number): string {
+  getProofStatusTone(status?: number): string {
     switch (status) {
-      case 0:
-        return 'Chua nop';
       case 1:
-        return 'Cho duyet';
+        return 'warning';
       case 2:
-        return 'Da duyet';
+        return 'success';
       case 3:
-        return 'Bi tu choi';
+        return 'danger';
       default:
-        return 'Khong ro';
+        return 'muted';
     }
+  }
+
+  getContributionTitle(detail: PointContribution): string {
+    return detail.activityTitle || detail.activityName || 'Hoạt động';
+  }
+
+  getContributionDate(detail: PointContribution): string | null {
+    return detail.awardedAt || detail.attendedAt || null;
+  }
+
+  trackCategory(_: number, category: UiCategory): number {
+    return category.id;
+  }
+
+  trackCategoryRow(_: number, category: CategoryRow): string {
+    return `${category.depth}-${category.id}`;
+  }
+
+  trackContribution(index: number, detail: PointContribution): string {
+    return `${detail.activityId || index}-${detail.categoryId || 'category'}-${detail.earnedPoint || 0}`;
+  }
+
+  selectRootCategory(categoryId: number): void {
+    this.selectedRootCategoryId.set(categoryId);
+  }
+
+  formatPoint(value: number | null | undefined): string {
+    const point = Number(value || 0);
+    return Number.isInteger(point) ? point.toString() : point.toFixed(1);
+  }
+
+  formatSemesterLabel(semester: Semester): string {
+    return `${semester.semesterName} (${semester.academicYear})`;
+  }
+
+  private normalizeCategoryTree(
+    categories: RuleCategoryResponse[],
+    earnedByCategory: Map<number, number>,
+  ): UiCategory[] {
+    return categories.map((category, index) =>
+      this.normalizeCategory(category, earnedByCategory, index),
+    );
+  }
+
+  private normalizeCategory(
+    category: RuleCategoryResponse,
+    earnedByCategory: Map<number, number>,
+    index: number,
+  ): UiCategory {
+    const id = Number(category.id ?? category.categoryId ?? index + 1);
+    const children = this.normalizeCategoryTree(category.children || [], earnedByCategory);
+    const childEarned = this.sumEarned(children);
+    const childMax = this.sumMax(children);
+    const explicitMax = Number(category.maxPoint ?? 0);
+    const explicitEarned =
+      category.earnedPoint != null ? Number(category.earnedPoint || 0) : earnedByCategory.get(id);
+    const rawEarned = explicitEarned != null ? explicitEarned : childEarned;
+    const maxPoint = explicitMax > 0 ? explicitMax : childMax;
+    const cappedEarnedPoint = maxPoint > 0 ? Math.min(Math.max(rawEarned, 0), maxPoint) : 0;
+
+    return {
+      id,
+      code: category.code || category.categoryCode || `CAT-${id}`,
+      name: category.name || category.categoryName || 'Tiêu chí rèn luyện',
+      maxPoint,
+      earnedPoint: cappedEarnedPoint,
+      percentage: this.calculatePercentage(cappedEarnedPoint, maxPoint),
+      cappedEarnedPoint,
+      remainingPoint: Math.max(maxPoint - cappedEarnedPoint, 0),
+      isLeaf: children.length === 0,
+      children,
+    };
+  }
+
+  private buildEarnedPointMap(categories: RuleCategoryResponse[]): Map<number, number> {
+    const map = new Map<number, number>();
+    const visit = (items: RuleCategoryResponse[]) => {
+      for (const item of items) {
+        const id = Number(item.id ?? item.categoryId ?? 0);
+        if (id > 0 && item.earnedPoint != null) {
+          map.set(id, Number(item.earnedPoint || 0));
+        }
+        visit(item.children || []);
+      }
+    };
+
+    visit(categories);
+    return map;
+  }
+
+  private flattenContributions(categories: RuleCategoryResponse[]): PointContribution[] {
+    const contributions: PointContribution[] = [];
+    const visit = (items: RuleCategoryResponse[]) => {
+      for (const item of items) {
+        const criteria =
+          (item as RuleCategoryResponse & { criteria?: PointContribution[] }).criteria || [];
+        contributions.push(...criteria);
+        visit(item.children || []);
+      }
+    };
+
+    visit(categories);
+    return contributions;
+  }
+
+  private sumEarned(categories: UiCategory[]): number {
+    return categories.reduce((total, category) => total + category.earnedPoint, 0);
+  }
+
+  private sumMax(categories: UiCategory[]): number {
+    return categories.reduce((total, category) => total + category.maxPoint, 0);
+  }
+
+  private countCategories(categories: UiCategory[]): number {
+    return categories.reduce(
+      (total, category) => total + 1 + this.countCategories(category.children),
+      0,
+    );
+  }
+
+  private countLeafCategories(categories: UiCategory[]): number {
+    return categories.reduce((total, category) => {
+      if (category.children.length === 0) return total + 1;
+      return total + this.countLeafCategories(category.children);
+    }, 0);
+  }
+
+  private ensureSelectedRootCategory(categories: UiCategory[]): void {
+    if (categories.length === 0) {
+      this.selectedRootCategoryId.set(null);
+      return;
+    }
+
+    const selectedId = this.selectedRootCategoryId();
+    const selectedStillExists = categories.some((category) => category.id === selectedId);
+    if (!selectedStillExists) {
+      this.selectedRootCategoryId.set(categories[0].id);
+    }
+  }
+
+  private flattenCategoryRows(categories: UiCategory[], depth = 0): CategoryRow[] {
+    return categories.flatMap((category) => [
+      { ...category, depth },
+      ...this.flattenCategoryRows(category.children, depth + 1),
+    ]);
+  }
+
+  private calculatePercentage(earned: number, max: number): number {
+    if (max <= 0) return 0;
+    return Math.min(100, Math.round((earned / max) * 1000) / 10);
+  }
+
+  resolveStatus(percentage: number): PointStatus {
+    if (percentage >= 90) return 'excellent';
+    if (percentage >= 70) return 'good';
+    if (percentage >= 50) return 'warning';
+    if (this.totalMax() > 0) return 'danger';
+    return 'unknown';
   }
 }

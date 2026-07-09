@@ -18,7 +18,12 @@
     </button>
   }
 
-  <lib-sidebar [menuItems]="adminMenus()" theme="light" class="sidebar-area"></lib-sidebar>
+  <lib-sidebar
+    [menuItems]="adminMenus()"
+    homeLink="/admin/dashboard"
+    theme="light"
+    class="sidebar-area"
+  ></lib-sidebar>
 
   <div class="content-area">
     <lib-header theme="light" class="header-area"></lib-header>

@@ -229,11 +229,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  
+
   svg {
     transform: rotate(-90deg);
   }
-  
+
   .progress-value {
     position: absolute;
     font-weight: 800;
@@ -250,8 +250,10 @@
   border-radius: var(--radius-2xl);
   color: white;
   padding: 2rem;
-  
-  h1, h2, h3 {
+
+  h1,
+  h2,
+  h3 {
     color: white;
   }
 }

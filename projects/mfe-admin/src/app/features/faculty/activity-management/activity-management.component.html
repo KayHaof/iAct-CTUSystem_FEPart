@@ -53,24 +53,28 @@
       <!-- Thong bao bi tu choi -->
       @if (act.status === 2) {
         <div class="admin-rejection-alert">
-          <div class="rejection-alert__icon">
+          <div class="admin-rejection-alert__icon">
             <i class="bi bi-shield-fill-x"></i>
           </div>
-          <div class="rejection-alert__content">
+          <div class="admin-rejection-alert__content">
             <h3>Hoạt động đã bị từ chối phê duyệt!</h3>
-            <div class="rejection-alert__reason">
-              <p class="rejection-alert__label">Lý do từ chối</p>
-              <p class="rejection-alert__text">"{{ act.reason || 'Không có lý do cụ thể' }}"</p>
+            <div class="admin-rejection-alert__reason">
+              <p class="admin-rejection-alert__label">Lý do từ chối</p>
+              <p class="admin-rejection-alert__text">
+                "{{ act.reason || 'Không có lý do cụ thể' }}"
+              </p>
             </div>
-            <div class="rejection-alert__meta">
-              <span
-                ><i class="bi bi-person-fill"></i> Người xử lý:
-                <strong>{{ act.handledBy?.fullName || 'Hệ thống' }}</strong></span
-              >
-              <span
-                ><i class="bi bi-clock-fill"></i> Thời gian:
-                <strong>{{ act.handledAt | date: 'HH:mm - dd/MM/yyyy' }}</strong></span
-              >
+            <div class="admin-rejection-alert__meta">
+              <span>
+                <i class="bi bi-person-fill"></i>
+                <span>Người xử lý:</span>
+                <strong>{{ act.handledBy?.fullName || 'Hệ thống' }}</strong>
+              </span>
+              <span>
+                <i class="bi bi-clock-fill"></i>
+                <span>Thời gian:</span>
+                <strong>{{ act.handledAt | date: 'HH:mm - dd/MM/yyyy' }}</strong>
+              </span>
             </div>
           </div>
         </div>

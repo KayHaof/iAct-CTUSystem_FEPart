@@ -25,18 +25,13 @@ export interface UserDto {
   department?: { id: number; name: string };
 }
 
-export interface OrganizerMock {
+export interface OrganizerOption {
   id: number;
   fullName?: string;
   username?: string;
   email?: string;
   avatarUrl?: string | null;
 }
-
-// export interface SemesterMock {
-//   id: number;
-//   name: string;
-// }
 
 export interface ActivityScheduleDto {
   id?: number;

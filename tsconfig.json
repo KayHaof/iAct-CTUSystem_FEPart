@@ -19,13 +19,10 @@
       "path": "./projects/shell/tsconfig.app.json"
     },
     {
-      "path": "./projects/shell/tsconfig.spec.json"
-    },
-    {
       "path": "./projects/mfe-admin/tsconfig.app.json"
     },
     {
-      "path": "./projects/mfe-admin/tsconfig.spec.json"
+      "path": "./projects/mfe-student/tsconfig.app.json"
     }
   ],
   "extends": "./tsconfig.base.json"

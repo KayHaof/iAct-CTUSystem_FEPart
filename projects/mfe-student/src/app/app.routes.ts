@@ -10,7 +10,7 @@ export const appRoutes: Routes = [
         path: 'dashboard',
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-        title: 'Dashboard | iAct CTU',
+        title: 'Tổng quan | iAct CTU',
       },
       {
         path: 'activity-hub',
@@ -18,7 +18,7 @@ export const appRoutes: Routes = [
           import('./features/activity-hub/activity-hub.component').then(
             (m) => m.ActivityHubComponent,
           ),
-        title: 'Cong Hoat dong',
+        title: 'Cổng hoạt động | iAct CTU',
       },
       {
         path: 'activity-hub/detail/:id',
@@ -26,13 +26,13 @@ export const appRoutes: Routes = [
           import('./features/activity-hub/activity-detail/activity-detail.component').then(
             (m) => m.ActivityDetailComponent,
           ),
-        title: 'Chi tiet Hoat dong',
+        title: 'Chi tiết hoạt động | iAct CTU',
       },
       {
         path: 'my-records',
         loadComponent: () =>
           import('./features/my-records/my-records.component').then((m) => m.MyRecordsComponent),
-        title: 'Quan ly hoat dong ca nhan',
+        title: 'Hoạt động của tôi | iAct CTU',
       },
       {
         path: 'submit-proof',
@@ -40,7 +40,13 @@ export const appRoutes: Routes = [
           import('./features/submit-proof/submit-proof.component').then(
             (m) => m.SubmitProofComponent,
           ),
-        title: 'Nop minh chung',
+        title: 'Nộp minh chứng | iAct CTU',
+      },
+      {
+        path: 'complaints',
+        loadComponent: () =>
+          import('./features/complaints/complaints.component').then((m) => m.ComplaintsComponent),
+        title: 'Khiếu nại hoạt động | iAct CTU',
       },
       {
         path: 'point-management',
@@ -48,7 +54,7 @@ export const appRoutes: Routes = [
           import('./features/point-management/point-management.component').then(
             (m) => m.PointManagementComponent,
           ),
-        title: 'Diem ren luyen',
+        title: 'Điểm rèn luyện | iAct CTU',
       },
       {
         path: 'preferences',
@@ -56,15 +62,29 @@ export const appRoutes: Routes = [
           import('./features/preferences/preferences.component').then(
             (m) => m.PreferencesComponent,
           ),
-        title: 'Cai dat uu tien',
+        title: 'Cài đặt ưu tiên | iAct CTU',
+      },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./features/notifications/notification-center.component').then(
+            (m) => m.StudentNotificationCenterComponent,
+          ),
+        title: 'Thông báo | iAct CTU',
+      },
+      {
+        path: 'notifications/:id',
+        loadComponent: () =>
+          import('./features/notifications/notification-detail.component').then(
+            (m) => m.StudentNotificationDetailComponent,
+          ),
+        title: 'Chi tiết thông báo | iAct CTU',
       },
       {
         path: 'qr-checkin',
         loadComponent: () =>
-          import('./features/qr-checkin/qr-checkin.component').then(
-            (m) => m.QrCheckinComponent,
-          ),
-        title: 'Quet QR diem danh',
+          import('./features/qr-checkin/qr-checkin.component').then((m) => m.QrCheckinComponent),
+        title: 'Quét QR điểm danh | iAct CTU',
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],

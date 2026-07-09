@@ -1,19 +1,12 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  inject,
-  signal,
-  ChangeDetectionStrategy,
-  ElementRef,
-  ViewChild,
-} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { Subscription } from 'rxjs';
-import { WebSocketService, AppNotification } from '@my-mfe/data-access-realtime';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { BarcodeFormat } from '@zxing/library';
+import { ZXingScannerModule } from '@zxing/ngx-scanner';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 import { ApiResponse } from '@my-mfe/interface';
 
 interface RegistrationQR {
@@ -23,6 +16,7 @@ interface RegistrationQR {
   qrData: string;
   checkInCode: string;
   validUntil: number;
+  status: number;
   sessionInfo?: {
     sessionId: number;
     sessionName: string;
@@ -31,372 +25,149 @@ interface RegistrationQR {
   };
 }
 
+type QrMode = 'SCAN_EVENT' | 'MY_QR';
+
 @Component({
   selector: 'app-qr-checkin',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ZXingScannerModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div class="w-full bg-slate-50 p-4 sm:p-6">
-      <div class="mx-auto max-w-lg">
-        <!-- Header -->
-        <div class="mb-6 flex items-center gap-3">
-          <button
-            type="button"
-            (click)="goBack()"
-            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl hover:bg-slate-200 transition"
-            aria-label="Quay lại"
-          >
-            <svg
-              class="w-5 h-5 text-slate-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-blue-600">Điểm danh</p>
-            <h1 class="text-xl font-bold text-slate-900 sm:text-2xl">Quét QR điểm danh</h1>
-            <p class="text-sm text-slate-500">Quét mã QR hoặc nhập mã được cung cấp.</p>
-          </div>
-        </div>
-
-        <!-- QR Scanner -->
-        @if (!qrResult()) {
-          <div
-            class="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-6 sm:p-6"
-          >
-            <div class="text-center">
-              <div
-                class="mx-auto mb-4 flex aspect-square w-full max-w-64 items-center justify-center overflow-hidden rounded-2xl bg-slate-100"
-                [class.border-2]="isScanning()"
-                [class.border-blue-500]="isScanning()"
-                #scannerContainer
-              >
-                @if (isScanning()) {
-                  <div class="text-center">
-                    <div
-                      class="mx-auto mb-3 h-24 w-24 animate-spin rounded-full border-4 border-blue-500 border-t-transparent sm:h-32 sm:w-32"
-                    ></div>
-                    <p class="text-sm text-slate-500">Đang khởi động camera...</p>
-                  </div>
-                } @else {
-                  <div class="text-center">
-                    <svg
-                      class="w-16 h-16 mx-auto text-slate-300 mb-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.5"
-                        d="M12 4v1m6 11h1m-11 0h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <p class="text-sm text-slate-500">Nhấn nút bên dưới để bật camera.</p>
-                  </div>
-                }
-              </div>
-
-              <div class="space-y-3">
-                <button
-                  (click)="startScanner()"
-                  [disabled]="isScanning()"
-                  class="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                  Quét QR
-                </button>
-                <button
-                  (click)="manualEntry()"
-                  class="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition"
-                >
-                  Nhập mã thủ công
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Manual Entry Form -->
-          @if (showManualEntry()) {
-            <div
-              class="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-6 sm:p-6"
-            >
-              <h3 class="mb-4 font-semibold text-slate-800">Nhập mã điểm danh</h3>
-              <input
-                type="text"
-                [(ngModel)]="manualCode"
-                placeholder="VD: CK000123"
-                class="w-full border border-slate-300 rounded-lg px-4 py-3 text-lg tracking-widest uppercase focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
-              />
-              <button
-                (click)="submitManualCode()"
-                [disabled]="!manualCode || isChecking()"
-                class="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition disabled:opacity-50"
-              >
-                {{ isChecking() ? 'Đang kiểm tra...' : 'Kiểm tra mã' }}
-              </button>
-            </div>
-          }
-        }
-
-        <!-- Check-in Success -->
-        @if (qrResult()?.success) {
-          <div
-            class="rounded-2xl border border-green-200 bg-white p-5 text-center shadow-sm sm:p-8"
-          >
-            <div
-              class="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4"
-            >
-              <svg
-                class="w-10 h-10 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <h2 class="mb-2 text-xl font-bold text-green-700">Điểm danh thành công</h2>
-            <p class="text-slate-600 mb-1">{{ qrResult()?.activityTitle }}</p>
-            @if (qrResult()?.sessionName) {
-              <p class="text-sm text-slate-500 mb-4">{{ qrResult()?.sessionName }}</p>
-            }
-            <p class="text-sm text-slate-400">
-              Thời gian: {{ qrResult()?.checkedInAt | date: 'HH:mm - dd/MM/yyyy' }}
-            </p>
-            <button
-              (click)="reset()"
-              class="mt-6 px-6 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition"
-            >
-              Quét tiếp
-            </button>
-          </div>
-        }
-
-        <!-- Check-in Error -->
-        @if (qrResult() && !qrResult()?.success) {
-          <div class="rounded-2xl border border-red-200 bg-white p-5 text-center shadow-sm sm:p-8">
-            <div
-              class="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4"
-            >
-              <svg
-                class="w-10 h-10 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </div>
-            <h2 class="mb-2 text-xl font-bold text-red-700">Điểm danh thất bại</h2>
-            <p class="text-slate-600 mb-4">{{ qrResult()?.message }}</p>
-            <button
-              (click)="reset()"
-              class="px-6 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition"
-            >
-              Thử lại
-            </button>
-          </div>
-        }
-
-        <!-- My QR Code -->
-        @if (myRegistrations().length > 0 && !qrResult()) {
-          <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-            <h3 class="mb-4 font-semibold text-slate-800">Mã QR của tôi</h3>
-            <div class="space-y-3">
-              @for (reg of myRegistrations(); track reg.registrationId) {
-                <div
-                  (click)="selectRegistration(reg)"
-                  (keydown.enter)="selectRegistration(reg)"
-                  (keydown.space)="selectRegistration(reg); $event.preventDefault()"
-                  role="button"
-                  tabindex="0"
-                  class="p-4 border border-slate-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition"
-                  [class.border-blue-400]="
-                    selectedRegistration()?.registrationId === reg.registrationId
-                  "
-                  [class.bg-blue-50]="selectedRegistration()?.registrationId === reg.registrationId"
-                >
-                  <p class="font-medium text-slate-700">{{ reg.activityTitle }}</p>
-                  <p class="mt-1 text-sm text-slate-500">Mã: {{ reg.checkInCode }}</p>
-                </div>
-              }
-            </div>
-
-            @if (selectedRegistration()) {
-              <div class="mt-4 p-4 bg-slate-50 rounded-lg text-center">
-                <p class="text-sm text-slate-500 mb-3">
-                  {{ selectedRegistration()!.activityTitle }}
-                </p>
-                <div class="bg-white p-4 rounded-lg inline-block">
-                  <img
-                    [src]="selectedRegistration()!.qrData"
-                    alt="QR Code"
-                    class="w-48 h-48 mx-auto"
-                  />
-                </div>
-                <p class="mt-2 text-xs text-slate-400">Quét tại điểm danh</p>
-              </div>
-            }
-          </div>
-        }
-
-        <!-- Loading -->
-        @if (isLoading()) {
-          <div class="flex justify-center py-8">
-            <div
-              class="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"
-            ></div>
-          </div>
-        }
-      </div>
-    </div>
-  `,
+  templateUrl: './qr-checkin.component.html',
+  styleUrl: './qr-checkin.component.scss',
 })
-export class QrCheckinComponent implements OnInit, OnDestroy {
+export class QrCheckinComponent implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private wsService = inject(WebSocketService);
-
-  @ViewChild('scannerContainer') scannerContainer!: ElementRef;
 
   private baseUrl = 'http://localhost:8080';
   private activityApiUrl = `${this.baseUrl}/activity/api/v1`;
 
+  readonly allowedFormats = [BarcodeFormat.QR_CODE];
+
   isLoading = signal(true);
   isScanning = signal(false);
-  isChecking = signal(false);
-  showManualEntry = signal(false);
+  isSubmitting = signal(false);
+  mode = signal<QrMode>('SCAN_EVENT');
   manualCode = '';
   myRegistrations = signal<RegistrationQR[]>([]);
   selectedRegistration = signal<RegistrationQR | null>(null);
   qrResult = signal<{
     success: boolean;
-    message?: string;
+    message: string;
     activityTitle?: string;
-    sessionName?: string;
     checkedInAt?: string;
   } | null>(null);
-  private notifSub?: Subscription;
 
   ngOnInit(): void {
     this.loadMyRegistrations();
-    this.initWebSocket();
-  }
-
-  ngOnDestroy(): void {
-    this.notifSub?.unsubscribe();
-  }
-
-  initWebSocket(): void {
-    this.wsService.initConnection();
-    this.wsService.watch('/topic/notifications').subscribe({
-      next: (msg: any) => {
-        const appNotification = msg as AppNotification;
-        if (appNotification.type === 3) {
-          this.qrResult.set({
-            success: true,
-            activityTitle: appNotification.title,
-            message: appNotification.message,
-            checkedInAt: new Date().toISOString(),
-          });
-        }
-      },
-    });
   }
 
   loadMyRegistrations(): void {
+    this.isLoading.set(true);
     this.http.get<ApiResponse<any[]>>(`${this.activityApiUrl}/registrations/my-records`).subscribe({
       next: (res) => {
         const regs = (res.data || []).filter((r: any) => r.status === 0 || r.status === 1);
-        const qrPromises = regs.map((r: any) =>
-          this.http
-            .get<ApiResponse<any>>(`${this.activityApiUrl}/registrations/${r.id}/qr`)
-            .toPromise(),
-        );
-        Promise.all(qrPromises).then((results) => {
-          const withQr = regs.map((r: any, i: number) => ({
-            registrationId: r.id,
-            activityId: r.activityId,
-            activityTitle: r.activityTitle || 'Hoat dong',
-            qrData: results[i]?.data || '',
-            checkInCode: 'CK' + String(r.id).padStart(6, '0'),
-            validUntil: 0,
-          }));
-          this.myRegistrations.set(withQr);
-          if (withQr.length > 0) {
-            this.selectedRegistration.set(withQr[0]);
-          }
+        if (regs.length === 0) {
+          this.myRegistrations.set([]);
+          this.selectedRegistration.set(null);
           this.isLoading.set(false);
+          return;
+        }
+
+        const qrRequests = regs.map((r: any) =>
+          this.http
+            .get<ApiResponse<RegistrationQR>>(`${this.activityApiUrl}/registrations/${r.id}/qr`)
+            .pipe(catchError(() => of(null))),
+        );
+
+        forkJoin(qrRequests)
+          .pipe(finalize(() => this.isLoading.set(false)))
+          .subscribe((results) => {
+            const withQr = regs.map((r: any, i: number) => {
+              const qr = results[i]?.data;
+              return {
+                registrationId: r.id,
+                activityId: r.activityId,
+                activityTitle: r.activityTitle || qr?.activityTitle || 'Hoạt động',
+                qrData: qr?.qrData || '',
+                checkInCode: qr?.checkInCode || `CK${String(r.id).padStart(6, '0')}`,
+                validUntil: qr?.validUntil || 0,
+                sessionInfo: qr?.sessionInfo,
+                status: r.status,
+              } as RegistrationQR;
+            });
+
+            this.myRegistrations.set(withQr);
+            this.selectedRegistration.set(withQr[0] || null);
+          });
+      },
+      error: () => {
+        this.isLoading.set(false);
+        this.qrResult.set({
+          success: false,
+          message: 'Không thể tải danh sách hoạt động đã đăng ký.',
         });
       },
-      error: () => this.isLoading.set(false),
     });
   }
 
+  changeMode(nextMode: QrMode): void {
+    this.mode.set(nextMode);
+    this.isScanning.set(false);
+    this.qrResult.set(null);
+    this.manualCode = '';
+  }
+
   startScanner(): void {
+    this.qrResult.set(null);
     this.isScanning.set(true);
   }
 
-  manualEntry(): void {
-    this.showManualEntry.set(true);
+  onScanSuccess(qrCode: string): void {
+    if (this.isSubmitting()) return;
+    this.isScanning.set(false);
+    this.manualCode = qrCode.trim();
+    this.submitCheckIn(qrCode);
   }
 
   submitManualCode(): void {
-    if (!this.manualCode) return;
-    this.isChecking.set(true);
-    const code = this.manualCode.trim().toUpperCase();
+    this.submitCheckIn(this.manualCode);
+  }
+
+  submitCheckIn(rawCode: string): void {
+    const selected = this.selectedRegistration();
+    const verifyCode = rawCode.trim();
+    if (!selected || !verifyCode) {
+      this.qrResult.set({
+        success: false,
+        message: 'Vui lòng chọn hoạt động và cung cấp mã điểm danh.',
+      });
+      return;
+    }
+
+    this.isSubmitting.set(true);
     this.http
-      .post<ApiResponse<any>>(`${this.activityApiUrl}/attendances/verify-qr`, { verifyCode: code })
+      .post<ApiResponse<any>>(`${this.activityApiUrl}/attendances/check-in`, {
+        activityId: selected.activityId,
+        method: 1,
+        verifyCode,
+      })
+      .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: (res) => {
-          this.isChecking.set(false);
           this.qrResult.set({
-            success: res.code === 200,
-            message: res.message,
-            activityTitle: '',
+            success: true,
+            message: res.data?.message || res.message || 'Điểm danh thành công.',
+            activityTitle: selected.activityTitle,
             checkedInAt: new Date().toISOString(),
           });
+          this.loadMyRegistrations();
         },
         error: (err) => {
-          this.isChecking.set(false);
           this.qrResult.set({
             success: false,
-            message: err.error?.message || 'Ma khong hop le',
+            message:
+              err.error?.message || 'Mã điểm danh không hợp lệ hoặc không thuộc hoạt động đã chọn.',
           });
         },
       });
@@ -404,12 +175,14 @@ export class QrCheckinComponent implements OnInit, OnDestroy {
 
   selectRegistration(reg: RegistrationQR): void {
     this.selectedRegistration.set(reg);
+    this.qrResult.set(null);
+    this.manualCode = '';
   }
 
   reset(): void {
     this.qrResult.set(null);
     this.manualCode = '';
-    this.showManualEntry.set(false);
+    this.isScanning.set(false);
   }
 
   goBack(): void {

@@ -24,6 +24,7 @@ export class SidebarComponent {
 
   @Input() menuItems: MenuItem[] = [];
   @Input() theme: 'light' | 'dark' = 'light';
+  @Input() homeLink = '/dashboard';
 
   isMobileOpen = this.layoutService.isMobileMenuOpen;
 

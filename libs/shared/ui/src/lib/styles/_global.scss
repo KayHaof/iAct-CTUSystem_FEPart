@@ -206,6 +206,51 @@ table {
   -webkit-overflow-scrolling: touch;
 }
 
+.iact-student-header {
+  margin-bottom: 1.5rem;
+}
+
+.iact-student-eyebrow {
+  margin: 0;
+  color: var(--primary-hover);
+  font-size: var(--student-eyebrow-size);
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.iact-student-title {
+  margin: 0.45rem 0 0;
+  color: var(--text);
+  font-size: var(--student-title-size);
+  font-weight: var(--student-title-weight);
+  letter-spacing: 0;
+  line-height: var(--student-title-line);
+}
+
+.iact-student-title--inverse {
+  color: #ffffff;
+}
+
+.iact-student-subtitle {
+  max-width: 44rem;
+  margin: 0.625rem 0 0;
+  color: var(--text-muted);
+  font-size: var(--student-subtitle-size);
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.iact-student-section-title {
+  margin: 0.15rem 0 0;
+  color: var(--text);
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
 @media (max-width: 639px) {
   h1 {
     font-size: clamp(1.5rem, 7vw, 1.875rem);

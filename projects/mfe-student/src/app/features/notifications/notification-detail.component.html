@@ -1,0 +1,110 @@
+<div class="nd-page">
+  <div class="nd-container">
+    @if (facade.detailLoading()) {
+      <!-- Skeleton Loading -->
+      <div class="nd-skeleton">
+        <div class="nd-skeleton-back"></div>
+        <div class="nd-skeleton-card">
+          <div class="nd-skeleton-line nd-skeleton-w40 nd-skeleton-badge"></div>
+          <div class="nd-skeleton-line nd-skeleton-w70 nd-skeleton-title"></div>
+          <div class="nd-skeleton-line nd-skeleton-w50"></div>
+          <div class="nd-skeleton-block"></div>
+        </div>
+      </div>
+    } @else if (facade.selectedNotification(); as n) {
+      <!-- Breadcrumb / Back -->
+      <button class="nd-back-btn" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i>
+        <span>Quay lại danh sách</span>
+      </button>
+
+      <!-- Detail Card -->
+      <div class="nd-card">
+        <!-- Header Row: Type + Read Status -->
+        <div class="nd-card-header">
+          <span
+            class="nd-type-badge"
+            [ngClass]="[getTypeConfig(n.type).bgClass, getTypeConfig(n.type).colorClass]"
+          >
+            <i [ngClass]="getTypeConfig(n.type).icon"></i>
+            {{ getTypeConfig(n.type).label }}
+          </span>
+          @if (n.isRead) {
+            <span class="nd-read-status nd-status-read">
+              <i class="bi bi-check2-circle"></i>
+              Đã đọc
+            </span>
+          } @else {
+            <span class="nd-read-status nd-status-unread">
+              <i class="bi bi-circle-fill"></i>
+              Chưa đọc
+            </span>
+          }
+        </div>
+
+        <!-- Title -->
+        <h1 class="nd-title iact-student-title">{{ n.title }}</h1>
+
+        <!-- Meta Info -->
+        <div class="nd-meta">
+          <span class="nd-meta-item">
+            <i class="bi bi-clock"></i>
+            {{ formatDateTime(n.createdAt) }}
+          </span>
+          @if (n.readAt) {
+            <span class="nd-meta-item">
+              <i class="bi bi-eye"></i>
+              Đọc lúc {{ formatDateTime(n.readAt) }}
+            </span>
+          }
+        </div>
+
+        <!-- Divider -->
+        <div class="nd-divider"></div>
+
+        <!-- Message Body -->
+        <div class="nd-body">
+          <p>{{ n.message }}</p>
+        </div>
+
+        <!-- Activity Link -->
+        @if (n.activityId) {
+          <div class="nd-activity-link">
+            <div class="nd-activity-icon">
+              <i class="bi bi-calendar3"></i>
+            </div>
+            <div class="nd-activity-info">
+              <span class="nd-activity-label">Hoạt động liên quan</span>
+              <strong class="nd-activity-id">#{{ n.activityId }}</strong>
+            </div>
+            <i class="bi bi-chevron-right nd-activity-arrow"></i>
+          </div>
+        }
+
+        <!-- CTA Actions -->
+        <div class="nd-actions">
+          @if (n.activityId) {
+            <button class="nd-btn nd-btn-primary" (click)="goToActivity(n.activityId)">
+              <i class="bi bi-box-arrow-up-right"></i>
+              Xem hoạt động
+            </button>
+          }
+          <button class="nd-btn nd-btn-ghost" (click)="goBack()">Quay lại danh sách</button>
+        </div>
+      </div>
+    } @else {
+      <!-- Not Found State -->
+      <div class="nd-empty">
+        <div class="nd-empty-icon">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <p class="nd-empty-title">Không tìm thấy thông báo</p>
+        <p class="nd-empty-desc">Thông báo này có thể đã bị xóa hoặc không tồn tại.</p>
+        <button class="nd-btn nd-btn-outline" (click)="goBack()">
+          <i class="bi bi-arrow-left"></i>
+          Quay lại
+        </button>
+      </div>
+    }
+  </div>
+</div>

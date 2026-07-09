@@ -14,8 +14,8 @@ import Swal from 'sweetalert2';
 
 import { ActivityService } from '../../../shared/services/activity.service';
 import { RegistrationService } from '../../../shared/services/registration.service';
-import { AlertService, ConfirmService } from '@my-mfe/ui';
-import { Activity } from '../../../shared/models/activity.model';
+import { AlertService } from '@my-mfe/ui';
+import { Activity, BenefitDto } from '../../../shared/models/activity.model';
 import { RegistrationResponse, ApiResponse } from '@my-mfe/interface';
 import { ActivityRegistrationModalComponent } from '../activity-form/activity-registration-modal.component';
 
@@ -34,7 +34,6 @@ export class ActivityDetailComponent implements OnInit {
   private registrationService = inject(RegistrationService);
 
   private alertService = inject(AlertService);
-  private confirmService = inject(ConfirmService);
 
   activity = signal<Activity | null>(null);
   userRegistration = signal<RegistrationResponse | null>(null);
@@ -43,15 +42,33 @@ export class ActivityDetailComponent implements OnInit {
   activeTab = signal<'overview' | 'content' | 'benefits'>('overview');
   isRegistrationModalOpen = signal<boolean>(false);
 
+  registrationStatus = computed(() => {
+    const status = this.userRegistration()?.status;
+    if (status === undefined || status === null) return null;
+
+    const parsedStatus = Number(status);
+    return Number.isNaN(parsedStatus) ? null : parsedStatus;
+  });
+
   isRegistered = computed(() => {
-    const reg = this.userRegistration();
-    return !!reg && (reg.status === 0 || reg.status === 1);
+    const status = this.registrationStatus();
+    return status === 0 || status === 1;
+  });
+
+  canCancelRegistration = computed(() => {
+    return this.registrationStatus() === 0;
   });
 
   capacityPercentage = computed(() => {
     const act = this.activity();
     if (!act || !act.maxParticipants) return 0;
     return Math.round(((act.registeredCount || 0) / act.maxParticipants) * 100);
+  });
+
+  remainingSlots = computed(() => {
+    const act = this.activity();
+    if (!act || !act.maxParticipants) return 0;
+    return Math.max(act.maxParticipants - (act.registeredCount || 0), 0);
   });
 
   totalPoints = computed(() => {
@@ -76,6 +93,15 @@ export class ActivityDetailComponent implements OnInit {
     }
 
     return { isOpen: true, label: 'Đang mở đăng ký', canRegister: true };
+  });
+
+  registrationStatusLabel = computed(() => {
+    const status = this.registrationStatus();
+    if (status === null) return 'Chưa đăng ký';
+    if (status === 1) return 'Đã điểm danh';
+    if (status === 0) return 'Đã đăng ký';
+    if (status === 2) return 'Đã hủy';
+    return 'Đang cập nhật';
   });
 
   async ngOnInit(): Promise<void> {
@@ -117,32 +143,54 @@ export class ActivityDetailComponent implements OnInit {
     this.activeTab.set(tab);
   }
 
+  benefitTitle(benefit: BenefitDto): string {
+    return benefit.categoryName || benefit.name || `Tiêu chí #${benefit.categoryId || 'N/A'}`;
+  }
+
+  benefitTypeLabel(benefit: BenefitDto): string {
+    if (benefit.typeLabel) return benefit.typeLabel;
+    if (benefit.type === 1) return 'Điểm cộng';
+    if (benefit.type === 2) return 'Điểm trừ';
+    return 'Theo tiêu chí';
+  }
+
+  semesterLabel(activity: Activity): string {
+    if (activity.semesterDisplayName) return activity.semesterDisplayName;
+    if (activity.semesterName && activity.academicYear) {
+      return `${activity.semesterName}, năm học ${activity.academicYear}`;
+    }
+    if (activity.semesterName) return activity.semesterName;
+    if (activity.academicYear) return `Năm học ${activity.academicYear}`;
+    return 'Đang cập nhật';
+  }
+
   async handleRegistration() {
     const act = this.activity();
     if (!act) return;
 
     if (this.isRegistered()) {
-      if (this.userRegistration()?.status === 1) {
+      if (!this.canCancelRegistration()) {
         this.alertService.info('Bạn đã điểm danh hoạt động này rồi!');
         return;
       }
-      await this.confirmService.confirm({
-        title: 'Xác nhận hủy?',
-        message: 'Bạn có chắc chắn muốn rút tên khỏi danh sách tham gia hoạt động không?',
-        confirmText: 'Chắc, hủy đăng ký',
-        cancelText: 'Không, giữ đăng ký',
-        type: 'warning',
-        onConfirm: async () => {
-          const { value: reason } = await Swal.fire({
-            title: 'Lý do hủy đăng ký',
-            input: 'text',
-            inputPlaceholder: 'Nhập lý do bận gì đó...',
-            inputValidator: (value) => (!value ? 'BTC cần biết lý do để xem xét yêu cầu!' : null),
-          });
 
-          if (reason) this.executeRegistrationAction('cancel', act.id, reason);
-        },
+      const { value: reason, isConfirmed } = await Swal.fire({
+        title: 'Xác nhận hủy đăng ký?',
+        text: 'Bạn có chắc chắn muốn rút tên khỏi danh sách tham gia hoạt động không?',
+        icon: 'warning',
+        input: 'text',
+        inputPlaceholder: 'Nhập lý do bận hoặc không thể tham gia...',
+        showCancelButton: true,
+        confirmButtonText: 'Chắc, hủy đăng ký',
+        cancelButtonText: 'Không, giữ đăng ký',
+        confirmButtonColor: '#e11d48',
+        inputValidator: (value) =>
+          !value ? 'BTC cần biết lý do để xem xét yêu cầu!' : null,
       });
+
+      if (isConfirmed && reason) {
+        this.executeRegistrationAction('cancel', act.id, reason);
+      }
     } else {
       if (!this.statusConfig().canRegister) return;
       this.isRegistrationModalOpen.set(true);

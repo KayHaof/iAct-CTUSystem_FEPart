@@ -4,12 +4,23 @@ import { Observable } from 'rxjs';
 import { PageDTO, ApiResponse } from '@my-mfe/interface';
 import { RegistrationResponse } from '@my-mfe/interface';
 
+export interface AttendanceResponse {
+  id: number;
+  registrationId: number;
+  checkinTime: string;
+  checkoutTime?: string;
+  attendanceStatus?: string;
+  method: number;
+  message: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class ParticipantService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8080/activity/api/v1/registrations';
+  private attendanceApiUrl = 'http://localhost:8080/activity/api/v1/attendances';
 
   getParticipantsByActivity(
     activityId: number,
@@ -34,6 +45,18 @@ export class ParticipantService {
   ): Observable<ApiResponse<RegistrationResponse>> {
     return this.http.put<ApiResponse<RegistrationResponse>>(`${this.apiUrl}/${id}/status`, {
       status: newStatus,
+    });
+  }
+
+  verifyStudentQr(
+    activityId: number,
+    qrData: string,
+    action: 'CHECK_IN' | 'CHECK_OUT' = 'CHECK_IN',
+  ): Observable<ApiResponse<AttendanceResponse>> {
+    return this.http.post<ApiResponse<AttendanceResponse>>(`${this.attendanceApiUrl}/verify-qr`, {
+      activityId,
+      qrData,
+      action,
     });
   }
 

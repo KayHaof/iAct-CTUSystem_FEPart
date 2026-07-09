@@ -1,0 +1,199 @@
+<div class="qr-page">
+  <header class="qr-header">
+    <button type="button" class="qr-back-btn" (click)="goBack()" aria-label="Quay lại">
+      <i class="bi bi-arrow-left"></i>
+    </button>
+
+    <div class="qr-header__content">
+      <p class="iact-student-eyebrow">Điểm danh QR</p>
+      <h1 class="iact-student-title">Điểm danh hoạt động</h1>
+      <p class="iact-student-subtitle">
+        Dùng camera để quét QR do Ban tổ chức cung cấp, hoặc xuất QR đăng ký cá nhân để Ban tổ
+        chức xác thực tham gia.
+      </p>
+    </div>
+
+    <div class="qr-mode-switch" role="tablist" aria-label="Chế độ điểm danh">
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="mode() === 'SCAN_EVENT'"
+        [class.is-active]="mode() === 'SCAN_EVENT'"
+        (click)="changeMode('SCAN_EVENT')"
+      >
+        <i class="bi bi-camera-video"></i>
+        <span>Quét mã BTC</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="mode() === 'MY_QR'"
+        [class.is-active]="mode() === 'MY_QR'"
+        (click)="changeMode('MY_QR')"
+      >
+        <i class="bi bi-qr-code"></i>
+        <span>QR của tôi</span>
+      </button>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <section class="qr-state-card" aria-live="polite">
+      <span class="qr-spinner"></span>
+      <p>Đang tải hoạt động đã đăng ký...</p>
+    </section>
+  } @else if (myRegistrations().length === 0) {
+    <section class="qr-state-card">
+      <span class="qr-state-card__icon">
+        <i class="bi bi-calendar-x"></i>
+      </span>
+      <h2>Chưa có hoạt động để điểm danh</h2>
+      <p>Các hoạt động đã đăng ký sẽ xuất hiện tại đây.</p>
+    </section>
+  } @else {
+    <main class="qr-layout">
+      <aside class="qr-registrations" aria-label="Hoạt động đã đăng ký">
+        <div class="qr-panel-heading">
+          <p class="iact-student-eyebrow">Hoạt động đã đăng ký</p>
+          <h2 class="iact-student-section-title">Chọn hoạt động</h2>
+        </div>
+
+        <div class="qr-registration-list">
+          @for (reg of myRegistrations(); track reg.registrationId) {
+            <button
+              type="button"
+              class="qr-registration-card"
+              [class.is-selected]="selectedRegistration()?.registrationId === reg.registrationId"
+              (click)="selectRegistration(reg)"
+            >
+              <span class="qr-registration-card__content">
+                <strong>{{ reg.activityTitle }}</strong>
+                <small>Mã đăng ký: {{ reg.checkInCode }}</small>
+              </span>
+              <span class="qr-status-pill" [class.qr-status-pill--success]="reg.status === 1">
+                {{ reg.status === 1 ? 'Đã ghi nhận' : 'Đã đăng ký' }}
+              </span>
+            </button>
+          }
+        </div>
+      </aside>
+
+      <section class="qr-workspace">
+        @if (mode() === 'SCAN_EVENT') {
+          <div class="qr-panel-heading">
+            <p class="iact-student-eyebrow">Quét mã điểm danh</p>
+            <h2 class="iact-student-section-title">Sinh viên quét QR của Ban tổ chức</h2>
+            <p>
+              Chọn đúng hoạt động, sau đó quét mã QR được hiển thị tại điểm danh hoặc nhập mã thủ
+              công.
+            </p>
+          </div>
+
+          <div class="qr-scan-stack">
+            @if (!isScanning()) {
+              <div class="qr-scanner-placeholder">
+                <i class="bi bi-qr-code-scan"></i>
+                <p>Sẵn sàng quét mã điểm danh</p>
+              </div>
+
+              <button
+                type="button"
+                class="qr-primary-action"
+                (click)="startScanner()"
+                [disabled]="!selectedRegistration() || isSubmitting()"
+              >
+                <i class="bi bi-camera-video"></i>
+                <span>Bật camera quét QR</span>
+              </button>
+            } @else {
+              <div class="qr-scanner-active">
+                <div class="qr-scanner-active__header">
+                  <p>Đưa QR của Ban tổ chức vào khung hình</p>
+                  <button type="button" (click)="isScanning.set(false)">
+                    <i class="bi bi-x-circle"></i>
+                    <span>Hủy quét</span>
+                  </button>
+                </div>
+
+                <div class="qr-scanner-frame">
+                  <zxing-scanner
+                    (scanSuccess)="onScanSuccess($event)"
+                    [formats]="allowedFormats"
+                    class="qr-scanner-frame__camera"
+                  ></zxing-scanner>
+                  <span class="qr-scanner-frame__target"></span>
+                </div>
+              </div>
+            }
+
+            <div class="qr-manual-code">
+              <input
+                type="text"
+                [(ngModel)]="manualCode"
+                placeholder="Nhập mã điểm danh"
+                aria-label="Nhập mã điểm danh"
+              />
+              <button
+                type="button"
+                (click)="submitManualCode()"
+                [disabled]="isSubmitting() || !manualCode.trim() || !selectedRegistration()"
+                aria-label="Gửi mã điểm danh"
+              >
+                @if (isSubmitting()) {
+                  <span class="qr-spinner qr-spinner--small"></span>
+                } @else {
+                  <i class="bi bi-send-fill"></i>
+                }
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="qr-panel-heading">
+            <p class="iact-student-eyebrow">QR cá nhân</p>
+            <h2 class="iact-student-section-title">Xuất QR đăng ký cho Ban tổ chức</h2>
+            <p>
+              Mã này đại diện cho lượt đăng ký của bạn. Ban tổ chức sẽ quét mã để xác thực tham
+              gia.
+            </p>
+          </div>
+
+          @if (selectedRegistration()) {
+            <div class="qr-personal-card">
+              <strong>{{ selectedRegistration()!.activityTitle }}</strong>
+              <div class="qr-personal-card__code">
+                @if (selectedRegistration()!.qrData) {
+                  <img [src]="selectedRegistration()!.qrData" alt="Mã QR đăng ký" />
+                } @else {
+                  <span>Không thể tải QR</span>
+                }
+              </div>
+              <code>{{ selectedRegistration()!.checkInCode }}</code>
+              <p>Xuất trình mã này tại quầy điểm danh.</p>
+            </div>
+          }
+        }
+
+        @if (qrResult()) {
+          <div
+            class="qr-result"
+            [class.qr-result--success]="qrResult()!.success"
+            [class.qr-result--error]="!qrResult()!.success"
+            aria-live="polite"
+          >
+            <i
+              class="bi"
+              [ngClass]="qrResult()!.success ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"
+            ></i>
+            <div>
+              <strong>{{ qrResult()!.success ? 'Ghi nhận thành công' : 'Không thể điểm danh' }}</strong>
+              <p>{{ qrResult()!.message }}</p>
+              @if (qrResult()!.checkedInAt) {
+                <small>Thời gian: {{ qrResult()!.checkedInAt | date: 'HH:mm - dd/MM/yyyy' }}</small>
+              }
+            </div>
+          </div>
+        }
+      </section>
+    </main>
+  }
+</div>

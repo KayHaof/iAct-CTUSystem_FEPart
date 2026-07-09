@@ -2,3 +2,27 @@
   display: block;
   width: 100%;
 }
+
+section {
+  min-height: calc(100dvh - var(--header-height, 4.5rem));
+  max-width: 40rem;
+  padding: 1.5rem;
+  color: #0f172a;
+}
+
+span {
+  border-radius: 1rem;
+}
+
+h1 {
+  color: #0f172a;
+  font-size: 1.375rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+p {
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 600;
+}

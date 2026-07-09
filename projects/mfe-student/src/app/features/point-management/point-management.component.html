@@ -1,0 +1,211 @@
+<div class="points-page">
+  <header class="points-header">
+    <div class="iact-student-header">
+      <p class="iact-student-eyebrow">Kết quả cá nhân</p>
+      <h1 class="iact-student-title">Điểm rèn luyện</h1>
+      <p class="iact-student-subtitle">
+        Theo dõi điểm đạt được theo từng mục trong bộ quy tắc rèn luyện của học kỳ.
+      </p>
+    </div>
+
+    <div class="semester-select" [class.is-open]="isSemesterMenuOpen()">
+      <span>Học kỳ</span>
+      <button
+        type="button"
+        class="semester-select__trigger"
+        aria-haspopup="listbox"
+        [attr.aria-expanded]="isSemesterMenuOpen()"
+        (click)="toggleSemesterMenu()"
+      >
+        <strong>{{ selectedSemesterLabel() }}</strong>
+        <i class="bi bi-chevron-down"></i>
+      </button>
+
+      @if (isSemesterMenuOpen()) {
+        <div class="semester-select__menu" role="listbox">
+          @for (sem of semesters(); track sem.id) {
+            <button
+              type="button"
+              class="semester-select__option"
+              role="option"
+              [class.is-selected]="sem.id === selectedSemesterId()"
+              [attr.aria-selected]="sem.id === selectedSemesterId()"
+              (click)="selectSemester(sem)"
+            >
+              {{ formatSemesterLabel(sem) }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <section class="points-state" aria-live="polite">
+      <span class="points-spinner"></span>
+      <p>Đang tải điểm rèn luyện...</p>
+    </section>
+  } @else if (categories().length > 0) {
+    <section class="points-overview" aria-label="Tổng quan điểm rèn luyện">
+      <div class="points-overview__score">
+        <span class="summary-label">Tổng điểm theo bộ quy tắc</span>
+        <div class="points-score">
+          <strong>{{ formatPoint(totalEarned()) }}</strong>
+          <span>/ {{ formatPoint(totalMax()) }} điểm</span>
+        </div>
+        <div class="progress-track" aria-hidden="true">
+          <span
+            class="progress-fill"
+            [ngClass]="'progress-fill--' + getStatusTone(currentStatus())"
+            [style.width.%]="totalPercentage()"
+          ></span>
+        </div>
+        <div class="points-overview__meta">
+          <span>{{ totalPercentage() | number: '1.1-1' }}%</span>
+          <span>Còn {{ formatPoint(remainingPoint()) }} điểm</span>
+        </div>
+      </div>
+
+      <div class="points-overview__status">
+        <span class="status-badge" [ngClass]="'status-badge--' + getStatusTone(currentStatus())">
+          <i class="bi" [ngClass]="getStatusIcon(currentStatus())"></i>
+          {{ getStatusLabel(currentStatus()) }}
+        </span>
+      </div>
+    </section>
+
+    <section class="points-tree-card">
+      <div class="section-heading">
+        <p class="iact-student-eyebrow">Cây tiến độ</p>
+        <h2 class="iact-student-section-title">Điểm theo mục rèn luyện</h2>
+      </div>
+
+      <div class="category-tabs" role="tablist" aria-label="Mục lớn điểm rèn luyện">
+        @for (root of categories(); track trackCategory($index, root)) {
+          <button
+            type="button"
+            class="category-tab"
+            role="tab"
+            [class.is-active]="selectedRootCategory().id === root.id"
+            [attr.aria-selected]="selectedRootCategory().id === root.id"
+            (click)="selectRootCategory(root.id)"
+          >
+            <span class="category-tab__code">{{ root.code }}</span>
+            <strong>{{ root.name }}</strong>
+            <span>{{ formatPoint(root.earnedPoint) }} / {{ formatPoint(root.maxPoint) }} điểm</span>
+          </button>
+        }
+      </div>
+
+      @if (selectedRootCategory(); as root) {
+        <div class="selected-category-summary">
+          <div>
+            <span class="summary-label">Mục đang xem</span>
+            <strong>{{ root.code }} - {{ root.name }}</strong>
+          </div>
+          <div class="selected-category-summary__score">
+            <strong>{{ formatPoint(root.earnedPoint) }}</strong>
+            <span>/ {{ formatPoint(root.maxPoint) }} điểm</span>
+          </div>
+        </div>
+      }
+
+      <div class="category-tree">
+        @for (cat of selectedRootCategoryRows(); track trackCategoryRow($index, cat)) {
+          <article
+            class="category-row"
+            [class.is-child]="cat.depth > 0"
+            [class.is-leaf]="cat.isLeaf"
+            [style.--depth]="cat.depth"
+          >
+            <div class="category-row__main">
+              <div class="category-row__title">
+                <span class="category-code">{{ cat.code }}</span>
+                <strong>{{ cat.name }}</strong>
+              </div>
+
+              <div class="category-points">
+                <strong>{{ formatPoint(cat.earnedPoint) }}</strong>
+                <span>/ {{ formatPoint(cat.maxPoint) }} điểm</span>
+              </div>
+            </div>
+
+            <div class="category-row__progress">
+              <div class="progress-track" aria-hidden="true">
+                <span
+                  class="progress-fill"
+                  [ngClass]="'progress-fill--' + getStatusTone(getCategoryStatus(cat))"
+                  [style.width.%]="cat.percentage"
+                ></span>
+              </div>
+              <span>{{ cat.percentage | number: '1.1-1' }}%</span>
+            </div>
+
+            <div class="category-row__footer">
+              <span>{{ cat.isLeaf ? 'Mục nhận điểm' : 'Mục tổng hợp' }}</span>
+              <span>Còn {{ formatPoint(cat.remainingPoint) }} điểm</span>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+
+    @if (details().length > 0) {
+      <section class="points-detail-card">
+        <div class="section-heading">
+          <p class="iact-student-eyebrow">Hoạt động ghi điểm</p>
+          <h2 class="iact-student-section-title">Chi tiết điểm đã ghi nhận</h2>
+        </div>
+
+        <div class="points-table-wrap" tabindex="0" aria-label="Bảng chi tiết điểm rèn luyện">
+          <table>
+            <thead>
+              <tr>
+                <th>Hoạt động</th>
+                <th>Mục rèn luyện</th>
+                <th>Điểm</th>
+                <th>Ngày nhận</th>
+                <th>Minh chứng</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (detail of details(); track trackContribution($index, detail)) {
+                <tr>
+                  <td>{{ getContributionTitle(detail) }}</td>
+                  <td>{{ detail.categoryName || 'Chưa phân loại' }}</td>
+                  <td>
+                    <strong>{{ formatPoint(detail.earnedPoint) }}</strong>
+                  </td>
+                  <td>
+                    @if (getContributionDate(detail)) {
+                      {{ getContributionDate(detail) | date: 'dd/MM/yyyy' }}
+                    } @else {
+                      Chưa có
+                    }
+                  </td>
+                  <td>
+                    <span
+                      class="status-pill"
+                      [ngClass]="'status-pill--' + getProofStatusTone(detail.proofStatus)"
+                    >
+                      {{ getProofStatusLabel(detail.proofStatus) }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+  } @else {
+    <section class="points-state">
+      <span class="points-state__icon">
+        <i class="bi bi-clipboard-data"></i>
+      </span>
+      <h2>Chưa có bộ quy tắc điểm rèn luyện</h2>
+      <p>Hệ thống chưa trả về danh mục điểm rèn luyện cho học kỳ đang chọn.</p>
+      <a routerLink="/activity-hub">Tìm hoạt động</a>
+    </section>
+  }
+</div>

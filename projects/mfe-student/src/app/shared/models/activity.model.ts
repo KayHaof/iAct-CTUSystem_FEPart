@@ -1,7 +1,10 @@
 export interface BenefitDto {
   id?: number;
   type?: number;
+  typeLabel?: string;
   categoryId?: number;
+  categoryCode?: string;
+  categoryName?: string;
   point?: number;
   name?: string;
   description?: string;
@@ -46,11 +49,16 @@ export interface Activity {
   endDate: string;
 
   semesterId: number;
+  semesterName?: string | null;
+  academicYear?: string | null;
+  semesterDisplayName?: string | null;
+  statusLabel?: string | null;
 
   organizer?: {
     id: number;
     fullName: string;
     departmentId?: number | null;
+    departmentName?: string | null;
     representativeId?: number | null;
   };
 
@@ -70,7 +78,7 @@ export interface ActivityRecord {
   id: number;
   activityId: number;
   title: string;
-  points: number;
+  points?: number | null;
   startDate: string;
   attendedAt?: string;
   studentCode?: string;
@@ -78,22 +86,32 @@ export interface ActivityRecord {
   organizer: string;
   status: number; // 0: Đăng ký, 1: Tham gia, 2: Hủy
   proofStatus: number; // 0: Chưa nộp, 1: Chờ duyệt, 2: Đã duyệt, 3: Bị từ chối
+  checkoutAt?: string;
+  attendanceStatus?: string;
+  participationStatus?: string;
+  canSubmitProof?: boolean;
+  nextAction?: string;
   cancelReason?: string;
-  point: number;
+  point?: number | null;
 }
 
 export interface RawRegistrationDto {
   id: number;
   activityId: number;
   activityTitle?: string;
-  points?: number;
-  point?: number;
+  points?: number | null;
+  point?: number | null;
   registeredAt: string;
   attendedAt?: string;
   studentCode?: string;
   activityLocation?: string;
   status: number;
   proofStatus?: number;
+  checkoutAt?: string;
+  attendanceStatus?: string;
+  participationStatus?: string;
+  canSubmitProof?: boolean;
+  nextAction?: string;
   cancelReason?: string;
 }
 

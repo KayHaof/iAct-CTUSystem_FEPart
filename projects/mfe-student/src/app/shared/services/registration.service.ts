@@ -12,7 +12,9 @@ export interface ActivityRecord {
   location: string;
   organizer: string;
   status: number; // 0: Đăng ký, 1: Tham gia, 2: Hủy
-  proofStatus: number; // 0: Chưa nộp, 1: Chờ duyệt, 2: Đã duyệt
+  proofStatus: number; // 0: Chưa nộp, 1: Chờ duyệt, 2: Đã duyệt, 3: Bị từ chối
+  canSubmitProof?: boolean;
+  nextAction?: string;
 }
 
 @Injectable({
