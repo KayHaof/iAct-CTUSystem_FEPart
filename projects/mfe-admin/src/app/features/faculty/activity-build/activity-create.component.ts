@@ -21,6 +21,10 @@ import { ActivityService } from '../services/activity.service';
 
 import { CategoryService } from '../services/category.service';
 import {
+  LocationResponse,
+  LocationService,
+} from '../../common/locations/location.service';
+import {
   Activity,
   ActivityRequest,
   ActivityScheduleDto,
@@ -63,6 +67,7 @@ export class ActivityCreateComponent implements OnInit {
   private cloudinaryService = inject(CloudinaryService);
   private userService = inject(UserService);
   private categoryService = inject(CategoryService);
+  private locationService = inject(LocationService);
   http = inject(HttpClient);
 
   isEditMode = signal<boolean>(false);
@@ -112,6 +117,8 @@ export class ActivityCreateComponent implements OnInit {
   isSearchingOrganizer = signal<boolean>(false);
   searchOrganizerError = signal<string | null>(null);
   isGeneratingAI = signal<boolean>(false);
+  isSearchingLocations = signal<Record<number, boolean>>({});
+  availableLocationsBySchedule = signal<Record<number, LocationResponse[]>>({});
 
   categoryTree = signal<CategoryResponse[]>([]);
   categories = signal<CategoryResponse[]>([]);
@@ -213,11 +220,12 @@ export class ActivityCreateComponent implements OnInit {
           if (act.schedules && act.schedules.length > 0) {
             this.schedules.clear();
             act.schedules.forEach((schedule: ActivityScheduleDto) => {
-              const scheduleGroup = this.fb.group({
+      const scheduleGroup = this.fb.group({
                 title: [schedule.title, Validators.required],
                 start_time: [this.formatDateForInput(schedule.startTime), Validators.required],
                 end_time: [this.formatDateForInput(schedule.endTime), Validators.required],
                 location: [schedule.location],
+                location_id: [schedule.locationId || this.findBookingLocationId(act, schedule)],
               });
               this.schedules.push(scheduleGroup);
             });
@@ -360,11 +368,64 @@ export class ActivityCreateComponent implements OnInit {
         start_time: ['', Validators.required],
         end_time: ['', Validators.required],
         location: [''],
+        location_id: [null],
       }),
     );
   }
   removeSchedule(index: number) {
     this.schedules.removeAt(index);
+    this.availableLocationsBySchedule.update((current) => {
+      const next = { ...current };
+      delete next[index];
+      return next;
+    });
+  }
+
+  searchAvailableLocations(index: number): void {
+    const schedule = this.schedules.at(index);
+    const startTime = schedule.get('start_time')?.value;
+    const endTime = schedule.get('end_time')?.value;
+    const maxParticipants = this.activityForm.get('max_participants')?.value;
+
+    if (!startTime || !endTime) {
+      this.alertService.warning('Vui lòng nhập thời gian bắt đầu và kết thúc của buổi trước.');
+      return;
+    }
+
+    this.isSearchingLocations.update((current) => ({ ...current, [index]: true }));
+    this.locationService
+      .getAvailableLocations({
+        startTime: this.formatDateTime(startTime),
+        endTime: this.formatDateTime(endTime),
+        minCapacity: maxParticipants ? Number(maxParticipants) : null,
+      })
+      .pipe(
+        finalize(() =>
+          this.isSearchingLocations.update((current) => ({ ...current, [index]: false })),
+        ),
+      )
+      .subscribe({
+        next: (locations) => {
+          this.availableLocationsBySchedule.update((current) => ({ ...current, [index]: locations }));
+          if (!locations.length) {
+            this.alertService.warning('Không có địa điểm trống phù hợp trong khung thời gian này.');
+          }
+        },
+        error: (error: HttpErrorResponse) =>
+          this.alertService.error(error.error?.message || 'Không thể tìm địa điểm trống.'),
+      });
+  }
+
+  onScheduleLocationSelected(index: number): void {
+    const schedule = this.schedules.at(index);
+    const locationId = Number(schedule.get('location_id')?.value);
+    const selectedLocation = this.availableLocationsBySchedule()[index]?.find(
+      (location) => location.id === locationId,
+    );
+    if (!selectedLocation) return;
+
+    schedule.patchValue({ location: selectedLocation.name });
+    this.syncMainLocationFromSchedules();
   }
 
   formatDateTime = (dtStr: string): string => {
@@ -778,13 +839,36 @@ export class ActivityCreateComponent implements OnInit {
           }));
 
           const mappedSchedules: ActivityScheduleDto[] = (data.schedules || []).map(
-            (s: { title: string; start_time: string; end_time: string; location?: string }) => ({
+            (s: {
+              title: string;
+              start_time: string;
+              end_time: string;
+              location?: string;
+              location_id?: number | null;
+            }) => ({
               title: s.title,
               startTime: this.formatDateTime(s.start_time),
               endTime: this.formatDateTime(s.end_time),
               location: s.location || null,
+              locationId: s.location_id ? Number(s.location_id) : null,
             }),
           );
+
+          const locationBookings = (data.schedules || [])
+            .filter((s: { location_id?: number | null }) => Boolean(s.location_id))
+            .map(
+              (s: {
+                title: string;
+                start_time: string;
+                end_time: string;
+                location_id?: number | null;
+              }) => ({
+                title: s.title,
+                locationId: Number(s.location_id),
+                startTime: this.formatDateTime(s.start_time),
+                endTime: this.formatDateTime(s.end_time),
+              }),
+            );
 
           const payload: ActivityRequest = {
             title: data.title,
@@ -811,6 +895,7 @@ export class ActivityCreateComponent implements OnInit {
             thumbnail: thumbUrl || null,
             benefits: mappedBenefits,
             schedules: mappedSchedules,
+            locationBookings,
           };
 
           const currentId = this.activityId();
@@ -845,6 +930,24 @@ export class ActivityCreateComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) => console.error('Chi tiết lỗi lưu hoạt động:', err),
       });
+  }
+
+  private findBookingLocationId(activity: Activity, schedule: ActivityScheduleDto): number | null {
+    const matchedBooking = activity.locationBookings?.find(
+      (booking) =>
+        this.formatDateForInput(booking.startTime) === this.formatDateForInput(schedule.startTime) &&
+        this.formatDateForInput(booking.endTime) === this.formatDateForInput(schedule.endTime),
+    );
+    return matchedBooking?.locationId || null;
+  }
+
+  private syncMainLocationFromSchedules(): void {
+    const selectedNames = this.schedules.controls
+      .map((schedule) => schedule.get('location')?.value)
+      .filter(Boolean);
+    if (selectedNames.length) {
+      this.activityForm.patchValue({ location: [...new Set(selectedNames)].join(', ') });
+    }
   }
 
   generateWithAI(): void {

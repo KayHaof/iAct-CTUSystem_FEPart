@@ -92,6 +92,24 @@ export const routes: Routes = [
         ],
       },
       {
+        path: 'representatives',
+        title: 'Đại diện lớp/chi đoàn | iAct CTU',
+        loadComponent: () =>
+          import(
+            './features/faculty/class-representatives/class-representative-management.component'
+          ).then((m) => m.ClassRepresentativeManagementComponent),
+        canActivate: [roleGuard],
+        data: { roles: ['department'] },
+      },
+      {
+        path: 'locations',
+        title: 'Địa điểm đơn vị | iAct CTU',
+        loadComponent: () =>
+          import('./features/common/locations/location-management.component').then(
+            (m) => m.LocationManagementComponent,
+          ),
+      },
+      {
         path: 'approvals',
         redirectTo: 'activities',
         pathMatch: 'full',
@@ -130,6 +148,17 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/super-admin/activity-moderation/activity-moderation.component').then(
         (m) => m.ActivityModerationComponent,
+      ),
+    canActivate: [roleGuard],
+    data: { roles: ['admin'] },
+  },
+
+  {
+    path: 'locations',
+    title: 'Quản lý địa điểm | iAct CTU',
+    loadComponent: () =>
+      import('./features/common/locations/location-management.component').then(
+        (m) => m.LocationManagementComponent,
       ),
     canActivate: [roleGuard],
     data: { roles: ['admin'] },

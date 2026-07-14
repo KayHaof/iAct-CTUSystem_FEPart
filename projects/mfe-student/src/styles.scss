@@ -14,16 +14,6 @@
 @tailwind utilities;
 
 // ==============================================
-// STUDENT SPECIFIC TOKENS
-// ==============================================
-// Student co mau nhe hon Admin (blue-500 thay vi blue-600)
-:root {
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-light: rgba(59, 130, 246, 0.08);
-}
-
-// ==============================================
 // SNACKBAR & ALERT STYLES
 // ==============================================
 .iact-alert-snackbar.mat-mdc-snack-bar-container {
@@ -44,50 +34,50 @@
 }
 
 // ==============================================
-// CONFIRM POPUP - Student Style
+// CONFIRM POPUP
 // ==============================================
 .iact-confirm-popup {
   width: min(92vw, 460px) !important;
   padding: 0 !important;
   overflow: hidden !important;
-  border-radius: var(--radius-3xl) !important;
+  border-radius: var(--radius-xl) !important;
   border: 1px solid var(--border) !important;
-  background: var(--bg) !important;
+  background: var(--bg-surface) !important;
   box-shadow: var(--shadow-xl) !important;
 }
 
 .iact-confirm-popup::before {
   content: '';
   display: block;
-  height: 6px;
-  background: linear-gradient(90deg, #3b82f6, #0ea5e9);
+  height: 5px;
+  background: var(--gradient-primary);
 }
 
 .iact-confirm-popup-danger::before {
-  background: linear-gradient(90deg, #dc2626, #f43f5e);
+  background: var(--gradient-danger);
 }
 
 .iact-confirm-popup-warning::before {
-  background: linear-gradient(90deg, #d97706, #f59e0b);
+  background: var(--gradient-warning);
 }
 
 .iact-confirm-popup-success::before {
-  background: linear-gradient(90deg, #059669, #10b981);
+  background: var(--gradient-success);
 }
 
 .iact-confirm-title {
   margin: 0 !important;
   padding: 1.5rem 1.75rem 0 !important;
   color: var(--text) !important;
-  font-size: 1.375rem !important;
+  font-size: 1.25rem !important;
   font-weight: 800 !important;
-  line-height: 1.25 !important;
+  line-height: 1.3 !important;
 }
 
 .iact-confirm-html {
   margin: 0 !important;
   padding: 0.625rem 1.75rem 0 !important;
-  color: var(--text-secondary) !important;
+  color: var(--text-muted) !important;
   font-size: 0.9375rem !important;
   font-weight: 500 !important;
   line-height: 1.6 !important;
@@ -103,21 +93,22 @@
 .iact-cancel-button {
   min-height: 2.75rem;
   border: 0;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   padding: 0 1.125rem;
-  font-weight: 800;
+  font-weight: 700;
   font-size: 0.875rem;
   transition: all 0.18s ease;
 }
 
 .iact-confirm-button:hover,
 .iact-cancel-button:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .iact-cancel-button {
   background: var(--bg-input);
-  color: var(--text-secondary);
+  color: var(--text);
+  border: 1px solid var(--border);
 
   &:hover {
     background: var(--border);
@@ -127,36 +118,36 @@
 
 .iact-confirm-primary,
 .iact-confirm-info {
-  background: var(--primary);
+  background: var(--gradient-primary);
   color: #ffffff;
-  box-shadow: 0 12px 26px rgba(59, 130, 246, 0.25);
+  box-shadow: var(--shadow-primary);
 }
 
 .iact-confirm-danger {
-  background: var(--danger);
+  background: var(--gradient-danger);
   color: #ffffff;
-  box-shadow: 0 12px 26px rgba(220, 38, 38, 0.25);
+  box-shadow: var(--shadow-danger);
 }
 
 .iact-confirm-warning {
-  background: var(--warning);
+  background: var(--gradient-warning);
   color: #ffffff;
-  box-shadow: 0 12px 26px rgba(217, 119, 6, 0.25);
+  box-shadow: var(--shadow-warning);
 }
 
 .iact-confirm-success {
-  background: var(--success);
+  background: var(--gradient-success);
   color: #ffffff;
-  box-shadow: 0 12px 26px rgba(5, 150, 105, 0.25);
+  box-shadow: var(--shadow-success);
 }
 
 // ==============================================
-// SWEETALERT2 POPUP - Student Style
+// SWEETALERT2 POPUP
 // ==============================================
 .swal2-popup:not(.iact-confirm-popup) {
-  border-radius: var(--radius-3xl) !important;
+  border-radius: var(--radius-xl) !important;
   border: 1px solid var(--border) !important;
-  background: var(--bg) !important;
+  background: var(--bg-surface) !important;
   box-shadow: var(--shadow-xl) !important;
 }
 
@@ -167,21 +158,23 @@
 
 .swal2-popup:not(.iact-confirm-popup) .swal2-html-container,
 .swal2-popup:not(.iact-confirm-popup) .swal2-input-label {
-  color: var(--text-secondary) !important;
+  color: var(--text-muted) !important;
   font-weight: 500 !important;
 }
 
 .swal2-popup:not(.iact-confirm-popup) .swal2-input,
 .swal2-popup:not(.iact-confirm-popup) .swal2-textarea {
-  border-radius: var(--radius-xl) !important;
+  border-radius: var(--radius-lg) !important;
   border-color: var(--border) !important;
+  background: var(--bg-input) !important;
+  color: var(--text) !important;
   box-shadow: none !important;
 }
 
 .swal2-popup:not(.iact-confirm-popup) .swal2-input:focus,
 .swal2-popup:not(.iact-confirm-popup) .swal2-textarea:focus {
   border-color: var(--primary) !important;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
 }
 
 // ==============================================

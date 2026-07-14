@@ -1,19 +1,13 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NxWelcome } from './nx-welcome';
-import { UserService } from '@my-mfe/auth';
+
 @Component({
-  imports: [NxWelcome, RouterModule],
+  imports: [RouterModule],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
   protected title = 'mfe-admin';
-  private userService = inject(UserService);
-
-  constructor() {
-    console.log('[MFE Admin] Component đã load!');
-    console.log('Instance ID:', this.userService);
-  }
 }

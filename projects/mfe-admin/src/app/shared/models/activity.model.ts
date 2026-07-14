@@ -39,6 +39,24 @@ export interface ActivityScheduleDto {
   startTime: string;
   endTime: string;
   location?: string | null;
+  locationId?: number | null;
+  locationName?: string | null;
+  locationCode?: string | null;
+}
+
+export interface LocationBookingDto {
+  id?: number;
+  activityId?: number;
+  locationId: number;
+  scheduleId?: number | null;
+  scheduleTitle?: string | null;
+  locationName?: string | null;
+  locationCode?: string | null;
+  title?: string | null;
+  startTime: string;
+  endTime: string;
+  status?: number;
+  statusLabel?: string | null;
 }
 
 export interface ActivityRequest {
@@ -61,6 +79,7 @@ export interface ActivityRequest {
   thumbnail?: string | null;
   benefits?: BenefitDto[];
   schedules?: ActivityScheduleDto[];
+  locationBookings?: LocationBookingDto[];
 }
 
 export interface Activity {
@@ -96,6 +115,7 @@ export interface Activity {
   createdAt?: string;
 
   schedules?: ActivityScheduleDto[];
+  locationBookings?: LocationBookingDto[];
 
   handledAt?: string | Date | null;
   handledBy?: UserDto | null;

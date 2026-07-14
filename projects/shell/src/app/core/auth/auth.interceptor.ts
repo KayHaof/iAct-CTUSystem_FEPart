@@ -5,6 +5,13 @@ import { Router } from '@angular/router';
 import { catchError, throwError, switchMap, from } from 'rxjs';
 import Swal from 'sweetalert2';
 
+const ACCOUNT_LOCKED_CODE = 1009;
+
+function getApiErrorCode(error: HttpErrorResponse): number | null {
+  const body = error.error as { code?: unknown } | null;
+  return typeof body?.code === 'number' ? body.code : null;
+}
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const oauthService = inject(OAuthService);
   const router = inject(Router);
@@ -22,13 +29,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      // TRƯỜNG HỢP 1: 401 Unauthorized (Token hết hạn)
       if (error.status === 401 && isApiUrl) {
-        console.warn('Access Token hết hạn, đang thử Refresh Token...');
-
         return from(oauthService.refreshToken()).pipe(
           switchMap(() => {
-            console.log('Refresh thành công! Đang gọi lại API...');
             const newToken = oauthService.getAccessToken();
             const newReq = req.clone({
               setHeaders: {
@@ -38,7 +41,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return next(newReq);
           }),
           catchError((refreshError) => {
-            console.error('Refresh Token cũng toang rồi. Login lại đi!');
             oauthService.logOut();
             oauthService.initLoginFlow();
             return throwError(() => refreshError);
@@ -46,27 +48,20 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         );
       }
 
-      // TRƯỜNG HỢP 2: 403 Forbidden (Bị khóa tài khoản)
-      if (error.status === 403 && isApiUrl) {
-        console.error('Lỗi 403: Tài khoản bị khóa hoặc bị cấm truy cập!');
-
-        // 1. Clear sạch sẽ trước để đảm bảo an toàn
+      if (error.status === 403 && isApiUrl && getApiErrorCode(error) === ACCOUNT_LOCKED_CODE) {
         oauthService.logOut();
-        sessionStorage.clear();
-        localStorage.clear();
 
-        // 2. Hiện cảnh báo có thanh đếm ngược 5 giây
         Swal.fire({
           icon: 'error',
-          title: 'Truy cập bị từ chối',
-          text: 'Tài khoản của bạn đã bị vô hiệu hóa. Hệ thống sẽ đăng xuất sau 5 giây...',
+          title: 'Tài khoản bị khóa',
+          text: 'Tài khoản của bạn đã bị vô hiệu hóa. Hệ thống sẽ đăng xuất sau 5 giây.',
           timer: 5000,
           timerProgressBar: true,
           confirmButtonText: 'Đăng xuất ngay',
           confirmButtonColor: '#ef4444',
           allowOutsideClick: false,
           allowEscapeKey: false,
-        }).then((result) => {
+        }).then(() => {
           router.navigate(['/']).then(() => {
             window.location.reload();
           });

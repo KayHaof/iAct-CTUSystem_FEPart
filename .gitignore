@@ -50,5 +50,6 @@ vitest.config.*.timestamp*
 
 .nx
 .nx-cache
+.nx-local-cache
 
 *.log

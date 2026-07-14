@@ -1,0 +1,198 @@
+<main class="rep-page">
+  <section class="rep-shell">
+    <header class="rep-header">
+      <div>
+        <p class="rep-eyebrow">Phân quyền khoa</p>
+        <h1>Đại diện lớp/chi đoàn</h1>
+        <p>
+          Quản lý sinh viên được ủy quyền đăng ký và theo dõi hoạt động cho lớp hoặc chi đoàn thuộc
+          đơn vị.
+        </p>
+      </div>
+      <div class="rep-stats" aria-label="Thống kê đại diện">
+        <article>
+          <span>{{ representatives().length }}</span>
+          <p>Bản ghi</p>
+        </article>
+        <article>
+          <span>{{ activeCount() }}</span>
+          <p>Đang hiệu lực</p>
+        </article>
+        <article>
+          <span>{{ manageableClasses().length }}</span>
+          <p>Lớp quản lý</p>
+        </article>
+      </div>
+    </header>
+
+    @if (!isDepartmentManager()) {
+      <section class="rep-empty rep-empty--standalone">
+        Nghiệp vụ đại diện lớp do tài khoản khoa/trường quản lý. Tài khoản hiện tại không có quyền
+        thực hiện.
+      </section>
+    } @else {
+      <section class="rep-create-panel">
+        <div class="rep-section-title">
+          <div>
+            <p>Gán quyền</p>
+            <h2>Đại diện mới</h2>
+          </div>
+          <span>Chọn lớp trước để tải danh sách sinh viên</span>
+        </div>
+
+        <div class="rep-create-grid">
+          <label class="rep-field">
+            <span>Lớp</span>
+            <select [ngModel]="form.classId" (ngModelChange)="onClassSelected($event)">
+              <option [ngValue]="null">Chọn lớp</option>
+              @for (cls of manageableClasses(); track cls.id) {
+                <option [ngValue]="cls.id">{{ cls.classCode }} - {{ cls.name }}</option>
+              }
+            </select>
+          </label>
+          <label class="rep-field rep-field--wide">
+            <span>Sinh viên trong lớp</span>
+            <select [(ngModel)]="form.studentId" (focus)="loadStudentsForSelectedClass()">
+              <option [ngValue]="null">Chọn sinh viên</option>
+              @for (student of students(); track student.id) {
+                <option [ngValue]="student.id">
+                  {{ student.studentCode || student.username }} -
+                  {{ student.fullName || student.username }}
+                </option>
+              }
+            </select>
+          </label>
+          <label class="rep-field">
+            <span>Vai trò</span>
+            <select [(ngModel)]="form.representativeType">
+              <option value="CLASS_MONITOR">Lớp trưởng</option>
+              <option value="SECRETARY">Bí thư chi đoàn</option>
+              <option value="DEPUTY_SECRETARY">Phó Bí thư chi đoàn</option>
+              <option value="ASSISTANT">Ban cán sự</option>
+              <option value="CLASS_REPRESENTATIVE">Đại diện lớp</option>
+            </select>
+          </label>
+          <label class="rep-field">
+            <span>Từ ngày</span>
+            <input type="date" [(ngModel)]="form.startDate" />
+          </label>
+          <label class="rep-field">
+            <span>Đến ngày</span>
+            <input type="date" [(ngModel)]="form.endDate" />
+          </label>
+          <button
+            type="button"
+            class="rep-button rep-button--primary rep-button--submit"
+            (click)="createRepresentative()"
+            [disabled]="isSaving()"
+          >
+            {{ isSaving() ? 'Đang gán...' : 'Gán đại diện' }}
+          </button>
+        </div>
+      </section>
+
+      <section class="rep-filter-panel">
+        <label class="rep-field rep-field--wide">
+          <span>Tìm kiếm</span>
+          <input
+            type="search"
+            [ngModel]="keyword()"
+            (ngModelChange)="keyword.set($event)"
+            placeholder="Sinh viên, MSSV, lớp hoặc vai trò"
+          />
+        </label>
+        <label class="rep-field">
+          <span>Lớp</span>
+          <select [ngModel]="selectedClassId()" (ngModelChange)="selectedClassId.set($event)">
+            <option value="">Tất cả lớp</option>
+            @for (cls of manageableClasses(); track cls.id) {
+              <option [value]="cls.id">{{ cls.classCode }} - {{ cls.name }}</option>
+            }
+          </select>
+        </label>
+        <label class="rep-field">
+          <span>Trạng thái</span>
+          <select [ngModel]="activeFilter()" (ngModelChange)="activeFilter.set($event)">
+            <option value="true">Đang hiệu lực</option>
+            <option value="">Tất cả trạng thái</option>
+            <option value="false">Đã ngưng</option>
+          </select>
+        </label>
+        <button
+          type="button"
+          class="rep-button rep-button--primary"
+          (click)="loadRepresentatives()"
+        >
+          Lọc
+        </button>
+      </section>
+
+      <section class="rep-table-panel">
+        <div class="rep-section-title">
+          <div>
+            <p>Danh sách</p>
+            <h2>Đại diện hiện có</h2>
+          </div>
+          <span>{{ representatives().length }} bản ghi</span>
+        </div>
+
+        @if (isLoading()) {
+          <div class="rep-empty">Đang tải danh sách đại diện...</div>
+        } @else if (representatives().length === 0) {
+          <div class="rep-empty">Chưa có đại diện phù hợp bộ lọc.</div>
+        } @else {
+          <div class="rep-table-wrap">
+            <table class="rep-table">
+              <thead>
+                <tr>
+                  <th>Sinh viên</th>
+                  <th>Lớp</th>
+                  <th>Đơn vị</th>
+                  <th>Trạng thái</th>
+                  <th class="rep-table__actions">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (rep of representatives(); track rep.id) {
+                  <tr>
+                    <td>
+                      <strong>{{ rep.studentName || 'Sinh viên' }}</strong>
+                      <span>
+                        {{ rep.studentCode || 'Chưa có MSSV' }} ·
+                        {{ representativeLabel(rep.representativeType) }}
+                      </span>
+                    </td>
+                    <td>
+                      <strong>{{ rep.classCode || 'Lớp' }}</strong>
+                      <span>{{ rep.className || 'Chưa có tên lớp' }}</span>
+                    </td>
+                    <td>
+                      <span>{{ rep.departmentName || 'Đơn vị quản lý' }}</span>
+                    </td>
+                    <td>
+                      <span class="rep-status" [class.rep-status--off]="!rep.isActive">
+                        {{ rep.isActive ? 'Đang hiệu lực' : 'Đã ngưng' }}
+                      </span>
+                    </td>
+                    <td class="rep-table__actions">
+                      <button
+                        type="button"
+                        class="rep-button rep-button--danger"
+                        (click)="deactivate(rep)"
+                        [disabled]="!rep.isActive"
+                      >
+                        Ngưng
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+  </section>
+</main>
+
+<lib-confirm-dialog></lib-confirm-dialog>

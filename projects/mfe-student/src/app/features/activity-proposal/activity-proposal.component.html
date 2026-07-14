@@ -1,0 +1,1018 @@
+<div class="student-proposal-page animate-fade-in-up">
+  <header class="proposal-hero">
+    <div class="proposal-hero__inner">
+      <div class="proposal-hero__lead">
+        <a
+          [routerLink]="isEditMode() ? '/activity-proposals' : '/activity-hub'"
+          class="proposal-back-link"
+          aria-label="Quay lại"
+        >
+          <i class="bi bi-arrow-left"></i>
+        </a>
+
+        <div class="proposal-hero__content">
+          <p class="proposal-eyebrow">
+            Đại diện lớp/chi đoàn
+          </p>
+          <h1>
+            {{ isEditMode() ? 'Chỉnh sửa đề xuất hoạt động' : 'Đăng ký tổ chức hoạt động' }}
+          </h1>
+          <p>
+            {{
+              isEditMode()
+                ? 'Cập nhật nội dung đề xuất trước khi khoa/trường xử lý hoặc phản hồi.'
+                : 'Hoàn thành các bước đề xuất để khoa/trường xem xét, phân công và duyệt hoạt động.'
+            }}
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <main
+    id="student-activity-proposal"
+    class="proposal-main"
+  >
+    @if (isLoading()) {
+      <div
+        class="proposal-state-card"
+        role="status"
+      >
+        <div
+          class="proposal-spinner"
+        ></div>
+        <p>Đang kiểm tra quyền đại diện...</p>
+      </div>
+    } @else if (!permission()?.canCreateActivity) {
+      <section class="proposal-denied-card">
+        <p class="text-xs font-bold uppercase tracking-wider text-red-600">Chưa đủ quyền</p>
+        <h2 class="mt-1 text-xl font-bold text-red-950">Bạn chưa được phân quyền đại diện</h2>
+        <p class="mt-2 max-w-3xl text-sm leading-6 text-red-700">
+          Tài khoản sinh viên cần được khoa/trường gán là đại diện lớp hoặc chi đoàn trước khi gửi
+          đề xuất tổ chức hoạt động.
+        </p>
+      </section>
+    } @else {
+      @if (isEditMode() && !canEditLoadedProposal()) {
+        <section class="proposal-readonly-card">
+          <i class="bi bi-lock-fill"></i>
+          <div>
+            <h2>Đề xuất đã được xử lý</h2>
+            <p>Hoạt động này không còn ở trạng thái chờ duyệt hoặc bản nháp nên không thể chỉnh sửa.</p>
+          </div>
+        </section>
+      }
+
+      <section class="proposal-stepper">
+        <div class="proposal-stepper__mobile">
+          <div>
+            <p>
+              Bước {{ currentStep() }} / {{ wizardSteps.length }}
+            </p>
+            <h2>
+              {{ wizardSteps[currentStep() - 1].label }}
+            </h2>
+          </div>
+          <span>{{ stepProgress() }}%</span>
+        </div>
+
+        <div class="proposal-stepper__progress">
+          <div
+            class="proposal-stepper__progress-bar"
+            [style.width.%]="stepProgress()"
+          ></div>
+        </div>
+
+        <ol class="proposal-stepper__list" aria-label="Các bước đăng ký tổ chức hoạt động">
+          @for (step of wizardSteps; track step.id) {
+            <li>
+              <button
+                type="button"
+                (click)="goToStep(step.id)"
+                [disabled]="!canNavigateToStep(step.id)"
+                [attr.aria-label]="'Bước ' + step.id + ': ' + step.label"
+                class="proposal-stepper__button"
+                [ngClass]="
+                  currentStep() === step.id
+                    ? 'proposal-stepper__button--active'
+                    : isStepCompleted(step.id)
+                      ? 'proposal-stepper__button--done'
+                      : 'proposal-stepper__button--locked'
+                "
+                [attr.aria-current]="currentStep() === step.id ? 'step' : null"
+              >
+                <span
+                  class="proposal-stepper__icon"
+                >
+                  <i
+                    class="bi"
+                    [ngClass]="isStepCompleted(step.id) ? 'bi-check-lg' : step.icon"
+                  ></i>
+                </span>
+                <span class="proposal-stepper__text">
+                  <span>Bước {{ step.id }}</span>
+                  <strong>{{ step.label }}</strong>
+                  <small>
+                    {{ step.description }}
+                  </small>
+                </span>
+              </button>
+            </li>
+          }
+        </ol>
+      </section>
+
+      <form [formGroup]="form" class="proposal-form" (ngSubmit)="submit()">
+        @if (currentStep() === 1) {
+          <div class="step-stack">
+            <section class="proposal-card">
+              <div class="proposal-card__head">
+                <p class="text-xs font-bold uppercase tracking-wider text-blue-600">Bước 1</p>
+                <h2 class="mt-1 text-xl font-bold text-slate-900">Thông tin bài đăng</h2>
+                <p class="mt-1 text-sm text-slate-500">
+                  Cung cấp nội dung giúp khoa/trường hiểu mục tiêu và phạm vi hoạt động.
+                </p>
+              </div>
+
+              <div class="form-grid">
+                <div>
+                  <label for="title" class="mb-2 block text-sm font-bold text-slate-700">
+                    Tên hoạt động <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="title"
+                    type="text"
+                    formControlName="title"
+                    placeholder="Ví dụ: Ngày hội hỗ trợ tân sinh viên"
+                    class="form-control"
+                    [class.form-control--invalid]="isInvalid('title')"
+                  />
+                  @if (isInvalid('title')) {
+                    <p class="mt-1.5 text-sm text-red-600">Vui lòng nhập tên hoạt động.</p>
+                  }
+                </div>
+
+                <div>
+                  <label for="description" class="mb-2 block text-sm font-bold text-slate-700">
+                    Mô tả ngắn <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="description"
+                    type="text"
+                    formControlName="description"
+                    placeholder="Tóm tắt ngắn gọn về hoạt động..."
+                    class="form-control"
+                    [class.form-control--invalid]="isInvalid('description')"
+                  />
+                  @if (isInvalid('description')) {
+                    <p class="mt-1.5 text-sm text-red-600">Vui lòng nhập mô tả ngắn.</p>
+                  }
+                </div>
+
+                <div>
+                  <label for="content" class="mb-2 block text-sm font-bold text-slate-700">
+                    Nội dung chi tiết <span class="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="content"
+                    formControlName="content"
+                    rows="8"
+                    placeholder="Mô tả chương trình, phân công, yêu cầu chuẩn bị..."
+                    class="form-control resize-y"
+                    [class.form-control--invalid]="isInvalid('content')"
+                  ></textarea>
+                  @if (isInvalid('content')) {
+                    <p class="mt-1.5 text-sm text-red-600">Vui lòng nhập nội dung chi tiết.</p>
+                  }
+                </div>
+
+                <div class="media-upload-grid">
+                  <div
+                    class="image-upload-zone"
+                    role="button"
+                    tabindex="0"
+                    (click)="triggerInput('proposalCoverInput')"
+                    (keydown.enter)="triggerInput('proposalCoverInput')"
+                    (dragover)="onDragOver($event)"
+                    (drop)="onFileDropped($event, 'cover')"
+                  >
+                    <input
+                      id="proposalCoverInput"
+                      type="file"
+                      accept="image/*"
+                      class="hidden"
+                      (change)="onFileSelected($event, 'cover')"
+                    />
+                    @if (coverPreview()) {
+                      <img
+                        [src]="coverPreview()"
+                        alt="Ảnh bìa hoạt động"
+                        class="image-upload-zone__image"
+                      />
+                      <button
+                        type="button"
+                        class="image-upload-zone__clear"
+                        aria-label="Xóa ảnh bìa"
+                        (click)="clearImage('cover'); $event.stopPropagation()"
+                      >
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    } @else {
+                      <div class="image-upload-zone__placeholder">
+                        <i class="bi bi-image"></i>
+                        <span>Ảnh bìa hoạt động</span>
+                        <small>Chọn hoặc kéo ảnh vào đây</small>
+                      </div>
+                    }
+                  </div>
+
+                  <div
+                    class="image-upload-zone image-upload-zone--thumb"
+                    role="button"
+                    tabindex="0"
+                    (click)="triggerInput('proposalThumbnailInput')"
+                    (keydown.enter)="triggerInput('proposalThumbnailInput')"
+                    (dragover)="onDragOver($event)"
+                    (drop)="onFileDropped($event, 'thumbnail')"
+                  >
+                    <input
+                      id="proposalThumbnailInput"
+                      type="file"
+                      accept="image/*"
+                      class="hidden"
+                      (change)="onFileSelected($event, 'thumbnail')"
+                    />
+                    @if (thumbnailPreview()) {
+                      <img
+                        [src]="thumbnailPreview()"
+                        alt="Ảnh thu nhỏ hoạt động"
+                        class="image-upload-zone__image"
+                      />
+                      <button
+                        type="button"
+                        class="image-upload-zone__clear"
+                        aria-label="Xóa ảnh thu nhỏ"
+                        (click)="clearImage('thumbnail'); $event.stopPropagation()"
+                      >
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    } @else {
+                      <div class="image-upload-zone__placeholder">
+                        <i class="bi bi-card-image"></i>
+                        <span>Ảnh thu nhỏ</span>
+                        <small>Dùng khi hiển thị danh sách</small>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <div class="benefit-section">
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h3 class="flex items-center gap-2 text-base font-bold text-emerald-950">
+                        <i class="bi bi-stars text-emerald-600"></i>
+                        Đề xuất mục điểm rèn luyện
+                      </h3>
+                      <p class="mt-1 text-sm leading-6 text-emerald-800">
+                        Sinh viên chỉ đề xuất mục phù hợp; khoa/trường có thể chỉnh lại khi duyệt
+                        hoạt động.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white transition hover:bg-emerald-700"
+                      (click)="addBenefit()"
+                    >
+                      <i class="bi bi-plus-lg"></i>
+                      Thêm mục ĐRL
+                    </button>
+                  </div>
+
+                  <div formArrayName="benefits" class="mt-4 space-y-3">
+                    @if (benefits.length === 0) {
+                      <div
+                        class="rounded-xl border border-dashed border-emerald-200 bg-white/70 p-4 text-sm text-emerald-800"
+                      >
+                        Chưa có mục đề xuất. Sinh viên có thể tự thêm một hoặc nhiều danh mục phù hợp.
+                      </div>
+                    }
+
+                    @for (benefit of benefits.controls; track benefit; let i = $index) {
+                      <div [formGroupName]="i" class="benefit-row">
+                        <label class="benefit-field benefit-field--category">
+                          Danh mục ĐRL đề xuất
+                          <select
+                            formControlName="categoryId"
+                            class="hidden"
+                          >
+                            <option [ngValue]="null">Chọn danh mục</option>
+                            @for (category of selectableCategories(); track category.id) {
+                              <option [ngValue]="category.id">
+                                {{ category.code }} - {{ category.name }}
+                              </option>
+                            }
+                          </select>
+                          <div class="benefit-picker">
+                            <button
+                              type="button"
+                              class="benefit-picker__trigger"
+                              [class.benefit-picker__trigger--empty]="!benefit.get('categoryId')?.value"
+                              (click)="toggleBenefitPicker(i)"
+                            >
+                              <span>{{ categoryLabel(benefit.get('categoryId')?.value) }}</span>
+                              <i class="bi bi-chevron-down"></i>
+                            </button>
+
+                            @if (openBenefitPicker() === i) {
+                              <div class="benefit-picker__menu">
+                                @for (category of availableBenefitCategories(i); track category.id) {
+                                  <button
+                                    type="button"
+                                    class="benefit-picker__option"
+                                    [class.benefit-picker__option--selected]="
+                                      benefit.get('categoryId')?.value === category.id
+                                    "
+                                    (click)="selectBenefitCategory(i, category)"
+                                  >
+                                    <span class="benefit-picker__code">{{ category.code || 'ĐRL' }}</span>
+                                    <span class="benefit-picker__name">{{ category.name }}</span>
+                                    <span class="benefit-picker__point">Tối đa {{ category.maxPoint }}</span>
+                                  </button>
+                                }
+                              </div>
+                            }
+                          </div>
+                        </label>
+
+                        <label class="benefit-field benefit-field--point">
+                          Điểm đề xuất
+                          <input
+                            type="number"
+                            min="0"
+                            formControlName="point"
+                            class="benefit-point-input"
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          class="benefit-remove-button"
+                          aria-label="Xóa mục đề xuất"
+                          (click)="removeBenefit(i)"
+                        >
+                          <i class="bi bi-trash3"></i>
+                          <span>Xóa</span>
+                        </button>
+                      </div>
+                    }
+                  </div>
+
+                </div>
+              </div>
+            </section>
+
+            <section class="proposal-info-grid">
+              <div class="proposal-info-card">
+                <h3 class="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900">
+                  <i class="bi bi-person-badge-fill text-blue-500"></i> Người đại diện tổ chức
+                </h3>
+                <dl class="space-y-3 text-sm">
+                  <div>
+                    <dt class="text-slate-500">Sinh viên đại diện</dt>
+                    <dd class="mt-1 font-bold text-slate-900">
+                      {{
+                        permission()?.studentName ||
+                          permission()?.studentCode ||
+                          'Sinh viên đại diện'
+                      }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Vai trò</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ representativeTypeLabel(permission()?.representativeType) }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Lớp phụ trách</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ permission()?.classCode || 'Chưa có mã lớp' }} -
+                      {{ permission()?.className || 'Lớp sinh hoạt' }}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div class="proposal-info-card proposal-info-card--blue">
+                <h3 class="mb-4 flex items-center gap-2 text-lg font-bold text-blue-900">
+                  <i class="bi bi-building-check text-blue-600"></i> Đơn vị duyệt
+                </h3>
+                <p class="text-sm font-bold text-blue-950">
+                  {{ permission()?.departmentName || 'Khoa/Viện quản lý' }}
+                </p>
+                <p class="mt-2 text-sm leading-6 text-blue-800">
+                  Đề xuất sẽ được gửi đến đơn vị quản lý lớp/chi đoàn để xem xét, phân công và duyệt
+                  trước khi công bố hoạt động.
+                </p>
+              </div>
+            </section>
+          </div>
+        }
+
+        @if (currentStep() === 2) {
+          <div class="step-stack">
+            <section class="proposal-card">
+              <div class="proposal-card__head">
+                <p class="text-xs font-bold uppercase tracking-wider text-blue-600">Bước 2</p>
+                <h2 class="mt-1 text-xl font-bold text-slate-900">Thời gian và tổ chức</h2>
+                <p class="mt-1 text-sm text-slate-500">
+                  Thiết lập thời gian đăng ký, thời gian tổ chức, địa điểm và lịch trình.
+                </p>
+              </div>
+
+              <div class="proposal-split-grid">
+                <div class="proposal-subcard proposal-subcard--orange">
+                  <h3 class="mb-4 flex items-center gap-2 font-bold text-orange-700">
+                    <i class="bi bi-pencil-square"></i> Thời gian đăng ký
+                  </h3>
+                  <div class="space-y-4">
+                    <div>
+                      <label
+                        for="registrationStart"
+                        class="mb-1.5 block text-sm font-semibold text-slate-700"
+                      >
+                        Mở đăng ký <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="registrationStart"
+                        type="datetime-local"
+                        formControlName="registrationStart"
+                        class="form-control form-control--orange"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for="registrationEnd"
+                        class="mb-1.5 block text-sm font-semibold text-slate-700"
+                      >
+                        Đóng đăng ký <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="registrationEnd"
+                        type="datetime-local"
+                        formControlName="registrationEnd"
+                        class="form-control form-control--orange"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="proposal-subcard proposal-subcard--blue">
+                  <h3 class="mb-4 flex items-center gap-2 font-bold text-blue-700">
+                    <i class="bi bi-calendar-event"></i> Thời gian tổ chức
+                  </h3>
+                  <div class="space-y-4">
+                    <div>
+                      <label
+                        for="startDate"
+                        class="mb-1.5 block text-sm font-semibold text-slate-700"
+                      >
+                        Bắt đầu <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="startDate"
+                        type="datetime-local"
+                        formControlName="startDate"
+                        (change)="onActivityTimeChanged()"
+                        class="form-control form-control--blue"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for="endDate"
+                        class="mb-1.5 block text-sm font-semibold text-slate-700"
+                      >
+                        Kết thúc <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="endDate"
+                        type="datetime-local"
+                        formControlName="endDate"
+                        (change)="onActivityTimeChanged()"
+                        class="form-control form-control--blue"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="proposal-workflow-grid">
+              <div
+                class="proposal-card proposal-card--side"
+              >
+                <h3 class="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900">
+                  <i class="bi bi-geo-alt-fill text-blue-500"></i> Thiết lập tổ chức
+                </h3>
+                <div class="space-y-4">
+                  <div>
+                    <label
+                      for="maxParticipants"
+                      class="mb-2 block text-sm font-bold text-slate-700"
+                    >
+                      Sức chứa <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="maxParticipants"
+                      type="number"
+                      min="1"
+                      formControlName="maxParticipants"
+                      placeholder="Ví dụ: 120"
+                      class="form-control"
+                    />
+                  </div>
+
+                  <div class="proposal-note-card">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Phạm vi đề xuất
+                    </p>
+                    <p class="mt-2 text-sm font-semibold text-slate-800">
+                      Hoạt động cấp khoa/trường quản lý lớp
+                    </p>
+                    <p class="mt-1 text-xs leading-5 text-slate-500">
+                      Hoạt động do sinh viên đại diện gửi lên sẽ được đơn vị quản lý xem xét trước
+                      khi công bố.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="proposal-card proposal-card--wide"
+              >
+                <div class="mb-4 flex items-start justify-between gap-3">
+                  <div>
+                    <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                      <i class="bi bi-list-task text-blue-500"></i> Lịch trình chi tiết
+                    </h3>
+                    <p class="mt-1 text-sm text-slate-500">
+                      Có thể dùng một buổi chính hoặc bật lịch trình chi tiết để thêm nhiều buổi.
+                    </p>
+                  </div>
+                  @if (form.controls.hasDetailedSchedule.value) {
+                    <button
+                      type="button"
+                      (click)="addSchedule()"
+                      class="flex min-h-10 shrink-0 items-center gap-2 rounded-xl bg-blue-50 px-3 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
+                    >
+                      <i class="bi bi-plus-lg"></i> Thêm buổi
+                    </button>
+                  }
+                </div>
+
+                <label
+                    class="schedule-toggle"
+                >
+                  <input
+                    type="checkbox"
+                    formControlName="hasDetailedSchedule"
+                    (change)="onDetailedScheduleToggle()"
+                    class="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>
+                    <span class="block text-sm font-bold text-slate-800"
+                      >Có lịch trình chi tiết</span
+                    >
+                    <span class="mt-1 block text-xs text-slate-500">
+                      Dùng khi hoạt động có nhiều buổi, nhiều khung giờ hoặc nhiều địa điểm.
+                    </span>
+                  </span>
+                </label>
+
+                @if (!form.controls.hasDetailedSchedule.value) {
+                  <div class="schedule-box">
+                    <div class="schedule-box__empty">
+                      <p class="text-sm font-bold text-slate-800">Không dùng lịch trình chi tiết</p>
+                      <p class="mt-1 text-xs leading-5 text-slate-500">
+                        Hoạt động sẽ dùng thời gian tổ chức đã nhập bên trên làm lịch chính. Chỉ bật
+                        lịch trình chi tiết khi hoạt động có nhiều buổi hoặc nhiều địa điểm khác
+                        nhau.
+                      </p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div class="sm:col-span-2">
+                        <div class="location-search-box">
+                          <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                            <label
+                              for="locationId"
+                              class="grid flex-1 gap-1 text-xs font-semibold text-slate-700"
+                            >
+                              Địa điểm còn trống theo thời gian tổ chức
+                              <select
+                                id="locationId"
+                                formControlName="locationId"
+                                (change)="selectLocation()"
+                                class="min-h-10 rounded-lg border border-blue-200 bg-white px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                              >
+                                <option [ngValue]="null">Chọn địa điểm từ danh sách</option>
+                                @for (location of availableLocations(); track location.id) {
+                                  <option [ngValue]="location.id">
+                                    {{ location.name }} - sức chứa
+                                    {{ location.capacity || 'chưa đặt' }}
+                                  </option>
+                                }
+                              </select>
+                            </label>
+                            <button
+                              type="button"
+                              (click)="findAvailableLocations()"
+                              [disabled]="isFindingLocations()"
+                              class="min-h-10 rounded-lg bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-50"
+                            >
+                              {{ isFindingLocations() ? 'Đang tìm...' : 'Tìm phòng trống' }}
+                            </button>
+                          </div>
+                          <p class="mt-2 text-xs font-medium text-blue-700">
+                            Hệ thống chỉ hiển thị địa điểm đang khả dụng và chưa bị giữ chỗ trong
+                            khung giờ tổ chức.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                } @else {
+                  <div
+                    formArrayName="schedules"
+                    class="schedule-list"
+                  >
+                    @for (schedule of schedules.controls; track schedule; let i = $index) {
+                      <div
+                        [formGroupName]="i"
+                        class="schedule-item"
+                      >
+                        <button
+                          type="button"
+                          (click)="removeSchedule(i)"
+                          class="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                          [attr.aria-label]="'Xóa buổi ' + (i + 1)"
+                        >
+                          <i class="bi bi-trash3"></i>
+                        </button>
+                        <p class="mb-3 pr-10 text-sm font-bold text-slate-700">Buổi {{ i + 1 }}</p>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <div class="sm:col-span-2">
+                            <label
+                              [for]="'schedule_title_' + i"
+                              class="mb-1 block text-xs font-semibold text-slate-600"
+                            >
+                              Tên buổi <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                              [id]="'schedule_title_' + i"
+                              type="text"
+                              formControlName="title"
+                              class="schedule-control"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              [for]="'schedule_start_' + i"
+                              class="mb-1 block text-xs font-semibold text-slate-600"
+                            >
+                              Bắt đầu <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                              [id]="'schedule_start_' + i"
+                              type="datetime-local"
+                              formControlName="startTime"
+                              (change)="onScheduleTimeChanged(i)"
+                              class="schedule-control"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              [for]="'schedule_end_' + i"
+                              class="mb-1 block text-xs font-semibold text-slate-600"
+                            >
+                              Kết thúc <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                              [id]="'schedule_end_' + i"
+                              type="datetime-local"
+                              formControlName="endTime"
+                              (change)="onScheduleTimeChanged(i)"
+                              class="schedule-control"
+                            />
+                          </div>
+                          <div class="sm:col-span-2">
+                            <div class="location-search-box">
+                              <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                                <label
+                                  [for]="'schedule_location_id_' + i"
+                                  class="grid flex-1 gap-1 text-xs font-semibold text-slate-700"
+                                >
+                                  Địa điểm còn trống trong khung giờ buổi này
+                                  <select
+                                    [id]="'schedule_location_id_' + i"
+                                    formControlName="locationId"
+                                    (change)="onScheduleLocationSelected(i)"
+                                    class="min-h-10 rounded-lg border border-blue-200 bg-white px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                  >
+                                    <option [ngValue]="null">Chọn địa điểm từ danh sách</option>
+                                    @for (
+                                      location of availableLocationsBySchedule()[i] || [];
+                                      track location.id
+                                    ) {
+                                      <option [ngValue]="location.id">
+                                        {{ location.name }} - sức chứa
+                                        {{ location.capacity || 'chưa đặt' }}
+                                      </option>
+                                    }
+                                  </select>
+                                </label>
+                                <button
+                                  type="button"
+                                  (click)="searchAvailableLocations(i)"
+                                  [disabled]="isFindingScheduleLocations()[i]"
+                                  class="min-h-10 rounded-lg bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                  {{
+                                    isFindingScheduleLocations()[i]
+                                      ? 'Đang tìm...'
+                                      : 'Tìm phòng trống'
+                                  }}
+                                </button>
+                              </div>
+                              <p class="mt-2 text-xs font-medium text-blue-700">
+                                Hệ thống chỉ hiển thị địa điểm đang khả dụng và chưa bị giữ chỗ
+                                trong khung giờ của buổi này.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </section>
+          </div>
+        }
+
+        @if (currentStep() === 3) {
+          <div class="step-stack">
+            <section
+              class="proposal-confirm-hero"
+            >
+              <p class="text-xs font-bold uppercase tracking-wider text-blue-100">Bước 3</p>
+              <h2 class="mt-1 text-2xl font-bold">Xác nhận thông tin đề xuất</h2>
+              <p class="mt-2 max-w-2xl text-sm text-blue-50">
+                Kiểm tra lại nội dung bên dưới trước khi gửi khoa/trường duyệt.
+              </p>
+            </section>
+
+            <div class="proposal-info-grid">
+              <section class="proposal-card proposal-card--summary">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                  <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <i class="bi bi-file-earmark-text text-blue-500"></i> Bài đăng
+                  </h3>
+                  <button
+                    type="button"
+                    (click)="goToStep(1)"
+                    class="text-sm font-bold text-blue-700 hover:text-blue-800"
+                  >
+                    Chỉnh sửa
+                  </button>
+                </div>
+                <dl class="space-y-3 text-sm">
+                  <div>
+                    <dt class="text-slate-500">Tên hoạt động</dt>
+                    <dd class="mt-1 font-bold text-slate-900">
+                      {{ form.get('title')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Mô tả ngắn</dt>
+                    <dd class="mt-1 text-slate-700">
+                      {{ form.get('description')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Nội dung</dt>
+                    <dd class="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap text-slate-700">
+                      {{ form.get('content')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+
+              <section class="proposal-card proposal-card--summary">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                  <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                    <i class="bi bi-calendar-event text-blue-500"></i> Thời gian và tổ chức
+                  </h3>
+                  <button
+                    type="button"
+                    (click)="goToStep(2)"
+                    class="text-sm font-bold text-blue-700 hover:text-blue-800"
+                  >
+                    Chỉnh sửa
+                  </button>
+                </div>
+                <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt class="text-slate-500">Mở đăng ký</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ form.get('registrationStart')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Đóng đăng ký</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ form.get('registrationEnd')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Bắt đầu tổ chức</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ form.get('startDate')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Kết thúc tổ chức</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ form.get('endDate')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Địa điểm</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ form.get('location')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Sức chứa</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ form.get('maxParticipants')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+            </div>
+
+            <section class="proposal-card proposal-card--summary">
+              <div class="mb-4 flex items-center justify-between gap-3">
+                <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                  <i class="bi bi-list-task text-blue-500"></i> Lịch trình
+                </h3>
+                <button
+                  type="button"
+                  (click)="goToStep(2)"
+                  class="text-sm font-bold text-blue-700 hover:text-blue-800"
+                >
+                  Chỉnh sửa
+                </button>
+              </div>
+              @if (!form.controls.hasDetailedSchedule.value) {
+                <dl class="grid grid-cols-1 gap-3 text-sm md:grid-cols-3">
+                  <div>
+                    <dt class="text-slate-500">Lịch áp dụng</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">Theo thời gian tổ chức</dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Thời gian</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ form.get('startDate')?.value || 'Chưa cung cấp' }} -
+                      {{ form.get('endDate')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Địa điểm</dt>
+                    <dd class="mt-1 font-semibold text-slate-800">
+                      {{ form.get('location')?.value || 'Chưa cung cấp' }}
+                    </dd>
+                  </div>
+                </dl>
+              } @else {
+                <div class="space-y-3">
+                  @for (schedule of schedules.controls; track schedule; let i = $index) {
+                    <div class="summary-row">
+                      <p class="font-bold text-slate-900">
+                        Buổi {{ i + 1 }}: {{ schedule.get('title')?.value }}
+                      </p>
+                      <p class="mt-1 text-slate-600">
+                        {{ schedule.get('startTime')?.value || 'Chưa có giờ bắt đầu' }} -
+                        {{ schedule.get('endTime')?.value || 'Chưa có giờ kết thúc' }}
+                      </p>
+                      <p class="mt-1 text-slate-600">
+                        {{
+                          schedule.get('location')?.value ||
+                            form.get('location')?.value ||
+                            'Chưa có địa điểm'
+                        }}
+                      </p>
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+
+            <section class="proposal-card proposal-card--summary">
+              <div class="mb-4 flex items-center justify-between gap-3">
+                <h3 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+                  <i class="bi bi-stars text-emerald-500"></i> Đề xuất điểm rèn luyện
+                </h3>
+                <button
+                  type="button"
+                  (click)="goToStep(1)"
+                  class="text-sm font-bold text-blue-700 hover:text-blue-800"
+                >
+                  Chỉnh sửa
+                </button>
+              </div>
+
+              @if (benefits.length === 0) {
+                <p class="text-sm text-slate-500">Chưa đề xuất mục điểm rèn luyện.</p>
+              } @else {
+                <div class="space-y-3">
+                  @for (benefit of benefits.controls; track benefit; let i = $index) {
+                    <div class="summary-row summary-row--green">
+                      <p class="font-bold text-emerald-950">
+                        {{ categoryLabel(benefit.get('categoryId')?.value) }}
+                      </p>
+                      <p class="mt-1 text-emerald-800">
+                        Điểm đề xuất: {{ benefit.get('point')?.value || 0 }}
+                      </p>
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+
+            <section class="proposal-card proposal-card--summary">
+              <h3 class="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900">
+                <i class="bi bi-person-check text-blue-500"></i> Người gửi đề xuất
+              </h3>
+              <dl class="grid grid-cols-1 gap-3 text-sm md:grid-cols-3">
+                <div>
+                  <dt class="text-slate-500">Đại diện</dt>
+                  <dd class="mt-1 font-bold text-slate-900">
+                    {{
+                      permission()?.studentName || permission()?.studentCode || 'Sinh viên đại diện'
+                    }}
+                  </dd>
+                </div>
+                <div>
+                  <dt class="text-slate-500">Lớp</dt>
+                  <dd class="mt-1 font-semibold text-slate-800">
+                    {{ permission()?.classCode || 'Chưa có mã lớp' }}
+                  </dd>
+                </div>
+                <div>
+                  <dt class="text-slate-500">Đơn vị duyệt</dt>
+                  <dd class="mt-1 font-semibold text-slate-800">
+                    {{ permission()?.departmentName || 'Khoa/Viện quản lý' }}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+          </div>
+        }
+
+        <footer class="proposal-actions">
+          <div>
+            @if (currentStep() > 1) {
+              <button type="button" class="secondary-action" (click)="previousStep()">
+                Quay lại
+              </button>
+            }
+            <button
+              type="button"
+              class="secondary-action"
+              (click)="saveDraft()"
+              [disabled]="isSaving() || !canEditLoadedProposal()"
+            >
+              {{ isEditMode() && loadedProposalStatus() !== 3 ? 'Lưu thay đổi' : 'Lưu nháp' }}
+            </button>
+          </div>
+
+          <div>
+            @if (currentStep() < wizardSteps.length) {
+              <button type="button" class="primary-action" (click)="nextStep()">Tiếp tục</button>
+            } @else {
+              <button
+                type="submit"
+                class="primary-action"
+                [disabled]="isSaving() || !canEditLoadedProposal()"
+              >
+                {{ isEditMode() ? 'Cập nhật đề xuất' : 'Gửi khoa/trường duyệt' }}
+              </button>
+            }
+          </div>
+        </footer>
+      </form>
+    }
+  </main>
+</div>

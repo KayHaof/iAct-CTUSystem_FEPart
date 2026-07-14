@@ -1,18 +1,24 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import {
-  RouterOutlet,
-  Router,
-  NavigationStart,
-  NavigationEnd,
   NavigationCancel,
+  NavigationEnd,
   NavigationError,
+  NavigationStart,
+  Router,
+  RouterOutlet,
 } from '@angular/router';
-import { SidebarComponent, MenuItem } from '../sidebar/sidebar.component';
-import { HeaderComponent } from '../header/header.component';
-import { FooterComponent } from '../footer/footer.component';
+import { ApiResponse } from '@my-mfe/interface';
 import { LoadingBarComponent } from '../../components/loading-bar/loading-bar.component';
-import { LoadingService } from '../../services/loading.service';
 import { LayoutService } from '../../layout/layout.service';
+import { LoadingService } from '../../services/loading.service';
+import { FooterComponent } from '../footer/footer.component';
+import { HeaderComponent } from '../header/header.component';
+import { MenuItem, SidebarComponent } from '../sidebar/sidebar.component';
+
+interface RepresentativeActivityPermission {
+  canCreateActivity: boolean;
+}
 
 @Component({
   selector: 'lib-app-student-layout',
@@ -24,12 +30,27 @@ import { LayoutService } from '../../layout/layout.service';
 })
 export class StudentLayoutComponent implements OnInit {
   private router = inject(Router);
+  private http = inject(HttpClient);
   private loadingService = inject(LoadingService);
   private layoutService = inject(LayoutService);
+  private readonly representativePermissionUrl =
+    'http://localhost:8080/user/api/v1/class-representatives/me/activity-permission';
 
-  isMobileMenuOpen = this.layoutService.isMobileMenuOpen;
+  readonly isMobileMenuOpen = this.layoutService.isMobileMenuOpen;
 
-  studentMenus: MenuItem[] = [
+  private readonly proposalMenu: MenuItem = {
+    label: 'Đăng ký tổ chức',
+    link: '/activity-proposal',
+    icon: 'bi bi-send-plus',
+  };
+
+  private readonly proposalManagementMenu: MenuItem = {
+    label: 'Hoạt động đã gửi',
+    link: '/activity-proposals',
+    icon: 'bi bi-kanban',
+  };
+
+  private readonly baseStudentMenus: MenuItem[] = [
     { label: 'Tổng quan', link: '/dashboard', icon: 'bi bi-grid-fill' },
     { label: 'Cộng hoạt động', link: '/activity-hub', icon: 'bi bi-calendar3' },
     { label: 'Quản lý hoạt động', link: '/my-records', icon: 'bi bi-person-lines-fill' },
@@ -39,6 +60,8 @@ export class StudentLayoutComponent implements OnInit {
     { label: 'Thông báo', link: '/notifications', icon: 'bi bi-bell-fill' },
     { label: 'Cài đặt ưu tiên', link: '/preferences', icon: 'bi bi-sliders' },
   ];
+
+  readonly studentMenus = signal<MenuItem[]>(this.baseStudentMenus);
 
   ngOnInit() {
     this.router.events.subscribe((event) => {
@@ -54,9 +77,32 @@ export class StudentLayoutComponent implements OnInit {
         this.loadingService.hide();
       }
     });
+
+    this.loadRepresentativeMenuPermission();
   }
 
   closeMobileMenu() {
     this.layoutService.closeMobileMenu();
+  }
+
+  private loadRepresentativeMenuPermission(): void {
+    this.http
+      .get<ApiResponse<RepresentativeActivityPermission>>(this.representativePermissionUrl)
+      .subscribe({
+        next: (response) => {
+          if (!response.data?.canCreateActivity) return;
+
+          this.studentMenus.set([
+            this.baseStudentMenus[0],
+            this.baseStudentMenus[1],
+            this.proposalMenu,
+            this.proposalManagementMenu,
+            ...this.baseStudentMenus.slice(2),
+          ]);
+        },
+        error: () => {
+          this.studentMenus.set(this.baseStudentMenus);
+        },
+      });
   }
 }

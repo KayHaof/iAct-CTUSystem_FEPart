@@ -615,6 +615,47 @@
                             class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
                           />
                         </div>
+                        <div class="sm:col-span-2">
+                          <div
+                            class="rounded-xl border border-blue-100 bg-blue-50 p-3"
+                          >
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                              <label
+                                [for]="'schedule_location_id_' + i"
+                                class="grid flex-1 gap-1 text-xs font-semibold text-slate-700"
+                              >
+                                Địa điểm còn trống
+                                <select
+                                  [id]="'schedule_location_id_' + i"
+                                  formControlName="location_id"
+                                  (change)="onScheduleLocationSelected(i)"
+                                  class="min-h-10 rounded-lg border border-blue-200 bg-white px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                >
+                                  <option [ngValue]="null">Chọn địa điểm từ danh sách</option>
+                                  @for (
+                                    option of availableLocationsBySchedule()[i] || [];
+                                    track option.id
+                                  ) {
+                                    <option [ngValue]="option.id">
+                                      {{ option.name }} - sức chứa {{ option.capacity || 'chưa đặt' }}
+                                    </option>
+                                  }
+                                </select>
+                              </label>
+                              <button
+                                type="button"
+                                (click)="searchAvailableLocations(i)"
+                                [disabled]="isSearchingLocations()[i]"
+                                class="min-h-10 rounded-lg bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-50"
+                              >
+                                {{ isSearchingLocations()[i] ? 'Đang tìm...' : 'Tìm phòng trống' }}
+                              </button>
+                            </div>
+                            <p class="mt-2 text-xs font-medium text-blue-700">
+                              Hệ thống chỉ hiển thị địa điểm đang khả dụng và chưa bị giữ chỗ trong khung giờ này.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   }

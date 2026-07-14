@@ -238,7 +238,24 @@
   <!-- Data Table -->
   <div class="table-wrapper">
     <lib-admin-table-container>
-      <table class="user-table">
+      <table
+        class="user-table"
+        [class.user-table--student]="activeTab() === 'STUDENT'"
+        [class.user-table--faculty]="activeTab() === 'FACULTY'"
+        [class.user-table--admin]="activeTab() === 'ADMIN'"
+      >
+        <colgroup>
+          <col class="col-identity" />
+          @if (activeTab() !== 'ADMIN') {
+            <col class="col-name" />
+          }
+          <col class="col-email" />
+          @if (activeTab() === 'STUDENT') {
+            <col class="col-class" />
+          }
+          <col class="col-status" />
+          <col class="col-actions" />
+        </colgroup>
         <thead>
           <tr>
             <th
@@ -248,8 +265,10 @@
               (click)="onSort('studentCode')"
               (keydown.enter)="onSort('studentCode')"
             >
-              {{ activeTab() === 'STUDENT' ? 'MSSV' : 'Username' }}
-              <i class="bi bi-arrow-down-up"></i>
+              <span class="th-sort-content">
+                {{ activeTab() === 'STUDENT' ? 'MSSV' : 'Username' }}
+                <i class="bi bi-arrow-down-up"></i>
+              </span>
             </th>
             @if (activeTab() !== 'ADMIN') {
               <th
@@ -259,8 +278,10 @@
                 (click)="onSort('fullName')"
                 (keydown.enter)="onSort('fullName')"
               >
-                {{ activeTab() === 'FACULTY' ? 'Tên đơn vị' : 'Họ và tên' }}
-                <i class="bi bi-arrow-down-up"></i>
+                <span class="th-sort-content">
+                  {{ activeTab() === 'FACULTY' ? 'Tên đơn vị' : 'Họ và tên' }}
+                  <i class="bi bi-arrow-down-up"></i>
+                </span>
               </th>
             }
             <th>Email</th>

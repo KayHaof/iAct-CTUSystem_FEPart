@@ -29,6 +29,30 @@ export const appRoutes: Routes = [
         title: 'Chi tiết hoạt động | iAct CTU',
       },
       {
+        path: 'activity-proposal',
+        loadComponent: () =>
+          import('./features/activity-proposal/activity-proposal.component').then(
+            (m) => m.ActivityProposalComponent,
+          ),
+        title: 'Đăng ký tổ chức hoạt động | iAct CTU',
+      },
+      {
+        path: 'activity-proposal/:id',
+        loadComponent: () =>
+          import('./features/activity-proposal/activity-proposal.component').then(
+            (m) => m.ActivityProposalComponent,
+          ),
+        title: 'Chỉnh sửa đề xuất hoạt động | iAct CTU',
+      },
+      {
+        path: 'activity-proposals',
+        loadComponent: () =>
+          import('./features/activity-proposals/activity-proposals.component').then(
+            (m) => m.ActivityProposalsComponent,
+          ),
+        title: 'Hoạt động đã gửi | iAct CTU',
+      },
+      {
         path: 'my-records',
         loadComponent: () =>
           import('./features/my-records/my-records.component').then((m) => m.MyRecordsComponent),

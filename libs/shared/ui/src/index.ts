@@ -21,11 +21,18 @@ export * from './lib/components/notification-center/notification-center.componen
 
 // Layouts
 export * from './lib/layout/admin-layout/admin-layout.component';
-export * from './lib/layout/student-layout/student-layout.component';
+export { StudentLayoutComponent } from './lib/layout/student-layout/student-layout.component';
 export * from './lib/layout/header/header.component';
 export * from './lib/layout/sidebar/sidebar.component';
 export * from './lib/layout/footer/footer.component';
 
 // Type exports
-export type { ConfirmDialogConfig, ConfirmType } from './lib/components/confirm-dialog/confirm-dialog.component';
-export type { StatusConfig, BadgeVariant, BadgeSize } from './lib/components/status-badge/status-badge.component';
+export type {
+  ConfirmDialogConfig,
+  ConfirmType,
+} from './lib/components/confirm-dialog/confirm-dialog.component';
+export type {
+  StatusConfig,
+  BadgeVariant,
+  BadgeSize,
+} from './lib/components/status-badge/status-badge.component';

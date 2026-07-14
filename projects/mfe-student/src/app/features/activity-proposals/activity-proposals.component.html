@@ -1,0 +1,143 @@
+<div class="proposal-page">
+  <section class="proposal-hero">
+    <div class="proposal-hero__content">
+      <p class="proposal-eyebrow">Đại diện lớp/chi đoàn</p>
+      <h1>Hoạt động đã gửi</h1>
+      <p>Theo dõi các đề xuất tổ chức hoạt động, trạng thái duyệt và phản hồi từ khoa/trường.</p>
+    </div>
+    <div class="proposal-summary" aria-label="Thong ke de xuat">
+      <div>
+        <p>&#272;&#227; g&#7917;i</p>
+        <strong>{{ proposals().length }}</strong>
+      </div>
+      <div>
+        <p>Ch&#7901; duy&#7879;t</p>
+        <strong class="text-amber">{{ pendingCount() }}</strong>
+      </div>
+      <div>
+        <p>&#272;&#227; duy&#7879;t</p>
+        <strong class="text-emerald">{{ approvedCount() }}</strong>
+      </div>
+      <div>
+        <p>T&#7915; ch&#7889;i</p>
+        <strong class="text-rose">{{ rejectedCount() }}</strong>
+      </div>
+      <div>
+        <p>B&#7843;n nh&#225;p</p>
+        <strong class="text-slate">{{ draftCount() }}</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="proposal-filter-panel" aria-label="Bo loc de xuat">
+    <a routerLink="/activity-proposal" class="primary-link">
+      <i class="bi bi-send-plus"></i>
+      Gửi đề xuất mới
+    </a>
+
+    <div class="proposal-filter-tabs">
+      <button type="button" class="stat" [class.stat--active]="currentStatus() === 'ALL'" (click)="setStatus('ALL')">
+        <span>Tất cả</span>
+        <strong>{{ proposals().length }}</strong>
+      </button>
+      <button type="button" class="stat" [class.stat--active]="currentStatus() === '0'" (click)="setStatus('0')">
+        <span>Chờ duyệt</span>
+        <strong>{{ pendingCount() }}</strong>
+      </button>
+      <button type="button" class="stat" [class.stat--active]="currentStatus() === '1'" (click)="setStatus('1')">
+        <span>Đã duyệt</span>
+        <strong>{{ approvedCount() }}</strong>
+      </button>
+      <button type="button" class="stat" [class.stat--active]="currentStatus() === '2'" (click)="setStatus('2')">
+        <span>Từ chối</span>
+        <strong>{{ rejectedCount() }}</strong>
+      </button>
+      <button type="button" class="stat" [class.stat--active]="currentStatus() === '3'" (click)="setStatus('3')">
+        <span>Bản nháp</span>
+        <strong>{{ draftCount() }}</strong>
+      </button>
+    </div>
+  </section>
+
+  <section class="proposal-panel">
+    <div class="proposal-panel__header">
+      <div>
+        <h2>Danh sách đề xuất</h2>
+        <p>{{ filteredProposals().length }} hoạt động đang hiển thị</p>
+      </div>
+      <button type="button" class="icon-action" aria-label="Tải lại" (click)="loadProposals()">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="empty-state">
+        <div class="spinner"></div>
+        <p>Đang tải hoạt động đã gửi...</p>
+      </div>
+    } @else if (filteredProposals().length === 0) {
+      <div class="empty-state">
+        <i class="bi bi-inboxes"></i>
+        <h3>Chưa có đề xuất phù hợp</h3>
+        <p>Các hoạt động bạn gửi sẽ xuất hiện tại đây để theo dõi quá trình duyệt.</p>
+      </div>
+    } @else {
+      <div class="proposal-list">
+        @for (activity of filteredProposals(); track activity.id) {
+          <article class="proposal-row">
+            <div class="proposal-row__media">
+              <img
+                [src]="activityImage(activity)"
+                [alt]="activity.title"
+                class="proposal-row__image"
+                loading="lazy"
+                (error)="onImageError($event)"
+              />
+            </div>
+
+            <div class="proposal-row__main">
+              <div class="proposal-row__content">
+                <h3>{{ activity.title }}</h3>
+                <p class="proposal-row__description">
+                  {{ activity.description || 'Chưa có mô tả ngắn.' }}
+                </p>
+              </div>
+
+              <div class="proposal-meta">
+                <span>
+                  <i class="bi bi-calendar-event"></i>
+                  {{ formatDate(activity.startDate) }}
+                </span>
+                <span>
+                  <i class="bi bi-geo-alt"></i>
+                  {{ activity.location || 'Chưa có địa điểm' }}
+                </span>
+                <span>
+                  <i class="bi bi-building"></i>
+                  {{ activity.departmentName || 'Khoa/Trường quản lý' }}
+                </span>
+              </div>
+
+              @if (activity.status === 2) {
+                <div class="proposal-reason">
+                  <i class="bi bi-info-circle"></i>
+                  <span>{{ activity.reason || 'Đơn vị duyệt chưa nhập lý do từ chối.' }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="proposal-row__actions">
+              <span [class]="statusClass(activity.status)">
+                {{ activity.statusLabel || statusLabel(activity.status) }}
+              </span>
+              <a [routerLink]="['/activity-proposal', activity.id]" class="secondary-link">
+                <i class="bi bi-pencil-square"></i>
+                Xem lại
+              </a>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</div>

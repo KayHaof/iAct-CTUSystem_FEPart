@@ -73,26 +73,22 @@ export class AuthService {
     await this.oauthService.loadDiscoveryDocumentAndTryLogin();
 
     if (!this.oauthService.hasValidAccessToken()) {
-      console.log('[AuthService] Chua dang nhap.');
       return;
     }
 
-    console.log('[AuthService] Token hop le.');
     this.oauthService.setupAutomaticSilentRefresh();
 
     this.userService.syncUser().subscribe({
-      next: (syncResponse) => {
-        console.log('[AuthService] Ket qua dong bo:', syncResponse.message);
+      next: () => {
         this.userService.getMyInfo().subscribe({
-          next: () => console.log('[AuthService] Da luu thong tin user vao signal.'),
-          error: (error) => console.error('[AuthService] Loi lay user info:', error),
+          next: () => undefined,
+          error: () => undefined,
         });
       },
-      error: (syncError) => {
-        console.error('[AuthService] Loi khi dong bo user:', syncError);
+      error: () => {
         this.userService.getMyInfo().subscribe({
-          next: () => console.log('[AuthService] Da lay user info sau khi sync loi.'),
-          error: (error) => console.error('[AuthService] Loi lay user info sau khi sync loi:', error),
+          next: () => undefined,
+          error: () => undefined,
         });
       },
     });
@@ -109,8 +105,7 @@ export class AuthService {
       const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
       const paddedBase64 = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
       return JSON.parse(atob(paddedBase64)) as JwtObject;
-    } catch (error) {
-      console.error('[AuthService] Loi decode token lay role:', error);
+    } catch {
       return null;
     }
   }
@@ -136,7 +131,12 @@ export class AuthService {
       new Set(
         roles
           .filter((role): role is string => typeof role === 'string' && role.trim().length > 0)
-          .map((role) => role.trim().toLowerCase().replace(/^role_/, '')),
+          .map((role) =>
+            role
+              .trim()
+              .toLowerCase()
+              .replace(/^role_/, ''),
+          ),
       ),
     );
   }

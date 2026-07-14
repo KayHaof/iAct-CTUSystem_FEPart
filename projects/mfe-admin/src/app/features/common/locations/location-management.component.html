@@ -1,0 +1,432 @@
+<main class="location-page">
+  <section class="location-shell">
+    <header class="location-header">
+      <div>
+        <p class="location-eyebrow">Quản lý tài nguyên</p>
+        <h1>Địa điểm cho mượn</h1>
+        <p>Theo dõi khả dụng, lịch sử dụng và danh mục địa điểm phục vụ hoạt động.</p>
+      </div>
+
+      @if (isAdmin()) {
+        <button
+          type="button"
+          class="location-button location-button--primary"
+          (click)="openCreateModal()"
+        >
+          Thêm địa điểm
+        </button>
+      }
+    </header>
+
+    <section class="location-stats" aria-label="Thống kê địa điểm">
+      <article>
+        <span>{{ locations().length }}</span>
+        <p>Tổng địa điểm</p>
+      </article>
+      <article>
+        <span>{{ availableCount() }}</span>
+        <p>Sẵn sàng</p>
+      </article>
+      <article>
+        <span>{{ maintenanceCount() }}</span>
+        <p>Bảo trì</p>
+      </article>
+      <article>
+        <span>{{ bookableCount() }}</span>
+        <p>Cho phép mượn</p>
+      </article>
+    </section>
+
+    <section class="location-filter-panel">
+      <form [formGroup]="filterForm" class="location-filter-grid">
+        <label class="location-field location-field--search">
+          <span>Tìm kiếm</span>
+          <input type="search" formControlName="keyword" placeholder="Tên, mã, tòa nhà, phòng" />
+        </label>
+
+        <label class="location-field">
+          <span>Loại</span>
+          <select formControlName="type">
+            <option value="">Tất cả</option>
+            @for (type of locationTypes; track type.value) {
+              <option [value]="type.value">{{ type.label }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="location-field">
+          <span>Khả dụng</span>
+          <select formControlName="availabilityStatus">
+            <option value="">Tất cả</option>
+            <option value="AVAILABLE">Sẵn sàng</option>
+            <option value="MAINTENANCE">Bảo trì</option>
+            <option value="UNAVAILABLE">Tạm ngưng</option>
+          </select>
+        </label>
+
+        <label class="location-field">
+          <span>Trạng thái</span>
+          <select formControlName="active">
+            <option value="">Tất cả</option>
+            <option value="true">Đang dùng</option>
+            <option value="false">Đã khóa</option>
+          </select>
+        </label>
+
+        <label class="location-field">
+          <span>Quản lý</span>
+          <select formControlName="adminManaged">
+            <option value="">Tất cả</option>
+            <option value="true">Admin</option>
+            <option value="false">Khoa/Trường</option>
+          </select>
+        </label>
+
+        <div class="location-filter-actions">
+          <button
+            type="button"
+            class="location-button location-button--primary"
+            (click)="loadLocations()"
+          >
+            Lọc
+          </button>
+          <button
+            type="button"
+            class="location-button location-button--secondary"
+            (click)="resetFilters()"
+          >
+            Xóa
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="location-table-panel">
+      <div class="location-section-title">
+        <div>
+          <p>Danh sách</p>
+          <h2>Địa điểm hiện có</h2>
+        </div>
+        <span>{{ locations().length }} bản ghi</span>
+      </div>
+
+      @if (isLoading()) {
+        <div class="location-empty">Đang tải danh sách địa điểm...</div>
+      } @else if (!locations().length) {
+        <div class="location-empty">Chưa có địa điểm phù hợp.</div>
+      } @else {
+        <div class="location-table-wrap">
+          <table class="location-table">
+            <thead>
+              <tr>
+                <th>Địa điểm</th>
+                <th>Loại</th>
+                <th>Sức chứa</th>
+                <th>Quản lý</th>
+                <th>Khả dụng</th>
+                <th class="location-table__actions">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (location of locations(); track location.id) {
+                <tr>
+                  <td>
+                    <strong>{{ location.name }}</strong>
+                    <span>{{ location.code || 'Chưa có mã' }} · {{ buildAddress(location) }}</span>
+                  </td>
+                  <td>{{ getTypeLabel(location.type) }}</td>
+                  <td>{{ location.capacity || 'Chưa đặt' }}</td>
+                  <td>{{ managerLabel(location) }}</td>
+                  <td>
+                    <div class="location-status-group">
+                      <span class="location-pill" [ngClass]="getAvailabilityClass(location)">
+                        {{ getAvailabilityLabel(location.availabilityStatus) }}
+                      </span>
+                      <span
+                        class="location-pill"
+                        [ngClass]="
+                          location.isActive
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'bg-slate-100 text-slate-600'
+                        "
+                      >
+                        {{ location.isActive ? 'Đang dùng' : 'Đã khóa' }}
+                      </span>
+                    </div>
+                  </td>
+                  <td class="location-table__actions">
+                    <div class="location-action-group">
+                      <button
+                        type="button"
+                        class="location-button location-button--secondary location-button--sm"
+                        (click)="openScheduleModal(location)"
+                      >
+                        Lịch
+                      </button>
+                      <button
+                        type="button"
+                        class="location-button location-button--info location-button--sm"
+                        (click)="openAvailabilityModal(location)"
+                      >
+                        Khả dụng
+                      </button>
+                      @if (isAdmin()) {
+                        <button
+                          type="button"
+                          class="location-button location-button--secondary location-button--sm"
+                          (click)="openEditModal(location)"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          type="button"
+                          class="location-button location-button--sm"
+                          [ngClass]="
+                            location.isActive
+                              ? 'location-button--danger'
+                              : 'location-button--success'
+                          "
+                          (click)="toggleActive(location)"
+                        >
+                          {{ location.isActive ? 'Khóa' : 'Mở' }}
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  </section>
+
+  @if (modalMode()) {
+    <div class="location-modal-backdrop">
+      <section
+        class="location-modal"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-label]="modalTitle()"
+      >
+        <header class="location-modal__header">
+          <h2>{{ modalTitle() }}</h2>
+          <button
+            type="button"
+            class="location-button location-button--secondary location-button--sm"
+            (click)="closeModal()"
+          >
+            Đóng
+          </button>
+        </header>
+
+        @if (modalMode() === 'create' || modalMode() === 'edit') {
+          <form [formGroup]="locationForm" class="location-modal__body" (ngSubmit)="saveLocation()">
+            <div class="location-form-grid">
+              <label class="location-field">
+                <span>Tên địa điểm</span>
+                <input formControlName="name" />
+              </label>
+              <label class="location-field">
+                <span>Mã địa điểm</span>
+                <input formControlName="code" />
+              </label>
+              <label class="location-field">
+                <span>Loại</span>
+                <select formControlName="type">
+                  @for (type of locationTypes; track type.value) {
+                    <option [value]="type.value">{{ type.label }}</option>
+                  }
+                </select>
+              </label>
+              <label class="location-field">
+                <span>Sức chứa</span>
+                <input type="number" min="0" formControlName="capacity" />
+              </label>
+              <label class="location-field">
+                <span>Tòa nhà</span>
+                <input formControlName="building" />
+              </label>
+              <label class="location-field">
+                <span>Tầng</span>
+                <input formControlName="floor" />
+              </label>
+              <label class="location-field">
+                <span>Phòng</span>
+                <input formControlName="room" />
+              </label>
+            </div>
+
+            <label class="location-checkbox">
+              <input
+                type="checkbox"
+                formControlName="adminManaged"
+                (change)="onAdminManagedChange()"
+              />
+              <span>Địa điểm do admin quản lý</span>
+            </label>
+
+            @if (!locationForm.get('adminManaged')?.value) {
+              <label class="location-field">
+                <span>Đơn vị quản lý</span>
+                <select formControlName="managerDepartmentId">
+                  <option [ngValue]="null">
+                    {{ isLoadingDepartments() ? 'Đang tải đơn vị...' : 'Chọn khoa/trường quản lý' }}
+                  </option>
+                  @for (department of departments(); track department.id) {
+                    <option [ngValue]="department.id">
+                      {{ department.name }}{{ department.code ? ' - ' + department.code : '' }}
+                    </option>
+                  }
+                </select>
+              </label>
+            } @else {
+              <div class="location-managed-note">
+                <strong>Admin quản lý địa điểm này</strong>
+                <span>Không cần chọn khoa/trường quản lý.</span>
+              </div>
+            }
+
+            <label class="location-field">
+              <span>Địa chỉ</span>
+              <input formControlName="address" />
+            </label>
+            <label class="location-field">
+              <span>Mô tả</span>
+              <textarea formControlName="description"></textarea>
+            </label>
+
+            <div class="location-form-grid">
+              <label class="location-field">
+                <span>Người liên hệ</span>
+                <input formControlName="contactName" />
+              </label>
+              <label class="location-field">
+                <span>Số điện thoại</span>
+                <input formControlName="contactPhone" />
+              </label>
+            </div>
+
+            <footer class="location-modal__footer">
+              <button
+                type="button"
+                class="location-button location-button--secondary"
+                (click)="closeModal()"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                class="location-button location-button--primary"
+                [disabled]="isSaving()"
+              >
+                {{ isSaving() ? 'Đang lưu...' : 'Lưu địa điểm' }}
+              </button>
+            </footer>
+          </form>
+        }
+
+        @if (modalMode() === 'availability') {
+          <form
+            [formGroup]="availabilityForm"
+            class="location-modal__body"
+            (ngSubmit)="saveAvailability()"
+          >
+            <label class="location-checkbox">
+              <input type="checkbox" formControlName="isBookable" />
+              <span>Cho phép mượn địa điểm này</span>
+            </label>
+            <label class="location-field">
+              <span>Trạng thái</span>
+              <select formControlName="availabilityStatus">
+                <option value="AVAILABLE">Sẵn sàng</option>
+                <option value="MAINTENANCE">Bảo trì</option>
+                <option value="UNAVAILABLE">Tạm ngưng</option>
+              </select>
+            </label>
+            <label class="location-field">
+              <span>Lý do</span>
+              <textarea formControlName="unavailableReason"></textarea>
+            </label>
+            <footer class="location-modal__footer">
+              <button
+                type="button"
+                class="location-button location-button--secondary"
+                (click)="closeModal()"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                class="location-button location-button--primary"
+                [disabled]="isSaving()"
+              >
+                Cập nhật
+              </button>
+            </footer>
+          </form>
+        }
+
+        @if (modalMode() === 'schedule') {
+          <div class="location-modal__body">
+            <form [formGroup]="scheduleForm" class="location-schedule-filter">
+              <label class="location-field">
+                <span>Ngày</span>
+                <input type="date" formControlName="date" />
+              </label>
+              <label class="location-field">
+                <span>Kiểu lịch</span>
+                <select formControlName="view">
+                  <option value="day">Ngày</option>
+                  <option value="week">Tuần</option>
+                  <option value="month">Tháng</option>
+                </select>
+              </label>
+              <label class="location-field">
+                <span>Trạng thái</span>
+                <select formControlName="statusMode">
+                  <option value="blocking">Đang giữ chỗ</option>
+                  <option value="all">Tất cả</option>
+                </select>
+              </label>
+              <button
+                type="button"
+                class="location-button location-button--primary"
+                (click)="loadBookings()"
+              >
+                Xem lịch
+              </button>
+            </form>
+
+            @if (isLoadingBookings()) {
+              <p class="location-empty location-empty--compact">Đang tải lịch sử dụng...</p>
+            } @else if (!bookings().length) {
+              <p class="location-empty location-empty--compact">
+                Chưa có booking trong khoảng thời gian này.
+              </p>
+            } @else {
+              <div class="location-booking-list">
+                @for (booking of bookings(); track booking.id) {
+                  <article>
+                    <div>
+                      <strong>{{ booking.title || 'Buổi sử dụng địa điểm' }}</strong>
+                      <span>Hoạt động #{{ booking.activityId }}</span>
+                    </div>
+                    <span class="location-pill" [ngClass]="getBookingStatusClass(booking.status)">
+                      {{ booking.statusLabel || getBookingStatusLabel(booking.status) }}
+                    </span>
+                    <p>
+                      {{ formatDisplayDate(booking.startTime) }} -
+                      {{ formatDisplayDate(booking.endTime) }}
+                    </p>
+                  </article>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+    </div>
+  }
+</main>

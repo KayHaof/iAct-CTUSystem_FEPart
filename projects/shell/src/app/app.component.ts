@@ -26,8 +26,6 @@ export class AppComponent implements OnInit {
 
       if (userInfo) {
         const nativePath = window.location.pathname;
-        console.log('User Info loaded. Native Path:', nativePath, '| RoleType:', userInfo.roleType);
-
         const isManager = userInfo.roleType === 2 || userInfo.roleType === 3;
 
         if (isManager) {
@@ -37,32 +35,23 @@ export class AppComponent implements OnInit {
             nativePath === '/admin' ||
             nativePath === '/admin/'
           ) {
-            console.log('Redirecting Admin/Department to dashboard...');
             this.router.navigate(['/admin/dashboard'], { replaceUrl: true }).then();
           }
         } else {
-          // Sinh viên
           if (nativePath === '/') {
-            console.log('Redirecting Student to dashboard...');
             this.router.navigate(['/dashboard'], { replaceUrl: true }).then();
           }
         }
 
-        // --- BẬT WEBSOCKET KÈM DỌN DẸP ---
         this.webSocketService.initConnection(userInfo.id);
         const wsSubscription = this.webSocketService
           .watchUserNotification(userInfo.id)
           .subscribe((notification: AppNotification) => {
-            try {
-              if (notification.type === 99) {
-                this.handleForceLogout(notification.message);
-              }
-            } catch (e) {
-              console.error('Lỗi xử lý message WebSocket:', e);
+            if (notification.type === 99) {
+              this.handleForceLogout(notification.message);
             }
           });
 
-        // Hủy luồng cũ khi effect chạy lại -> Chống lag / lặp popup
         onCleanup(() => {
           wsSubscription.unsubscribe();
         });
