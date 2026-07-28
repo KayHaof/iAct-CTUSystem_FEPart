@@ -1,8 +1,35 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, of, tap } from 'rxjs';
 import { ApiResponse, ChangePasswordDto, UserInfo } from '@my-mfe/interface';
+
+export interface StudentFaceEmbeddingRequest {
+  referenceImageUrl: string;
+  referenceImagePublicId?: string;
+}
+
+export interface StudentFaceEmbeddingResponse {
+  userId: number;
+  referenceImageUrl: string;
+  referenceImagePublicId?: string;
+  vectorSize?: number;
+  modelName?: string;
+  detectorBackend?: string;
+  normalizationMethod?: string;
+  distanceMetric?: string;
+  qualityScore?: number;
+  faceConfidence?: number;
+  embeddingVersion?: number;
+  status?: number;
+  lastVerifiedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  revokedAt?: string;
+  revokedReason?: string;
+}
+
+const RESOURCE_NOT_EXISTED_CODE = 1008;
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -10,6 +37,7 @@ export class UserService {
   private readonly oauthService = inject(OAuthService);
 
   private readonly baseUrl = 'http://localhost:8080/user/api/v1/users';
+  private readonly profileBaseUrl = 'http://localhost:8080/user/api/v1/user-profiles';
 
   currentUser = signal<UserInfo | null>(null);
 
@@ -71,6 +99,35 @@ export class UserService {
     return this.http
       .put<ApiResponse<void>>(`${this.baseUrl}/${userId}`, data)
       .pipe(tap(() => this.getMyInfo().subscribe()));
+  }
+
+  getMyFaceEmbedding(): Observable<ApiResponse<StudentFaceEmbeddingResponse>> {
+    return this.http
+      .get<ApiResponse<StudentFaceEmbeddingResponse>>(
+        `${this.profileBaseUrl}/me/face-embedding/active`,
+      )
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          if (error.status === 404 && error.error?.code === RESOURCE_NOT_EXISTED_CODE) {
+            return of({
+              code: RESOURCE_NOT_EXISTED_CODE,
+              message: error.error?.message || 'Sinh viên chưa có ảnh xác thực AI.',
+              timestamp: Date.now(),
+            } as ApiResponse<StudentFaceEmbeddingResponse>);
+          }
+
+          throw error;
+        }),
+      );
+  }
+
+  upsertMyFaceEmbedding(
+    data: StudentFaceEmbeddingRequest,
+  ): Observable<ApiResponse<StudentFaceEmbeddingResponse>> {
+    return this.http.put<ApiResponse<StudentFaceEmbeddingResponse>>(
+      `${this.profileBaseUrl}/me/face-embedding`,
+      data,
+    );
   }
 
   deactivateAccount(id: number | string): Observable<ApiResponse<string>> {

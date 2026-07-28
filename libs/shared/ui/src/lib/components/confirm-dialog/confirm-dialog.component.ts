@@ -37,7 +37,7 @@ export interface ConfirmDialogConfig {
             }
             <div class="confirm-actions">
               <button type="button" class="btn btn-cancel" (click)="onCancel()">
-                {{ confirmService.dialogState()!.cancelText || 'Huy bo' }}
+                {{ confirmService.dialogState()!.cancelText || 'Hủy' }}
               </button>
               <button
                 type="button"
@@ -45,7 +45,7 @@ export interface ConfirmDialogConfig {
                 [class]="'btn-confirm--' + confirmService.dialogState()!.type"
                 (click)="onConfirm()"
               >
-                {{ confirmService.dialogState()!.confirmText || 'Xac nhan' }}
+                {{ confirmService.dialogState()!.confirmText || 'Xác nhận' }}
               </button>
             </div>
           </div>

@@ -7,6 +7,7 @@ export * from './lib/services/alert.service';
 export * from './lib/services/loading.service';
 export * from './lib/services/confirm.service';
 export * from './lib/services/notification-facade.service';
+export * from './lib/tokens/api-origin.token';
 
 // Components
 export * from './lib/components/loading-bar/loading-bar.component';

@@ -57,7 +57,8 @@
         "assets": [
           {
             "glob": "**/*",
-            "input": "projects/mfe-student/public"
+            "input": "projects/mfe-student/public",
+            "output": "/"
           }
         ],
         "styles": ["projects/mfe-student/src/styles.scss"],

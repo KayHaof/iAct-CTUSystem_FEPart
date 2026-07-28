@@ -12,13 +12,13 @@ import { CommonModule, Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { UserService } from '@my-mfe/auth';
+import { StudentFaceEmbeddingResponse, UserService } from '@my-mfe/auth';
 import { ApiResponse, UserInfo } from '@my-mfe/interface';
 import { CloudinaryService } from '@my-mfe/data-access-media';
 import { AlertService, ConfirmService } from '@my-mfe/ui';
 import { OAuthService } from 'angular-oauth2-oidc';
 
-import { of, Observable } from 'rxjs';
+import { forkJoin, of, Observable } from 'rxjs';
 import { switchMap, finalize } from 'rxjs/operators';
 
 import { HeaderComponent } from '@my-mfe/ui';
@@ -55,7 +55,10 @@ export class UserProfileComponent implements OnInit {
   isGenderDropdownOpen = signal(false);
 
   previewAvatar = signal<string | null>(null);
+  previewFaceImage = signal<string | null>(null);
+  faceEmbedding = signal<StudentFaceEmbeddingResponse | null>(null);
   selectedFile: File | null = null;
+  selectedFaceFile: File | null = null;
 
   genderOptions = [
     { value: 1, label: 'Nam' },
@@ -83,6 +86,9 @@ export class UserProfileComponent implements OnInit {
     const u = this.user();
     if (u && u.id) {
       this.loadFullProfile(u.id);
+      if (u.roleType === 1) {
+        this.loadActiveFaceEmbedding();
+      }
     }
   }
 
@@ -104,6 +110,13 @@ export class UserProfileComponent implements OnInit {
     });
   }
 
+  loadActiveFaceEmbedding() {
+    this.userService.getMyFaceEmbedding().subscribe({
+      next: (res) => this.faceEmbedding.set(res.data || null),
+      error: () => this.faceEmbedding.set(null),
+    });
+  }
+
   enterEditMode() {
     const fullData = this.fullProfileData();
     if (fullData) {
@@ -118,12 +131,18 @@ export class UserProfileComponent implements OnInit {
       });
 
       this.previewAvatar.set(null);
+      this.previewFaceImage.set(null);
       this.selectedFile = null;
+      this.selectedFaceFile = null;
     } else {
       const u = this.user();
       if (u) {
         this.isEditing.set(true);
         this.profileForm.patchValue({ fullName: u.fullName, avatarUrl: u.avatarUrl });
+        this.previewAvatar.set(null);
+        this.previewFaceImage.set(null);
+        this.selectedFile = null;
+        this.selectedFaceFile = null;
       }
     }
   }
@@ -132,7 +151,9 @@ export class UserProfileComponent implements OnInit {
     this.isEditing.set(false);
     this.profileForm.reset();
     this.selectedFile = null;
+    this.selectedFaceFile = null;
     this.previewAvatar.set(null);
+    this.previewFaceImage.set(null);
     this.isGenderDropdownOpen.set(false);
   }
 
@@ -153,8 +174,8 @@ export class UserProfileComponent implements OnInit {
     const file = input.files?.[0];
 
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        this.alertService.error('Ảnh quá lớn! Vui lòng chọn ảnh dưới 5MB.');
+      if (!this.isValidImageFile(file)) {
+        input.value = '';
         return;
       }
       this.selectedFile = file;
@@ -164,6 +185,62 @@ export class UserProfileComponent implements OnInit {
       };
       reader.readAsDataURL(file);
     }
+
+    input.value = '';
+  }
+
+  onFaceFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (file) {
+      if (!this.isValidImageFile(file)) {
+        input.value = '';
+        return;
+      }
+      this.selectedFaceFile = file;
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        this.previewFaceImage.set(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    input.value = '';
+  }
+
+  clearAvatarSelection(event?: Event) {
+    event?.stopPropagation();
+    this.selectedFile = null;
+    this.previewAvatar.set(null);
+  }
+
+  clearFaceSelection(event?: Event) {
+    event?.stopPropagation();
+    this.selectedFaceFile = null;
+    this.previewFaceImage.set(null);
+  }
+
+  private isValidImageFile(file: File): boolean {
+    if (!file.type.startsWith('image/')) {
+      this.alertService.error('Vui lòng chọn đúng định dạng hình ảnh.');
+      return false;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      this.alertService.error('Ảnh quá lớn! Vui lòng chọn ảnh dưới 5MB.');
+      return false;
+    }
+
+    return true;
+  }
+
+  faceImageUrl(): string {
+    return this.previewFaceImage() || this.faceEmbedding()?.referenceImageUrl || '';
+  }
+
+  hasActiveFaceEmbedding(): boolean {
+    return !!this.faceEmbedding()?.referenceImageUrl && this.faceEmbedding()?.status !== 2;
   }
 
   saveInfo() {
@@ -183,24 +260,43 @@ export class UserProfileComponent implements OnInit {
       address: formValues.address ?? undefined,
     };
 
-    const uploadStream$: Observable<string | null> = this.selectedFile
+    const avatarUpload$: Observable<string | null> = this.selectedFile
       ? this.cloudinaryService.uploadImage(this.selectedFile, 'avatar')
       : of(null);
+    const faceUpload$: Observable<string | null> =
+      this.user()?.roleType === 1 && this.selectedFaceFile
+        ? this.cloudinaryService.uploadImage(this.selectedFaceFile, 'student-face')
+        : of(null);
 
-    uploadStream$
+    forkJoin({
+      avatarUrl: avatarUpload$,
+      faceImageUrl: faceUpload$,
+    })
       .pipe(
-        switchMap((newImageUrl: string | null) => {
+        switchMap(({ avatarUrl, faceImageUrl }) => {
           const currentUser = this.user();
           if (!currentUser || !currentUser.id) throw new Error('Không tìm thấy ID người dùng!');
 
-          if (newImageUrl) {
-            formData.avatarUrl = newImageUrl;
+          if (avatarUrl) {
+            formData.avatarUrl = avatarUrl;
           } else {
             const fullData = this.fullProfileData();
             formData.avatarUrl = fullData?.avatarUrl ? fullData.avatarUrl : currentUser.avatarUrl;
           }
 
-          return this.userService.updateProfile(currentUser.id, formData);
+          const updateRequests: Observable<unknown>[] = [
+            this.userService.updateProfile(currentUser.id, formData),
+          ];
+
+          if (faceImageUrl) {
+            updateRequests.push(
+              this.userService.upsertMyFaceEmbedding({
+                referenceImageUrl: faceImageUrl,
+              }),
+            );
+          }
+
+          return forkJoin(updateRequests);
         }),
         this.alertService.observe(
           'Cập nhật hồ sơ thành công!',
@@ -215,6 +311,9 @@ export class UserProfileComponent implements OnInit {
           const u = this.user();
           if (u && u.id) {
             this.loadFullProfile(u.id);
+            if (u.roleType === 1) {
+              this.loadActiveFaceEmbedding();
+            }
             this.userService.currentUser.update((oldUser) => {
               if (!oldUser) return oldUser;
               return {
@@ -225,8 +324,11 @@ export class UserProfileComponent implements OnInit {
               };
             });
 
-            this.alertService.success('Cập nhật hồ sơ thành công!');
           }
+          this.selectedFile = null;
+          this.selectedFaceFile = null;
+          this.previewAvatar.set(null);
+          this.previewFaceImage.set(null);
         },
         error: (err: HttpErrorResponse) => {
           console.error('Chi tiết lỗi:', err);
