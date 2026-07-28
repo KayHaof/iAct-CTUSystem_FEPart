@@ -117,6 +117,8 @@ export class ActivityCreateComponent implements OnInit {
   isSearchingOrganizer = signal<boolean>(false);
   searchOrganizerError = signal<string | null>(null);
   isGeneratingAI = signal<boolean>(false);
+  isSearchingMainLocation = signal<boolean>(false);
+  availableLocations = signal<LocationResponse[]>([]);
   isSearchingLocations = signal<Record<number, boolean>>({});
   availableLocationsBySchedule = signal<Record<number, LocationResponse[]>>({});
 
@@ -151,6 +153,7 @@ export class ActivityCreateComponent implements OnInit {
     start_date: ['', Validators.required],
     end_date: ['', Validators.required],
     location: ['', Validators.required],
+    location_id: [null],
     max_participants: [null, Validators.required],
     cover_image: [null],
     thumbnail: [null],
@@ -191,6 +194,7 @@ export class ActivityCreateComponent implements OnInit {
       .subscribe({
         next: (act: Activity) => {
           this.currentStatus.set(act.status || 0);
+          const baseLocation = this.resolveScheduleLocation(act, act.schedules?.[0]);
 
           this.activityForm.patchValue({
             title: act.title,
@@ -203,11 +207,13 @@ export class ActivityCreateComponent implements OnInit {
             registration_end: this.formatDateForInput(act.registrationEnd),
             start_date: this.formatDateForInput(act.startDate),
             end_date: this.formatDateForInput(act.endDate),
-            location: act.location,
+            location: baseLocation?.name || act.location,
+            location_id: baseLocation?.id ?? null,
             max_participants: act.maxParticipants,
             cover_image: act.coverImage,
             thumbnail: act.thumbnail,
           });
+          this.availableLocations.set(baseLocation ? [baseLocation] : []);
 
           if (act.benefits && act.benefits.length > 0) {
             this.benefits.clear();
@@ -219,16 +225,23 @@ export class ActivityCreateComponent implements OnInit {
 
           if (act.schedules && act.schedules.length > 0) {
             this.schedules.clear();
-            act.schedules.forEach((schedule: ActivityScheduleDto) => {
-      const scheduleGroup = this.fb.group({
+            const scheduleLocationMap: Record<number, LocationResponse[]> = {};
+            act.schedules.forEach((schedule: ActivityScheduleDto, index: number) => {
+              const selectedLocation = this.resolveScheduleLocation(act, schedule);
+              const scheduleGroup = this.fb.group({
                 title: [schedule.title, Validators.required],
                 start_time: [this.formatDateForInput(schedule.startTime), Validators.required],
                 end_time: [this.formatDateForInput(schedule.endTime), Validators.required],
-                location: [schedule.location],
-                location_id: [schedule.locationId || this.findBookingLocationId(act, schedule)],
+                location: [selectedLocation?.name || schedule.location],
+                location_id: [selectedLocation?.id ?? null, Validators.required],
               });
               this.schedules.push(scheduleGroup);
+              if (selectedLocation) {
+                scheduleLocationMap[index] = [selectedLocation];
+              }
             });
+            this.availableLocationsBySchedule.set(scheduleLocationMap);
+            this.syncMainLocationFromSchedules();
           }
 
           if (act.coverImage) this.coverPreview.set(act.coverImage);
@@ -368,17 +381,81 @@ export class ActivityCreateComponent implements OnInit {
         start_time: ['', Validators.required],
         end_time: ['', Validators.required],
         location: [''],
-        location_id: [null],
+        location_id: [null, Validators.required],
       }),
     );
+    if (this.schedules.length === 1) {
+      this.onActivityTimeChanged();
+    }
   }
   removeSchedule(index: number) {
     this.schedules.removeAt(index);
     this.availableLocationsBySchedule.update((current) => {
-      const next = { ...current };
-      delete next[index];
+      const next: Record<number, LocationResponse[]> = {};
+      Object.values(current).forEach((locations, currentIndex) => {
+        if (currentIndex < index) next[currentIndex] = locations;
+        if (currentIndex > index) next[currentIndex - 1] = locations;
+      });
       return next;
     });
+    if (this.schedules.length === 0) {
+      this.onActivityTimeChanged();
+    } else {
+      this.syncMainLocationFromSchedules();
+    }
+  }
+
+  onActivityTimeChanged(): void {
+    this.activityForm.patchValue({ location: '', location_id: null });
+    this.availableLocations.set([]);
+  }
+
+  onCapacityChanged(): void {
+    this.onActivityTimeChanged();
+    this.schedules.controls.forEach((schedule, index) => this.resetScheduleLocation(index));
+  }
+
+  findAvailableLocations(): void {
+    const data = this.activityForm.getRawValue();
+    const startTime = data.start_date;
+    const endTime = data.end_date;
+
+    if (!startTime || !endTime) {
+      this.alertService.warning('Vui lòng nhập thời gian bắt đầu và kết thúc hoạt động trước.');
+      return;
+    }
+    this.isSearchingMainLocation.set(true);
+    this.locationService
+      .getAvailableLocations({
+        startTime: this.formatDateTime(startTime),
+        endTime: this.formatDateTime(endTime),
+        minCapacity: data.max_participants ? Number(data.max_participants) : null,
+      })
+      .pipe(finalize(() => this.isSearchingMainLocation.set(false)))
+      .subscribe({
+        next: (locations) => {
+          this.availableLocations.set(locations);
+          if (!locations.length) {
+            this.alertService.warning('Không có địa điểm trống phù hợp trong khung thời gian này.');
+          }
+        },
+        error: (error: HttpErrorResponse) =>
+          this.alertService.error(error.error?.message || 'Không thể tìm địa điểm trống.'),
+      });
+  }
+
+  selectLocation(): void {
+    const locationId = Number(this.activityForm.get('location_id')?.value);
+    const selectedLocation = this.availableLocations().find(
+      (location) => location.id === locationId,
+    );
+    if (!selectedLocation) return;
+
+    this.activityForm.patchValue({ location: selectedLocation.name });
+  }
+
+  onScheduleTimeChanged(index: number): void {
+    this.resetScheduleLocation(index);
   }
 
   searchAvailableLocations(index: number): void {
@@ -391,7 +468,6 @@ export class ActivityCreateComponent implements OnInit {
       this.alertService.warning('Vui lòng nhập thời gian bắt đầu và kết thúc của buổi trước.');
       return;
     }
-
     this.isSearchingLocations.update((current) => ({ ...current, [index]: true }));
     this.locationService
       .getAvailableLocations({
@@ -425,6 +501,17 @@ export class ActivityCreateComponent implements OnInit {
     if (!selectedLocation) return;
 
     schedule.patchValue({ location: selectedLocation.name });
+    this.syncMainLocationFromSchedules();
+  }
+
+  private resetScheduleLocation(index: number): void {
+    const schedule = this.schedules.at(index);
+    schedule.patchValue({ location: '', location_id: null });
+    this.availableLocationsBySchedule.update((current) => {
+      const next = { ...current };
+      delete next[index];
+      return next;
+    });
     this.syncMainLocationFromSchedules();
   }
 
@@ -681,7 +768,6 @@ export class ActivityCreateComponent implements OnInit {
       'registration_end',
       'start_date',
       'end_date',
-      'location',
       'max_participants',
     ];
     const hasInvalidControl = requiredControls.some((controlName) => {
@@ -691,7 +777,16 @@ export class ActivityCreateComponent implements OnInit {
     });
 
     this.schedules.markAllAsTouched();
-    if (hasInvalidControl || this.schedules.invalid) {
+    const hasDetailedSchedule = this.schedules.length > 0;
+    const hasInvalidLocation = hasDetailedSchedule
+      ? this.schedules.controls.some((schedule) => !schedule.get('location_id')?.value)
+      : !this.activityForm.get('location_id')?.value;
+    if (hasInvalidLocation) {
+      this.activityForm.get('location_id')?.markAsTouched();
+      this.schedules.controls.forEach((schedule) => schedule.get('location_id')?.markAsTouched());
+    }
+
+    if (hasInvalidControl || this.schedules.invalid || hasInvalidLocation) {
       if (showAlert) this.alertService.error('Vui lòng hoàn thành thời gian và thông tin tổ chức.');
       return false;
     }
@@ -838,37 +933,62 @@ export class ActivityCreateComponent implements OnInit {
             type: b.type ?? undefined,
           }));
 
-          const mappedSchedules: ActivityScheduleDto[] = (data.schedules || []).map(
-            (s: {
-              title: string;
-              start_time: string;
-              end_time: string;
-              location?: string;
-              location_id?: number | null;
-            }) => ({
-              title: s.title,
-              startTime: this.formatDateTime(s.start_time),
-              endTime: this.formatDateTime(s.end_time),
-              location: s.location || null,
-              locationId: s.location_id ? Number(s.location_id) : null,
-            }),
-          );
+          const rawSchedules = data.schedules || [];
+          const hasDetailedSchedule = rawSchedules.length > 0;
+          const mappedSchedules: ActivityScheduleDto[] = hasDetailedSchedule
+            ? rawSchedules.map(
+                (s: {
+                  title: string;
+                  start_time: string;
+                  end_time: string;
+                  location?: string;
+                  location_id?: number | null;
+                }) => ({
+                  title: s.title,
+                  startTime: this.formatDateTime(s.start_time),
+                  endTime: this.formatDateTime(s.end_time),
+                  location: s.location || null,
+                  locationId: s.location_id ? Number(s.location_id) : null,
+                }),
+              )
+            : data.start_date && data.end_date
+              ? [
+                  {
+                    title: data.title || 'Buổi chính',
+                    startTime: this.formatDateTime(data.start_date),
+                    endTime: this.formatDateTime(data.end_date),
+                    location: data.location || null,
+                    locationId: data.location_id ? Number(data.location_id) : null,
+                  },
+                ]
+              : [];
 
-          const locationBookings = (data.schedules || [])
-            .filter((s: { location_id?: number | null }) => Boolean(s.location_id))
-            .map(
-              (s: {
-                title: string;
-                start_time: string;
-                end_time: string;
-                location_id?: number | null;
-              }) => ({
-                title: s.title,
-                locationId: Number(s.location_id),
-                startTime: this.formatDateTime(s.start_time),
-                endTime: this.formatDateTime(s.end_time),
-              }),
-            );
+          const locationBookings = hasDetailedSchedule
+            ? rawSchedules
+                .filter((s: { location_id?: number | null }) => Boolean(s.location_id))
+                .map(
+                  (s: {
+                    title: string;
+                    start_time: string;
+                    end_time: string;
+                    location_id?: number | null;
+                  }) => ({
+                    title: s.title,
+                    locationId: Number(s.location_id),
+                    startTime: this.formatDateTime(s.start_time),
+                    endTime: this.formatDateTime(s.end_time),
+                  }),
+                )
+            : data.location_id && data.start_date && data.end_date
+              ? [
+                  {
+                    title: data.title || 'Buổi chính',
+                    locationId: Number(data.location_id),
+                    startTime: this.formatDateTime(data.start_date),
+                    endTime: this.formatDateTime(data.end_date),
+                  },
+                ]
+              : [];
 
           const payload: ActivityRequest = {
             title: data.title,
@@ -932,13 +1052,33 @@ export class ActivityCreateComponent implements OnInit {
       });
   }
 
-  private findBookingLocationId(activity: Activity, schedule: ActivityScheduleDto): number | null {
-    const matchedBooking = activity.locationBookings?.find(
-      (booking) =>
+  private resolveScheduleLocation(
+    activity: Activity,
+    schedule?: ActivityScheduleDto,
+  ): LocationResponse | null {
+    const matchedBooking = activity.locationBookings?.find((booking) => {
+      if (!schedule) return true;
+      if (booking.scheduleId && schedule.id) return booking.scheduleId === schedule.id;
+      if (booking.scheduleTitle && schedule.title) return booking.scheduleTitle === schedule.title;
+      return (
         this.formatDateForInput(booking.startTime) === this.formatDateForInput(schedule.startTime) &&
-        this.formatDateForInput(booking.endTime) === this.formatDateForInput(schedule.endTime),
-    );
-    return matchedBooking?.locationId || null;
+        this.formatDateForInput(booking.endTime) === this.formatDateForInput(schedule.endTime)
+      );
+    });
+    const locationId = schedule?.locationId || matchedBooking?.locationId || null;
+    if (!locationId) return null;
+
+    return {
+      id: Number(locationId),
+      name:
+        schedule?.locationName ||
+        matchedBooking?.locationName ||
+        schedule?.location ||
+        activity.location ||
+        'Địa điểm đã chọn',
+      code: schedule?.locationCode || matchedBooking?.locationCode || null,
+      type: 'OTHER',
+    };
   }
 
   private syncMainLocationFromSchedules(): void {
@@ -947,6 +1087,8 @@ export class ActivityCreateComponent implements OnInit {
       .filter(Boolean);
     if (selectedNames.length) {
       this.activityForm.patchValue({ location: [...new Set(selectedNames)].join(', ') });
+    } else if (this.schedules.length > 0) {
+      this.activityForm.patchValue({ location: '' });
     }
   }
 

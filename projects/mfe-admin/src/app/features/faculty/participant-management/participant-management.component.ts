@@ -12,8 +12,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { ApiResponse } from '@my-mfe/interface';
-import { BarcodeFormat } from '@zxing/library';
-import { ZXingScannerModule } from '@zxing/ngx-scanner';
 
 import {
   PaginationComponent,
@@ -31,6 +29,7 @@ import {
   ProofApproval,
   ProofApprovalService,
 } from '../services/proof-approval.service';
+import { ActivityComplaintsComponent } from './activity-complaints/activity-complaints.component';
 
 @Component({
   selector: 'app-participant-management',
@@ -45,8 +44,8 @@ import {
     TableContainerComponent,
     NgOptimizedImage,
     CloudinaryPathPipe, // Import pipe
-    ZXingScannerModule,
     ConfirmDialogComponent,
+    ActivityComplaintsComponent,
   ],
   templateUrl: './participant-management.component.html',
   styleUrl: './participant-management.component.scss',
@@ -64,16 +63,12 @@ export class ParticipantManagementComponent implements OnInit {
 
   // --- QUẢN LÝ TRẠNG THÁI ---
   searchQuery = signal('');
-  activeView = signal<'PARTICIPANTS' | 'PROOFS'>('PARTICIPANTS');
+  activeView = signal<'PARTICIPANTS' | 'PROOFS' | 'COMPLAINTS'>('PARTICIPANTS');
   currentTab = signal('ALL');
   currentPage = signal(1);
   pageSize = signal(10);
   isLoading = signal(false);
-  isQrScannerOpen = signal(false);
-  isVerifyingQr = signal(false);
   isProofLoading = signal(false);
-  lastScannedQr = signal('');
-  qrAction = signal<'CHECK_IN' | 'CHECK_OUT'>('CHECK_IN');
   proofStatus = signal<number | null>(0);
   proofPage = signal(1);
   proofPageSize = signal(6);
@@ -85,7 +80,6 @@ export class ParticipantManagementComponent implements OnInit {
   totalRows = signal(0);
   participants = signal<RegistrationResponse[]>([]);
   proofs = signal<ProofApproval[]>([]);
-  allowedFormats = [BarcodeFormat.QR_CODE];
   pendingProofCount = computed(() => this.proofs().filter((proof) => proof.status === 0).length);
 
   // --- QUẢN LÝ SORT CLIENT ---
@@ -129,8 +123,11 @@ export class ParticipantManagementComponent implements OnInit {
   }
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
+    const viewParam = this.route.snapshot.queryParamMap.get('view');
+    const proofStatusParam = this.route.snapshot.queryParamMap.get('proofStatus');
     if (idParam) {
       this.activityId.set(Number(idParam));
+      this.applyDeepLink(viewParam, proofStatusParam);
       this.fetchParticipants();
       this.fetchProofs();
     } else {
@@ -204,7 +201,7 @@ export class ParticipantManagementComponent implements OnInit {
     this.fetchParticipants();
   }
 
-  setActiveView(view: 'PARTICIPANTS' | 'PROOFS'): void {
+  setActiveView(view: 'PARTICIPANTS' | 'PROOFS' | 'COMPLAINTS'): void {
     this.activeView.set(view);
     if (view === 'PROOFS' && this.proofs().length === 0) {
       this.fetchProofs();
@@ -257,6 +254,32 @@ export class ParticipantManagementComponent implements OnInit {
     }
   }
 
+  private applyDeepLink(viewParam: string | null, proofStatusParam: string | null): void {
+    if (viewParam === 'proofs') {
+      this.activeView.set('PROOFS');
+      this.proofStatus.set(this.parseProofStatus(proofStatusParam));
+      return;
+    }
+
+    if (viewParam === 'complaints') {
+      this.activeView.set('COMPLAINTS');
+      return;
+    }
+
+    if (viewParam === 'participants') {
+      this.activeView.set('PARTICIPANTS');
+    }
+  }
+
+  private parseProofStatus(proofStatusParam: string | null): number | null {
+    if (proofStatusParam === null || proofStatusParam === 'all') {
+      return null;
+    }
+
+    const parsed = Number(proofStatusParam);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
   async changeStatus(id: number, newStatus: number, actionName: string): Promise<void> {
     try {
       await this.confirmService.confirm({
@@ -283,47 +306,6 @@ export class ParticipantManagementComponent implements OnInit {
         },
         error: (err: HttpErrorResponse) =>
           this.alertService.error(err.error?.message || 'Có lỗi xảy ra!'),
-      });
-  }
-
-  openQrScanner(): void {
-    this.lastScannedQr.set('');
-    this.qrAction.set('CHECK_IN');
-    this.isQrScannerOpen.set(true);
-  }
-
-  closeQrScanner(): void {
-    this.isQrScannerOpen.set(false);
-    this.isVerifyingQr.set(false);
-    this.lastScannedQr.set('');
-  }
-
-  setQrAction(action: 'CHECK_IN' | 'CHECK_OUT'): void {
-    this.qrAction.set(action);
-    this.lastScannedQr.set('');
-  }
-
-  onStudentQrScanned(qrData: string): void {
-    const actId = this.activityId();
-    const normalizedQr = qrData.trim();
-    if (!actId || !normalizedQr || this.isVerifyingQr() || normalizedQr === this.lastScannedQr()) {
-      return;
-    }
-
-    this.lastScannedQr.set(normalizedQr);
-    this.isVerifyingQr.set(true);
-    this.participantService
-      .verifyStudentQr(actId, normalizedQr, this.qrAction())
-      .pipe(finalize(() => this.isVerifyingQr.set(false)))
-      .subscribe({
-        next: (res) => {
-          this.alertService.success(res.data?.message || res.message || 'Đã xác thực tham gia!');
-          this.fetchParticipants();
-        },
-        error: (err: HttpErrorResponse) => {
-          this.alertService.error(err.error?.message || 'Mã QR sinh viên không hợp lệ!');
-          this.lastScannedQr.set('');
-        },
       });
   }
 

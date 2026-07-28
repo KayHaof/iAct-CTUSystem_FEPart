@@ -412,6 +412,7 @@
                         id="start_date"
                         type="datetime-local"
                         formControlName="start_date"
+                        (change)="onActivityTimeChanged()"
                         class="w-full rounded-xl border border-blue-200 bg-white px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-300"
                       />
                     </div>
@@ -426,6 +427,7 @@
                         id="end_date"
                         type="datetime-local"
                         formControlName="end_date"
+                        (change)="onActivityTimeChanged()"
                         class="w-full rounded-xl border border-blue-200 bg-white px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-300"
                       />
                     </div>
@@ -443,18 +445,6 @@
                 </h3>
                 <div class="space-y-4">
                   <div>
-                    <label for="location" class="mb-2 block text-sm font-bold text-slate-700">
-                      Địa điểm tổ chức <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="location"
-                      type="text"
-                      formControlName="location"
-                      placeholder="Ví dụ: Hội trường Rùa"
-                      class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    />
-                  </div>
-                  <div>
                     <label
                       for="max_participants"
                       class="mb-2 block text-sm font-bold text-slate-700"
@@ -467,6 +457,66 @@
                       min="1"
                       formControlName="max_participants"
                       placeholder="Ví dụ: 200"
+                      (change)="onCapacityChanged()"
+                      class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </div>
+                  @if (schedules.length === 0) {
+                    <div class="location-search-box">
+                      <div class="location-search-box__head">
+                        <div>
+                          <label for="location_id" class="location-search-box__label">
+                            Địa điểm còn trống <span class="text-red-500">*</span>
+                          </label>
+                          <p>Chọn từ danh sách địa điểm khả dụng theo thời gian tổ chức.</p>
+                        </div>
+                        <button
+                          type="button"
+                          (click)="findAvailableLocations()"
+                          [disabled]="isSearchingMainLocation()"
+                          class="location-search-box__button"
+                        >
+                          <i
+                            class="bi"
+                            [ngClass]="isSearchingMainLocation() ? 'bi-arrow-repeat animate-spin' : 'bi-search'"
+                          ></i>
+                          {{ isSearchingMainLocation() ? 'Đang tìm...' : 'Tìm phòng trống' }}
+                        </button>
+                      </div>
+                      <select
+                        id="location_id"
+                        formControlName="location_id"
+                        (change)="selectLocation()"
+                        class="location-search-box__select"
+                        [class.location-search-box__select--invalid]="
+                          activityForm.get('location_id')?.touched &&
+                          !activityForm.get('location_id')?.value
+                        "
+                      >
+                        <option [ngValue]="null">Chọn địa điểm từ danh sách</option>
+                        @for (option of availableLocations(); track option.id) {
+                          <option [ngValue]="option.id">
+                            {{ option.name }} - sức chứa {{ option.capacity || 'chưa đặt' }}
+                          </option>
+                        }
+                      </select>
+                      @if (
+                        activityForm.get('location_id')?.touched &&
+                        !activityForm.get('location_id')?.value
+                      ) {
+                        <p class="location-search-box__error">Vui lòng chọn địa điểm từ danh sách.</p>
+                      }
+                    </div>
+                  }
+                  <div class="hidden">
+                    <label for="location" class="mb-2 block text-sm font-bold text-slate-700">
+                      Địa điểm tổ chức <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="location"
+                      type="hidden"
+                      formControlName="location"
+                      placeholder="Ví dụ: Hội trường Rùa"
                       class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                     />
                   </div>
@@ -573,7 +623,7 @@
                             class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
                           />
                         </div>
-                        <div>
+                        <div class="hidden">
                           <label
                             [for]="'schedule_location_' + i"
                             class="mb-1 block text-xs font-semibold text-slate-600"
@@ -598,6 +648,7 @@
                             [id]="'schedule_start_' + i"
                             type="datetime-local"
                             formControlName="start_time"
+                            (change)="onScheduleTimeChanged(i)"
                             class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
                           />
                         </div>
@@ -612,46 +663,47 @@
                             [id]="'schedule_end_' + i"
                             type="datetime-local"
                             formControlName="end_time"
+                            (change)="onScheduleTimeChanged(i)"
                             class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
                           />
                         </div>
                         <div class="sm:col-span-2">
                           <div
-                            class="rounded-xl border border-blue-100 bg-blue-50 p-3"
+                            class="location-search-box"
                           >
-                            <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                            <div class="location-search-box__head">
                               <label
                                 [for]="'schedule_location_id_' + i"
-                                class="grid flex-1 gap-1 text-xs font-semibold text-slate-700"
+                                class="location-search-box__label"
                               >
                                 Địa điểm còn trống
-                                <select
-                                  [id]="'schedule_location_id_' + i"
-                                  formControlName="location_id"
-                                  (change)="onScheduleLocationSelected(i)"
-                                  class="min-h-10 rounded-lg border border-blue-200 bg-white px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                >
-                                  <option [ngValue]="null">Chọn địa điểm từ danh sách</option>
-                                  @for (
-                                    option of availableLocationsBySchedule()[i] || [];
-                                    track option.id
-                                  ) {
-                                    <option [ngValue]="option.id">
-                                      {{ option.name }} - sức chứa {{ option.capacity || 'chưa đặt' }}
-                                    </option>
-                                  }
-                                </select>
                               </label>
+                              <select
+                                [id]="'schedule_location_id_' + i"
+                                formControlName="location_id"
+                                (change)="onScheduleLocationSelected(i)"
+                                class="location-search-box__select"
+                              >
+                                <option [ngValue]="null">Chọn địa điểm từ danh sách</option>
+                                @for (
+                                  option of availableLocationsBySchedule()[i] || [];
+                                  track option.id
+                                ) {
+                                  <option [ngValue]="option.id">
+                                    {{ option.name }} - sức chứa {{ option.capacity || 'chưa đặt' }}
+                                  </option>
+                                }
+                              </select>
                               <button
                                 type="button"
                                 (click)="searchAvailableLocations(i)"
                                 [disabled]="isSearchingLocations()[i]"
-                                class="min-h-10 rounded-lg bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-50"
+                                class="location-search-box__button"
                               >
                                 {{ isSearchingLocations()[i] ? 'Đang tìm...' : 'Tìm phòng trống' }}
                               </button>
                             </div>
-                            <p class="mt-2 text-xs font-medium text-blue-700">
+                            <p class="location-search-box__hint">
                               Hệ thống chỉ hiển thị địa điểm đang khả dụng và chưa bị giữ chỗ trong khung giờ này.
                             </p>
                           </div>

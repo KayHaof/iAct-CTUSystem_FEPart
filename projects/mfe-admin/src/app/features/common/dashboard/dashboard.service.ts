@@ -23,6 +23,33 @@ export interface RecentActivity {
   thumbnail?: string;
 }
 
+interface DashboardStatsPayload {
+  totalActivities?: unknown;
+  activeActivities?: unknown;
+  pendingActivities?: unknown;
+  totalStudents?: unknown;
+  totalDepartments?: unknown;
+  totalMajors?: unknown;
+  recentActivities?: RecentActivityPayload[];
+}
+
+interface RecentActivityPayload {
+  id?: unknown;
+  title?: unknown;
+  name?: unknown;
+  departmentName?: unknown;
+  department?: unknown;
+  startDate?: unknown;
+  start_time?: unknown;
+  status?: unknown;
+  registeredCount?: unknown;
+  registered_count?: unknown;
+  maxParticipants?: unknown;
+  max_participants?: unknown;
+  thumbnail?: unknown;
+  coverImage?: unknown;
+}
+
 export interface ApiResponse<T> {
   code: number;
   message?: string;
@@ -40,28 +67,43 @@ export class DashboardService {
   private apiUrl = `${this.baseUrl}/activity/api/v1`;
 
   getDashboardStats(): Observable<DashboardStats> {
-    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/dashboard/stats`).pipe(
+    return this.http.get<ApiResponse<DashboardStatsPayload>>(`${this.apiUrl}/dashboard/stats`).pipe(
       map((response) => {
         const data = response.data || {};
+        const recentActivities = Array.isArray(data.recentActivities) ? data.recentActivities : [];
+
         return {
-          totalActivities: data.totalActivities || 0,
-          activeActivities: data.activeActivities || 0,
-          pendingActivities: data.pendingActivities || 0,
-          totalStudents: data.totalStudents || 0,
-          totalDepartments: data.totalDepartments || 0,
-          totalMajors: data.totalMajors || 0,
-          recentActivities: (data.recentActivities || []).map((item: any) => ({
-            id: item.id,
-            title: item.title || item.name,
-            departmentName: item.departmentName || item.department || '',
-            startDate: item.startDate || item.start_time || '',
-            status: item.status || 0,
-            registeredCount: item.registeredCount || item.registered_count || 0,
-            maxParticipants: item.maxParticipants || item.max_participants || 0,
-            thumbnail: item.thumbnail || item.coverImage || '',
-          })),
+          totalActivities: this.toNumber(data.totalActivities),
+          activeActivities: this.toNumber(data.activeActivities),
+          pendingActivities: this.toNumber(data.pendingActivities),
+          totalStudents: this.toNumber(data.totalStudents),
+          totalDepartments: this.toNumber(data.totalDepartments),
+          totalMajors: this.toNumber(data.totalMajors),
+          recentActivities: recentActivities.map((item) => this.toRecentActivity(item)),
         };
       }),
     );
+  }
+
+  private toRecentActivity(item: RecentActivityPayload): RecentActivity {
+    return {
+      id: this.toNumber(item.id),
+      title: this.toText(item.title) || this.toText(item.name) || 'Hoạt động chưa đặt tên',
+      departmentName: this.toText(item.departmentName) || this.toText(item.department),
+      startDate: this.toText(item.startDate) || this.toText(item.start_time),
+      status: this.toNumber(item.status),
+      registeredCount: this.toNumber(item.registeredCount ?? item.registered_count),
+      maxParticipants: this.toNumber(item.maxParticipants ?? item.max_participants),
+      thumbnail: this.toText(item.thumbnail) || this.toText(item.coverImage),
+    };
+  }
+
+  private toNumber(value: unknown): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  private toText(value: unknown): string {
+    return typeof value === 'string' ? value : '';
   }
 }

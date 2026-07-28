@@ -48,6 +48,16 @@ export class LocationManagementComponent implements OnInit {
   readonly isLoadingDepartments = signal(false);
 
   readonly isAdmin = computed(() => this.userService.currentUser()?.roleType === 3);
+  readonly isDepartment = computed(() => this.userService.currentUser()?.roleType === 2);
+  readonly currentDepartmentId = computed(() => this.userService.currentUser()?.departmentId ?? null);
+  readonly pageTitle = computed(() =>
+    this.isDepartment() ? 'Địa điểm đơn vị' : 'Địa điểm cho mượn',
+  );
+  readonly pageDescription = computed(() =>
+    this.isDepartment()
+      ? 'Theo dõi khả dụng và lịch sử dụng các địa điểm do khoa/trường của bạn quản lý.'
+      : 'Theo dõi khả dụng, lịch sử dụng và danh mục địa điểm phục vụ hoạt động.',
+  );
   readonly availableCount = computed(
     () =>
       this.locations().filter(
@@ -115,12 +125,21 @@ export class LocationManagementComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.hydrateCurrentDepartmentOption();
     this.loadLocations();
-    this.loadDepartments();
+    if (this.isAdmin()) {
+      this.loadDepartments();
+    }
   }
 
   loadLocations(): void {
     const raw = this.filterForm.getRawValue();
+    const departmentId = this.currentDepartmentId();
+    if (this.isDepartment() && !departmentId) {
+      this.locations.set([]);
+      this.alertService.error('Tài khoản chưa được gắn khoa/trường quản lý địa điểm.');
+      return;
+    }
     this.isLoading.set(true);
     this.locationService
       .getLocations({
@@ -129,7 +148,8 @@ export class LocationManagementComponent implements OnInit {
         availabilityStatus: raw.availabilityStatus || null,
         active: this.toBoolean(raw.active),
         bookable: this.toBoolean(raw.bookable),
-        adminManaged: this.toBoolean(raw.adminManaged),
+        managerDepartmentId: this.isDepartment() ? departmentId : null,
+        adminManaged: this.isDepartment() ? false : this.toBoolean(raw.adminManaged),
       })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
@@ -145,7 +165,7 @@ export class LocationManagementComponent implements OnInit {
       availabilityStatus: '',
       active: '',
       bookable: '',
-      adminManaged: '',
+      adminManaged: this.isDepartment() ? 'false' : '',
     });
     this.loadLocations();
   }
@@ -406,6 +426,10 @@ export class LocationManagementComponent implements OnInit {
   }
 
   private loadDepartments(): void {
+    if (!this.isAdmin()) {
+      this.hydrateCurrentDepartmentOption();
+      return;
+    }
     this.isLoadingDepartments.set(true);
     this.masterDataService
       .getDepartmentOptions('true')
@@ -420,6 +444,20 @@ export class LocationManagementComponent implements OnInit {
     if (value === 'true') return true;
     if (value === 'false') return false;
     return null;
+  }
+
+  private hydrateCurrentDepartmentOption(): void {
+    const user = this.userService.currentUser();
+    if (!user?.departmentId || this.departments().some((item) => item.id === user.departmentId)) {
+      return;
+    }
+    this.departments.update((items) => [
+      ...items,
+      {
+        id: user.departmentId as number,
+        name: user.departmentName || `Khoa/Trường #${user.departmentId}`,
+      },
+    ]);
   }
 
   private todayInput(): string {

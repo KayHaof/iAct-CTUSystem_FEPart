@@ -18,3 +18,103 @@
     animation: none;
   }
 }
+
+.location-search-box {
+  display: grid;
+  gap: 0.875rem;
+  border: 1px solid rgb(191 219 254);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgb(239 246 255), rgb(248 250 252));
+  padding: 1rem;
+}
+
+.location-search-box__head {
+  display: grid;
+  gap: 0.625rem;
+}
+
+.location-search-box__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: rgb(51 65 85);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.location-search-box__label p,
+.location-search-box__head p,
+.location-search-box__hint {
+  margin: 0;
+  color: rgb(37 99 235);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.location-search-box__select {
+  min-height: 2.875rem;
+  width: 100%;
+  border: 1px solid rgb(147 197 253);
+  border-radius: 0.75rem;
+  background: white;
+  color: rgb(15 23 42);
+  cursor: pointer;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  outline: none;
+  padding: 0.625rem 0.875rem;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.location-search-box__select:focus {
+  border-color: rgb(37 99 235);
+  box-shadow: 0 0 0 3px rgb(219 234 254);
+}
+
+.location-search-box__select--invalid {
+  border-color: rgb(248 113 113);
+  box-shadow: 0 0 0 3px rgb(254 226 226);
+}
+
+.location-search-box__button {
+  display: inline-flex;
+  min-height: 2.875rem;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  background: rgb(37 99 235);
+  padding: 0.625rem 1rem;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  transition:
+    background-color 160ms ease,
+    opacity 160ms ease;
+}
+
+.location-search-box__button:hover {
+  background: rgb(29 78 216);
+}
+
+.location-search-box__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.location-search-box__error {
+  color: rgb(220 38 38);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+@media (min-width: 640px) {
+  .location-search-box__button {
+    white-space: nowrap;
+  }
+}

@@ -223,6 +223,13 @@ export class DashboardComponent implements OnInit {
         tone: 'warning',
       },
       {
+        label: 'Duyệt giấy khen',
+        description: 'Xác nhận hồ sơ cộng điểm',
+        icon: 'bi bi-award-fill',
+        link: '/admin/org/certificates',
+        tone: 'teal',
+      },
+      {
         label: 'Thông báo',
         description: 'Theo dõi phản hồi từ hệ thống',
         icon: 'bi bi-bell-fill',

@@ -1,0 +1,265 @@
+<section class="complaints-panel">
+  <header class="complaints-panel__header">
+    <div class="complaints-panel__title">
+      <span class="complaints-panel__icon" aria-hidden="true">
+        <i class="bi bi-chat-left-text-fill"></i>
+      </span>
+      <div>
+        <p>Khiếu nại hoạt động #{{ activityId }}</p>
+        <h2>Xử lý khiếu nại điểm danh</h2>
+        <div class="complaints-panel__chips">
+          <span>{{ statusFilter() === 0 ? totalRows() : pendingCount() }} chờ xử lý</span>
+          <span
+            >Bộ lọc: {{ statusFilter() === null ? 'Tất cả' : statusLabel(statusFilter()) }}</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="complaints-panel__tools">
+      <div class="complaints-filter" role="tablist" aria-label="Lọc trạng thái khiếu nại">
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="statusFilter() === 0"
+          (click)="onStatusChange(0)"
+        >
+          <i class="bi bi-hourglass-split"></i>
+          Chờ
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="statusFilter() === 1"
+          (click)="onStatusChange(1)"
+        >
+          <i class="bi bi-check2-circle"></i>
+          Duyệt
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="statusFilter() === 2"
+          (click)="onStatusChange(2)"
+        >
+          <i class="bi bi-x-circle"></i>
+          Từ chối
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="statusFilter() === null"
+          (click)="onStatusChange(null)"
+        >
+          <i class="bi bi-grid-3x3-gap"></i>
+          Tất cả
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="complaints-refresh"
+        (click)="loadComplaints()"
+        [disabled]="isLoading()"
+      >
+        <i class="bi bi-arrow-clockwise"></i>
+        Tải lại
+      </button>
+    </div>
+  </header>
+
+  <div class="complaints-panel__body">
+    @if (isLoading()) {
+      <div class="complaints-state">
+        <span class="complaints-spinner"></span>
+        <strong>Đang tải khiếu nại...</strong>
+      </div>
+    } @else if (complaints().length === 0) {
+      <div class="complaints-empty">
+        <span aria-hidden="true">
+          <i class="bi bi-inbox"></i>
+        </span>
+        <h3>Chưa có khiếu nại phù hợp</h3>
+        <p>Danh sách chỉ hiển thị khiếu nại thuộc hoạt động hiện tại.</p>
+      </div>
+    } @else {
+      <div class="complaints-layout">
+        <div class="complaints-list">
+          @for (complaint of complaints(); track complaint.id) {
+            <article
+              class="complaint-record"
+              [class.is-selected]="selectedComplaint()?.id === complaint.id"
+            >
+              <div class="complaint-record__main">
+                <div class="complaint-record__avatar">
+                  {{ studentLabel(complaint).charAt(0).toUpperCase() }}
+                </div>
+                <div class="complaint-record__identity">
+                  <h3>{{ studentLabel(complaint) }}</h3>
+                  <div>
+                    <span>{{ complaint.studentCode || 'Chưa có MSSV' }}</span>
+                    <span>ĐK #{{ complaint.registrationId }}</span>
+                    @if (complaint.createdAt) {
+                      <span>{{ complaint.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                    }
+                  </div>
+                </div>
+                <span class="complaint-status" [ngClass]="statusClass(complaint.status)">
+                  {{ statusLabel(complaint.status) }}
+                </span>
+              </div>
+
+              <div class="complaint-record__content">
+                <p>
+                  {{
+                    complaint.detail ||
+                      complaint.reason ||
+                      'Sinh viên chưa nhập nội dung khiếu nại.'
+                  }}
+                </p>
+                @if (complaint.evidenceUrl) {
+                  <a [href]="complaint.evidenceUrl" target="_blank" rel="noopener noreferrer">
+                    <i class="bi bi-paperclip"></i>
+                    Xem minh chứng đính kèm
+                  </a>
+                }
+              </div>
+
+              @if (complaint.status === 0) {
+                <div class="complaint-record__actions">
+                  <button
+                    type="button"
+                    class="complaint-button complaint-button--approve"
+                    (click)="openResponsePanel(complaint, 'APPROVE')"
+                  >
+                    <i class="bi bi-check2-circle"></i>
+                    Duyệt khiếu nại
+                  </button>
+                  <button
+                    type="button"
+                    class="complaint-button complaint-button--reject"
+                    (click)="openResponsePanel(complaint, 'REJECT')"
+                  >
+                    <i class="bi bi-x-circle"></i>
+                    Từ chối
+                  </button>
+                </div>
+              } @else {
+                <div class="complaint-record__response">
+                  <strong>Phản hồi của trường</strong>
+                  <p>
+                    {{ complaint.response || complaint.detailResponse || 'Đã xử lý khiếu nại.' }}
+                  </p>
+                  @if (complaint.resolvedAt) {
+                    <small>{{ complaint.resolvedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+                  }
+                </div>
+              }
+            </article>
+          }
+        </div>
+
+        <aside class="complaint-response" [class.is-empty]="!selectedComplaint()">
+          @if (selectedComplaint(); as complaint) {
+            <div class="complaint-response__head">
+              <div>
+                <p>{{ isApproveDecision() ? 'Duyệt khiếu nại' : 'Từ chối khiếu nại' }}</p>
+                <h3>{{ studentLabel(complaint) }}</h3>
+                <span
+                  >{{ complaint.studentCode || 'Chưa có MSSV' }} · ĐK #{{
+                    complaint.registrationId
+                  }}</span
+                >
+              </div>
+              <button
+                type="button"
+                (click)="closeResponsePanel()"
+                [disabled]="processingId() === complaint.id"
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            <div class="complaint-response__notice" [class.is-reject]="!isApproveDecision()">
+              <i
+                class="bi"
+                [ngClass]="isApproveDecision() ? 'bi-info-circle' : 'bi-exclamation-triangle'"
+              ></i>
+              <p>
+                @if (isApproveDecision()) {
+                  Khi duyệt, sinh viên được ghi nhận đã điểm danh thành công và hệ thống sẽ nhắc
+                  sinh viên nộp lại minh chứng.
+                } @else {
+                  Khi từ chối, sinh viên chỉ nhận phản hồi của trường và trạng thái khiếu nại được
+                  đóng.
+                }
+              </p>
+            </div>
+
+            <label class="complaint-response__field">
+              <span>Nhận xét phản hồi</span>
+              <textarea
+                rows="8"
+                [ngModel]="responseText()"
+                (ngModelChange)="responseText.set($event)"
+                maxlength="1000"
+                [disabled]="processingId() === complaint.id"
+              ></textarea>
+            </label>
+
+            <div class="complaint-response__meta">
+              <span>Phản hồi này sẽ gửi cho sinh viên.</span>
+              <span>{{ responseText().length }}/1000</span>
+            </div>
+
+            <div class="complaint-response__actions">
+              <button
+                type="button"
+                class="complaint-button complaint-button--ghost"
+                (click)="closeResponsePanel()"
+                [disabled]="processingId() === complaint.id"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                class="complaint-button"
+                [class.complaint-button--approve]="isApproveDecision()"
+                [class.complaint-button--reject]="!isApproveDecision()"
+                (click)="submitResponse()"
+                [disabled]="processingId() === complaint.id || !responseText().trim()"
+              >
+                @if (processingId() === complaint.id) {
+                  <span class="complaints-spinner complaints-spinner--small"></span>
+                  Đang xử lý...
+                } @else {
+                  <i
+                    class="bi"
+                    [ngClass]="isApproveDecision() ? 'bi-check2-circle' : 'bi-x-circle'"
+                  ></i>
+                  {{ isApproveDecision() ? 'Xác nhận duyệt' : 'Xác nhận từ chối' }}
+                }
+              </button>
+            </div>
+          } @else {
+            <span aria-hidden="true">
+              <i class="bi bi-chat-square-text"></i>
+            </span>
+            <h3>Chọn một khiếu nại</h3>
+            <p>Mở form phản hồi để trường nhận xét, duyệt hoặc từ chối khiếu nại của sinh viên.</p>
+          }
+        </aside>
+      </div>
+
+      <lib-pagination
+        class="complaints-pagination"
+        [currentPage]="page()"
+        [totalItems]="totalRows()"
+        [pageSize]="pageSize()"
+        theme="dark"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onSizeChange($event)"
+      ></lib-pagination>
+    }
+  </div>
+</section>

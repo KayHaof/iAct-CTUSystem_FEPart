@@ -3,8 +3,8 @@
     <header class="location-header">
       <div>
         <p class="location-eyebrow">Quản lý tài nguyên</p>
-        <h1>Địa điểm cho mượn</h1>
-        <p>Theo dõi khả dụng, lịch sử dụng và danh mục địa điểm phục vụ hoạt động.</p>
+        <h1>{{ pageTitle() }}</h1>
+        <p>{{ pageDescription() }}</p>
       </div>
 
       @if (isAdmin()) {
@@ -21,7 +21,7 @@
     <section class="location-stats" aria-label="Thống kê địa điểm">
       <article>
         <span>{{ locations().length }}</span>
-        <p>Tổng địa điểm</p>
+        <p>{{ isDepartment() ? 'Địa điểm đơn vị' : 'Tổng địa điểm' }}</p>
       </article>
       <article>
         <span>{{ availableCount() }}</span>
@@ -73,14 +73,16 @@
           </select>
         </label>
 
-        <label class="location-field">
-          <span>Quản lý</span>
-          <select formControlName="adminManaged">
-            <option value="">Tất cả</option>
-            <option value="true">Admin</option>
-            <option value="false">Khoa/Trường</option>
-          </select>
-        </label>
+        @if (isAdmin()) {
+          <label class="location-field">
+            <span>Quản lý</span>
+            <select formControlName="adminManaged">
+              <option value="">Tất cả</option>
+              <option value="true">Admin</option>
+              <option value="false">Khoa/Trường</option>
+            </select>
+          </label>
+        }
 
         <div class="location-filter-actions">
           <button
@@ -105,7 +107,7 @@
       <div class="location-section-title">
         <div>
           <p>Danh sách</p>
-          <h2>Địa điểm hiện có</h2>
+          <h2>{{ isDepartment() ? 'Địa điểm thuộc khoa/trường của bạn' : 'Địa điểm hiện có' }}</h2>
         </div>
         <span>{{ locations().length }} bản ghi</span>
       </div>

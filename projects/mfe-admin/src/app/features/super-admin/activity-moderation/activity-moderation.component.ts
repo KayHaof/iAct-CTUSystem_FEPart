@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { AlertService } from '@my-mfe/ui';
 import { finalize } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -42,6 +43,7 @@ type ModalType = 'view' | 'reject' | 'viewReason';
 export class ActivityModerationComponent implements OnInit {
   private moderationService = inject(ActivityModerationService);
   private alertService = inject(AlertService);
+  private route = inject(ActivatedRoute);
 
   // --- Signals quản lý trạng thái ---
   isLoading = signal(false);
@@ -66,6 +68,7 @@ export class ActivityModerationComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.openActivityFromRoute(this.route.snapshot.queryParamMap.get('activityId'));
     this.loadStats();
     this.loadActivities();
   }
@@ -108,6 +111,30 @@ export class ActivityModerationComponent implements OnInit {
     this.pageSize.set(newSize);
     this.currentPage.set(1);
     this.loadActivities();
+  }
+
+  private openActivityFromRoute(activityIdParam: string | null): void {
+    if (!activityIdParam) {
+      return;
+    }
+
+    const activityId = Number(activityIdParam);
+    if (!Number.isFinite(activityId)) {
+      return;
+    }
+
+    this.moderationService.getActivityDetails(activityId.toString()).subscribe({
+      next: (res) => {
+        const activity = res.data ?? null;
+        if (!activity) {
+          return;
+        }
+
+        this.selectedActivityForAction.set(activity);
+        this.modalStates.update((state) => ({ ...state, view: true }));
+      },
+      error: () => this.alertService.error('Không thể mở hoạt động từ thông báo.'),
+    });
   }
 
   onApproveActivity(activity: Activity): void {
