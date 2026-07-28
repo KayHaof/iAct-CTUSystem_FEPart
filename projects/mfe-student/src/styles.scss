@@ -250,3 +250,304 @@
     color: white;
   }
 }
+
+// ==============================================
+// STUDENT UI CONTRACT
+// ==============================================
+.page-content.iact-page {
+  color: var(--text);
+  font-weight: 400;
+}
+
+.page-content.iact-page :is(.font-semibold, .font-bold, .font-extrabold, .font-black) {
+  font-weight: 600 !important;
+}
+
+.page-content.iact-page
+  :is(p, span, li, dt, dd, small, label, input, textarea, select, option, td) {
+  font-weight: 400 !important;
+}
+
+.page-content.iact-page
+  :is(
+    .iact-student-subtitle,
+    .dashboard-header__subtitle,
+    .records-header__description,
+    .activity-item__meta,
+    .proof-item__meta,
+    .quick-action__description,
+    .stat-card__meta,
+    .activity-record__meta,
+    .submission-card__top p,
+    .submission-meta dd,
+    .ai-suggestion p,
+    .proof-state p,
+    .proof-upload p,
+    .cert-state p,
+    .points-state p
+  ) {
+  font-weight: 400 !important;
+}
+
+.page-content.iact-page
+  :is(
+    .iact-student-eyebrow,
+    .dashboard-header__eyebrow,
+    .panel__eyebrow,
+    .summary-label,
+    .mobile-label,
+    .records-table__head,
+    th
+  ) {
+  font-weight: 600 !important;
+}
+
+.page-content.iact-page :is(.iact-student-title, .dashboard-header__title) {
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+}
+
+.page-content.iact-page :is(.iact-student-section-title, .panel__title) {
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+}
+
+.page-content.iact-page
+  :is(
+    .stat-card__value,
+    .score-ring__inner strong,
+    .score-summary__text span,
+    .points-score strong,
+    .selected-category-summary__score strong,
+    .cert-summary strong
+  ) {
+  font-weight: 700 !important;
+}
+
+.page-content.iact-page
+  :is(
+    .action-btn,
+    .btn-action,
+    .primary-button,
+    .secondary-button,
+    .panel__link,
+    .proof-item__action,
+    .quick-action__label,
+    .status-pill,
+    .status-badge,
+    .activity-item__badge,
+    .pending-count
+  ) {
+  font-weight: 600 !important;
+}
+
+.page-content.iact-page :is(input, textarea, select) {
+  width: 100%;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow-xs);
+  line-height: 1.45;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.page-content.iact-page :is(input, select) {
+  min-height: 2.75rem;
+  padding: 0.625rem 0.875rem !important;
+}
+
+.page-content.iact-page select {
+  accent-color: var(--primary);
+  color-scheme: light;
+  cursor: pointer;
+  padding-right: 2.25rem !important;
+}
+
+.page-content.iact-page textarea {
+  min-height: 7rem;
+  padding: 0.875rem !important;
+  resize: vertical;
+}
+
+.page-content.iact-page :is(input, textarea, select):focus {
+  border-color: var(--primary) !important;
+  background-color: var(--bg) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14) !important;
+  outline: 0 !important;
+}
+
+.page-content.iact-page :is(input, textarea, select):disabled {
+  background-color: var(--bg-input) !important;
+  color: var(--text-muted) !important;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.page-content.iact-page
+  :is(.semester-filter, .semester-select, .form-field, .proof-link, .proof-note) {
+  color: var(--text);
+}
+
+.page-content.iact-page .semester-filter {
+  border-color: var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  background: var(--bg) !important;
+  box-shadow: var(--shadow-xs);
+}
+
+.page-content.iact-page .semester-filter:focus-within {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14) !important;
+}
+
+.page-content.iact-page .semester-filter select {
+  min-height: auto;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none;
+  padding: 0 !important;
+}
+
+.page-content.iact-page :is(.semester-select__menu, .benefit-picker__menu) {
+  z-index: var(--z-dropdown);
+  border-color: var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  background: var(--bg) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.page-content.iact-page :is(.semester-select__option, .benefit-picker__option) {
+  font-weight: 400 !important;
+}
+
+.page-content.iact-page
+  :is(
+    .semester-select__option:hover,
+    .semester-select__option.is-selected,
+    .benefit-picker__option:hover,
+    .benefit-picker__option--selected
+  ) {
+  background: var(--primary-light) !important;
+  color: var(--primary-hover) !important;
+}
+
+.page-content.iact-page :is(.records-tabs, .status-filter, .proposal-filter-tabs, .category-tabs) {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.page-content.iact-page
+  :is(
+    .dashboard-header,
+    .panel,
+    .stat-card,
+    .records-table,
+    .activity-record,
+    .points-overview,
+    .points-history-card,
+    .points-tree-card,
+    .points-detail-card,
+    .cert-form,
+    .cert-list,
+    .submission-card,
+    .cert-summary article,
+    .records-modal__panel,
+    .cert-modal__panel
+  ) {
+  border-color: var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  background: var(--bg) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.page-content.iact-page :is(.student-dashboard, .records-page, .points-page, .cert-page) {
+  background: var(--bg-surface) !important;
+}
+
+.page-content.iact-page :is(.review-note, .warning-panel, .ai-suggestion, .modal-summary span) {
+  font-weight: 400 !important;
+}
+
+.page-content.iact-page :is(.points-table-wrap, .records-table, .iact-scroll-region) {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.page-content.iact-page :is(.records-modal__panel, .cert-modal__panel) {
+  max-height: min(92dvh, 56rem);
+}
+
+@media (max-width: 767px) {
+  .page-content {
+    padding: 0.75rem;
+  }
+
+  .page-content.iact-page :is(.student-dashboard, .records-page, .points-page, .cert-page) {
+    padding: 1rem !important;
+  }
+
+  .page-content.iact-page
+    :is(
+      .dashboard-header__content,
+      .panel,
+      .points-overview,
+      .points-history-card,
+      .points-tree-card,
+      .points-detail-card,
+      .cert-form,
+      .cert-list
+    ) {
+    padding: 1rem !important;
+  }
+
+  .page-content.iact-page :is(.action-btn, .btn-action, .primary-button, .secondary-button) {
+    min-height: 2.75rem;
+  }
+
+  .page-content.iact-page :is(.dashboard-header__actions, .cert-header__actions) > * {
+    flex: 1 1 auto;
+  }
+
+  .page-content.iact-page .cert-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .page-content.iact-page .cert-summary article {
+    flex-basis: auto !important;
+  }
+
+  .page-content.iact-page :is(.records-tabs, .status-filter, .proposal-filter-tabs) {
+    width: 100%;
+  }
+
+  .page-content.iact-page :is(.records-modal, .cert-modal) {
+    align-items: end;
+    padding: 0.75rem;
+  }
+
+  .page-content.iact-page :is(.records-modal__panel, .cert-modal__panel) {
+    width: 100%;
+    max-height: calc(100dvh - 1.5rem);
+  }
+}
+
+@media (max-width: 479px) {
+  .page-content.iact-page .cert-summary {
+    grid-template-columns: 1fr !important;
+  }
+
+  .page-content.iact-page :is(.proof-item, .activity-item, .submission-card) {
+    gap: 0.75rem;
+  }
+
+  .page-content.iact-page :is(.records-modal__footer, .cert-modal__footer) {
+    align-items: stretch !important;
+  }
+}

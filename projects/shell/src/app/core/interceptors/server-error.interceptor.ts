@@ -3,11 +3,26 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 
+const RESOURCE_NOT_EXISTED_CODE = 1008;
+const ACTIVE_FACE_EMBEDDING_PATH = '/user-profiles/me/face-embedding/active';
+
+function isExpectedMissingFaceEmbedding(reqUrl: string, error: HttpErrorResponse): boolean {
+  return (
+    error.status === 404 &&
+    error.error?.code === RESOURCE_NOT_EXISTED_CODE &&
+    reqUrl.includes(ACTIVE_FACE_EMBEDDING_PATH)
+  );
+}
+
 export const serverErrorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      if (isExpectedMissingFaceEmbedding(req.url, error)) {
+        return throwError(() => error);
+      }
+
       if (error.status !== 401) {
         if (error.status >= 500 || error.status === 0) {
           console.error('=> Server toang rồi! Đang chuyển hướng...', error.message);

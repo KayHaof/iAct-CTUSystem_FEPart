@@ -59,6 +59,20 @@ export const appRoutes: Routes = [
         title: 'Hoạt động của tôi | iAct CTU',
       },
       {
+        path: 'certificates',
+        loadComponent: () =>
+          import('./features/certificate-submissions/certificate-submissions.component').then(
+            (m) => m.CertificateSubmissionsComponent,
+          ),
+        title: 'Giấy khen của tôi | iAct CTU',
+      },
+      {
+        path: 'qr-checkin',
+        loadComponent: () =>
+          import('./features/qr-checkin/qr-checkin.component').then((m) => m.QrCheckinComponent),
+        title: 'Điểm danh QR | iAct CTU',
+      },
+      {
         path: 'submit-proof',
         loadComponent: () =>
           import('./features/submit-proof/submit-proof.component').then(
@@ -86,7 +100,7 @@ export const appRoutes: Routes = [
           import('./features/preferences/preferences.component').then(
             (m) => m.PreferencesComponent,
           ),
-        title: 'Cài đặt ưu tiên | iAct CTU',
+        title: 'Cài đặt thông báo | iAct CTU',
       },
       {
         path: 'notifications',
@@ -103,12 +117,6 @@ export const appRoutes: Routes = [
             (m) => m.StudentNotificationDetailComponent,
           ),
         title: 'Chi tiết thông báo | iAct CTU',
-      },
-      {
-        path: 'qr-checkin',
-        loadComponent: () =>
-          import('./features/qr-checkin/qr-checkin.component').then((m) => m.QrCheckinComponent),
-        title: 'Quét QR điểm danh | iAct CTU',
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],

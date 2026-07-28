@@ -1,0 +1,167 @@
+<section class="face-checkin">
+  <div class="face-checkin__stage">
+    <video #cameraVideo class="face-checkin__video" autoplay muted playsinline></video>
+
+    <div class="face-checkin__shade" aria-hidden="true"></div>
+    <div
+      class="face-checkin__oval"
+      [class.face-checkin__oval--ready]="faceFrameProgress() >= 88"
+      aria-hidden="true"
+    >
+      <span></span>
+    </div>
+
+    <div class="face-checkin__topbar">
+      <button type="button" class="face-checkin__close" (click)="cancel()" aria-label="Đóng xác thực">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+
+      <div class="face-checkin__activity">
+        <span>Xác thực tham gia</span>
+        <strong>{{ activity.title }}</strong>
+      </div>
+
+      <div
+        class="face-checkin__progress-ring"
+        [style.--progress]="overallProgress() + '%'"
+        aria-label="Tiến trình xác thực"
+      >
+        <span>{{ overallProgress() }}%</span>
+      </div>
+    </div>
+
+    <div class="face-checkin__guide">
+      @if (phase() === 'LOADING') {
+        <span class="face-checkin__pulse"></span>
+        <strong>Đang chuẩn bị camera</strong>
+        <p>{{ cameraStatus() }} {{ modelStatus() }}</p>
+      } @else if (phase() === 'RUNNING') {
+        <span class="face-checkin__pulse face-checkin__pulse--active"></span>
+        <strong>{{ activeChallenge()?.title || 'Hoàn tất thử thách' }}</strong>
+        <p>{{ activeChallenge()?.instruction || guideMessage() }}</p>
+      } @else if (phase() === 'SUBMITTING') {
+        <span class="face-checkin__pulse face-checkin__pulse--active"></span>
+        <strong>Đang gửi ảnh live</strong>
+        <p>Giữ yên camera trong giây lát để hệ thống ghi nhận.</p>
+      } @else if (phase() === 'RESULT') {
+        <span
+          class="face-checkin__pulse"
+          [class.face-checkin__pulse--success]="resultSuccess()"
+          [class.face-checkin__pulse--danger]="!resultSuccess()"
+        ></span>
+        <strong>{{ resultMessage() }}</strong>
+        <p>{{ resultDetail() || 'Bạn có thể đóng cửa sổ này hoặc thử lại nếu còn lượt.' }}</p>
+      } @else {
+        <span class="face-checkin__pulse" [class.face-checkin__pulse--active]="faceFrameProgress() >= 88"></span>
+        <strong>{{ faceFrameProgress() >= 88 ? 'Khuôn mặt đã đúng vị trí' : 'Đưa mặt vào khung oval' }}</strong>
+        <p>{{ guideMessage() }}</p>
+      }
+    </div>
+  </div>
+
+  <aside class="face-checkin__panel">
+    <div class="face-checkin__panel-head">
+      <p>Điểm danh AI</p>
+      <h3>Chụp ảnh xác thực khuôn mặt</h3>
+    </div>
+
+    <div class="face-checkin__readiness">
+      <div [class.is-ready]="isCameraReady()">
+        <i class="bi bi-camera-video" aria-hidden="true"></i>
+        <span>{{ isCameraReady() ? 'Camera sẵn sàng' : cameraStatus() }}</span>
+      </div>
+      <div [class.is-ready]="isModelReady()">
+        <i class="bi bi-cpu" aria-hidden="true"></i>
+        <span>{{ isModelReady() ? 'MediaPipe sẵn sàng' : modelStatus() }}</span>
+      </div>
+      <div [class.is-ready]="faceFrameProgress() >= 88">
+        <i class="bi bi-person-bounding-box" aria-hidden="true"></i>
+        <span>{{ guideMessage() }}</span>
+      </div>
+    </div>
+
+    @if (challenges().length > 0) {
+      <div class="face-checkin__challenge-list">
+        @for (challenge of challenges(); track challenge.kind) {
+          <article
+            class="face-checkin__challenge"
+            [class.is-active]="challenge.status === 'active'"
+            [class.is-done]="challenge.status === 'done'"
+          >
+            <div class="face-checkin__challenge-icon">
+              <i class="bi" [ngClass]="challenge.icon" aria-hidden="true"></i>
+            </div>
+            <div>
+              <span>{{ challenge.status === 'done' ? 'Đã hoàn thành' : 'Thử thách' }}</span>
+              <strong>{{ challenge.title }}</strong>
+              <p>{{ challenge.instruction }}</p>
+              <div class="face-checkin__bar" aria-hidden="true">
+                <i [style.width.%]="challenge.progress"></i>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    } @else {
+      <div class="face-checkin__empty-challenge">
+        <i class="bi bi-shield-check" aria-hidden="true"></i>
+        <strong>Sẵn sàng kiểm tra sự sống</strong>
+        <p>Hệ thống sẽ tạo ngẫu nhiên 1 hoặc 2 thử thách khi bạn bắt đầu.</p>
+      </div>
+    }
+
+    <div class="face-checkin__tips">
+      <span>Gợi ý</span>
+      <p>Đứng nơi đủ sáng, tháo khẩu trang nếu có thể, nhìn vào camera và không che mặt.</p>
+    </div>
+
+    <div class="face-checkin__actions">
+      @if (phase() === 'RESULT' && !resultSuccess() && canRetry()) {
+        <button
+          type="button"
+          class="face-checkin__button face-checkin__button--secondary"
+          (click)="retryChallenge()"
+        >
+          <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+          Thử lại
+        </button>
+      }
+
+      @if (phase() === 'RESULT' && !resultSuccess() && !canRetry()) {
+        <button
+          type="button"
+          class="face-checkin__button face-checkin__button--secondary"
+          (click)="goToComplaint()"
+        >
+          <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+          Gửi khiếu nại
+        </button>
+      }
+
+      @if (phase() === 'SETUP') {
+        <button
+          type="button"
+          class="face-checkin__button face-checkin__button--primary"
+          (click)="startChallenge()"
+          [disabled]="!canStart()"
+        >
+          <i class="bi bi-play-fill" aria-hidden="true"></i>
+          Bắt đầu thử thách
+        </button>
+      } @else if (phase() === 'RUNNING') {
+        <button type="button" class="face-checkin__button face-checkin__button--primary" disabled>
+          Còn {{ remainingChallengeCount() }} thử thách
+        </button>
+      } @else if (phase() === 'SUBMITTING') {
+        <button type="button" class="face-checkin__button face-checkin__button--primary" disabled>
+          <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
+          Đang gửi
+        </button>
+      } @else if (phase() === 'LOADING') {
+        <button type="button" class="face-checkin__button face-checkin__button--primary" disabled>
+          Đang chuẩn bị
+        </button>
+      }
+    </div>
+  </aside>
+</section>
