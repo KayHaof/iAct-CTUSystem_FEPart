@@ -1,0 +1,672 @@
+<div id="certificate-page-top" class="cert-page">
+  <span id="certificate-page-top-sentinel" class="cert-page__sentinel" aria-hidden="true"></span>
+  <header class="cert-header">
+    <div class="iact-student-header">
+      <p class="iact-student-eyebrow">Hồ sơ cộng điểm</p>
+      <h1 class="iact-student-title">Giấy khen - Giấy chứng nhận</h1>
+      <p class="iact-student-subtitle">
+        Nộp giấy khen, giấy chứng nhận, minh chứng tham gia các hoạt động ngoại khóa, cuộc thi, sự
+        kiện... để được cộng điểm vào hồ sơ cá nhân.
+      </p>
+    </div>
+
+    <div class="cert-header__aside">
+      <section class="cert-summary" aria-label="Tổng quan hồ sơ giấy khen">
+        <article>
+          <span>Chờ duyệt</span>
+          <strong>{{ pendingCount() }}</strong>
+        </article>
+        <article>
+          <span>Đã duyệt</span>
+          <strong>{{ approvedCount() }}</strong>
+        </article>
+        <article>
+          <span>Bị từ chối</span>
+          <strong>{{ rejectedCount() }}</strong>
+        </article>
+      </section>
+
+      <div class="cert-header__actions">
+        <button
+          type="button"
+          class="primary-button primary-button--fit"
+          (click)="openSubmitModal()"
+        >
+          <i class="bi bi-plus-lg" aria-hidden="true"></i>
+          Nộp mới
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="cert-workspace">
+    <section id="submission-section" class="cert-list">
+      <div class="cert-list__header">
+        <div class="section-heading">
+          <p class="iact-student-eyebrow">Theo dõi</p>
+          <h2 class="iact-student-section-title">Hồ sơ đã nộp</h2>
+        </div>
+
+        <div class="status-filter" role="tablist" aria-label="Lọc trạng thái hồ sơ">
+          @for (option of statusOptions; track option.label) {
+            <button
+              type="button"
+              role="tab"
+              [class.is-active]="selectedStatus() === option.value"
+              [attr.aria-selected]="selectedStatus() === option.value"
+              (click)="changeStatus(option.value)"
+            >
+              {{ option.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="cert-hint">
+        Nếu minh chứng hợp lệ nhưng hệ thống nhận sai, hãy bấm
+        <strong>Khiếu nại</strong> ngay trên thẻ hồ sơ đó.
+      </div>
+
+      @if (isLoading()) {
+        <div class="cert-state" aria-live="polite">
+          <span class="cert-spinner cert-spinner--large"></span>
+          <p>Đang tải hồ sơ giấy khen...</p>
+        </div>
+      } @else if (submissions().length > 0) {
+        <div class="submission-list">
+          @for (item of submissions(); track trackSubmission($index, item)) {
+            <article class="submission-card">
+              @if ((item.aiWarnings || []).length > 0) {
+                <div class="warning-strip">
+                  <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                  <span>{{ (item.aiWarnings || [])[0] }}</span>
+                  @if ((item.aiWarnings || []).length > 1) {
+                    <div class="warning-strip__more">
+                      <button
+                        type="button"
+                        class="warning-strip__count"
+                        [attr.aria-label]="
+                          'Xem chi tiết ' + ((item.aiWarnings || []).length - 1) + ' cảnh báo'
+                        "
+                      >
+                        +{{ (item.aiWarnings || []).length - 1 }} cảnh báo
+                      </button>
+
+                      <div class="warning-strip__tooltip" role="tooltip">
+                        <strong>Cảnh báo chi tiết</strong>
+                        <ul>
+                          @for (warning of item.aiWarnings || []; track $index) {
+                            <li>{{ warning }}</li>
+                          }
+                        </ul>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <div class="submission-card__main">
+                <a
+                  class="submission-card__image"
+                  [href]="item.imageUrl"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <img [src]="item.imageUrl" alt="Ảnh giấy khen" loading="lazy" />
+                </a>
+
+                <div class="submission-card__body">
+                  <div class="submission-card__top">
+                    <div class="submission-card__title">
+                      <h3>{{ displayTitle(item) }}</h3>
+                      <p>{{ displayStudent(item) }}</p>
+                    </div>
+                    <div class="submission-card__status">
+                      <span
+                        class="status-pill"
+                        [ngClass]="'status-pill--' + statusTone(item.status)"
+                      >
+                        {{ item.statusLabel || statusLabel(item.status) }}
+                      </span>
+                      @if (item.createdAt) {
+                        <time [attr.datetime]="item.createdAt">{{
+                          item.createdAt | date: 'dd/MM/yyyy'
+                        }}</time>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="submission-summary">
+                    <dl class="submission-meta">
+                      <div>
+                        <dt>Đơn vị cấp</dt>
+                        <dd>{{ item.issuer || 'Chưa nhận diện' }}</dd>
+                      </div>
+                      <div>
+                        <dt>Ngày cấp</dt>
+                        <dd>
+                          @if (item.issuedDate) {
+                            {{ item.issuedDate | date: 'dd/MM/yyyy' }}
+                          } @else {
+                            Chưa nhận diện
+                          }
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div class="ai-suggestion">
+                      <span>
+                        <i class="bi bi-stars" aria-hidden="true"></i>
+                        AI đề xuất
+                      </span>
+                      <strong>{{ item.suggestedCategoryName || 'Chờ Trường phân loại' }}</strong>
+                      @if (item.suggestedPoint !== null) {
+                        <small>{{ item.suggestedPoint }} điểm đề xuất</small>
+                      }
+                      @if (item.suggestionReason) {
+                        <p>{{ item.suggestionReason }}</p>
+                      }
+                    </div>
+                  </div>
+
+                  @if (item.status === 1) {
+                    <div class="review-note review-note--success">
+                      <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                      <span>
+                        Đã cộng {{ item.approvedPoint || 0 }} điểm vào
+                        {{ item.approvedCategoryName || 'mục đã duyệt' }}.
+                      </span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              @if (item.status === 2) {
+                <div class="submission-card__footer">
+                  <div class="review-note review-note--danger">
+                    <i class="bi bi-x-circle-fill" aria-hidden="true"></i>
+                    <span>{{ item.rejectionReason || 'Hồ sơ chưa đủ điều kiện duyệt.' }}</span>
+                  </div>
+
+                  @if (complaintForSubmission(item.id); as complaint) {
+                    <div class="submission-complaint">
+                      <div class="submission-complaint__head">
+                        <span>Đã gửi khiếu nại</span>
+                        <span
+                          class="status-pill"
+                          [ngClass]="'status-pill--' + complaintStatusTone(complaint.status)"
+                        >
+                          {{ complaint.statusLabel || complaintStatusLabel(complaint.status) }}
+                        </span>
+                      </div>
+                      <p>{{ complaint.complaintReason }}</p>
+                      @if (complaint.reviewNote || complaint.rejectionReason) {
+                        <small>
+                          {{
+                            complaint.reviewNote ||
+                              complaint.rejectionReason ||
+                              'Trường sẽ phản hồi sau khi xử lý.'
+                          }}
+                        </small>
+                      }
+                      <button
+                        type="button"
+                        class="action-link action-link--ghost action-link--compact"
+                        (click)="openComplaintDetail(complaint)"
+                      >
+                        <i class="bi bi-journal-text"></i>
+                        Xem khiếu nại
+                      </button>
+                    </div>
+                  } @else {
+                    <button
+                      type="button"
+                      class="action-link action-link--primary action-link--compact"
+                      (click)="openComplaintModal(item)"
+                    >
+                      <i class="bi bi-chat-left-text"></i>
+                      Khiếu nại
+                    </button>
+                  }
+                </div>
+              }
+            </article>
+          }
+        </div>
+
+        @if (totalRows() > 0) {
+          <div class="cert-pagination-container">
+            <lib-pagination
+              [currentPage]="currentPage()"
+              [totalItems]="totalRows()"
+              [pageSize]="pageSize()"
+              [pageSizeOptions]="[5, 8, 12, 20]"
+              (pageChange)="goToPage($event)"
+              (pageSizeChange)="changePageSize($event)"
+            ></lib-pagination>
+          </div>
+        }
+      } @else {
+        <div class="cert-state">
+          <span class="cert-state__icon">
+            <i class="bi bi-award" aria-hidden="true"></i>
+          </span>
+          <h3>Chưa có hồ sơ giấy khen</h3>
+          <p>Hồ sơ đã nộp trong học kỳ đang chọn sẽ hiển thị tại đây.</p>
+          <button
+            type="button"
+            class="primary-button primary-button--fit"
+            (click)="openSubmitModal()"
+          >
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+            Nộp giấy khen mới
+          </button>
+        </div>
+      }
+    </section>
+
+    @if (isSubmitModalOpen()) {
+      <section
+        class="cert-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="certificate-submit-title"
+      >
+        <button
+          type="button"
+          class="cert-modal__backdrop"
+          aria-label="Đóng form nộp giấy khen"
+          (click)="closeSubmitModal()"
+        ></button>
+
+        <form class="cert-form cert-modal__panel" (ngSubmit)="submitCertificate()">
+          <div class="cert-modal__header">
+            <div class="section-heading">
+              <p class="iact-student-eyebrow">Nộp hồ sơ</p>
+              <h2 id="certificate-submit-title" class="iact-student-section-title">
+                Ảnh giấy khen
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              class="icon-button icon-button--static"
+              aria-label="Đóng form nộp giấy khen"
+              [disabled]="isSubmitting()"
+              (click)="closeSubmitModal()"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <label
+            class="cert-upload"
+            [class.is-dragging]="isDragging()"
+            [class.has-preview]="previewUrl()"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+          >
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              (change)="onFileSelected($event)"
+              [disabled]="isSubmitting()"
+            />
+
+            @if (previewUrl()) {
+              <figure class="cert-preview">
+                <img [src]="previewUrl()" alt="Ảnh giấy khen đã chọn" />
+                <button
+                  type="button"
+                  class="icon-button"
+                  aria-label="Xóa ảnh"
+                  [disabled]="isSubmitting()"
+                  (click)="removeFile($event)"
+                >
+                  <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+              </figure>
+            } @else {
+              <span class="cert-upload__icon">
+                <i class="bi bi-image" aria-hidden="true"></i>
+              </span>
+              <strong>Chọn ảnh giấy khen</strong>
+              <small>JPG, PNG hoặc WEBP</small>
+            }
+          </label>
+
+          @if (selectedFileName()) {
+            <p class="cert-file-name">
+              <i class="bi bi-paperclip" aria-hidden="true"></i>
+              {{ selectedFileName() }}
+            </p>
+          }
+
+          <div class="form-grid">
+            <label class="form-field">
+              <span>Học kỳ</span>
+              <select
+                [ngModel]="selectedSemesterId()"
+                (ngModelChange)="selectSemester($event)"
+                name="semesterId"
+                [disabled]="isSubmitting()"
+              >
+                <option [ngValue]="null">Học kỳ hiện tại</option>
+                @for (semester of semesters(); track semester.id) {
+                  <option [ngValue]="semester.id">{{ formatSemesterLabel(semester) }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="form-field">
+              <span>Ghi chú</span>
+              <input
+                type="text"
+                [ngModel]="studentNote()"
+                (ngModelChange)="studentNote.set($event)"
+                name="studentNote"
+                maxlength="255"
+                placeholder="Tên cuộc thi, cấp khen thưởng..."
+                [disabled]="isSubmitting()"
+              />
+            </label>
+          </div>
+
+          <div class="cert-modal__footer">
+            <button
+              type="button"
+              class="secondary-button"
+              [disabled]="isSubmitting()"
+              (click)="closeSubmitModal()"
+            >
+              Hủy
+            </button>
+
+            <button
+              type="submit"
+              class="primary-button primary-button--fit"
+              [disabled]="!canSubmit()"
+            >
+              @if (isSubmitting()) {
+                <span class="cert-spinner"></span>
+                Đang nộp hồ sơ
+              } @else {
+                <i class="bi bi-cloud-upload" aria-hidden="true"></i>
+                Nộp giấy khen
+              }
+            </button>
+          </div>
+        </form>
+      </section>
+    }
+
+    @if (isComplaintModalOpen() && selectedComplaintSubmission(); as submission) {
+      <section
+        class="cert-modal cert-modal--wide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="complaint-title"
+      >
+        <button
+          type="button"
+          class="cert-modal__backdrop"
+          aria-label="Đóng form khiếu nại"
+          (click)="closeComplaintModal()"
+        ></button>
+
+        <form
+          class="cert-form cert-modal__panel cert-modal__panel--complaint"
+          (ngSubmit)="submitComplaint()"
+        >
+          <div class="cert-modal__header">
+            <div class="section-heading">
+              <p class="iact-student-eyebrow">Khiếu nại riêng</p>
+              <h2 id="complaint-title" class="iact-student-section-title">Giấy khen bị từ chối</h2>
+            </div>
+
+            <button
+              type="button"
+              class="icon-button icon-button--static"
+              aria-label="Đóng form khiếu nại"
+              [disabled]="isComplaintSubmitting()"
+              (click)="closeComplaintModal()"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div class="complaint-modal__layout">
+            <div class="complaint-modal__preview">
+              <a
+                [href]="submission.imageUrl"
+                target="_blank"
+                rel="noopener"
+                class="complaint-modal__image"
+              >
+                <img [src]="submission.imageUrl" alt="Ảnh giấy khen bị từ chối" loading="lazy" />
+              </a>
+
+              <div class="complaint-modal__summary">
+                <h3>{{ displayTitle(submission) }}</h3>
+                <p>{{ displayStudent(submission) }}</p>
+
+                <div class="complaint-modal__meta">
+                  <span>
+                    <strong>Đơn vị cấp</strong>
+                    {{ submission.issuer || 'Chưa nhận diện' }}
+                  </span>
+                  <span>
+                    <strong>Ngày cấp</strong>
+                    @if (submission.issuedDate) {
+                      {{ submission.issuedDate | date: 'dd/MM/yyyy' }}
+                    } @else {
+                      Chưa nhận diện
+                    }
+                  </span>
+                </div>
+              </div>
+
+              @if (submission.rejectionReason || (submission.aiWarnings || []).length > 0) {
+                <div class="complaint-modal__callout">
+                  <span class="complaint-card__label">Lý do hệ thống từ chối</span>
+                  <p>{{ submission.rejectionReason || 'Hồ sơ bị từ chối tự động.' }}</p>
+                  @if ((submission.aiWarnings || []).length > 0) {
+                    <small>{{ (submission.aiWarnings || []).join(' - ') }}</small>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="complaint-modal__form">
+              <div class="cert-hint cert-hint--soft complaint-modal__intro">
+                Chỉ gửi khi giấy khen hợp lệ nhưng hệ thống nhận sai tên, sai đơn vị hoặc từ chối
+                nhầm.
+              </div>
+
+              <label class="form-field form-field--textarea">
+                <span>Lý do khiếu nại</span>
+                <textarea
+                  rows="6"
+                  maxlength="2000"
+                  name="complaintReason"
+                  [ngModel]="complaintReason()"
+                  (ngModelChange)="complaintReason.set($event)"
+                  placeholder="Mô tả ngắn gọn vì sao giấy khen này hợp lệ..."
+                  [disabled]="isComplaintSubmitting()"
+                ></textarea>
+              </label>
+
+              <div class="complaint-modal__note">
+                Khi gửi xong, hồ sơ sẽ chuyển sang mục khiếu nại riêng để Trường duyệt thủ công.
+              </div>
+            </div>
+          </div>
+
+          <div class="cert-modal__footer">
+            <button
+              type="button"
+              class="secondary-button"
+              [disabled]="isComplaintSubmitting()"
+              (click)="closeComplaintModal()"
+            >
+              Hủy
+            </button>
+
+            <button
+              type="submit"
+              class="primary-button primary-button--fit"
+              [disabled]="!canSendComplaint()"
+            >
+              @if (isComplaintSubmitting()) {
+                <span class="cert-spinner"></span>
+                Đang gửi khiếu nại
+              } @else {
+                <i class="bi bi-send" aria-hidden="true"></i>
+                Gửi khiếu nại
+              }
+            </button>
+          </div>
+        </form>
+      </section>
+    }
+
+    @if (isComplaintDetailModalOpen() && selectedComplaintDetail(); as complaint) {
+      <section
+        class="cert-modal cert-modal--wide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="complaint-detail-title"
+      >
+        <button
+          type="button"
+          class="cert-modal__backdrop"
+          aria-label="Đóng chi tiết khiếu nại"
+          (click)="closeComplaintDetailModal()"
+        ></button>
+
+        <section
+          class="cert-form cert-modal__panel cert-modal__panel--complaint cert-modal__panel--detail"
+        >
+          <div class="cert-modal__header">
+            <div class="section-heading">
+              <p class="iact-student-eyebrow">Khiếu nại giấy khen</p>
+              <h2 id="complaint-detail-title" class="iact-student-section-title">
+                Chi tiết khiếu nại
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              class="icon-button icon-button--static"
+              aria-label="Đóng chi tiết khiếu nại"
+              (click)="closeComplaintDetailModal()"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div class="complaint-modal__layout complaint-modal__layout--detail">
+            <div class="complaint-modal__preview">
+              @if (complaint.imageUrl) {
+                <a
+                  [href]="complaint.imageUrl"
+                  target="_blank"
+                  rel="noopener"
+                  class="complaint-modal__image"
+                >
+                  <img [src]="complaint.imageUrl" alt="Ảnh giấy khen khiếu nại" loading="lazy" />
+                </a>
+              } @else {
+                <div class="complaint-detail__placeholder">
+                  <i class="bi bi-image" aria-hidden="true"></i>
+                  Không có ảnh minh chứng
+                </div>
+              }
+
+              <div class="complaint-modal__summary">
+                <h3>{{ complaintTitle(complaint) }}</h3>
+                <p>{{ complaintStudent(complaint) }}</p>
+
+                <div class="complaint-modal__meta">
+                  <span>
+                    <strong>Học kỳ</strong>
+                    {{ complaint.semesterName || 'Chưa xác định' }}
+                  </span>
+                  <span>
+                    <strong>Ngày gửi</strong>
+                    @if (complaint.createdAt) {
+                      {{ complaint.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                    } @else {
+                      Chưa xác định
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="complaint-detail">
+              <div class="complaint-detail__status">
+                <span class="complaint-card__label">Trạng thái xử lý</span>
+                <span
+                  class="status-pill"
+                  [ngClass]="'status-pill--' + complaintStatusTone(complaint.status)"
+                >
+                  {{ complaint.statusLabel || complaintStatusLabel(complaint.status) }}
+                </span>
+              </div>
+
+              <div class="complaint-detail__box">
+                <span class="complaint-card__label">Lý do khiếu nại</span>
+                <p>{{ complaint.complaintReason }}</p>
+              </div>
+
+              <div class="complaint-detail__box">
+                <span class="complaint-card__label">Phản hồi của Trường</span>
+                @if (complaint.reviewNote || complaint.rejectionReason) {
+                  <p>{{ complaint.reviewNote || complaint.rejectionReason }}</p>
+                } @else {
+                  <p>Trường chưa phản hồi. Hồ sơ đang chờ xử lý thủ công.</p>
+                }
+              </div>
+
+              @if (complaint.reviewerName || complaint.reviewedAt) {
+                <div class="complaint-detail__box complaint-detail__box--muted">
+                  <span class="complaint-card__label">Người xử lý</span>
+                  <p>
+                    {{ complaint.reviewerName || 'Chưa xác định' }}
+                    @if (complaint.reviewedAt) {
+                      - {{ complaint.reviewedAt | date: 'dd/MM/yyyy HH:mm' }}
+                    }
+                  </p>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="cert-modal__footer">
+            <button
+              type="button"
+              class="primary-button primary-button--fit"
+              (click)="closeComplaintDetailModal()"
+            >
+              Đã hiểu
+            </button>
+          </div>
+        </section>
+      </section>
+    }
+  </section>
+
+  @if (showScrollTop()) {
+    <button
+      type="button"
+      class="cert-scroll-top"
+      aria-label="Cuộn lên đầu trang"
+      title="Cuộn lên đầu trang"
+      (click)="scrollToTop()"
+    >
+      <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
+    </button>
+  }
+</div>
