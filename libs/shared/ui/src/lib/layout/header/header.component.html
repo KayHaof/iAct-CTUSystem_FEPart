@@ -19,6 +19,105 @@
     </div>
 
     <div class="header-right">
+      @if (isDepartment()) {
+        <div class="support-menu">
+          <button
+            class="support-trigger"
+            type="button"
+            aria-label="Mở kênh hỗ trợ đơn vị"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="supportMenuOpen()"
+            (click)="toggleSupportMenu($event)"
+            (keydown.escape)="closeSupportMenu()"
+          >
+            <span class="support-trigger-icon">
+              <i class="bi bi-headset"></i>
+            </span>
+            <span class="support-trigger-copy">
+              <span>Hỗ trợ đơn vị</span>
+              <small>Liên hệ quản trị</small>
+            </span>
+            <i class="bi bi-chevron-down support-chevron"></i>
+          </button>
+
+          @if (supportMenuOpen()) {
+            <div
+              class="support-panel"
+              role="menu"
+              tabindex="-1"
+              aria-label="Kênh liên hệ quản trị và hỗ trợ"
+              (click)="$event.stopPropagation()"
+              (keydown.escape)="closeSupportMenu()"
+            >
+              <div class="support-panel-header">
+                <span class="support-panel-kicker">Kênh hỗ trợ</span>
+                <strong>{{ currentUser()?.departmentName || 'Đơn vị' }}</strong>
+                <p>
+                  Chọn kênh phù hợp để báo sự cố, hỏi nghiệp vụ hoặc theo dõi phản hồi từ cấp trên.
+                </p>
+              </div>
+
+              <button
+                class="support-option support-option-primary"
+                type="button"
+                role="menuitem"
+                (click)="openSupportModal('support')"
+              >
+                <span class="support-option-icon">
+                  <i class="bi bi-envelope-paper"></i>
+                </span>
+                <span class="support-option-text">
+                  <strong>Gửi yêu cầu hỗ trợ</strong>
+                  <small>Mở biểu mẫu để gửi nội dung vào thông báo của admin</small>
+                </span>
+                <i class="bi bi-arrow-up-right support-option-arrow"></i>
+              </button>
+
+              <button
+                class="support-option"
+                type="button"
+                role="menuitem"
+                (click)="openSupportModal('incident')"
+              >
+                <span class="support-option-icon">
+                  <i class="bi bi-exclamation-diamond"></i>
+                </span>
+                <span class="support-option-text">
+                  <strong>Báo sự cố cần hỗ trợ</strong>
+                  <small>Ưu tiên cho lỗi hệ thống ảnh hưởng đến vận hành hoạt động</small>
+                </span>
+                <i class="bi bi-arrow-up-right support-option-arrow"></i>
+              </button>
+
+              <button
+                class="support-option"
+                type="button"
+                role="menuitem"
+                (click)="goToAdminNotifications()"
+              >
+                <span class="support-option-icon">
+                  <i class="bi bi-bell"></i>
+                </span>
+                <span class="support-option-text">
+                  <strong>Theo dõi phản hồi</strong>
+                  <small>Mở trung tâm thông báo để xem cập nhật từ hệ thống</small>
+                </span>
+                <i class="bi bi-arrow-right support-option-arrow"></i>
+              </button>
+
+              <a
+                class="support-call"
+                href="tel:+842923832663"
+                role="menuitem"
+                (click)="closeSupportMenu()"
+              >
+                <i class="bi bi-telephone"></i>
+                <span>Gọi hỗ trợ: 0292 3832 663</span>
+              </a>
+            </div>
+          }
+        </div>
+      }
       <lib-notification-bell></lib-notification-bell>
       <div class="divider"></div>
       <div
@@ -64,3 +163,94 @@
     </div>
   </div>
 </header>
+
+@if (supportModalOpen()) {
+  <div class="support-modal" role="presentation">
+      <button
+        class="support-modal-backdrop"
+        type="button"
+        aria-label="Đóng yêu cầu hỗ trợ"
+        (click)="closeSupportModal()"
+      ></button>
+
+      <section
+        class="support-modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="support-modal-title"
+      >
+        <div class="support-modal-header">
+          <div>
+            <span class="support-modal-kicker">{{ supportTypeLabel() }}</span>
+            <h2 id="support-modal-title">Gửi yêu cầu đến admin</h2>
+            <p>{{ currentUser()?.departmentName || 'Đơn vị' }}</p>
+          </div>
+          <button
+            class="support-modal-close"
+            type="button"
+            aria-label="Đóng"
+            [disabled]="supportSubmitting()"
+            (click)="closeSupportModal()"
+          >
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="support-modal-body">
+          <label class="support-field">
+            <span>Tiêu đề</span>
+            <input
+              type="text"
+              [ngModel]="supportTitle()"
+              (ngModelChange)="supportTitle.set($event)"
+              [disabled]="supportSubmitting()"
+              maxlength="120"
+            />
+          </label>
+
+          <label class="support-field">
+            <span>Nội dung cần hỗ trợ</span>
+            <textarea
+              [ngModel]="supportContent()"
+              (ngModelChange)="supportContent.set($event)"
+              [disabled]="supportSubmitting()"
+              rows="6"
+              maxlength="1200"
+              placeholder="Mô tả vấn đề, hoạt động liên quan, thời điểm xảy ra và mong muốn hỗ trợ..."
+            ></textarea>
+            <small>{{ supportContent().trim().length }}/1200 ký tự</small>
+          </label>
+
+          <div class="support-modal-note">
+            <i class="bi bi-info-circle"></i>
+            <span>Yêu cầu sẽ được gửi vào trung tâm thông báo của admin kèm thông tin đơn vị và người gửi.</span>
+          </div>
+        </div>
+
+        <footer class="support-modal-actions">
+          <button
+            class="support-modal-secondary"
+            type="button"
+            [disabled]="supportSubmitting()"
+            (click)="closeSupportModal()"
+          >
+            Hủy
+          </button>
+          <button
+            class="support-modal-primary"
+            type="button"
+            [disabled]="!canSubmitSupportRequest()"
+            (click)="submitSupportRequest()"
+          >
+            @if (supportSubmitting()) {
+              <i class="bi bi-arrow-repeat support-spin"></i>
+              Đang gửi
+            } @else {
+              <i class="bi bi-send-fill"></i>
+              Gửi đến admin
+            }
+          </button>
+        </footer>
+      </section>
+  </div>
+}

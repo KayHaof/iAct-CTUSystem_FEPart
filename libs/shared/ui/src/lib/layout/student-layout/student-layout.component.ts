@@ -15,6 +15,7 @@ import { LoadingService } from '../../services/loading.service';
 import { FooterComponent } from '../footer/footer.component';
 import { HeaderComponent } from '../header/header.component';
 import { MenuItem, SidebarComponent } from '../sidebar/sidebar.component';
+import { IACT_API_ORIGIN } from '../../tokens/api-origin.token';
 
 interface RepresentativeActivityPermission {
   canCreateActivity: boolean;
@@ -33,8 +34,8 @@ export class StudentLayoutComponent implements OnInit {
   private http = inject(HttpClient);
   private loadingService = inject(LoadingService);
   private layoutService = inject(LayoutService);
-  private readonly representativePermissionUrl =
-    'http://localhost:8080/user/api/v1/class-representatives/me/activity-permission';
+  private readonly apiOrigin = inject(IACT_API_ORIGIN);
+  private readonly representativePermissionUrl = `${this.apiOrigin}/user/api/v1/class-representatives/me/activity-permission`;
 
   readonly isMobileMenuOpen = this.layoutService.isMobileMenuOpen;
 
@@ -52,13 +53,14 @@ export class StudentLayoutComponent implements OnInit {
 
   private readonly baseStudentMenus: MenuItem[] = [
     { label: 'Tổng quan', link: '/dashboard', icon: 'bi bi-grid-fill' },
-    { label: 'Cộng hoạt động', link: '/activity-hub', icon: 'bi bi-calendar3' },
+    { label: 'Hoạt động', link: '/activity-hub', icon: 'bi bi-calendar3' },
     { label: 'Quản lý hoạt động', link: '/my-records', icon: 'bi bi-person-lines-fill' },
+    { label: 'Giấy khen', link: '/certificates', icon: 'bi bi-award-fill' },
     { label: 'Khiếu nại hoạt động', link: '/complaints', icon: 'bi bi-chat-left-text' },
     { label: 'Điểm rèn luyện', link: '/point-management', icon: 'bi bi-star-fill' },
     { label: 'Quét QR điểm danh', link: '/qr-checkin', icon: 'bi bi-qr-code-scan' },
     { label: 'Thông báo', link: '/notifications', icon: 'bi bi-bell-fill' },
-    { label: 'Cài đặt ưu tiên', link: '/preferences', icon: 'bi bi-sliders' },
+    { label: 'Cài đặt thông báo', link: '/preferences', icon: 'bi bi-sliders' },
   ];
 
   readonly studentMenus = signal<MenuItem[]>(this.baseStudentMenus);

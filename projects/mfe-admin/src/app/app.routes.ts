@@ -110,6 +110,16 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'certificates',
+        title: 'Duyệt giấy khen sinh viên | iAct CTU',
+        loadComponent: () =>
+          import('./features/faculty/certificate-approval/certificate-approval.component').then(
+            (m) => m.CertificateApprovalComponent,
+          ),
+        canActivate: [roleGuard],
+        data: { roles: ['department'] },
+      },
+      {
         path: 'approvals',
         redirectTo: 'activities',
         pathMatch: 'full',
@@ -119,6 +129,7 @@ export const routes: Routes = [
   },
 
   { path: 'approvals', redirectTo: 'org/activities', pathMatch: 'full' },
+  { path: 'certificates', redirectTo: 'org/certificates', pathMatch: 'full' },
 
   {
     path: 'user-management/import-users',

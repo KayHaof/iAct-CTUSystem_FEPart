@@ -921,7 +921,9 @@
   font-weight: 500;
   transition: all 0.2s;
 
-  &::placeholder { color: #94a3b8; }
+  &::placeholder {
+    color: #94a3b8;
+  }
 
   &:focus {
     outline: none;
@@ -1080,5 +1082,375 @@
 
   &--amber {
     background: var(--warning);
+  }
+}
+
+// ==============================================
+// ADMIN UI CONTRACT
+// ==============================================
+.page-content.iact-page {
+  color: var(--text);
+  font-weight: 400;
+}
+
+.page-content.iact-page :is(.font-semibold, .font-bold, .font-extrabold, .font-black) {
+  font-weight: 600 !important;
+}
+
+.page-content.iact-page
+  :is(
+    p,
+    li,
+    dt,
+    dd,
+    small,
+    input,
+    textarea,
+    select,
+    option,
+    td,
+    [class*='__meta'],
+    [class*='__description'],
+    [class*='__subtitle'],
+    [class*='-meta'],
+    [class*='-description'],
+    [class*='-subtitle']
+  ) {
+  font-weight: 400 !important;
+}
+
+.page-content.iact-page
+  :is(
+    label,
+    th,
+    .filter-label,
+    .admin-page-header__eyebrow,
+    .dashboard-header__eyebrow,
+    .content-panel__eyebrow,
+    .stat-card__label,
+    .mobile-label
+  ) {
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+.page-content.iact-page :is(h1, .admin-page-header__title, .dashboard-header__title) {
+  font-weight: var(--admin-title-weight) !important;
+  letter-spacing: 0 !important;
+  line-height: var(--admin-title-line);
+}
+
+.page-content.iact-page
+  :is(h2, h3, .admin-page-header__section-title, .content-panel__title, .panel-title) {
+  font-weight: var(--admin-section-title-weight) !important;
+  letter-spacing: 0 !important;
+}
+
+.page-content.iact-page
+  :is(
+    button,
+    [role='button'],
+    .btn-admin-primary,
+    .btn-admin-secondary,
+    .btn-admin-danger,
+    .btn-admin-success,
+    .btn-sm,
+    .filter-btn-primary,
+    .filter-btn-reset,
+    .content-panel__link,
+    .quick-action__label,
+    .badge-admin,
+    .badge-status,
+    .status-badge,
+    .status-pill
+  ) {
+  font-weight: 600 !important;
+}
+
+.page-content.iact-page
+  :is(
+    .admin-page-wrapper,
+    .dashboard-page,
+    .location-page,
+    .activity-management-page,
+    .activity-list-page,
+    .certificate-page,
+    .representatives-page,
+    .category-page,
+    .department-page,
+    .major-page,
+    .class-page,
+    .semester-page,
+    .user-management-page,
+    .notification-page
+  ) {
+  background: var(--bg-surface) !important;
+}
+
+.page-content.iact-page
+  :is(
+    .admin-card,
+    .admin-stat-card,
+    .admin-page-header,
+    .admin-table-wrapper,
+    .major-filter-bar,
+    .class-filter-bar,
+    .dashboard-header,
+    .content-panel,
+    .stat-card,
+    .activity-item,
+    .quick-action,
+    .location-filter-panel,
+    .location-card,
+    .modal-form,
+    .modal-container,
+    .modal-content,
+    .dialog-container,
+    .form-panel,
+    .filter-panel,
+    .table-panel,
+    .panel
+  ) {
+  border-color: var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  background: var(--bg) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.page-content.iact-page
+  :is(
+    input:not([type='checkbox']):not([type='radio']),
+    textarea,
+    select,
+    .admin-input,
+    .admin-select,
+    .filter-input,
+    .select-trigger,
+    .form-control,
+    .form-select
+  ) {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow-xs) !important;
+  font-weight: 400 !important;
+  line-height: 1.45;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.page-content.iact-page :is(input:not([type='checkbox']):not([type='radio']), select) {
+  padding: 0.625rem 0.875rem !important;
+}
+
+.page-content.iact-page select {
+  appearance: none;
+  color-scheme: light;
+  cursor: pointer;
+  padding-right: 2.5rem !important;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%) !important;
+  background-position:
+    calc(100% - 1rem) calc(50% - 0.125rem),
+    calc(100% - 0.7rem) calc(50% - 0.125rem) !important;
+  background-repeat: no-repeat !important;
+  background-size:
+    0.35rem 0.35rem,
+    0.35rem 0.35rem !important;
+}
+
+.page-content.iact-page textarea {
+  min-height: 7rem;
+  padding: 0.875rem !important;
+  resize: vertical;
+}
+
+.page-content.iact-page
+  :is(
+    input:not([type='checkbox']):not([type='radio']),
+    textarea,
+    select,
+    .admin-input,
+    .admin-select,
+    .filter-input,
+    .select-trigger,
+    .form-control,
+    .form-select
+  ):focus,
+.page-content.iact-page .select-field:focus-within .select-trigger {
+  border-color: var(--primary) !important;
+  background-color: var(--bg) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14) !important;
+  outline: 0 !important;
+}
+
+.page-content.iact-page
+  :is(
+    input:not([type='checkbox']):not([type='radio']),
+    textarea,
+    select,
+    .admin-input,
+    .admin-select,
+    .filter-input,
+    .select-trigger,
+    .form-control,
+    .form-select
+  ):disabled {
+  background-color: var(--bg-input) !important;
+  color: var(--text-muted) !important;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.page-content.iact-page :is(.select-field, .filter-group, .filter-select-wrap) {
+  position: relative;
+  overflow: visible !important;
+}
+
+.page-content.iact-page :is(.select-field:focus-within, .filter-group:focus-within) {
+  z-index: var(--z-dropdown);
+}
+
+.page-content.iact-page :is(.select-panel, [role='listbox']) {
+  z-index: var(--z-dropdown);
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  background: var(--bg) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.page-content.iact-page :is(.select-option, [role='option']) {
+  color: var(--text) !important;
+  font-weight: 400 !important;
+}
+
+.page-content.iact-page
+  :is(
+    .select-option:hover,
+    .select-option-active,
+    .select-option.is-selected,
+    [role='option']:hover,
+    [role='option'][aria-selected='true']
+  ) {
+  background: var(--primary-light) !important;
+  color: var(--primary-hover) !important;
+}
+
+.page-content.iact-page
+  :is(
+    .admin-table-wrapper,
+    .table-wrapper,
+    .table-container,
+    .table-scroll,
+    .records-table,
+    .points-table-wrap,
+    .iact-scroll-region,
+    [class*='table-wrapper'],
+    [class*='table-container'],
+    [class*='table-scroll'],
+    [class*='table-wrap']
+  ) {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.page-content.iact-page
+  :is(
+    .admin-action-bar,
+    .dashboard-header__actions,
+    .filter-actions,
+    .location-filter-actions,
+    .modal-actions,
+    .form-actions,
+    .dialog-actions
+  ) {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.page-content.iact-page :is(.modal-container, .modal-content, .dialog-container) {
+  max-width: min(100%, 44rem);
+  max-height: min(92dvh, 48rem);
+}
+
+@media (max-width: 767px) {
+  .page-content {
+    padding: 0.75rem;
+  }
+
+  .page-content.iact-page
+    :is(
+      .admin-page-wrapper,
+      .dashboard-page,
+      .location-page,
+      .activity-management-page,
+      .activity-list-page,
+      .certificate-page,
+      .representatives-page,
+      .category-page,
+      .department-page,
+      .major-page,
+      .class-page,
+      .semester-page,
+      .user-management-page,
+      .notification-page
+    ) {
+    padding: 1rem !important;
+  }
+
+  .page-content.iact-page
+    :is(
+      .admin-page-header,
+      .dashboard-header__content,
+      .content-panel,
+      .admin-card,
+      .admin-stat-card,
+      .major-filter-bar,
+      .class-filter-bar,
+      .location-filter-panel,
+      .filter-panel,
+      .table-panel,
+      .panel
+    ) {
+    padding: 1rem !important;
+  }
+
+  .page-content.iact-page
+    :is(.btn-admin-primary, .btn-admin-secondary, .btn-admin-danger, .btn-admin-success, .btn-sm) {
+    min-height: 2.75rem;
+  }
+
+  .page-content.iact-page
+    :is(.dashboard-header__actions, .admin-action-bar, .filter-actions, .location-filter-actions)
+    > * {
+    flex: 1 1 auto;
+  }
+
+  .page-content.iact-page :is(.modal-overlay, .dialog-overlay) {
+    align-items: end;
+    padding: 0.75rem;
+  }
+
+  .page-content.iact-page :is(.modal-container, .modal-content, .dialog-container) {
+    width: 100%;
+    max-height: calc(100dvh - 1.5rem);
+  }
+}
+
+@media (max-width: 479px) {
+  .page-content.iact-page :is(.admin-grid, .dashboard-stats-grid, .quick-actions-grid) {
+    grid-template-columns: 1fr !important;
+  }
+
+  .page-content.iact-page :is(.modal-actions, .form-actions, .dialog-actions) {
+    align-items: stretch !important;
   }
 }

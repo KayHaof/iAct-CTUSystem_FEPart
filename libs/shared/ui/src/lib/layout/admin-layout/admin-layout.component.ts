@@ -48,8 +48,13 @@ export class AdminLayoutComponent implements OnInit {
       return [
         { label: 'Tổng quan', link: '/admin/dashboard', icon: 'bi bi-grid-fill' },
         { label: 'Quản lý hoạt động', link: '/admin/org/activities', icon: 'bi bi-calendar-plus' },
+        { label: 'Duyệt giấy khen', link: '/admin/org/certificates', icon: 'bi bi-award-fill' },
         { label: 'Địa điểm đơn vị', link: '/admin/org/locations', icon: 'bi bi-building-gear' },
-        { label: 'Đại diện lớp', link: '/admin/org/representatives', icon: 'bi bi-person-badge-fill' },
+        {
+          label: 'Đại diện lớp',
+          link: '/admin/org/representatives',
+          icon: 'bi bi-person-badge-fill',
+        },
         { label: 'Thông báo', link: '/admin/notifications', icon: 'bi bi-bell-fill' },
       ];
     }
@@ -70,7 +75,7 @@ export class AdminLayoutComponent implements OnInit {
         { label: 'Quản lý địa điểm', link: '/admin/locations', icon: 'bi bi-building-gear' },
         { label: 'Quản lý học kỳ', link: '/admin/semesters', icon: 'bi bi-calendar-range' },
         { label: 'Danh mục DRL', link: '/admin/categories', icon: 'bi bi-diagram-3-fill' },
-        { label: 'Khoa/Truờng/Viện', link: '/admin/departments', icon: 'bi bi-building-fill' },
+        { label: 'Khoa / Trường / Viện', link: '/admin/departments', icon: 'bi bi-building-fill' },
         { label: 'Chuyên ngành', link: '/admin/majors', icon: 'bi bi-mortarboard-fill' },
         { label: 'Lớp sinh hoạt', link: '/admin/classes', icon: 'bi bi-collection-fill' },
         { label: 'Thông báo', link: '/admin/notifications', icon: 'bi bi-bell-fill' },

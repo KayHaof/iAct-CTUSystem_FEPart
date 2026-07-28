@@ -1,55 +1,124 @@
-<footer class="iact-footer relative overflow-hidden">
-  <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-ctu-gold/10 via-ctu-gold to-ctu-gold/10"></div>
-
-  <div class="container mx-auto px-4 sm:px-6 pt-10 pb-6 relative z-10">
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
-      <div class="md:col-span-12 lg:col-span-5">
-        <h3 class="footer-brand">
-          <span class="text-white">iAct</span><span class="text-ctu-gold"> - CTU</span>
-        </h3>
-        <p class="text-sm leading-relaxed text-gray-300 mb-5 max-w-sm">
-          Hệ thống Quản lý Hoạt động & Điểm rèn luyện sinh viên trường Đại học Cần Thơ. Nhanh chóng, tiện lợi và minh bạch.
-        </p>
-        <div class="flex gap-3 mt-4">
-          <a href="#" class="social-btn"><i class="bi bi-facebook"></i></a>
-          <a href="#" class="social-btn"><i class="bi bi-youtube"></i></a>
-          <a href="#" class="social-btn"><i class="bi bi-globe"></i></a>
+<footer class="iact-footer">
+  <div class="footer-shell">
+    <section class="footer-brand-panel" aria-labelledby="iact-footer-title">
+      <div class="footer-brand-lockup">
+        <span class="footer-brand-mark" aria-hidden="true">iA</span>
+        <div>
+          <h2 id="iact-footer-title" class="footer-brand">iAct CTU</h2>
+          <p class="footer-tagline">Hoạt động sinh viên và điểm rèn luyện</p>
         </div>
       </div>
 
-      <div class="md:col-span-6 lg:col-span-3">
-        <h4 class="footer-title">Liên kết nhanh</h4>
-        <ul class="space-y-3">
-          <li><a href="#" class="footer-link">Trang chủ</a></li>
-          <li><a href="#" class="footer-link">Tra cứu hoạt động</a></li>
-          <li><a href="#" class="footer-link">Hướng dẫn sử dụng</a></li>
-          <li><a href="#" class="footer-link">Quy chế điểm rèn luyện</a></li>
-        </ul>
-      </div>
+      <p class="footer-description">
+        Hệ thống hỗ trợ sinh viên theo dõi hoạt động, minh chứng tham gia và kết quả điểm rèn luyện
+        tại Đại học Cần Thơ.
+      </p>
 
-      <div class="md:col-span-6 lg:col-span-4">
-        <h4 class="footer-title">Thông tin liên hệ</h4>
-        <ul class="space-y-4">
-          <li class="flex items-start">
-            <i class="bi bi-geo-alt text-ctu-gold mt-0.5 mr-3 text-lg flex-shrink-0"></i>
-            <span class="text-sm text-gray-300 leading-relaxed">Khu II, Đ. 3/2, Xuân Khánh, Ninh Kiều, TP. Cần Thơ</span>
+      <div class="footer-actions" aria-label="Kênh liên hệ nhanh">
+        <a class="footer-action" href="mailto:ctsv-iact@ctu.edu.vn" aria-label="Gửi email hỗ trợ">
+          <i class="bi bi-envelope" aria-hidden="true"></i>
+          <span>Email hỗ trợ</span>
+        </a>
+        <a class="footer-action" href="tel:+842923832663" aria-label="Gọi số hỗ trợ">
+          <i class="bi bi-telephone" aria-hidden="true"></i>
+          <span>0292 3832 663</span>
+        </a>
+        <a
+          class="footer-action"
+          href="https://www.ctu.edu.vn"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Mở website Đại học Cần Thơ"
+        >
+          <i class="bi bi-globe2" aria-hidden="true"></i>
+          <span>Website CTU</span>
+        </a>
+      </div>
+    </section>
+
+    <div class="footer-grid">
+      <nav class="footer-section" aria-label="Liên kết sinh viên">
+        <h3 class="footer-title">Sinh viên</h3>
+        <ul class="footer-list">
+          <li>
+            <a routerLink="/dashboard" class="footer-link">
+              <i class="bi bi-grid" aria-hidden="true"></i>
+              <span>Tổng quan</span>
+            </a>
           </li>
-          <li class="flex items-center">
-            <i class="bi bi-envelope text-ctu-gold mr-3 text-lg flex-shrink-0"></i>
-            <a href="mailto:ctsv-iact@ctu.edu.vn" class="text-sm text-gray-300 hover:text-white transition-colors">ctsv-iact@ctu.edu.vn</a>
+          <li>
+            <a routerLink="/activity-hub" class="footer-link">
+              <i class="bi bi-calendar3" aria-hidden="true"></i>
+              <span>Cổng hoạt động</span>
+            </a>
           </li>
-          <li class="flex items-center">
-            <i class="bi bi-telephone text-ctu-gold mr-3 text-lg flex-shrink-0"></i>
-            <span class="text-sm text-gray-300">0292 3832 663</span>
+          <li>
+            <a routerLink="/my-records" class="footer-link">
+              <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+              <span>Hoạt động của tôi</span>
+            </a>
+          </li>
+          <li>
+            <a routerLink="/point-management" class="footer-link">
+              <i class="bi bi-star" aria-hidden="true"></i>
+              <span>Điểm rèn luyện</span>
+            </a>
           </li>
         </ul>
-      </div>
+      </nav>
 
+      <section class="footer-section" aria-labelledby="iact-support-title">
+        <h3 id="iact-support-title" class="footer-title">Hỗ trợ</h3>
+        <ul class="footer-list">
+          <li>
+            <a routerLink="/notifications" class="footer-link">
+              <i class="bi bi-bell" aria-hidden="true"></i>
+              <span>Thông báo</span>
+            </a>
+          </li>
+          <li>
+            <a routerLink="/certificates" class="footer-link">
+              <i class="bi bi-award" aria-hidden="true"></i>
+              <span>Giấy khen</span>
+            </a>
+          </li>
+          <li>
+            <a routerLink="/complaints" class="footer-link">
+              <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+              <span>Khiếu nại hoạt động</span>
+            </a>
+          </li>
+          <li>
+            <a routerLink="/preferences" class="footer-link">
+              <i class="bi bi-sliders" aria-hidden="true"></i>
+              <span>Cài đặt thông báo</span>
+            </a>
+          </li>
+        </ul>
+      </section>
+
+      <section class="footer-section footer-contact" aria-labelledby="iact-contact-title">
+        <h3 id="iact-contact-title" class="footer-title">Liên hệ</h3>
+        <ul class="footer-contact-list">
+          <li>
+            <i class="bi bi-geo-alt" aria-hidden="true"></i>
+            <span>Khu II, đường 3/2, Xuân Khánh, Ninh Kiều, TP. Cần Thơ</span>
+          </li>
+          <li>
+            <i class="bi bi-envelope" aria-hidden="true"></i>
+            <a href="mailto:ctsv-iact@ctu.edu.vn">ctsv-iact&#64;ctu.edu.vn</a>
+          </li>
+          <li>
+            <i class="bi bi-clock" aria-hidden="true"></i>
+            <span>Hỗ trợ trong giờ hành chính</span>
+          </li>
+        </ul>
+      </section>
     </div>
 
-    <div class="footer-copyright">
-      <p>&copy; {{ currentYear }} <span class="font-semibold text-white">iAct-CTU</span>. All rights reserved.</p>
-      <p class="mt-2 md:mt-0">Phát triển bởi <span class="text-ctu-gold">CTU Tech Team</span></p>
+    <div class="footer-bottom">
+      <p>&copy; {{ currentYear }} iAct CTU. Bảo lưu mọi quyền.</p>
+      <p>Phát triển bởi CTU Tech Team</p>
     </div>
   </div>
 </footer>
