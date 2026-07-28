@@ -376,7 +376,6 @@ export class ActivityProposalComponent implements OnInit {
       this.alertService.warning('Vui lòng nhập thời gian tổ chức trước khi tìm địa điểm.');
       return;
     }
-
     this.isFindingLocations.set(true);
     this.locationService
       .getAvailableLocations({
@@ -423,7 +422,6 @@ export class ActivityProposalComponent implements OnInit {
       this.alertService.warning('Vui lòng nhập thời gian của buổi trước khi tìm địa điểm.');
       return;
     }
-
     this.setScheduleLocationSearching(index, true);
     this.locationService
       .getAvailableLocations({

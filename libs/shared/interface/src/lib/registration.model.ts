@@ -16,6 +16,11 @@ export interface RegistrationResponse {
   participationStatus?: string;
   canSubmitProof?: boolean;
   nextAction?: string;
+  faceVerificationAttemptCount?: number;
+  faceVerificationMaxAttempts?: number;
+  faceVerificationRemainingAttempts?: number;
+  faceVerificationExhausted?: boolean;
+  canSubmitComplaint?: boolean;
   scheduleIds?: number[];
   proofStatus?: number;
 }

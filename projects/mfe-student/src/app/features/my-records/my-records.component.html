@@ -4,10 +4,9 @@
       <p class="records-header__eyebrow iact-student-eyebrow">Hồ sơ tham gia</p>
       <h1 class="iact-student-title">Hoạt động của tôi</h1>
       <p class="records-header__description iact-student-subtitle">
-        Theo dõi đăng ký, điểm danh và minh chứng theo từng hoạt động.
+        Theo dõi đăng ký, xác thực tham gia và minh chứng theo từng hoạt động.
       </p>
     </div>
-
   </section>
 
   <section class="records-toolbar" aria-label="Bộ lọc hoạt động">
@@ -80,7 +79,7 @@
       <div class="records-table__head" aria-hidden="true">
         <span>Hoạt động</span>
         <span>Thời gian & địa điểm</span>
-        <span>Điểm danh</span>
+        <span>Xác thực</span>
         <span>Minh chứng</span>
         <span>Thao tác</span>
       </div>
@@ -90,14 +89,25 @@
           <article
             class="activity-record"
             [class.is-locked]="act.status === 2 || act.isMissed"
-            [class.needs-action]="act.nextAction === 'CHECK_OUT' || canOpenProof(act)"
+            [class.needs-complaint]="isFaceVerificationExhausted(act)"
+            [class.needs-action]="
+              act.nextAction === 'QR_CHECK_IN' ||
+              act.nextAction === 'QR_CHECK_OUT' ||
+              act.nextAction === 'FACE_VERIFY' ||
+              isFaceVerificationExhausted(act) ||
+              canOpenProof(act)
+            "
           >
             <div class="activity-record__main">
               <div class="activity-record__icon" aria-hidden="true">
                 @if (act.status === 2 || act.isMissed) {
                   <i class="bi bi-lock"></i>
-                } @else if (act.nextAction === 'CHECK_OUT') {
-                  <i class="bi bi-box-arrow-right"></i>
+                } @else if (act.nextAction === 'QR_CHECK_IN' || act.nextAction === 'QR_CHECK_OUT') {
+                  <i class="bi bi-qr-code-scan"></i>
+                } @else if (isFaceVerificationExhausted(act)) {
+                  <i class="bi bi-chat-left-text"></i>
+                } @else if (act.nextAction === 'FACE_VERIFY') {
+                  <i class="bi bi-person-bounding-box"></i>
                 } @else if (canOpenProof(act)) {
                   <i class="bi bi-cloud-upload"></i>
                 } @else {
@@ -110,7 +120,12 @@
                 <div class="activity-record__meta">
                   <span>#{{ act.activityId }}</span>
                   @if (getRecordNote(act)) {
-                    <span class="activity-record__note">{{ getRecordNote(act) }}</span>
+                    <span
+                      class="activity-record__note"
+                      [class.activity-record__note--danger]="isFaceVerificationExhausted(act)"
+                    >
+                      {{ getRecordNote(act) }}
+                    </span>
                   }
                 </div>
               </div>
@@ -126,17 +141,21 @@
             </div>
 
             <div class="activity-record__cell">
-              <span class="mobile-label">Điểm danh</span>
+              <span class="mobile-label">Xác thực</span>
               <span
                 class="status-pill"
                 [class.status-pill--success]="act.status === 1"
-                [class.status-pill--warning]="act.status === 0 && !act.isMissed"
+                [class.status-pill--warning]="act.status === 0 && !act.isMissed && !isFaceVerificationExhausted(act)"
+                [class.status-pill--danger]="isFaceVerificationExhausted(act)"
                 [class.status-pill--muted]="act.status === 2 || act.isMissed"
               >
                 {{ getAttendanceLabel(act) }}
               </span>
               @if (act.attendedAt) {
-                <small>{{ act.attendedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+                <small>Check-in: {{ act.attendedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+              }
+              @if (act.checkoutAt) {
+                <small>Check-out: {{ act.checkoutAt | date: 'dd/MM/yyyy HH:mm' }}</small>
               }
             </div>
 
@@ -160,36 +179,38 @@
                   <i class="bi bi-lock-fill" aria-hidden="true"></i>
                   Đã khóa
                 </button>
-              } @else if (act.status === 0 && currentTab() === 'ONGOING') {
+              } @else if (act.nextAction === 'QR_CHECK_IN' || act.nextAction === 'QR_CHECK_OUT') {
+                <a class="btn-action btn-action--primary" [routerLink]="['/qr-checkin']">
+                  <i class="bi bi-qr-code-scan" aria-hidden="true"></i>
+                  Quét QR
+                </a>
+              } @else if (isFaceVerificationExhausted(act)) {
+                <button
+                  type="button"
+                  class="btn-action btn-action--danger"
+                  (click)="openComplaint(act)"
+                >
+                  <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+                  Gửi khiếu nại
+                </button>
+              } @else if (act.nextAction === 'FACE_VERIFY') {
                 <button
                   type="button"
                   class="btn-action btn-action--primary"
-                  (click)="openModal(act, 'SCAN')"
+                  (click)="openModal(act, 'FACE')"
                 >
-                  <i class="bi bi-qr-code-scan" aria-hidden="true"></i>
-                  Check-in
+                  <i class="bi bi-person-bounding-box" aria-hidden="true"></i>
+                  Xác minh khuôn mặt
                 </button>
-              } @else if (act.nextAction === 'CHECK_OUT' || canOpenProof(act)) {
-                @if (act.nextAction === 'CHECK_OUT') {
-                  <button
-                    type="button"
-                    class="btn-action btn-action--checkout"
-                    (click)="openModal(act, 'SCAN')"
-                  >
-                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                    Check-out
-                  </button>
-                }
-                @if (canOpenProof(act)) {
-                  <button
-                    type="button"
-                    class="btn-action btn-action--primary"
-                    (click)="openModal(act, 'PROOF')"
-                  >
-                    <i class="bi bi-cloud-upload" aria-hidden="true"></i>
-                    Nộp minh chứng
-                  </button>
-                }
+              } @else if (canOpenProof(act)) {
+                <button
+                  type="button"
+                  class="btn-action btn-action--primary"
+                  (click)="openModal(act, 'PROOF')"
+                >
+                  <i class="bi bi-cloud-upload" aria-hidden="true"></i>
+                  Nộp minh chứng
+                </button>
               } @else {
                 <a
                   class="btn-action btn-action--ghost"
@@ -221,12 +242,17 @@
         aria-label="Đóng cửa sổ thao tác"
       ></button>
 
-      <section class="records-modal__panel" role="dialog" aria-modal="true">
+      <section
+        class="records-modal__panel"
+        [class.records-modal__panel--face]="modalMode() === 'FACE'"
+        role="dialog"
+        aria-modal="true"
+      >
         <header class="records-modal__header">
           <div>
             <p>
-              @if (modalMode() === 'SCAN') {
-                Điểm danh hoạt động
+              @if (modalMode() === 'FACE') {
+                Xác thực khuôn mặt
               } @else if (modalMode() === 'PROOF') {
                 Minh chứng tham gia
               } @else {
@@ -241,85 +267,44 @@
         </header>
 
         <div class="records-modal__content custom-scrollbar">
-          <div class="modal-summary">
-            <span>
-              <i class="bi bi-clock" aria-hidden="true"></i>
-              {{
-                selectedActivity()?.realStartDate || selectedActivity()?.startDate
-                  | date: 'dd/MM/yyyy HH:mm'
-              }}
-            </span>
-            <span>
-              <i class="bi bi-person-badge" aria-hidden="true"></i>
-              {{ selectedActivity()?.studentCode || 'Chưa cập nhật MSSV' }}
-            </span>
-          </div>
-
-          @if (modalMode() === 'SCAN') {
-            <section class="scan-panel">
-              @if (!isScanning()) {
-                <span class="scan-panel__icon">
-                  <i class="bi bi-qr-code-scan" aria-hidden="true"></i>
-                </span>
-                <h3>
-                  {{
-                    selectedActivity()?.status === 0 ? 'Ghi nhận check-in' : 'Ghi nhận check-out'
-                  }}
-                </h3>
-                <p>Quét QR tại quầy sự kiện hoặc nhập mã do Ban tổ chức cung cấp.</p>
-
-                <button
-                  type="button"
-                  class="btn-action btn-action--primary"
-                  (click)="isScanning.set(true)"
-                >
-                  <i class="bi bi-camera-video" aria-hidden="true"></i>
-                  {{ selectedActivity()?.status === 0 ? 'Quét QR check-in' : 'Quét QR check-out' }}
-                </button>
-
-                <div class="manual-code">
-                  <span>Hoặc nhập mã</span>
-                  <div>
-                    <input type="text" [(ngModel)]="manualCode" placeholder="Nhập mã điểm danh" />
-                    <button
-                      type="button"
-                      (click)="submitManualCode()"
-                      [disabled]="isSubmittingCheckIn() || !manualCode()"
-                      aria-label="Gửi mã điểm danh"
-                    >
-                      @if (isSubmittingCheckIn()) {
-                        <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
-                      } @else {
-                        <i class="bi bi-send-fill" aria-hidden="true"></i>
-                      }
-                    </button>
-                  </div>
-                </div>
-              } @else {
-                <div class="scanner-header">
-                  <h3>Đưa mã QR vào khung hình</h3>
-                  <button type="button" (click)="isScanning.set(false)">
-                    <i class="bi bi-x-circle" aria-hidden="true"></i>
-                    Hủy quét
-                  </button>
-                </div>
-
-                <div class="scanner-frame">
-                  <zxing-scanner
-                    (scanSuccess)="onScanSuccess($event)"
-                    [formats]="allowedFormats"
-                    class="scanner-frame__camera"
-                  ></zxing-scanner>
-                  <span class="scanner-frame__target"></span>
-                  <span class="scanner-frame__line"></span>
-                </div>
-              }
-            </section>
+          @if (modalMode() === 'FACE') {
+            <app-face-checkin-capture
+              [activity]="selectedActivity()!"
+              (completed)="onFaceCheckInCompleted()"
+              (exhausted)="onFaceCheckInExhausted($event)"
+              (cancelled)="closeModal()"
+            ></app-face-checkin-capture>
+          } @else {
+            <div class="modal-summary">
+              <span>
+                <i class="bi bi-clock" aria-hidden="true"></i>
+                {{
+                  selectedActivity()?.realStartDate || selectedActivity()?.startDate
+                    | date: 'dd/MM/yyyy HH:mm'
+                }}
+              </span>
+              <span>
+                <i class="bi bi-person-badge" aria-hidden="true"></i>
+                {{ selectedActivity()?.studentCode || 'Chưa cập nhật MSSV' }}
+              </span>
+            </div>
           }
 
           @if (modalMode() === 'PROOF') {
             @if (canOpenProof(selectedActivity())) {
               <section class="proof-form">
+                @if (proofOpenedFromApprovedComplaint()) {
+                  <div class="proof-complaint-approved">
+                    <span><i class="bi bi-check2-circle" aria-hidden="true"></i></span>
+                    <div>
+                      <strong>Khiếu nại đã được duyệt</strong>
+                      <p>
+                        Bạn đã được ghi nhận điểm danh cho hoạt động này. Hãy nộp minh chứng bổ sung để Ban tổ chức duyệt và hoàn tất ghi nhận.
+                      </p>
+                    </div>
+                  </div>
+                }
+
                 <div
                   class="proof-upload"
                   [class.is-dragging]="isDragging()"
@@ -395,43 +380,45 @@
           }
         </div>
 
-        <footer class="records-modal__footer">
-          @if (modalMode() === 'PROOF' && selectedActivity()?.status === 1) {
-            <span
-              class="status-pill"
-              [class.status-pill--warning]="selectedActivity()?.proofStatus === 0"
-              [class.status-pill--info]="selectedActivity()?.proofStatus === 1"
-              [class.status-pill--success]="selectedActivity()?.proofStatus === 2"
-              [class.status-pill--danger]="selectedActivity()?.proofStatus === 3"
-            >
-              {{ selectedActivity() ? getProofLabel(selectedActivity()!) : '' }}
-            </span>
-          } @else {
-            <span></span>
-          }
-
-          <div>
-            <button type="button" class="btn-action btn-action--ghost" (click)="closeModal()">
-              Đóng
-            </button>
-            @if (modalMode() === 'PROOF' && canOpenProof(selectedActivity())) {
-              <button
-                type="button"
-                class="btn-action btn-action--primary"
-                (click)="submitProofData()"
-                [disabled]="isSubmittingProof()"
+        @if (modalMode() !== 'FACE') {
+          <footer class="records-modal__footer">
+            @if (modalMode() === 'PROOF' && selectedActivity()?.status === 1) {
+              <span
+                class="status-pill"
+                [class.status-pill--warning]="selectedActivity()?.proofStatus === 0"
+                [class.status-pill--info]="selectedActivity()?.proofStatus === 1"
+                [class.status-pill--success]="selectedActivity()?.proofStatus === 2"
+                [class.status-pill--danger]="selectedActivity()?.proofStatus === 3"
               >
-                @if (isSubmittingProof()) {
-                  <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
-                  Đang gửi
-                } @else {
-                  <i class="bi bi-send-fill" aria-hidden="true"></i>
-                  Gửi duyệt
-                }
-              </button>
+                {{ selectedActivity() ? getProofLabel(selectedActivity()!) : '' }}
+              </span>
+            } @else {
+              <span></span>
             }
-          </div>
-        </footer>
+
+            <div>
+              <button type="button" class="btn-action btn-action--ghost" (click)="closeModal()">
+                Đóng
+              </button>
+              @if (modalMode() === 'PROOF' && canOpenProof(selectedActivity())) {
+                <button
+                  type="button"
+                  class="btn-action btn-action--primary"
+                  (click)="submitProofData()"
+                  [disabled]="isSubmittingProof()"
+                >
+                  @if (isSubmittingProof()) {
+                    <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
+                    Đang gửi
+                  } @else {
+                    <i class="bi bi-send-fill" aria-hidden="true"></i>
+                    Gửi duyệt
+                  }
+                </button>
+              }
+            </div>
+          </footer>
+        }
       </section>
     </div>
   }

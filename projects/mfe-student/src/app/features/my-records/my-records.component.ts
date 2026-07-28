@@ -11,8 +11,6 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, switchMap, catchError, map } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
-import { BarcodeFormat } from '@zxing/library';
-import { ZXingScannerModule } from '@zxing/ngx-scanner';
 
 import { AlertService } from '@my-mfe/ui';
 import { CloudinaryService } from '@my-mfe/data-access-media';
@@ -23,13 +21,15 @@ import {
 } from '../../shared/models/activity.model';
 import { Semester } from '@my-mfe/interface';
 
-import { AttendanceService, CheckInRequest } from '../../shared/services/attendance.service';
 import { RegistrationService } from '../../shared/services/registration.service';
 import { ProofService, ProofSubmissionRequest } from '../../shared/services/proof.service';
 import { SemesterService } from '../../shared/services/semester.service';
 import { ActivityService } from '../../shared/services/activity.service';
+import { FaceCheckInResponse } from '../../shared/services/attendance.service';
+import { FaceCheckinCaptureComponent } from './face-checkin-capture.component';
 
 type TabMode = 'REGISTERED' | 'ONGOING' | 'PROOF_SUBMITTED' | 'COMPLETED';
+type ProofOpenContext = 'COMPLAINT_APPROVED';
 
 export interface UiActivityRecord extends ActivityRecord {
   realStartDate?: Date;
@@ -41,14 +41,13 @@ export interface UiActivityRecord extends ActivityRecord {
 @Component({
   selector: 'app-my-records',
   standalone: true,
-  imports: [CommonModule, FormsModule, ZXingScannerModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, FaceCheckinCaptureComponent],
   templateUrl: './my-records.component.html',
   styleUrls: ['./my-records.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MyRecordsComponent implements OnInit {
   private registrationService = inject(RegistrationService);
-  private attendanceService = inject(AttendanceService);
   private proofService = inject(ProofService);
   private semesterService = inject(SemesterService);
   private alertService = inject(AlertService);
@@ -67,15 +66,13 @@ export class MyRecordsComponent implements OnInit {
   isLoadingData = signal(false);
 
   // --- STATE ĐIỂM DANH ---
-  manualCode = signal('');
-  isSubmittingCheckIn = signal(false);
-  isScanning = signal(false);
-  modalMode = signal<'SCAN' | 'PROOF' | 'INFO'>('INFO');
+  modalMode = signal<'FACE' | 'PROOF' | 'INFO'>('INFO');
 
   // --- STATE MINH CHỨNG ---
   proofImageUrl = signal('');
   proofDescription = signal('');
   isSubmittingProof = signal(false);
+  proofOpenedFromApprovedComplaint = signal(false);
 
   // --- STATE UPLOAD FILE KÉO THẢ ---
   isDragging = signal(false);
@@ -85,17 +82,30 @@ export class MyRecordsComponent implements OnInit {
 
   activities = signal<UiActivityRecord[]>([]);
   private pendingProofActivityId: number | null = null;
+  private pendingFaceActivityId: number | null = null;
+  private pendingRecordActivityId: number | null = null;
+  private pendingSemesterId: number | null = null;
+  private pendingProofOpenContext: ProofOpenContext | null = null;
   private hasHandledProofRoute = false;
-
-  allowedFormats = [BarcodeFormat.QR_CODE];
+  private hasHandledFaceRoute = false;
+  private hasHandledRecordRoute = false;
 
   ngOnInit() {
     const proofActivityId =
       this.route.snapshot.queryParamMap.get('proofActivityId') ||
       this.route.snapshot.queryParamMap.get('activityId');
+    const faceActivityId = this.route.snapshot.queryParamMap.get('faceActivityId');
+    const recordActivityId = this.route.snapshot.queryParamMap.get('recordActivityId');
+    const semesterId = this.route.snapshot.queryParamMap.get('semesterId');
+    const proofSource = this.route.snapshot.queryParamMap.get('proofSource');
     this.pendingProofActivityId = proofActivityId ? Number(proofActivityId) : null;
+    this.pendingFaceActivityId = faceActivityId ? Number(faceActivityId) : null;
+    this.pendingRecordActivityId = recordActivityId ? Number(recordActivityId) : null;
+    this.pendingSemesterId = semesterId ? Number(semesterId) : null;
+    this.pendingProofOpenContext =
+      proofSource === 'complaint-approved' ? 'COMPLAINT_APPROVED' : null;
 
-    if (this.pendingProofActivityId) {
+    if (this.pendingProofActivityId || this.pendingFaceActivityId || this.pendingRecordActivityId) {
       this.currentTab.set('ONGOING');
     }
 
@@ -108,9 +118,12 @@ export class MyRecordsComponent implements OnInit {
         const semesterList = res.data || [];
         this.semesters.set(semesterList);
 
+        const routedSemester = semesterList.find((s) => s.id === this.pendingSemesterId);
         const activeSem = semesterList.find((s) => s.isActive);
 
-        if (activeSem) {
+        if (routedSemester) {
+          this.selectedSemesterId.set(routedSemester.id);
+        } else if (activeSem) {
           this.selectedSemesterId.set(activeSem.id);
         } else if (semesterList.length > 0) {
           this.selectedSemesterId.set(semesterList[0].id);
@@ -185,16 +198,21 @@ export class MyRecordsComponent implements OnInit {
                   isStartingSoon: isStartingSoon,
                   isMissed: isMissed,
                   attendedAt: item.attendedAt,
+                  checkoutAt: item.checkoutAt,
                   studentCode: item.studentCode,
                   location: finalLocation,
                   organizer: 'Đoàn - Hội',
                   status: item.status,
                   proofStatus: item.proofStatus || 0,
-                  checkoutAt: item.checkoutAt,
                   attendanceStatus: item.attendanceStatus,
                   participationStatus: item.participationStatus,
                   canSubmitProof: item.canSubmitProof,
                   nextAction: item.nextAction,
+                  faceVerificationAttemptCount: item.faceVerificationAttemptCount,
+                  faceVerificationMaxAttempts: item.faceVerificationMaxAttempts,
+                  faceVerificationRemainingAttempts: item.faceVerificationRemainingAttempts,
+                  faceVerificationExhausted: item.faceVerificationExhausted,
+                  canSubmitComplaint: item.canSubmitComplaint,
                   cancelReason: item.cancelReason || '',
                   point: item.point ?? null,
                 } as UiActivityRecord;
@@ -207,13 +225,47 @@ export class MyRecordsComponent implements OnInit {
       .subscribe({
         next: (mappedData) => {
           this.activities.set(mappedData);
+          this.openFaceFromRoute(mappedData);
           this.openProofFromRoute(mappedData);
+          this.openRecordFromRoute(mappedData);
         },
         error: () => {
           this.alertService.error('Không thể tải danh sách hoạt động!');
           this.activities.set([]);
         },
       });
+  }
+
+  private openFaceFromRoute(records: UiActivityRecord[]): void {
+    if (!this.pendingFaceActivityId || this.hasHandledFaceRoute) {
+      return;
+    }
+
+    this.hasHandledFaceRoute = true;
+    const target = records.find((act) => act.activityId === this.pendingFaceActivityId);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { faceActivityId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+
+    if (!target) {
+      this.alertService.error('Không tìm thấy hoạt động cần xác minh khuôn mặt.');
+      return;
+    }
+
+    const targetTab = this.getUiTabStatus(target);
+    if (targetTab) {
+      this.currentTab.set(targetTab);
+    }
+
+    if (!this.canOpenFace(target)) {
+      this.alertService.error('Hoạt động này chưa sẵn sàng để xác minh khuôn mặt.');
+      return;
+    }
+
+    this.openModal(target, 'FACE');
   }
 
   private openProofFromRoute(records: UiActivityRecord[]): void {
@@ -225,7 +277,7 @@ export class MyRecordsComponent implements OnInit {
     const target = records.find((act) => act.activityId === this.pendingProofActivityId);
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { proofActivityId: null, activityId: null },
+      queryParams: { proofActivityId: null, activityId: null, semesterId: null, proofSource: null },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
@@ -240,18 +292,43 @@ export class MyRecordsComponent implements OnInit {
       this.currentTab.set(targetTab);
     }
 
-    this.openModal(target, 'PROOF');
+    this.openModal(
+      target,
+      'PROOF',
+      this.pendingProofOpenContext === 'COMPLAINT_APPROVED' ? 'COMPLAINT_APPROVED' : undefined,
+    );
+    this.pendingProofOpenContext = null;
+  }
+
+  private openRecordFromRoute(records: UiActivityRecord[]): void {
+    if (!this.pendingRecordActivityId || this.hasHandledRecordRoute) {
+      return;
+    }
+
+    this.hasHandledRecordRoute = true;
+    const target = records.find((act) => act.activityId === this.pendingRecordActivityId);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { recordActivityId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+
+    if (!target) {
+      this.alertService.error('Không tìm thấy hồ sơ tham gia cần xem.');
+      return;
+    }
+
+    const targetTab = this.getUiTabStatus(target);
+    if (targetTab) {
+      this.currentTab.set(targetTab);
+    }
+
+    this.openModal(target, 'INFO');
   }
 
   onFilterChange() {
     this.fetchMyRecords();
-  }
-
-  async onScanSuccess(resultString: string) {
-    this.isScanning.set(false);
-    this.manualCode.set(resultString);
-    this.alertService.success('Đã quét mã thành công! Đang gửi điểm danh...');
-    await this.submitManualCode();
   }
 
   getUiTabStatus(act: UiActivityRecord): TabMode | null {
@@ -278,13 +355,18 @@ export class MyRecordsComponent implements OnInit {
     const isHappeningNow =
       act.realStartDate && act.realEndDate && now >= act.realStartDate && now <= act.realEndDate;
 
+    const needsParticipationAction =
+      act.nextAction === 'QR_CHECK_IN' ||
+      act.nextAction === 'QR_CHECK_OUT' ||
+      act.nextAction === 'FACE_VERIFY' ||
+      act.nextAction === 'SUBMIT_COMPLAINT' ||
+      act.participationStatus === 'FACE_VERIFICATION_EXHAUSTED';
     const needsProofAction =
       act.canSubmitProof === true ||
-      act.participationStatus === 'CHECKED_IN' ||
-      act.participationStatus === 'CHECKED_OUT' ||
+      act.participationStatus === 'FACE_VERIFIED' ||
       act.participationStatus === 'PROOF_REJECTED' ||
       (act.status === 1 && (act.proofStatus === 0 || act.proofStatus === 3));
-    if (needsProofAction || (act.status === 0 && isHappeningNow)) {
+    if (needsParticipationAction || needsProofAction || (act.status === 0 && isHappeningNow)) {
       return 'ONGOING';
     }
 
@@ -316,15 +398,27 @@ export class MyRecordsComponent implements OnInit {
       return 'Đã bỏ lỡ';
     }
 
-    if (activity.nextAction === 'CHECK_OUT') {
-      return 'Đã check-in';
-    }
-
     if (activity.status === 1) {
-      return 'Đã check-out';
+      return 'Đã xác thực';
     }
 
-    return 'Chưa điểm danh';
+    if (activity.nextAction === 'QR_CHECK_IN' || activity.attendanceStatus === 'NOT_CHECKED_IN') {
+      return 'Cần check-in';
+    }
+
+    if (activity.nextAction === 'QR_CHECK_OUT' || activity.attendanceStatus === 'CHECKED_IN') {
+      return 'Cần check-out';
+    }
+
+    if (this.isFaceVerificationExhausted(activity)) {
+      return 'Hết lượt xác minh';
+    }
+
+    if (activity.nextAction === 'FACE_VERIFY' || activity.attendanceStatus === 'CHECKED_OUT') {
+      return 'Cần xác minh';
+    }
+
+    return 'Chưa xác thực';
   }
 
   getProofLabel(activity: UiActivityRecord): string {
@@ -356,8 +450,20 @@ export class MyRecordsComponent implements OnInit {
       return 'Sắp diễn ra';
     }
 
-    if (activity.nextAction === 'CHECK_OUT') {
-      return 'Cần check-out';
+    if (activity.nextAction === 'QR_CHECK_IN') {
+      return 'Quét QR check-in';
+    }
+
+    if (activity.nextAction === 'QR_CHECK_OUT') {
+      return 'Quét QR check-out';
+    }
+
+    if (this.isFaceVerificationExhausted(activity)) {
+      return 'Hết lượt xác minh khuôn mặt';
+    }
+
+    if (activity.nextAction === 'FACE_VERIFY') {
+      return 'Cần xác thực khuôn mặt';
     }
 
     if (this.canOpenProof(activity)) {
@@ -375,21 +481,66 @@ export class MyRecordsComponent implements OnInit {
     );
   }
 
-  openModal(activity: UiActivityRecord, mode: 'SCAN' | 'PROOF' | 'INFO' = 'INFO') {
+  isFaceVerificationExhausted(activity: UiActivityRecord | null | undefined): boolean {
+    if (!activity || activity.status === 1 || activity.status === 2 || activity.isMissed) {
+      return false;
+    }
+
+    return (
+      activity.faceVerificationExhausted === true ||
+      activity.nextAction === 'SUBMIT_COMPLAINT' ||
+      activity.participationStatus === 'FACE_VERIFICATION_EXHAUSTED'
+    );
+  }
+
+  canSubmitComplaint(activity: UiActivityRecord | null | undefined): boolean {
+    return !!activity && (activity.canSubmitComplaint === true || this.isFaceVerificationExhausted(activity));
+  }
+
+  canOpenFace(activity: UiActivityRecord | null | undefined): boolean {
+    return (
+      !!activity &&
+      !this.isFaceVerificationExhausted(activity) &&
+      (activity.nextAction === 'FACE_VERIFY' || activity.attendanceStatus === 'CHECKED_OUT')
+    );
+  }
+
+  openComplaint(activity: UiActivityRecord): void {
+    void this.router.navigate(['/complaints'], {
+      queryParams: { activityId: activity.activityId },
+    });
+  }
+
+  openModal(
+    activity: UiActivityRecord,
+    mode: 'FACE' | 'PROOF' | 'INFO' = 'INFO',
+    proofContext?: ProofOpenContext,
+  ) {
+    if (mode === 'FACE' && !this.canOpenFace(activity)) {
+      this.alertService.error(
+        'Bạn cần check-in và check-out bằng QR trước khi xác minh khuôn mặt.',
+      );
+      return;
+    }
+
     if (
       mode === 'PROOF' &&
       !this.canOpenProof(activity) &&
       activity.proofStatus !== 1 &&
       activity.proofStatus !== 2
     ) {
-      this.alertService.error('Bạn cần hoàn tất check-out trước khi nộp minh chứng.');
+      this.alertService.error(
+        'Bạn cần check-in, check-out và xác minh khuôn mặt trước khi nộp minh chứng.',
+      );
       return;
     }
 
     this.selectedActivity.set(activity);
     this.modalMode.set(mode);
+    this.proofOpenedFromApprovedComplaint.set(
+      mode === 'PROOF' && proofContext === 'COMPLAINT_APPROVED',
+    );
     this.isModalOpen.set(true);
-    this.manualCode.set('');
     this.proofImageUrl.set('');
     this.proofDescription.set('');
   }
@@ -397,91 +548,47 @@ export class MyRecordsComponent implements OnInit {
   closeModal() {
     this.isModalOpen.set(false);
     this.selectedActivity.set(null);
-    this.isScanning.set(false);
     this.selectedFile.set(null);
     this.previewUrl.set(null);
     this.selectedFileName.set('');
+    this.proofOpenedFromApprovedComplaint.set(false);
   }
 
-  getCurrentLocation(): Promise<{ lat: number; lng: number }> {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject('Trình duyệt không hỗ trợ GPS');
-      } else {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-          () => reject('Không thể lấy tọa độ'),
-          { enableHighAccuracy: true, timeout: 5000 },
-        );
-      }
-    });
+  onFaceCheckInCompleted() {
+    const activityId = this.selectedActivity()?.activityId ?? null;
+    this.closeModal();
+    if (activityId) {
+      this.pendingProofActivityId = activityId;
+      this.hasHandledProofRoute = false;
+    }
+    this.fetchMyRecords();
   }
 
-  async submitManualCode() {
-    if (!this.manualCode().trim()) {
-      this.alertService.error('Vui lòng nhập mã điểm danh!');
+  onFaceCheckInExhausted(response: FaceCheckInResponse) {
+    const activity = this.selectedActivity();
+    if (!activity) {
       return;
     }
 
-    const act = this.selectedActivity();
-    if (!act) return;
-
-    this.isSubmittingCheckIn.set(true);
-    let lat = 0,
-      lng = 0;
-
-    try {
-      const coords = await this.getCurrentLocation();
-      lat = coords.lat;
-      lng = coords.lng;
-    } catch {
-      console.warn('Không lấy được GPS, dùng mặc định (0,0)');
-    }
-
-    const request: CheckInRequest = {
-      activityId: act.activityId,
-      latitude: lat,
-      longitude: lng,
-      method: 2,
-      verifyCode: this.manualCode().trim(),
+    const attempt = response.attempt ?? response.attemptCount ?? activity.faceVerificationAttemptCount ?? 5;
+    const maxAttempts = response.maxAttempts ?? activity.faceVerificationMaxAttempts ?? 5;
+    const remainingAttempts =
+      response.remainingAttempts ?? response.attemptsRemaining ?? Math.max(maxAttempts - attempt, 0);
+    const exhaustedActivity: UiActivityRecord = {
+      ...activity,
+      participationStatus: 'FACE_VERIFICATION_EXHAUSTED',
+      nextAction: 'SUBMIT_COMPLAINT',
+      faceVerificationAttemptCount: attempt,
+      faceVerificationMaxAttempts: maxAttempts,
+      faceVerificationRemainingAttempts: remainingAttempts,
+      faceVerificationExhausted: true,
+      canSubmitComplaint: true,
     };
 
-    const attendanceRequest =
-      act.nextAction === 'CHECK_OUT'
-        ? this.attendanceService.checkOut(request)
-        : this.attendanceService.checkIn(request);
-
-    attendanceRequest.pipe(finalize(() => this.isSubmittingCheckIn.set(false))).subscribe({
-      next: (res) => {
-        const successMsg = res.message || 'Điểm danh thành công!';
-        this.alertService.success(successMsg);
-        this.fetchMyRecords();
-
-        if (res.data?.attendanceStatus === 'CHECKED_OUT') {
-          const currentAct = this.selectedActivity();
-          if (currentAct) {
-            this.selectedActivity.set({
-              ...currentAct,
-              status: 1,
-              attendanceStatus: 'CHECKED_OUT',
-              participationStatus: 'CHECKED_OUT',
-              proofStatus: 0,
-              canSubmitProof: true,
-              nextAction: 'SUBMIT_PROOF',
-            });
-            this.isScanning.set(false);
-            this.manualCode.set('');
-
-            this.modalMode.set('PROOF');
-          }
-        } else {
-          this.closeModal();
-        }
-      },
-      error: (err) => {
-        this.alertService.error(err.error?.message || 'Mã điểm danh không hợp lệ!');
-      },
-    });
+    this.selectedActivity.set(exhaustedActivity);
+    this.activities.update((items) =>
+      items.map((item) => (item.id === exhaustedActivity.id ? { ...item, ...exhaustedActivity } : item)),
+    );
   }
 
   submitProofData() {
@@ -489,7 +596,9 @@ export class MyRecordsComponent implements OnInit {
     if (!act) return;
 
     if (!this.canOpenProof(act)) {
-      this.alertService.error('Bạn cần hoàn tất check-out trước khi nộp minh chứng.');
+      this.alertService.error(
+        'Bạn cần check-in, check-out và xác minh khuôn mặt trước khi nộp minh chứng.',
+      );
       return;
     }
 

@@ -182,7 +182,7 @@
                         Đơn vị chủ trì
                       </p>
                       <p class="mt-2 break-words text-base font-bold leading-6 text-slate-950">
-                        {{ act.departmentName || 'Trường Đại học Cần Thơ' }}
+                        {{ act.departmentName || 'Đại học Cần Thơ' }}
                       </p>
                     </div>
 
@@ -446,18 +446,38 @@
                 </p>
               </div>
 
+              @if (needsFaceEmbeddingBeforeRegister()) {
+                <div
+                  class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900"
+                >
+                  <div class="mb-2 flex items-center gap-2 font-black">
+                    <i class="bi bi-person-bounding-box"></i>
+                    Cần ảnh xác thực AI trước khi đăng ký
+                  </div>
+                  <p>
+                    Hãy cập nhật ảnh khuôn mặt trong hồ sơ để hệ thống tạo vector nhận diện và đồng
+                    bộ sang điểm danh.
+                  </p>
+                </div>
+              }
+
               <button
                 type="button"
                 (click)="handleRegistration()"
                 [disabled]="
                   isSubmitting() ||
+                  (!isRegistered() && isCheckingFaceEmbedding()) ||
                   (isRegistered() && !canCancelRegistration()) ||
                   (!statusConfig().canRegister && !isRegistered())
                 "
                 class="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl px-5 py-4 text-base font-black shadow-sm transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 [ngClass]="{
                   'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20':
-                    !isRegistered() && statusConfig().canRegister,
+                    !isRegistered() &&
+                    statusConfig().canRegister &&
+                    !needsFaceEmbeddingBeforeRegister(),
+                  'border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 shadow-none':
+                    needsFaceEmbeddingBeforeRegister(),
                   'border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-100 shadow-none':
                     isRegistered() && canCancelRegistration(),
                   'border border-emerald-100 bg-emerald-50 text-emerald-700 shadow-none':
@@ -472,7 +492,13 @@
                   ></div>
                   <span>Đang xử lý...</span>
                 } @else {
-                  @if (canCancelRegistration()) {
+                  @if (!isRegistered() && isCheckingFaceEmbedding()) {
+                    <i class="bi bi-arrow-repeat spin"></i>
+                    Đang kiểm tra ảnh xác thực
+                  } @else if (needsFaceEmbeddingBeforeRegister()) {
+                    <i class="bi bi-person-bounding-box"></i>
+                    Cập nhật ảnh xác thực
+                  } @else if (canCancelRegistration()) {
                     <i class="bi bi-x-circle-fill"></i>
                     Hủy tham gia
                   } @else if (isRegistered()) {

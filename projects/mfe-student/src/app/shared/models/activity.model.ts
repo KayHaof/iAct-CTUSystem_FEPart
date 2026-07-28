@@ -101,16 +101,21 @@ export interface ActivityRecord {
   points?: number | null;
   startDate: string;
   attendedAt?: string;
+  checkoutAt?: string;
   studentCode?: string;
   location: string;
   organizer: string;
   status: number; // 0: Đăng ký, 1: Tham gia, 2: Hủy
   proofStatus: number; // 0: Chưa nộp, 1: Chờ duyệt, 2: Đã duyệt, 3: Bị từ chối
-  checkoutAt?: string;
   attendanceStatus?: string;
   participationStatus?: string;
   canSubmitProof?: boolean;
   nextAction?: string;
+  faceVerificationAttemptCount?: number;
+  faceVerificationMaxAttempts?: number;
+  faceVerificationRemainingAttempts?: number;
+  faceVerificationExhausted?: boolean;
+  canSubmitComplaint?: boolean;
   cancelReason?: string;
   point?: number | null;
 }
@@ -123,15 +128,20 @@ export interface RawRegistrationDto {
   point?: number | null;
   registeredAt: string;
   attendedAt?: string;
+  checkoutAt?: string;
   studentCode?: string;
   activityLocation?: string;
   status: number;
   proofStatus?: number;
-  checkoutAt?: string;
   attendanceStatus?: string;
   participationStatus?: string;
   canSubmitProof?: boolean;
   nextAction?: string;
+  faceVerificationAttemptCount?: number;
+  faceVerificationMaxAttempts?: number;
+  faceVerificationRemainingAttempts?: number;
+  faceVerificationExhausted?: boolean;
+  canSubmitComplaint?: boolean;
   cancelReason?: string;
 }
 

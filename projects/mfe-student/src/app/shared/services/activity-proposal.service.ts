@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ApiResponse, PageDTO } from '@my-mfe/interface';
+import { IACT_API_ORIGIN } from '@my-mfe/ui';
 import { Activity } from '../models/activity.model';
 
 export interface RepresentativeActivityPermission {
@@ -69,9 +70,10 @@ export interface TrainingCategory {
 @Injectable({ providedIn: 'root' })
 export class ActivityProposalService {
   private readonly http = inject(HttpClient);
-  private readonly userUrl = 'http://localhost:8080/user/api/v1/class-representatives';
-  private readonly activityUrl = 'http://localhost:8080/activity/api/v1/activities';
-  private readonly categoryUrl = 'http://localhost:8080/activity/api/v1/categories';
+  private readonly apiOrigin = inject(IACT_API_ORIGIN);
+  private readonly userUrl = `${this.apiOrigin}/user/api/v1/class-representatives`;
+  private readonly activityUrl = `${this.apiOrigin}/activity/api/v1/activities`;
+  private readonly categoryUrl = `${this.apiOrigin}/activity/api/v1/categories`;
 
   getMyPermission(): Observable<RepresentativeActivityPermission> {
     return this.http

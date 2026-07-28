@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { RegistrationResponse, ApiResponse } from '@my-mfe/interface';
+import { IACT_API_ORIGIN } from '@my-mfe/ui';
 
 export interface ActivityRecord {
   id: number;
@@ -15,6 +16,11 @@ export interface ActivityRecord {
   proofStatus: number; // 0: Chưa nộp, 1: Chờ duyệt, 2: Đã duyệt, 3: Bị từ chối
   canSubmitProof?: boolean;
   nextAction?: string;
+  faceVerificationAttemptCount?: number;
+  faceVerificationMaxAttempts?: number;
+  faceVerificationRemainingAttempts?: number;
+  faceVerificationExhausted?: boolean;
+  canSubmitComplaint?: boolean;
 }
 
 @Injectable({
@@ -22,12 +28,13 @@ export interface ActivityRecord {
 })
 export class RegistrationService {
   private http = inject(HttpClient);
-  private readonly API_URL = 'http://localhost:8080/activity/api/v1/registrations';
+  private readonly apiOrigin = inject(IACT_API_ORIGIN);
+  private readonly apiUrl = `${this.apiOrigin}/activity/api/v1/registrations`;
 
   // 1. Kiểm tra trạng thái đăng ký của tôi (Detail)
   getMyStatus(activityId: number): Observable<ApiResponse<RegistrationResponse>> {
     return this.http.get<ApiResponse<RegistrationResponse>>(
-      `${this.API_URL}/my-status/${activityId}`,
+      `${this.apiUrl}/my-status/${activityId}`,
     );
   }
 
@@ -40,7 +47,7 @@ export class RegistrationService {
       activityId: activityId,
       scheduleIds: scheduleIds,
     };
-    return this.http.post<ApiResponse<RegistrationResponse>>(`${this.API_URL}/join`, payload);
+    return this.http.post<ApiResponse<RegistrationResponse>>(`${this.apiUrl}/join`, payload);
   }
 
   // 3. Hủy đăng ký hoạt động
@@ -49,7 +56,7 @@ export class RegistrationService {
     reason: string,
   ): Observable<ApiResponse<RegistrationResponse>> {
     return this.http.patch<ApiResponse<RegistrationResponse>>(
-      `${this.API_URL}/cancel-by-activity/${activityId}`,
+      `${this.apiUrl}/cancel-by-activity/${activityId}`,
       { reason: reason },
     );
   }
@@ -62,6 +69,6 @@ export class RegistrationService {
       params = params.set('semesterId', semesterId.toString());
     }
 
-    return this.http.get<ApiResponse<ActivityRecord[]>>(`${this.API_URL}/my-records`, { params });
+    return this.http.get<ApiResponse<ActivityRecord[]>>(`${this.apiUrl}/my-records`, { params });
   }
 }

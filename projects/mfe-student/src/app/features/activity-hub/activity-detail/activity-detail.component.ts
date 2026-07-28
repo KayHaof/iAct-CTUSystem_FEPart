@@ -17,6 +17,7 @@ import { RegistrationService } from '../../../shared/services/registration.servi
 import { AlertService } from '@my-mfe/ui';
 import { Activity, BenefitDto } from '../../../shared/models/activity.model';
 import { RegistrationResponse, ApiResponse } from '@my-mfe/interface';
+import { StudentFaceEmbeddingResponse, UserService } from '@my-mfe/auth';
 import { ActivityRegistrationModalComponent } from '../activity-form/activity-registration-modal.component';
 
 @Component({
@@ -32,6 +33,7 @@ export class ActivityDetailComponent implements OnInit {
   private router = inject(Router);
   private activityService = inject(ActivityService);
   private registrationService = inject(RegistrationService);
+  private userService = inject(UserService);
 
   private alertService = inject(AlertService);
 
@@ -39,6 +41,9 @@ export class ActivityDetailComponent implements OnInit {
   userRegistration = signal<RegistrationResponse | null>(null);
   isLoading = signal<boolean>(true);
   isSubmitting = signal<boolean>(false);
+  isCheckingFaceEmbedding = signal<boolean>(false);
+  faceEmbeddingChecked = signal<boolean>(false);
+  faceEmbedding = signal<StudentFaceEmbeddingResponse | null>(null);
   activeTab = signal<'overview' | 'content' | 'benefits'>('overview');
   isRegistrationModalOpen = signal<boolean>(false);
 
@@ -57,6 +62,20 @@ export class ActivityDetailComponent implements OnInit {
 
   canCancelRegistration = computed(() => {
     return this.registrationStatus() === 0;
+  });
+
+  hasActiveFaceEmbedding = computed(() => {
+    const embedding = this.faceEmbedding();
+    return !!embedding?.referenceImageUrl && embedding.status !== 2;
+  });
+
+  needsFaceEmbeddingBeforeRegister = computed(() => {
+    return (
+      !this.isRegistered() &&
+      this.statusConfig().canRegister &&
+      this.faceEmbeddingChecked() &&
+      !this.hasActiveFaceEmbedding()
+    );
   });
 
   capacityPercentage = computed(() => {
@@ -105,6 +124,7 @@ export class ActivityDetailComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
+    this.loadFaceEmbeddingStatus();
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.fetchActivityDetails(Number(id));
@@ -141,6 +161,23 @@ export class ActivityDetailComponent implements OnInit {
 
   setTab(tab: 'overview' | 'content' | 'benefits'): void {
     this.activeTab.set(tab);
+  }
+
+  loadFaceEmbeddingStatus(): void {
+    this.isCheckingFaceEmbedding.set(true);
+    this.userService
+      .getMyFaceEmbedding()
+      .pipe(finalize(() => this.isCheckingFaceEmbedding.set(false)))
+      .subscribe({
+        next: (res) => {
+          this.faceEmbedding.set(res.data || null);
+          this.faceEmbeddingChecked.set(true);
+        },
+        error: () => {
+          this.faceEmbedding.set(null);
+          this.faceEmbeddingChecked.set(true);
+        },
+      });
   }
 
   benefitTitle(benefit: BenefitDto): string {
@@ -193,8 +230,17 @@ export class ActivityDetailComponent implements OnInit {
       }
     } else {
       if (!this.statusConfig().canRegister) return;
+      if (!this.hasActiveFaceEmbedding()) {
+        this.alertService.warning('Bạn cần cập nhật ảnh xác thực AI trước khi đăng ký tham gia hoạt động.');
+        await this.goToProfile();
+        return;
+      }
       this.isRegistrationModalOpen.set(true);
     }
+  }
+
+  async goToProfile(): Promise<void> {
+    await this.router.navigate(['/profile']);
   }
 
   submitRegistration(selectedScheduleIds: number[]) {

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '@my-mfe/interface';
+import { IACT_API_ORIGIN } from '@my-mfe/ui';
 import {
   ComplaintEligibleActivity,
   ComplaintRequest,
@@ -11,7 +12,8 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ComplaintService {
   private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/activity/api/v1/complaints';
+  private readonly apiOrigin = inject(IACT_API_ORIGIN);
+  private readonly apiUrl = `${this.apiOrigin}/activity/api/v1/complaints`;
 
   getMyEligibleActivities(
     semesterId?: number | null,

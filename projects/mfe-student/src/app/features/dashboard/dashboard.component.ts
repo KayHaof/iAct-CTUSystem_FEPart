@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { UserService } from '@my-mfe/auth';
 import { ApiResponse } from '@my-mfe/interface';
+import { IACT_API_ORIGIN } from '@my-mfe/ui';
 import { catchError, forkJoin, map, of } from 'rxjs';
 
 import { ActivityItem, CriteriaScore, ProofItem } from './models/dashboard.model';
@@ -71,8 +72,9 @@ export class DashboardComponent implements OnInit {
   private readonly registrationService = inject(RegistrationService);
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly apiOrigin = inject(IACT_API_ORIGIN);
 
-  private readonly apiUrl = 'http://localhost:8080/activity/api/v1';
+  private readonly apiUrl = `${this.apiOrigin}/activity/api/v1`;
 
   readonly studentName = computed(() => this.userService.currentUser()?.fullName || 'Sinh viên');
   readonly studentMeta = computed(() => {
@@ -98,13 +100,6 @@ export class DashboardComponent implements OnInit {
       icon: 'bi bi-compass',
       link: '/activity-hub',
       tone: 'primary',
-    },
-    {
-      label: 'Quét QR',
-      description: 'Check-in hoạt động đã đăng ký',
-      icon: 'bi bi-qr-code-scan',
-      link: '/qr-checkin',
-      tone: 'success',
     },
     {
       label: 'Lịch sử tham gia',

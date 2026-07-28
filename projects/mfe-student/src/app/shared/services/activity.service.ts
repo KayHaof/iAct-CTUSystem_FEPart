@@ -4,13 +4,15 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Activity, ActivityTimeResponse } from '../models/activity.model';
 import { PageDTO, ApiResponse } from '@my-mfe/interface';
+import { IACT_API_ORIGIN } from '@my-mfe/ui';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ActivityService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/activity/api/v1/activities';
+  private readonly apiOrigin = inject(IACT_API_ORIGIN);
+  private readonly apiUrl = `${this.apiOrigin}/activity/api/v1/activities`;
 
   getAllActivities(
     keyword = '',

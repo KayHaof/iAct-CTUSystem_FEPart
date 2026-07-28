@@ -11,9 +11,10 @@ import {
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
-import { catchError, finalize } from 'rxjs/operators';
+import { catchError, finalize, map } from 'rxjs/operators';
 import { SemesterService } from '../../shared/services/semester.service';
 import { ApiResponse, Semester } from '@my-mfe/interface';
+import { IACT_API_ORIGIN } from '@my-mfe/ui';
 
 interface RuleCategoryResponse {
   id?: number;
@@ -32,9 +33,12 @@ interface RuleCategoryResponse {
 }
 
 interface PointContribution {
+  sourceType?: string;
   activityId?: number;
   activityTitle?: string;
   activityName?: string;
+  certificateSubmissionId?: number;
+  certificateTitle?: string;
   categoryId?: number;
   categoryName?: string;
   earnedPoint?: number;
@@ -62,6 +66,16 @@ interface PointDetailsResponse {
   maxPoint?: number;
   categories?: RuleCategoryResponse[];
   details?: PointContribution[];
+}
+
+interface SemesterPointStat {
+  semesterId: number;
+  label: string;
+  totalPoint: number;
+  maxPoint: number;
+  percentage: number;
+  status: PointStatus;
+  isActive: boolean;
 }
 
 interface UiCategory {
@@ -94,17 +108,19 @@ type PointStatus = 'excellent' | 'good' | 'warning' | 'danger' | 'unknown';
 export class PointManagementComponent implements OnInit {
   private http = inject(HttpClient);
   private semesterService = inject(SemesterService);
-  private baseUrl = 'http://localhost:8080';
-  private apiUrl = `${this.baseUrl}/activity/api/v1`;
+  private readonly apiOrigin = inject(IACT_API_ORIGIN);
+  private readonly apiUrl = `${this.apiOrigin}/activity/api/v1`;
 
   summary = signal<PointSummary | null>(null);
   categories = signal<UiCategory[]>([]);
   details = signal<PointContribution[]>([]);
   semesters = signal<Semester[]>([]);
+  semesterStats = signal<SemesterPointStat[]>([]);
   selectedSemesterId = signal<number>(0);
   isSemesterMenuOpen = signal(false);
   selectedRootCategoryId = signal<number | null>(null);
   isLoading = signal(true);
+  isHistoryLoading = signal(false);
 
   readonly totalEarned = computed(() => this.sumEarned(this.categories()));
   readonly totalMax = computed(() => this.sumMax(this.categories()));
@@ -117,6 +133,52 @@ export class PointManagementComponent implements OnInit {
   readonly categoryCount = computed(() => this.countCategories(this.categories()));
   readonly leafCategoryCount = computed(() => this.countLeafCategories(this.categories()));
   readonly categoryRows = computed(() => this.flattenCategoryRows(this.categories()));
+  readonly historyAxisMax = computed(() => this.resolveHistoryAxisMax());
+  readonly historyTicks = computed(() => {
+    const max = this.historyAxisMax();
+    return [max, max * 0.75, max * 0.5, max * 0.25, 0].map((value) => Math.round(value * 10) / 10);
+  });
+  readonly historyLinePointsData = computed(() => {
+    const stats = this.semesterStats();
+    if (stats.length === 0) return [];
+
+    const span = Math.max(stats.length - 1, 1);
+    return stats.map((stat, index) => ({
+      semesterId: stat.semesterId,
+      x: stats.length === 1 ? 50 : (index / span) * 100,
+      y: 100 - this.calculatePercentage(this.getHistoryLineValue(stat), this.historyAxisMax()),
+      value: this.getHistoryLineValue(stat),
+    }));
+  });
+  readonly historyLinePoints = computed(() =>
+    this.historyLinePointsData()
+      .map((point) => `${point.x},${point.y}`)
+      .join(' '),
+  );
+  readonly selectedSemesterStat = computed(
+    () =>
+      this.semesterStats().find((stat) => stat.semesterId === this.selectedSemesterId()) || null,
+  );
+  readonly previousSemesterStat = computed(() => {
+    const stats = this.semesterStats();
+    const selectedIndex = stats.findIndex((stat) => stat.semesterId === this.selectedSemesterId());
+    return selectedIndex > 0 ? stats[selectedIndex - 1] : null;
+  });
+  readonly semesterDelta = computed(() => {
+    const current = this.selectedSemesterStat();
+    const previous = this.previousSemesterStat();
+    return current && previous ? current.totalPoint - previous.totalPoint : null;
+  });
+  readonly bestSemesterStat = computed(() => {
+    const stats = this.semesterStats();
+    if (stats.length === 0) return null;
+    return stats.reduce((best, current) =>
+      current.totalPoint > best.totalPoint ||
+      (current.totalPoint === best.totalPoint && current.percentage > best.percentage)
+        ? current
+        : best,
+    );
+  });
   readonly selectedRootCategory = computed(() => {
     const categories = this.categories();
     const selectedId = this.selectedRootCategoryId();
@@ -157,6 +219,7 @@ export class PointManagementComponent implements OnInit {
         this.semesters.set(list);
         const active = list.find((s: Semester) => s.isActive);
         const selected = active || list[0];
+        this.loadSemesterHistory(list);
 
         if (selected) {
           this.selectedSemesterId.set(selected.id);
@@ -192,6 +255,13 @@ export class PointManagementComponent implements OnInit {
     this.selectedSemesterId.set(semester.id);
     this.closeSemesterMenu();
     this.loadPointData(semester.id);
+  }
+
+  selectSemesterById(semesterId: number): void {
+    const semester = this.semesters().find((item) => item.id === semesterId);
+    if (semester) {
+      this.selectSemester(semester);
+    }
   }
 
   loadPointData(semesterId: number): void {
@@ -231,6 +301,30 @@ export class PointManagementComponent implements OnInit {
         this.ensureSelectedRootCategory(normalizedCategories);
         this.details.set(detailsData?.details || this.flattenContributions(detailCategories));
       });
+  }
+
+  loadSemesterHistory(semesters: Semester[]): void {
+    const orderedSemesters = this.sortSemestersForHistory(semesters);
+    if (orderedSemesters.length === 0) {
+      this.semesterStats.set([]);
+      return;
+    }
+
+    this.isHistoryLoading.set(true);
+    forkJoin(
+      orderedSemesters.map((semester) =>
+        this.http
+          .get<ApiResponse<PointSummary>>(`${this.apiUrl}/student-points/summary`, {
+            params: { semesterId: semester.id.toString() },
+          })
+          .pipe(
+            map((response) => this.toSemesterStat(semester, response?.data ?? null)),
+            catchError(() => of(this.toSemesterStat(semester, null))),
+          ),
+      ),
+    )
+      .pipe(finalize(() => this.isHistoryLoading.set(false)))
+      .subscribe((stats) => this.semesterStats.set(stats));
   }
 
   getStatusLabel(status: PointStatus): string {
@@ -288,10 +382,8 @@ export class PointManagementComponent implements OnInit {
       case 0:
         return 'Chưa nộp';
       case 1:
-        return 'Chờ duyệt';
-      case 2:
         return 'Đã duyệt';
-      case 3:
+      case 2:
         return 'Bị từ chối';
       default:
         return 'Không rõ';
@@ -300,11 +392,11 @@ export class PointManagementComponent implements OnInit {
 
   getProofStatusTone(status?: number): string {
     switch (status) {
-      case 1:
+      case 0:
         return 'warning';
-      case 2:
+      case 1:
         return 'success';
-      case 3:
+      case 2:
         return 'danger';
       default:
         return 'muted';
@@ -312,6 +404,9 @@ export class PointManagementComponent implements OnInit {
   }
 
   getContributionTitle(detail: PointContribution): string {
+    if (detail.sourceType === 'CERTIFICATE_SUBMISSION') {
+      return detail.certificateTitle || 'Giấy khen đã duyệt';
+    }
     return detail.activityTitle || detail.activityName || 'Hoạt động';
   }
 
@@ -328,11 +423,34 @@ export class PointManagementComponent implements OnInit {
   }
 
   trackContribution(index: number, detail: PointContribution): string {
-    return `${detail.activityId || index}-${detail.categoryId || 'category'}-${detail.earnedPoint || 0}`;
+    return `${detail.sourceType || 'ACTIVITY'}-${detail.activityId || detail.certificateSubmissionId || index}-${detail.categoryId || 'category'}-${detail.earnedPoint || 0}`;
+  }
+
+  trackSemesterStat(_: number, stat: SemesterPointStat): number {
+    return stat.semesterId;
   }
 
   selectRootCategory(categoryId: number): void {
     this.selectedRootCategoryId.set(categoryId);
+  }
+
+  getHistoryBarHeight(stat: SemesterPointStat): number {
+    if (stat.totalPoint <= 0) return 0;
+    return Math.max(4, this.calculatePercentage(stat.totalPoint, this.historyAxisMax()));
+  }
+
+  getSemesterDeltaLabel(): string {
+    const delta = this.semesterDelta();
+    if (delta === null) return 'Chưa có kỳ trước';
+    if (delta > 0) return `Tăng ${this.formatPoint(delta)} điểm so với kỳ trước`;
+    if (delta < 0) return `Giảm ${this.formatPoint(Math.abs(delta))} điểm so với kỳ trước`;
+    return 'Không đổi so với kỳ trước';
+  }
+
+  getSemesterDeltaTone(): string {
+    const delta = this.semesterDelta();
+    if (delta === null || delta === 0) return 'muted';
+    return delta > 0 ? 'success' : 'danger';
   }
 
   formatPoint(value: number | null | undefined): string {
@@ -342,6 +460,60 @@ export class PointManagementComponent implements OnInit {
 
   formatSemesterLabel(semester: Semester): string {
     return `${semester.semesterName} (${semester.academicYear})`;
+  }
+
+  getSemesterChartLabel(stat: SemesterPointStat): string {
+    return stat.label.replace(/\s*\(/, ' - ').replace(/\)$/, '');
+  }
+
+  private sortSemestersForHistory(semesters: Semester[]): Semester[] {
+    return [...semesters].sort(
+      (first, second) => this.semesterTime(first) - this.semesterTime(second),
+    );
+  }
+
+  private semesterTime(semester: Semester): number {
+    const rawDate = semester.startDate || semester.createdAt;
+    const parsed = rawDate ? Date.parse(rawDate) : Number.NaN;
+    return Number.isNaN(parsed) ? semester.id : parsed;
+  }
+
+  private toSemesterStat(semester: Semester, summary: PointSummary | null): SemesterPointStat {
+    const totalPoint = Number(summary?.totalPoint ?? 0);
+    const maxPoint = Number(summary?.maxPoint ?? 0);
+    const percentage = this.calculatePercentage(totalPoint, maxPoint);
+    return {
+      semesterId: semester.id,
+      label: this.formatSemesterLabel(semester),
+      totalPoint,
+      maxPoint,
+      percentage,
+      status: summary?.status || this.resolveStatus(percentage, maxPoint),
+      isActive: semester.isActive,
+    };
+  }
+
+  private resolveHistoryAxisMax(): number {
+    const rawMax = Math.max(
+      ...this.semesterStats().map((stat) => Math.max(stat.totalPoint, stat.maxPoint)),
+      this.totalMax(),
+      1,
+    );
+
+    if (rawMax <= 4) return 4;
+    if (rawMax <= 10) return 10;
+    if (rawMax <= 25) return 25;
+    if (rawMax <= 50) return 50;
+    if (rawMax <= 100) return 100;
+    return Math.ceil(rawMax / 25) * 25;
+  }
+
+  private getHistoryLineValue(stat: SemesterPointStat): number {
+    if (stat.maxPoint <= 0) {
+      return stat.totalPoint;
+    }
+
+    return (stat.percentage / 100) * this.historyAxisMax();
   }
 
   private normalizeCategoryTree(
@@ -461,11 +633,11 @@ export class PointManagementComponent implements OnInit {
     return Math.min(100, Math.round((earned / max) * 1000) / 10);
   }
 
-  resolveStatus(percentage: number): PointStatus {
+  resolveStatus(percentage: number, maxPoint = this.totalMax()): PointStatus {
     if (percentage >= 90) return 'excellent';
     if (percentage >= 70) return 'good';
     if (percentage >= 50) return 'warning';
-    if (this.totalMax() > 0) return 'danger';
+    if (maxPoint > 0) return 'danger';
     return 'unknown';
   }
 }

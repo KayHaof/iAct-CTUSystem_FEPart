@@ -21,7 +21,6 @@ export interface ComplaintEligibleActivity {
   startDate?: string | null;
   endDate?: string | null;
   checkinTime?: string | null;
-  checkoutTime?: string | null;
   complaint?: ComplaintResponse | null;
 }
 

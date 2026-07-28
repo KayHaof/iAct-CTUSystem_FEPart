@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AlertService } from '@my-mfe/ui';
 import { CloudinaryService } from '@my-mfe/data-access-media';
@@ -13,6 +14,7 @@ import { ComplaintService } from '../../shared/services/complaint.service';
 import { SemesterService } from '../../shared/services/semester.service';
 
 type ComplaintFilter = 'ALL' | 'OPEN' | 'PENDING' | 'RESPONDED';
+type ComplaintModalMode = 'DETAIL' | 'FORM';
 
 @Component({
   selector: 'app-complaints',
@@ -27,12 +29,15 @@ export class ComplaintsComponent implements OnInit {
   private semesterService = inject(SemesterService);
   private alertService = inject(AlertService);
   private cloudinaryService = inject(CloudinaryService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   semesters = signal<Semester[]>([]);
   selectedSemesterId = signal<number | null>(null);
   filter = signal<ComplaintFilter>('ALL');
   activities = signal<ComplaintEligibleActivity[]>([]);
   selectedActivity = signal<ComplaintEligibleActivity | null>(null);
+  modalMode = signal<ComplaintModalMode>('FORM');
 
   isLoading = signal(false);
   isModalOpen = signal(false);
@@ -44,8 +49,12 @@ export class ComplaintsComponent implements OnInit {
 
   detail = signal('');
   evidenceUrl = signal('');
+  private pendingActivityId: number | null = null;
+  private hasHandledRouteActivity = false;
 
   ngOnInit() {
+    const activityId = this.route.snapshot.queryParamMap.get('activityId');
+    this.pendingActivityId = activityId ? Number(activityId) : null;
     this.loadSemesters();
   }
 
@@ -98,7 +107,9 @@ export class ComplaintsComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
-          this.activities.set(res.data || []);
+          const activities = res.data || [];
+          this.activities.set(activities);
+          this.openActivityFromRoute(activities);
         },
         error: (err) => {
           this.activities.set([]);
@@ -117,6 +128,7 @@ export class ComplaintsComponent implements OnInit {
 
   openComplaintModal(activity: ComplaintEligibleActivity) {
     this.selectedActivity.set(activity);
+    this.modalMode.set('FORM');
     this.detail.set(activity.complaint?.detail || '');
     this.evidenceUrl.set(activity.complaint?.evidenceUrl || '');
     this.selectedFile.set(null);
@@ -125,9 +137,58 @@ export class ComplaintsComponent implements OnInit {
     this.isModalOpen.set(true);
   }
 
+  openDetailModal(activity: ComplaintEligibleActivity) {
+    this.selectedActivity.set(activity);
+    this.modalMode.set('DETAIL');
+    this.detail.set(activity.complaint?.detail || '');
+    this.evidenceUrl.set(activity.complaint?.evidenceUrl || '');
+    this.selectedFile.set(null);
+    this.selectedFileName.set('');
+    this.previewUrl.set(null);
+    this.isModalOpen.set(true);
+  }
+
+  openProofSubmission(activity: ComplaintEligibleActivity): void {
+    void this.router.navigate(['/my-records'], {
+      queryParams: {
+        proofActivityId: activity.activityId,
+        semesterId: this.selectedSemesterId(),
+        proofSource: 'complaint-approved',
+      },
+    });
+  }
+
+  private openActivityFromRoute(activities: ComplaintEligibleActivity[]) {
+    if (!this.pendingActivityId || this.hasHandledRouteActivity) {
+      return;
+    }
+
+    this.hasHandledRouteActivity = true;
+    const target = activities.find((activity) => activity.activityId === this.pendingActivityId);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { activityId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+
+    if (!target) {
+      this.alertService.error('Không tìm thấy hoạt động đủ điều kiện khiếu nại.');
+      return;
+    }
+
+    if (target.complaint) {
+      this.openDetailModal(target);
+      return;
+    }
+
+    this.openComplaintModal(target);
+  }
+
   closeModal() {
     this.isModalOpen.set(false);
     this.selectedActivity.set(null);
+    this.modalMode.set('FORM');
     this.selectedFile.set(null);
     this.selectedFileName.set('');
     this.previewUrl.set(null);
@@ -271,3 +332,4 @@ export class ComplaintsComponent implements OnInit {
     reader.readAsDataURL(file);
   }
 }
+
