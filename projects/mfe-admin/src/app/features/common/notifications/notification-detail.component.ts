@@ -64,6 +64,10 @@ export class AdminNotificationDetailComponent implements OnInit {
     this.router.navigate(['/admin/activity-moderation']);
   }
 
+  goToCertificateApprovals(): void {
+    this.router.navigate(['/admin/org/certificates']);
+  }
+
   goBack(): void {
     this.router.navigate(['/admin/notifications']);
   }

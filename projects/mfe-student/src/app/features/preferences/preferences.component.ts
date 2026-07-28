@@ -1,22 +1,13 @@
 import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ApiResponse } from '@my-mfe/interface';
+import { ApiResponse, NotificationPreferenceSettings } from '@my-mfe/interface';
+import { IACT_API_ORIGIN } from '@my-mfe/ui';
 
 interface PreferenceResponse {
   id?: number;
   userId?: number;
-  categoryRatings?: Record<string, number>;
-  categoryEnabled?: Record<string, boolean>;
-  preferredCategoryIds?: number[];
-  excludedCategories?: string[];
-  aiRecommendationEnabled?: boolean;
-  notificationSettings?: {
-    emailEnabled?: boolean;
-    pushEnabled?: boolean;
-    activityReminder?: boolean;
-    registrationConfirmation?: boolean;
-  };
+  notificationSettings?: NotificationPreferenceSettings;
 }
 
 @Component({
@@ -29,134 +20,83 @@ interface PreferenceResponse {
 })
 export class PreferencesComponent implements OnInit {
   private http = inject(HttpClient);
+  private readonly apiOrigin = inject(IACT_API_ORIGIN);
 
-  private baseUrl = 'http://localhost:8080';
-  private apiUrl = `${this.baseUrl}/user/api/v1`;
+  private readonly apiUrl = `${this.apiOrigin}/user/api/v1`;
+  private readonly defaultNotificationSettings: Required<NotificationPreferenceSettings> = {
+    newActivityAlert: true,
+    reminderAlert: true,
+    reminderDaysBefore: 1,
+  };
 
-  preference = signal<PreferenceResponse | null>(null);
-  categories = signal<{ id: number; name: string; code: string }[]>([]);
-  selectedIds = signal<number[]>([]);
-  ratings = signal<Record<string, number>>({});
-  aiEnabled = signal(true);
-  notifSettings = signal<PreferenceResponse['notificationSettings']>({});
+  notifSettings = signal<NotificationPreferenceSettings>({ ...this.defaultNotificationSettings });
   isSaving = signal(false);
   isLoading = signal(true);
 
   ngOnInit(): void {
-    this.loadCategories();
     this.loadPreferences();
-  }
-
-  loadCategories(): void {
-    this.http
-      .get<ApiResponse<any[]>>(`${this.baseUrl}/activity/api/v1/categories?active=true`)
-      .subscribe({
-        next: (res) => {
-          const cats = (res.data || []).map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            code: c.code || '',
-          }));
-          this.categories.set(cats);
-        },
-      });
   }
 
   loadPreferences(): void {
     this.http.get<ApiResponse<PreferenceResponse>>(`${this.apiUrl}/student-preferences`).subscribe({
       next: (res) => {
-        const pref = res.data;
-        if (pref) {
-          this.preference.set(pref);
-          this.aiEnabled.set(pref.aiRecommendationEnabled ?? true);
-          this.notifSettings.set(pref.notificationSettings || {});
-          const enabledIds = pref.preferredCategoryIds || [];
-          this.selectedIds.set(enabledIds);
-          const ratings: Record<string, number> = {};
-          if (pref.categoryRatings) {
-            Object.entries(pref.categoryRatings).forEach(([k, v]) => {
-              ratings[k] = v;
-            });
-          }
-          this.ratings.set(ratings);
-        }
+        this.notifSettings.set({
+          ...this.defaultNotificationSettings,
+          ...(res.data?.notificationSettings || {}),
+        });
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false),
     });
   }
 
-  isSelected(id: number): boolean {
-    return this.selectedIds().includes(id);
+  notificationSettings(): Required<NotificationPreferenceSettings> {
+    return {
+      ...this.defaultNotificationSettings,
+      ...this.notifSettings(),
+    };
   }
 
-  toggleCategory(id: number): void {
-    const ids = this.selectedIds();
-    if (ids.includes(id)) {
-      this.selectedIds.set(ids.filter((i) => i !== id));
-    } else {
-      this.selectedIds.set([...ids, id]);
-    }
+  updateNotif(key: 'newActivityAlert' | 'reminderAlert', event: Event): void {
+    this.notifSettings.set({
+      ...this.notificationSettings(),
+      [key]: (event.target as HTMLInputElement).checked,
+    });
   }
 
-  setRating(id: number, star: number): void {
-    const r = { ...this.ratings() };
-    r[String(id)] = star;
-    this.ratings.set(r);
-  }
+  updateReminderDays(event: Event): void {
+    const value = Number((event.target as HTMLInputElement).value);
+    const reminderDaysBefore = Number.isFinite(value)
+      ? Math.min(Math.max(Math.trunc(value), 1), 14)
+      : 1;
 
-  toggleAI(event: Event): void {
-    this.aiEnabled.set((event.target as HTMLInputElement).checked);
-  }
-
-  updateNotif(key: string, event: Event): void {
-    const settings = { ...this.notifSettings() };
-    (settings as any)[key] = (event.target as HTMLInputElement).checked;
-    this.notifSettings.set(settings);
+    this.notifSettings.set({
+      ...this.notificationSettings(),
+      reminderDaysBefore,
+    });
   }
 
   savePreferences(): void {
     this.isSaving.set(true);
-    const ratings: Record<string, number> = {};
-    this.selectedIds().forEach((id) => {
-      ratings[String(id)] = this.ratings()[String(id)] || 3;
-    });
     const payload = {
-      preferredCategoryIds: this.selectedIds(),
-      categoryRatings: ratings,
-      categoryEnabled: Object.fromEntries(this.selectedIds().map((id) => [String(id), true])),
-      aiRecommendationEnabled: this.aiEnabled(),
-      notificationSettings: this.notifSettings(),
+      notificationSettings: this.notificationSettings(),
     };
     this.http
       .put<ApiResponse<PreferenceResponse>>(`${this.apiUrl}/student-preferences`, payload)
       .subscribe({
-        next: () => {
+        next: (res) => {
+          this.notifSettings.set({
+            ...this.defaultNotificationSettings,
+            ...(res.data?.notificationSettings || payload.notificationSettings),
+          });
           this.isSaving.set(false);
         },
         error: () => this.isSaving.set(false),
       });
   }
 
-  resetToDefault(): void {
-    this.http
-      .post<ApiResponse<PreferenceResponse>>(`${this.apiUrl}/student-preferences/reset`, {})
-      .subscribe({
-        next: (res) => {
-          if (res.data) {
-            this.preference.set(res.data);
-            this.aiEnabled.set(res.data.aiRecommendationEnabled ?? true);
-            this.notifSettings.set(res.data.notificationSettings || {});
-            this.selectedIds.set(res.data.preferredCategoryIds || []);
-            const ratings: Record<string, number> = {};
-            if (res.data.categoryRatings) {
-              Object.entries(res.data.categoryRatings).forEach(([k, v]) => {
-                ratings[k] = v;
-              });
-            }
-            this.ratings.set(ratings);
-          }
-        },
-      });
+  resetNotificationDefaults(): void {
+    this.notifSettings.set({ ...this.defaultNotificationSettings });
+    this.savePreferences();
   }
 }

@@ -1,4 +1,8 @@
-<div class="notification-center-page" [class.nc-role-student]="roleContext() === 'student'">
+<div
+  class="notification-center-page"
+  [class.nc-role-student]="roleContext() === 'student'"
+  aria-labelledby="notification-center-title"
+>
   <!-- Page Header -->
   <div class="nc-page-header">
     <div class="nc-page-header-inner">
@@ -7,15 +11,25 @@
           <i class="bi bi-bell-fill"></i>
           Trung tâm thông báo
         </p>
-        <h1 class="nc-page-title">Thông báo</h1>
+        <h1 id="notification-center-title" class="nc-page-title">Thông báo</h1>
         <p class="nc-page-subtitle">{{ subtitle() }}</p>
       </div>
-      @if (facade.hasUnread()) {
-        <button class="nc-mark-all-btn" type="button" (click)="markAllAsRead()">
-          <i class="bi bi-check2-all"></i>
-          Đánh dấu tất cả đã đọc
-        </button>
-      }
+      <div class="nc-header-meta">
+        <div class="nc-meta-chip">
+          <i class="bi bi-inbox"></i>
+          <span>{{ filteredNotifications().length }} mục</span>
+        </div>
+        <div class="nc-meta-chip nc-meta-chip-soft">
+          <i class="bi bi-clock-history"></i>
+          <span>{{ facade.unreadCount() }} chưa đọc</span>
+        </div>
+        @if (facade.hasUnread()) {
+          <button class="nc-mark-all-btn" type="button" (click)="markAllAsRead()">
+            <i class="bi bi-check2-all"></i>
+            Đánh dấu tất cả đã đọc
+          </button>
+        }
+      </div>
     </div>
   </div>
 
@@ -132,10 +146,13 @@
                     <i class="bi bi-clock"></i>
                     {{ formatTime(item.createdAt) }}
                   </span>
-                  @if (item.activityId) {
+                  @if (facade.getNavigationContext(item); as targetContext) {
                     <span class="nc-card-activity">
                       <i class="bi bi-calendar3"></i>
-                      HD #{{ item.activityId }}
+                      {{ targetContext }}
+                      @if (item.activityId) {
+                        #{{ item.activityId }}
+                      }
                     </span>
                   }
                 </div>
@@ -143,6 +160,13 @@
 
               <!-- Row Actions -->
               <div class="nc-card-actions">
+                <button
+                  class="nc-action-btn nc-action-open"
+                  title="Mở đích"
+                  (click)="openNotification(item, $event)"
+                >
+                  <i class="bi bi-box-arrow-up-right"></i>
+                </button>
                 @if (!item.isRead) {
                   <button
                     class="nc-action-btn"
@@ -254,11 +278,14 @@
             </div>
 
             <!-- Activity Link -->
-            @if (n.activityId) {
+            @if (facade.hasBusinessTarget(n)) {
               <div class="nc-detail-activity">
                 <i class="bi bi-calendar3"></i>
                 <span
-                  >Hoạt động liên quan: <strong>#{{ n.activityId }}</strong></span
+                  >Điểm đến: <strong>{{ facade.getNavigationContext(n) }}</strong>
+                  @if (n.activityId) {
+                    <strong>#{{ n.activityId }}</strong>
+                  }</span
                 >
               </div>
             }
@@ -287,12 +314,10 @@
 
             <!-- CTA Actions -->
             <div class="nc-detail-actions">
-              @if (n.activityId) {
-                <button class="nc-cta-primary" (click)="openNotification(n)">
-                  <i class="bi bi-box-arrow-up-right"></i>
-                  Xem hoạt động
-                </button>
-              }
+              <button class="nc-cta-primary" (click)="openNotification(n)">
+                <i class="bi bi-box-arrow-up-right"></i>
+                {{ facade.getNavigationLabel(n) }}
+              </button>
               <button class="nc-cta-secondary" (click)="facade.selectedNotification.set(null)">
                 Quay lại danh sách
               </button>

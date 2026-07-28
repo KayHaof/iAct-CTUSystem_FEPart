@@ -124,7 +124,8 @@ export class NotificationCenterComponent implements OnInit, AfterViewInit {
     this.facade.loadDetail(item.id);
   }
 
-  openNotification(item: NotificationItem): void {
+  openNotification(item: NotificationItem, event?: MouseEvent): void {
+    event?.stopPropagation();
     this.facade.openNotification(item);
   }
 

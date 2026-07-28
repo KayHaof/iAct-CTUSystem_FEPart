@@ -90,6 +90,10 @@
                   <i class="bi bi-clock"></i>
                   {{ formatTime(item.createdAt) }}
                 </span>
+                <span class="notif-target">
+                  <i class="bi bi-box-arrow-up-right"></i>
+                  {{ facade.getNavigationLabel(item) }}
+                </span>
               </div>
               @if (!item.isRead) {
                 <span class="notif-unread-dot" aria-label="Chưa đọc"></span>

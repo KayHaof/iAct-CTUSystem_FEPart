@@ -40,7 +40,7 @@ export interface UrgentNotificationRequest {
   title: string;
   message: string;
   priority?: number;
-  targetType: 'ALL_DEPARTMENT' | 'ACTIVITY' | 'CLASS';
+  targetType: 'ALL_DEPARTMENT' | 'ACTIVITY' | 'CLASS' | 'ADMIN_SUPPORT';
   targetId?: number;
   activityId?: number;
   userIds?: string[];

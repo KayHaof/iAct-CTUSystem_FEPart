@@ -68,14 +68,19 @@
         </div>
 
         <!-- Activity Link -->
-        @if (n.activityId) {
+        @if (facade.hasBusinessTarget(n)) {
           <div class="nd-activity-link">
             <div class="nd-activity-icon">
               <i class="bi bi-calendar3"></i>
             </div>
             <div class="nd-activity-info">
-              <span class="nd-activity-label">Hoạt động liên quan</span>
-              <strong class="nd-activity-id">#{{ n.activityId }}</strong>
+              <span class="nd-activity-label">Điểm đến</span>
+              <strong class="nd-activity-id">
+                {{ facade.getNavigationContext(n) }}
+                @if (n.activityId) {
+                  #{{ n.activityId }}
+                }
+              </strong>
             </div>
             <i class="bi bi-chevron-right nd-activity-arrow"></i>
           </div>
@@ -83,10 +88,10 @@
 
         <!-- CTA Actions -->
         <div class="nd-actions">
-          @if (n.activityId) {
-            <button class="nd-btn nd-btn-primary" (click)="goToActivity(n.activityId)">
+          @if (facade.hasBusinessTarget(n)) {
+            <button class="nd-btn nd-btn-primary" (click)="facade.openNotification(n)">
               <i class="bi bi-box-arrow-up-right"></i>
-              Xem hoạt động
+              {{ facade.getNavigationLabel(n) }}
             </button>
           }
           <button class="nd-btn nd-btn-ghost" (click)="goBack()">Quay lại danh sách</button>

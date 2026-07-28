@@ -284,6 +284,20 @@
   }
 }
 
+.notif-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: $font-semibold;
+  color: $blue-700;
+
+  i {
+    font-size: 0.625rem;
+  }
+}
+
 .notif-unread-dot {
   flex-shrink: 0;
   width: 0.5rem;

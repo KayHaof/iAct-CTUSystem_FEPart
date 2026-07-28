@@ -21,6 +21,14 @@ import {
 import { NotificationService } from '@my-mfe/data-access-notification';
 import { WebSocketService } from '@my-mfe/data-access-realtime';
 
+export interface NotificationNavigationTarget {
+  commands: (string | number)[];
+  queryParams?: Record<string, string | number>;
+  label: string;
+  contextLabel: string;
+  isFallback?: boolean;
+}
+
 /**
  * NotificationFacade - Facade trung tâm quản lý state notification dùng chung.
  *
@@ -275,30 +283,40 @@ export class NotificationFacade {
     }
     this.dropdownOpen.set(false);
 
-    const user = this.userService.currentUser();
-    const roleType = user?.roleType;
+    const target = this.getNavigationTarget(notification);
+    const extras = target.queryParams ? { queryParams: target.queryParams } : undefined;
+    this.router.navigate(target.commands, extras);
+  }
 
-    // Nếu có activityId, điều hướng theo role
-    if (notification.activityId) {
-      if (roleType === 1) {
-        // Student
-        this.router.navigate(['/activity-hub/detail', notification.activityId]);
-      } else if (roleType === 2) {
-        // Department
-        this.router.navigate(['/admin/org/activities/detail', notification.activityId]);
-      } else if (roleType === 3) {
-        // Admin
-        this.router.navigate(['/admin/org/activities/detail', notification.activityId]);
-      }
-      return;
-    }
+  getNavigationTarget(notification: NotificationItem): NotificationNavigationTarget {
+    const roleType = this.userService.currentUser()?.roleType;
 
-    // Không có activityId → mở detail notification
     if (roleType === 1) {
-      this.router.navigate(['/notifications', notification.id]);
-    } else {
-      this.router.navigate(['/admin/notifications', notification.id]);
+      return this.resolveStudentTarget(notification);
     }
+
+    if (roleType === 2) {
+      return this.resolveDepartmentTarget(notification);
+    }
+
+    if (roleType === 3) {
+      return this.resolveAdminTarget(notification);
+    }
+
+    return this.notificationDetailTarget(notification, roleType);
+  }
+
+  getNavigationLabel(notification: NotificationItem): string {
+    return this.getNavigationTarget(notification).label;
+  }
+
+  getNavigationContext(notification: NotificationItem): string {
+    const target = this.getNavigationTarget(notification);
+    return target.contextLabel;
+  }
+
+  hasBusinessTarget(notification: NotificationItem): boolean {
+    return !this.getNavigationTarget(notification).isFallback;
   }
 
   /** Toggle bell dropdown */
@@ -389,5 +407,236 @@ export class NotificationFacade {
     this.ngZone.run(() => {
       update();
     });
+  }
+
+  private resolveStudentTarget(notification: NotificationItem): NotificationNavigationTarget {
+    const topic = this.normalizeTopic(notification.sourceTopic);
+    const eventId = this.normalizeTopic(notification.sourceEventId);
+    const activityId = notification.activityId;
+
+    if (this.topicIncludes(topic, 'certificate-submission')) {
+      return this.studentCertificateTarget(topic);
+    }
+
+    if (this.topicIncludes(topic, 'point')) {
+      return {
+        commands: ['/point-management'],
+        label: 'Xem điểm rèn luyện',
+        contextLabel: 'Điểm rèn luyện',
+      };
+    }
+
+    if (this.topicIncludes(topic, 'activity-complaints')) {
+      if (activityId && this.topicIncludes(eventId, 'approved')) {
+        return {
+          commands: ['/my-records'],
+          queryParams: {
+            proofActivityId: activityId,
+            proofSource: 'complaint-approved',
+          },
+          label: 'Nộp minh chứng bổ sung',
+          contextLabel: 'Khiếu nại đã duyệt',
+        };
+      }
+
+      return activityId
+        ? {
+            commands: ['/complaints'],
+            queryParams: { activityId },
+            label: 'Xem khiếu nại',
+            contextLabel: 'Khiếu nại hoạt động',
+          }
+        : {
+            commands: ['/complaints'],
+            label: 'Xem khiếu nại',
+            contextLabel: 'Khiếu nại hoạt động',
+          };
+    }
+
+    if (activityId && this.topicIncludes(topic, 'proof')) {
+      return {
+        commands: ['/my-records'],
+        queryParams: { proofActivityId: activityId },
+        label: this.topicIncludes(topic, 'rejected') ? 'Nộp lại minh chứng' : 'Xem minh chứng',
+        contextLabel: 'Minh chứng hoạt động',
+      };
+    }
+
+    if (activityId && this.topicIncludes(topic, 'attendance.checked-in')) {
+      return {
+        commands: ['/my-records'],
+        queryParams: { proofActivityId: activityId },
+        label: 'Nộp minh chứng',
+        contextLabel: 'Điểm danh hoạt động',
+      };
+    }
+
+    if (activityId && this.topicIncludes(topic, 'registration')) {
+      return {
+        commands: ['/my-records'],
+        queryParams: { recordActivityId: activityId },
+        label: 'Xem hồ sơ tham gia',
+        contextLabel: 'Hồ sơ tham gia',
+      };
+    }
+
+    if (activityId) {
+      return {
+        commands: ['/activity-hub/detail', activityId],
+        label: 'Xem hoạt động',
+        contextLabel: 'Hoạt động liên quan',
+      };
+    }
+
+    return this.notificationDetailTarget(notification, 1);
+  }
+
+  private resolveDepartmentTarget(notification: NotificationItem): NotificationNavigationTarget {
+    const topic = this.normalizeTopic(notification.sourceTopic);
+    const activityId = notification.activityId;
+
+    if (this.topicIncludes(topic, 'certificate-submission')) {
+      return this.adminCertificateTarget(topic);
+    }
+
+    if (activityId && this.topicIncludes(topic, 'proof')) {
+      return {
+        commands: ['/admin/org/activities/participants', activityId],
+        queryParams: {
+          view: 'proofs',
+          proofStatus: this.statusQueryFromTopic(topic),
+        },
+        label: 'Duyệt minh chứng',
+        contextLabel: 'Minh chứng chờ duyệt',
+      };
+    }
+
+    if (activityId && this.topicIncludes(topic, 'activity-complaints')) {
+      return {
+        commands: ['/admin/org/activities/participants', activityId],
+        queryParams: { view: 'complaints' },
+        label: 'Xử lý khiếu nại',
+        contextLabel: 'Khiếu nại hoạt động',
+      };
+    }
+
+    if (activityId && (this.topicIncludes(topic, 'registration') || this.topicIncludes(topic, 'attendance'))) {
+      return {
+        commands: ['/admin/org/activities/participants', activityId],
+        queryParams: { view: 'participants' },
+        label: 'Xem người tham gia',
+        contextLabel: 'Người tham gia hoạt động',
+      };
+    }
+
+    if (activityId) {
+      return {
+        commands: ['/admin/org/activities/detail', activityId],
+        label: 'Xem vận hành hoạt động',
+        contextLabel: 'Hoạt động liên quan',
+      };
+    }
+
+    return this.notificationDetailTarget(notification, 2);
+  }
+
+  private resolveAdminTarget(notification: NotificationItem): NotificationNavigationTarget {
+    const topic = this.normalizeTopic(notification.sourceTopic);
+    const activityId = notification.activityId;
+
+    if (activityId && this.topicIncludes(topic, 'activity.submitted')) {
+      return {
+        commands: ['/admin/activity-moderation'],
+        queryParams: { activityId },
+        label: 'Duyệt hoạt động',
+        contextLabel: 'Hoạt động chờ duyệt',
+      };
+    }
+
+    if (activityId && this.topicIncludes(topic, 'proof')) {
+      return {
+        commands: ['/admin/org/activities/participants', activityId],
+        queryParams: {
+          view: 'proofs',
+          proofStatus: this.statusQueryFromTopic(topic),
+        },
+        label: 'Xem minh chứng',
+        contextLabel: 'Minh chứng hoạt động',
+      };
+    }
+
+    if (activityId && this.topicIncludes(topic, 'activity-complaints')) {
+      return {
+        commands: ['/admin/org/activities/participants', activityId],
+        queryParams: { view: 'complaints' },
+        label: 'Xem khiếu nại',
+        contextLabel: 'Khiếu nại hoạt động',
+      };
+    }
+
+    if (activityId && (this.topicIncludes(topic, 'registration') || this.topicIncludes(topic, 'attendance'))) {
+      return {
+        commands: ['/admin/org/activities/participants', activityId],
+        queryParams: { view: 'participants' },
+        label: 'Xem người tham gia',
+        contextLabel: 'Người tham gia hoạt động',
+      };
+    }
+
+    if (activityId) {
+      return {
+        commands: ['/admin/org/activities/detail', activityId],
+        label: 'Xem vận hành hoạt động',
+        contextLabel: 'Hoạt động liên quan',
+      };
+    }
+
+    return this.notificationDetailTarget(notification, 3);
+  }
+
+  private studentCertificateTarget(topic: string): NotificationNavigationTarget {
+    return {
+      commands: ['/certificates'],
+      queryParams: { status: this.statusQueryFromTopic(topic) },
+      label: 'Xem giấy khen',
+      contextLabel: 'Giấy khen sinh viên',
+    };
+  }
+
+  private adminCertificateTarget(topic: string): NotificationNavigationTarget {
+    return {
+      commands: ['/admin/org/certificates'],
+      queryParams: { status: this.statusQueryFromTopic(topic) },
+      label: 'Duyệt giấy khen',
+      contextLabel: 'Giấy khen chờ xử lý',
+    };
+  }
+
+  private notificationDetailTarget(
+    notification: NotificationItem,
+    roleType?: number | null,
+  ): NotificationNavigationTarget {
+    const isStudent = roleType === 1;
+    return {
+      commands: isStudent ? ['/notifications', notification.id] : ['/admin/notifications', notification.id],
+      label: 'Mở chi tiết thông báo',
+      contextLabel: 'Chi tiết thông báo',
+      isFallback: true,
+    };
+  }
+
+  private statusQueryFromTopic(topic: string): number | string {
+    if (this.topicIncludes(topic, 'approved')) return 1;
+    if (this.topicIncludes(topic, 'rejected')) return 2;
+    if (this.topicIncludes(topic, 'submitted')) return 0;
+    return 'all';
+  }
+
+  private normalizeTopic(value?: string | null): string {
+    return (value || '').toLowerCase();
+  }
+
+  private topicIncludes(topic: string, token: string): boolean {
+    return topic.includes(token);
   }
 }
