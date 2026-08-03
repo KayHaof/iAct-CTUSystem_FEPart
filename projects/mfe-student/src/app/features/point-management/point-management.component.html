@@ -4,8 +4,8 @@
       <p class="iact-student-eyebrow">Kết quả cá nhân</p>
       <h1 class="iact-student-title">Điểm rèn luyện</h1>
       <p class="iact-student-subtitle">
-        Theo dõi điểm đạt được theo từng mục trong bộ quy tắc rèn luyện của học kỳ. Điểm chỉ ghi
-        nhận khi đã hoàn tất điểm danh và minh chứng được duyệt.
+        Thống kê điểm rèn luyện từ hoạt động sinh viên tham gia và các chứng nhận đã được duyệt. Dữ liệu được tổng
+        hợp theo từng học kỳ đang chọn.
       </p>
     </div>
 
@@ -49,276 +49,304 @@
   } @else if (categories().length > 0) {
     <section class="points-overview" aria-label="Tổng quan điểm rèn luyện">
       <div class="points-overview__score">
-        <span class="summary-label">Tổng điểm theo bộ quy tắc</span>
+        <span class="summary-label">Tổng điểm rèn luyện đã ghi nhận</span>
         <div class="points-score">
           <strong>{{ formatPoint(totalEarned()) }}</strong>
-          <span>/ {{ formatPoint(totalMax()) }} điểm</span>
+          <span>điểm</span>
         </div>
+
+        <div class="points-overview__source-grid" aria-label="Phân bổ nguồn điểm">
+          <article class="source-metric">
+            <span>Từ hoạt động</span>
+            <strong>{{ formatPoint(activityPointTotal()) }}</strong>
+            <p>{{ activityContributionCount() }} lần ghi nhận</p>
+          </article>
+
+          <article class="source-metric">
+            <span>Từ chứng nhận</span>
+            <strong>{{ formatPoint(certificatePointTotal()) }}</strong>
+            <p>{{ certificateContributionCount() }} hồ sơ được duyệt</p>
+          </article>
+        </div>
+
         <div class="progress-track" aria-hidden="true">
-          <span
-            class="progress-fill"
-            [ngClass]="'progress-fill--' + getStatusTone(currentStatus())"
-            [style.width.%]="totalPercentage()"
-          ></span>
+          <span class="progress-fill" [style.width.%]="totalPercentage()"></span>
         </div>
         <div class="points-overview__meta">
-          <span>{{ totalPercentage() | number: '1.1-1' }}%</span>
-          <span>Còn {{ formatPoint(remainingPoint()) }} điểm</span>
+          <span>Theo bộ quy tắc: {{ formatPoint(totalMax()) }} điểm</span>
+          <span>Còn {{ formatPoint(remainingPoint()) }} điểm có thể ghi nhận</span>
         </div>
       </div>
 
-      <div class="points-overview__status">
-        <span class="status-badge" [ngClass]="'status-badge--' + getStatusTone(currentStatus())">
-          <i class="bi" [ngClass]="getStatusIcon(currentStatus())"></i>
-          {{ getStatusLabel(currentStatus()) }}
-        </span>
+      <div class="points-overview__aside">
+        <article class="overview-note">
+          <span>Học kỳ đang xem</span>
+          <strong>{{ selectedSemesterLabel() }}</strong>
+          <p>
+            @if (selectedSemesterStat(); as selected) {
+              {{ formatPoint(selected.totalPoint) }} điểm trong học kỳ này
+            } @else {
+              Dữ liệu được hiển thị theo học kỳ đã chọn
+            }
+          </p>
+        </article>
+
+        <article class="overview-note overview-note--soft">
+          <span>Biến động</span>
+          <strong>{{ getSemesterDeltaLabel() }}</strong>
+          <p>Biểu đồ lịch sử và mốc học kỳ nằm trong tab Cây tiến độ</p>
+        </article>
       </div>
     </section>
 
-    <section class="points-history-card" aria-label="Thống kê điểm rèn luyện theo học kỳ">
-      <div class="section-heading">
-        <p class="iact-student-eyebrow">So sánh học kỳ</p>
-        <h2 class="iact-student-section-title">Tiến độ điểm rèn luyện qua các kỳ</h2>
-      </div>
+    <div class="points-tabs" role="tablist" aria-label="Chuyển tab điểm rèn luyện">
+      <button
+        type="button"
+        class="points-tab"
+        role="tab"
+        [class.is-active]="selectedTab() === 'tree'"
+        [attr.aria-selected]="selectedTab() === 'tree'"
+        (click)="selectTab('tree')"
+      >
+        Cây tiến độ
+      </button>
+      <button
+        type="button"
+        class="points-tab"
+        role="tab"
+        [class.is-active]="selectedTab() === 'activities'"
+        [attr.aria-selected]="selectedTab() === 'activities'"
+        (click)="selectTab('activities')"
+      >
+        Hoạt động
+      </button>
+    </div>
 
-      @if (isHistoryLoading()) {
-        <div class="history-loading">
-          <span class="points-spinner"></span>
-          <p>Đang tải thống kê học kỳ...</p>
+    @if (selectedTab() === 'tree') {
+      <section class="points-history-card" aria-label="Thống kê điểm rèn luyện theo học kỳ">
+        <div class="section-heading">
+          <p class="iact-student-eyebrow">Lịch sử học kỳ</p>
+          <h2 class="iact-student-section-title">Diễn biến điểm rèn luyện qua các kỳ</h2>
         </div>
-      } @else if (semesterStats().length > 0) {
-        <div class="history-content">
-          <div class="history-visual">
-            <div class="history-legend" aria-label="Chú giải biểu đồ">
-              <span><i class="history-legend__bar"></i>Điểm đạt</span>
-              <span><i class="history-legend__line"></i>Tỷ lệ hoàn thành</span>
-            </div>
 
-            <div class="history-chart-scroll" aria-label="Biểu đồ điểm rèn luyện theo học kỳ">
-              <div class="history-chart">
-                <div class="history-axis" aria-hidden="true">
-                  @for (tick of historyTicks(); track $index) {
-                    <span>{{ formatPoint(tick) }}</span>
-                  }
-                </div>
+        @if (isHistoryLoading()) {
+          <div class="history-loading">
+            <span class="points-spinner"></span>
+            <p>Đang tải thống kê học kỳ...</p>
+          </div>
+        } @else if (semesterStats().length > 0) {
+          <div class="history-content">
+            <div class="history-visual">
+              <div class="history-legend" aria-label="Chú giải biểu đồ">
+                <span><i class="history-legend__bar"></i>Điểm ghi nhận</span>
+                <span><i class="history-legend__line"></i>Xu hướng</span>
+              </div>
 
-                <div class="history-plot">
-                  <div class="history-grid" aria-hidden="true">
+              <div class="history-chart-scroll" aria-label="Biểu đồ điểm rèn luyện theo học kỳ">
+                <div class="history-chart">
+                  <div class="history-axis" aria-hidden="true">
                     @for (tick of historyTicks(); track $index) {
-                      <span></span>
+                      <span>{{ formatPoint(tick) }}</span>
                     }
                   </div>
 
-                  <div class="history-bars" role="list">
+                  <div class="history-plot">
+                    <div class="history-grid" aria-hidden="true">
+                      @for (tick of historyTicks(); track $index) {
+                        <span></span>
+                      }
+                    </div>
+
+                    <div class="history-bars" role="list">
+                      @for (stat of semesterStats(); track trackSemesterStat($index, stat)) {
+                        <button
+                          type="button"
+                          class="history-bar"
+                          role="listitem"
+                          [class.is-selected]="stat.semesterId === selectedSemesterId()"
+                          [class.is-active-semester]="stat.isActive"
+                          [attr.aria-label]="
+                            getSemesterChartLabel(stat) + ': ' + formatPoint(stat.totalPoint) + ' điểm'
+                          "
+                          (click)="selectSemesterById(stat.semesterId)"
+                        >
+                          <span class="history-bar__value">{{ formatPoint(stat.totalPoint) }}</span>
+                          <span class="history-bar__fill" [style.height.%]="getHistoryBarHeight(stat)"></span>
+                        </button>
+                      }
+                    </div>
+
+                    <svg
+                      class="history-line"
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
+                    >
+                      <polyline [attr.points]="historyLinePoints()"></polyline>
+                      @for (point of historyLinePointsData(); track point.semesterId) {
+                        <circle [attr.cx]="point.x" [attr.cy]="point.y" r="1.45"></circle>
+                      }
+                    </svg>
+                  </div>
+
+                  <div class="history-axis-title">Điểm</div>
+                  <div class="history-x-axis" aria-hidden="true">
                     @for (stat of semesterStats(); track trackSemesterStat($index, stat)) {
                       <button
                         type="button"
-                        class="history-bar"
-                        role="listitem"
                         [class.is-selected]="stat.semesterId === selectedSemesterId()"
-                        [class.is-active-semester]="stat.isActive"
-                        [attr.aria-label]="
-                          getSemesterChartLabel(stat) +
-                          ': ' +
-                          formatPoint(stat.totalPoint) +
-                          ' điểm, ' +
-                          (stat.percentage | number: '1.1-1') +
-                          '%'
-                        "
                         (click)="selectSemesterById(stat.semesterId)"
                       >
-                        <span class="history-bar__value">{{ formatPoint(stat.totalPoint) }}</span>
-                        <span
-                          class="history-bar__fill"
-                          [ngClass]="'history-bar__fill--' + getStatusTone(stat.status)"
-                          [style.height.%]="getHistoryBarHeight(stat)"
-                        ></span>
+                        {{ getSemesterChartLabel(stat) }}
                       </button>
                     }
                   </div>
-
-                  <svg
-                    class="history-line"
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
-                    aria-hidden="true"
-                  >
-                    <polyline [attr.points]="historyLinePoints()"></polyline>
-                    @for (point of historyLinePointsData(); track point.semesterId) {
-                      <circle [attr.cx]="point.x" [attr.cy]="point.y" r="1.45"></circle>
-                    }
-                  </svg>
                 </div>
+              </div>
+            </div>
 
-                <div class="history-axis-title">Điểm</div>
-                <div class="history-x-axis" aria-hidden="true">
-                  @for (stat of semesterStats(); track trackSemesterStat($index, stat)) {
-                    <button
-                      type="button"
-                      [class.is-selected]="stat.semesterId === selectedSemesterId()"
-                      (click)="selectSemesterById(stat.semesterId)"
-                    >
-                      {{ getSemesterChartLabel(stat) }}
-                    </button>
+            <div class="history-summary" aria-label="Tóm tắt so sánh học kỳ">
+              <article>
+                <span>Học kỳ đang xem</span>
+                <strong>{{ selectedSemesterStat()?.label || selectedSemesterLabel() }}</strong>
+                <p>{{ formatPoint(selectedSemesterStat()?.totalPoint || totalEarned()) }} điểm đã ghi nhận</p>
+              </article>
+
+              <article>
+                <span>So với kỳ trước</span>
+                <strong [ngClass]="'history-delta--' + getSemesterDeltaTone()">
+                  {{ getSemesterDeltaLabel() }}
+                </strong>
+                <p>
+                  @if (previousSemesterStat(); as previous) {
+                    Kỳ trước: {{ formatPoint(previous.totalPoint) }} điểm
+                  } @else {
+                    Chưa có dữ liệu so sánh
                   }
+                </p>
+              </article>
+
+              <article>
+                <span>Kỳ cao nhất</span>
+                <strong>{{ bestSemesterStat()?.label || 'Chưa có dữ liệu' }}</strong>
+                <p>{{ formatPoint(bestSemesterStat()?.totalPoint || 0) }} điểm</p>
+              </article>
+            </div>
+          </div>
+        }
+      </section>
+
+      <section class="points-tree-card">
+        <div class="section-heading">
+          <p class="iact-student-eyebrow">Cây tiến độ</p>
+          <h2 class="iact-student-section-title">Điểm theo mục rèn luyện</h2>
+        </div>
+
+        <div class="category-tabs" role="tablist" aria-label="Mục lớn điểm rèn luyện">
+          @for (root of categories(); track trackCategory($index, root)) {
+            <button
+              type="button"
+              class="category-tab"
+              role="tab"
+              [class.is-active]="selectedRootCategory().id === root.id"
+              [attr.aria-selected]="selectedRootCategory().id === root.id"
+              (click)="selectRootCategory(root.id)"
+            >
+              <span class="category-tab__code">{{ root.code }}</span>
+              <strong>{{ root.name }}</strong>
+              <span>{{ formatPoint(root.earnedPoint) }} / {{ formatPoint(root.maxPoint) }} điểm</span>
+            </button>
+          }
+        </div>
+
+        <div class="category-tree">
+          @for (cat of selectedRootCategoryRows(); track trackCategoryRow($index, cat)) {
+            <article
+              class="category-row"
+              [class.is-child]="cat.depth > 0"
+              [class.is-leaf]="cat.isLeaf"
+              [style.--depth]="cat.depth"
+            >
+              <div class="category-row__main">
+                <div class="category-row__title">
+                  <span class="category-code">{{ cat.code }}</span>
+                  <strong>{{ cat.name }}</strong>
+                </div>
+
+                <div class="category-points">
+                  <strong>{{ formatPoint(cat.earnedPoint) }}</strong>
+                  <span>/ {{ formatPoint(cat.maxPoint) }} điểm</span>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div class="history-summary" aria-label="Tóm tắt so sánh học kỳ">
-            <article>
-              <span>Học kỳ đang xem</span>
-              <strong>{{ selectedSemesterStat()?.label || selectedSemesterLabel() }}</strong>
-              <p>
-                {{ formatPoint(selectedSemesterStat()?.totalPoint || totalEarned()) }} /
-                {{ formatPoint(selectedSemesterStat()?.maxPoint || totalMax()) }} điểm
-              </p>
+              <div class="category-row__progress">
+                <div class="progress-track" aria-hidden="true">
+                  <span class="progress-fill" [style.width.%]="cat.percentage"></span>
+                </div>
+                <span>
+                  {{ cat.percentage | number: '1.1-1' }}% - Còn {{ formatPoint(cat.remainingPoint) }} điểm
+                </span>
+              </div>
             </article>
-
-            <article>
-              <span>So với kỳ trước</span>
-              <strong [ngClass]="'history-delta--' + getSemesterDeltaTone()">
-                {{ getSemesterDeltaLabel() }}
-              </strong>
-              <p>
-                @if (previousSemesterStat(); as previous) {
-                  Kỳ trước: {{ formatPoint(previous.totalPoint) }} điểm
-                } @else {
-                  Chưa có dữ liệu so sánh
-                }
-              </p>
-            </article>
-
-            <article>
-              <span>Kỳ cao nhất</span>
-              <strong>{{ bestSemesterStat()?.label || 'Chưa có dữ liệu' }}</strong>
-              <p>{{ formatPoint(bestSemesterStat()?.totalPoint || 0) }} điểm</p>
-            </article>
-          </div>
+          }
         </div>
-      }
-    </section>
-
-    <section class="points-tree-card">
-      <div class="section-heading">
-        <p class="iact-student-eyebrow">Cây tiến độ</p>
-        <h2 class="iact-student-section-title">Điểm theo mục rèn luyện</h2>
-      </div>
-
-      <div class="category-tabs" role="tablist" aria-label="Mục lớn điểm rèn luyện">
-        @for (root of categories(); track trackCategory($index, root)) {
-          <button
-            type="button"
-            class="category-tab"
-            role="tab"
-            [class.is-active]="selectedRootCategory().id === root.id"
-            [attr.aria-selected]="selectedRootCategory().id === root.id"
-            (click)="selectRootCategory(root.id)"
-          >
-            <span class="category-tab__code">{{ root.code }}</span>
-            <strong>{{ root.name }}</strong>
-            <span>{{ formatPoint(root.earnedPoint) }} / {{ formatPoint(root.maxPoint) }} điểm</span>
-          </button>
-        }
-      </div>
-
-      @if (selectedRootCategory(); as root) {
-        <div class="selected-category-summary">
-          <div>
-            <span class="summary-label">Đang xem</span>
-            <strong>{{ root.code }} - {{ root.name }}</strong>
-          </div>
-          <div class="selected-category-summary__score">
-            <strong>{{ formatPoint(root.earnedPoint) }}</strong>
-            <span>/ {{ formatPoint(root.maxPoint) }} điểm</span>
-          </div>
-        </div>
-      }
-
-      <div class="category-tree">
-        @for (cat of selectedRootCategoryRows(); track trackCategoryRow($index, cat)) {
-          <article
-            class="category-row"
-            [class.is-child]="cat.depth > 0"
-            [class.is-leaf]="cat.isLeaf"
-            [style.--depth]="cat.depth"
-          >
-            <div class="category-row__main">
-              <div class="category-row__title">
-                <span class="category-code">{{ cat.code }}</span>
-                <strong>{{ cat.name }}</strong>
-              </div>
-
-              <div class="category-points">
-                <strong>{{ formatPoint(cat.earnedPoint) }}</strong>
-                <span>/ {{ formatPoint(cat.maxPoint) }} điểm</span>
-              </div>
-            </div>
-
-            <div class="category-row__progress">
-              <div class="progress-track" aria-hidden="true">
-                <span
-                  class="progress-fill"
-                  [ngClass]="'progress-fill--' + getStatusTone(getCategoryStatus(cat))"
-                  [style.width.%]="cat.percentage"
-                ></span>
-              </div>
-              <span>
-                {{ cat.percentage | number: '1.1-1' }}% - Còn {{ formatPoint(cat.remainingPoint) }} điểm
-              </span>
-            </div>
-          </article>
-        }
-      </div>
-    </section>
-
-    @if (details().length > 0) {
+      </section>
+    } @else {
       <section class="points-detail-card">
         <div class="section-heading">
-          <p class="iact-student-eyebrow">Hoạt động ghi điểm</p>
-          <h2 class="iact-student-section-title">Chi tiết điểm đã ghi nhận</h2>
+          <p class="iact-student-eyebrow">Hoạt động</p>
+          <h2 class="iact-student-section-title">Các hoạt động và chứng nhận đã ghi điểm</h2>
         </div>
 
-        <div class="points-table-wrap" tabindex="0" aria-label="Bảng chi tiết điểm rèn luyện">
-          <table>
-            <thead>
-              <tr>
-                <th>Nguồn điểm</th>
-                <th>Mục rèn luyện</th>
-                <th>Điểm</th>
-                <th>Ngày nhận</th>
-                <th>Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (detail of details(); track trackContribution($index, detail)) {
+        @if (details().length > 0) {
+          <div class="points-table-wrap" tabindex="0" aria-label="Bảng chi tiết điểm rèn luyện">
+            <table>
+              <thead>
                 <tr>
-                  <td>{{ getContributionTitle(detail) }}</td>
-                  <td>{{ detail.categoryName || 'Chưa phân loại' }}</td>
-                  <td>
-                    <strong>{{ formatPoint(detail.earnedPoint) }}</strong>
-                  </td>
-                  <td>
-                    @if (getContributionDate(detail)) {
-                      {{ getContributionDate(detail) | date: 'dd/MM/yyyy' }}
-                    } @else {
-                      Chưa có
-                    }
-                  </td>
-                  <td>
-                    <span
-                      class="status-pill"
-                      [ngClass]="'status-pill--' + getProofStatusTone(detail.proofStatus)"
-                    >
-                      {{ getProofStatusLabel(detail.proofStatus) }}
-                    </span>
-                  </td>
+                  <th>Nguồn điểm</th>
+                  <th>Mục rèn luyện</th>
+                  <th>Điểm</th>
+                  <th>Ngày nhận</th>
+                  <th>Trạng thái</th>
                 </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                @for (detail of details(); track trackContribution($index, detail)) {
+                  <tr>
+                    <td>{{ getContributionTitle(detail) }}</td>
+                    <td>{{ detail.categoryName || 'Chưa phân loại' }}</td>
+                    <td>
+                      <strong>{{ formatPoint(detail.earnedPoint) }}</strong>
+                    </td>
+                    <td>
+                      @if (getContributionDate(detail)) {
+                        {{ getContributionDate(detail) | date: 'dd/MM/yyyy' }}
+                      } @else {
+                        Chưa có
+                      }
+                    </td>
+                    <td>
+                      <span
+                        class="status-pill"
+                        [ngClass]="'status-pill--' + getProofStatusTone(detail.proofStatus)"
+                      >
+                        {{ getProofStatusLabel(detail.proofStatus) }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <section class="points-state points-state--compact">
+            <span class="points-state__icon">
+              <i class="bi bi-clipboard-data"></i>
+            </span>
+            <h2>Chưa có hoạt động hoặc chứng nhận nào được ghi điểm</h2>
+            <p>Hãy tham gia hoạt động hoặc nộp chứng nhận để hệ thống tổng hợp dữ liệu ở tab này.</p>
+          </section>
+        }
       </section>
     }
   } @else {

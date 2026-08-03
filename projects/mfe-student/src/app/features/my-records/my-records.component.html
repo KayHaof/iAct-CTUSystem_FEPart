@@ -58,6 +58,18 @@
       <button
         type="button"
         role="tab"
+        [attr.aria-selected]="currentTab() === 'OVERDUE'"
+        [class.is-active]="currentTab() === 'OVERDUE'"
+        [class.is-danger]="currentTab() === 'OVERDUE'"
+        (click)="changeTab('OVERDUE')"
+      >
+        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+        Quá hạn
+        <span>{{ tabCount('OVERDUE') }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
         [attr.aria-selected]="currentTab() === 'COMPLETED'"
         [class.is-active]="currentTab() === 'COMPLETED'"
         (click)="changeTab('COMPLETED')"
@@ -88,7 +100,8 @@
         @for (act of filteredActivities(); track act.id) {
           <article
             class="activity-record"
-            [class.is-locked]="act.status === 2 || act.isMissed"
+            [class.is-locked]="act.status === 2"
+            [class.is-overdue]="isActivityOverdue(act)"
             [class.needs-complaint]="isFaceVerificationExhausted(act)"
             [class.needs-action]="
               act.nextAction === 'QR_CHECK_IN' ||
@@ -100,8 +113,10 @@
           >
             <div class="activity-record__main">
               <div class="activity-record__icon" aria-hidden="true">
-                @if (act.status === 2 || act.isMissed) {
+                @if (act.status === 2) {
                   <i class="bi bi-lock"></i>
+                } @else if (isActivityOverdue(act)) {
+                  <i class="bi bi-exclamation-triangle"></i>
                 } @else if (act.nextAction === 'QR_CHECK_IN' || act.nextAction === 'QR_CHECK_OUT') {
                   <i class="bi bi-qr-code-scan"></i>
                 } @else if (isFaceVerificationExhausted(act)) {
@@ -145,9 +160,9 @@
               <span
                 class="status-pill"
                 [class.status-pill--success]="act.status === 1"
-                [class.status-pill--warning]="act.status === 0 && !act.isMissed && !isFaceVerificationExhausted(act)"
-                [class.status-pill--danger]="isFaceVerificationExhausted(act)"
-                [class.status-pill--muted]="act.status === 2 || act.isMissed"
+                [class.status-pill--warning]="act.status === 0 && !isActivityOverdue(act) && !isFaceVerificationExhausted(act)"
+                [class.status-pill--danger]="isFaceVerificationExhausted(act) || isActivityOverdue(act)"
+                [class.status-pill--muted]="act.status === 2"
               >
                 {{ getAttendanceLabel(act) }}
               </span>
@@ -163,21 +178,26 @@
               <span class="mobile-label">Minh chứng</span>
               <span
                 class="status-pill"
-                [class.status-pill--warning]="act.proofStatus === 0 && act.status === 1"
+                [class.status-pill--warning]="act.proofStatus === 0 && act.status === 1 && !isActivityOverdue(act)"
                 [class.status-pill--info]="act.proofStatus === 1"
-                [class.status-pill--success]="act.proofStatus === 2"
-                [class.status-pill--danger]="act.proofStatus === 3"
-                [class.status-pill--muted]="(act.status !== 1 && act.status !== 2) || act.isMissed"
+                [class.status-pill--success]="act.proofStatus === 2 && !isActivityOverdue(act)"
+                [class.status-pill--danger]="act.proofStatus === 3 || isActivityOverdue(act)"
+                [class.status-pill--muted]="act.status !== 1 && act.status !== 2"
               >
                 {{ getProofLabel(act) }}
               </span>
             </div>
 
             <div class="activity-record__actions">
-              @if (act.status === 2 || act.isMissed) {
+              @if (act.status === 2) {
                 <button type="button" class="btn-action btn-action--disabled" disabled>
                   <i class="bi bi-lock-fill" aria-hidden="true"></i>
                   Đã khóa
+                </button>
+              } @else if (isActivityOverdue(act) && act.status === 0) {
+                <button type="button" class="btn-action btn-action--disabled" disabled>
+                  <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                  Đã quá hạn
                 </button>
               } @else if (act.nextAction === 'QR_CHECK_IN' || act.nextAction === 'QR_CHECK_OUT') {
                 <a class="btn-action btn-action--primary" [routerLink]="['/qr-checkin']">

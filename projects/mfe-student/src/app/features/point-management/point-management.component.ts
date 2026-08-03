@@ -96,6 +96,7 @@ interface CategoryRow extends UiCategory {
 }
 
 type PointStatus = 'excellent' | 'good' | 'warning' | 'danger' | 'unknown';
+type PointTab = 'tree' | 'activities';
 
 @Component({
   selector: 'app-point-management',
@@ -117,6 +118,7 @@ export class PointManagementComponent implements OnInit {
   semesters = signal<Semester[]>([]);
   semesterStats = signal<SemesterPointStat[]>([]);
   selectedSemesterId = signal<number>(0);
+  selectedTab = signal<PointTab>('tree');
   isSemesterMenuOpen = signal(false);
   selectedRootCategoryId = signal<number | null>(null);
   isLoading = signal(true);
@@ -132,6 +134,14 @@ export class PointManagementComponent implements OnInit {
   readonly rootCategoryCount = computed(() => this.categories().length);
   readonly categoryCount = computed(() => this.countCategories(this.categories()));
   readonly leafCategoryCount = computed(() => this.countLeafCategories(this.categories()));
+  readonly activityPointTotal = computed(() => this.sumContributionPoints('ACTIVITY'));
+  readonly certificatePointTotal = computed(() => this.sumContributionPoints('CERTIFICATE_SUBMISSION'));
+  readonly activityContributionCount = computed(() =>
+    this.countContributionsBySource('ACTIVITY'),
+  );
+  readonly certificateContributionCount = computed(() =>
+    this.countContributionsBySource('CERTIFICATE_SUBMISSION'),
+  );
   readonly categoryRows = computed(() => this.flattenCategoryRows(this.categories()));
   readonly historyAxisMax = computed(() => this.resolveHistoryAxisMax());
   readonly historyTicks = computed(() => {
@@ -262,6 +272,10 @@ export class PointManagementComponent implements OnInit {
     if (semester) {
       this.selectSemester(semester);
     }
+  }
+
+  selectTab(tab: PointTab): void {
+    this.selectedTab.set(tab);
   }
 
   loadPointData(semesterId: number): void {
@@ -495,7 +509,7 @@ export class PointManagementComponent implements OnInit {
 
   private resolveHistoryAxisMax(): number {
     const rawMax = Math.max(
-      ...this.semesterStats().map((stat) => Math.max(stat.totalPoint, stat.maxPoint)),
+      ...this.semesterStats().map((stat) => stat.totalPoint),
       this.totalMax(),
       1,
     );
@@ -509,11 +523,7 @@ export class PointManagementComponent implements OnInit {
   }
 
   private getHistoryLineValue(stat: SemesterPointStat): number {
-    if (stat.maxPoint <= 0) {
-      return stat.totalPoint;
-    }
-
-    return (stat.percentage / 100) * this.historyAxisMax();
+    return stat.totalPoint;
   }
 
   private normalizeCategoryTree(
@@ -584,6 +594,16 @@ export class PointManagementComponent implements OnInit {
 
     visit(categories);
     return contributions;
+  }
+
+  private sumContributionPoints(sourceType: string): number {
+    return this.details()
+      .filter((detail) => detail.sourceType === sourceType)
+      .reduce((total, detail) => total + Number(detail.earnedPoint || 0), 0);
+  }
+
+  private countContributionsBySource(sourceType: string): number {
+    return this.details().filter((detail) => detail.sourceType === sourceType).length;
   }
 
   private sumEarned(categories: UiCategory[]): number {

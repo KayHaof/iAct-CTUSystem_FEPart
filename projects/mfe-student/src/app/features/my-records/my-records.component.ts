@@ -28,7 +28,7 @@ import { ActivityService } from '../../shared/services/activity.service';
 import { FaceCheckInResponse } from '../../shared/services/attendance.service';
 import { FaceCheckinCaptureComponent } from './face-checkin-capture.component';
 
-type TabMode = 'REGISTERED' | 'ONGOING' | 'PROOF_SUBMITTED' | 'COMPLETED';
+type TabMode = 'REGISTERED' | 'ONGOING' | 'PROOF_SUBMITTED' | 'OVERDUE' | 'COMPLETED';
 type ProofOpenContext = 'COMPLAINT_APPROVED';
 
 export interface UiActivityRecord extends ActivityRecord {
@@ -333,14 +333,13 @@ export class MyRecordsComponent implements OnInit {
 
   getUiTabStatus(act: UiActivityRecord): TabMode | null {
     const now = new Date();
+    const isPastDeadline = !!act.realEndDate && now > act.realEndDate;
 
     if (
       act.participationStatus === 'CANCELLED' ||
       act.participationStatus === 'COMPLETED' ||
-      act.participationStatus === 'MISSED' ||
       act.status === 2 ||
-      (act.status === 1 && act.proofStatus === 2) ||
-      act.isMissed
+      (act.status === 1 && act.proofStatus === 2)
     ) {
       return 'COMPLETED';
     }
@@ -350,6 +349,10 @@ export class MyRecordsComponent implements OnInit {
       (act.status === 1 && act.proofStatus === 1)
     ) {
       return 'PROOF_SUBMITTED';
+    }
+
+    if (this.isRecordOverdue(act, isPastDeadline)) {
+      return 'OVERDUE';
     }
 
     const isHappeningNow =
@@ -389,9 +392,35 @@ export class MyRecordsComponent implements OnInit {
     return this.activities().filter((act) => this.getUiTabStatus(act) === tab).length;
   }
 
+  isActivityOverdue(activity: UiActivityRecord | null | undefined): boolean {
+    return !!activity && this.isRecordOverdue(activity);
+  }
+
+  private isRecordOverdue(activity: UiActivityRecord, isPastDeadline?: boolean): boolean {
+    if (!activity || activity.status === 2 || activity.participationStatus === 'CANCELLED') {
+      return false;
+    }
+
+    const overdue = isPastDeadline ?? (!!activity.realEndDate && new Date() > activity.realEndDate);
+    if (!overdue) {
+      return false;
+    }
+
+    return (
+      activity.isMissed === true ||
+      activity.participationStatus === 'MISSED' ||
+      activity.status === 0 ||
+      (activity.status === 1 && (activity.proofStatus === 0 || activity.proofStatus === 3))
+    );
+  }
+
   getAttendanceLabel(activity: UiActivityRecord): string {
     if (activity.status === 2 || activity.participationStatus === 'CANCELLED') {
       return 'Đã hủy';
+    }
+
+    if (this.isActivityOverdue(activity)) {
+      return activity.status === 0 ? 'Quá hạn điểm danh' : 'Quá hạn minh chứng';
     }
 
     if (activity.isMissed || activity.participationStatus === 'MISSED') {
@@ -426,6 +455,14 @@ export class MyRecordsComponent implements OnInit {
       return 'Không áp dụng';
     }
 
+    if (this.isActivityOverdue(activity)) {
+      if (activity.status === 0) {
+        return 'Quá hạn';
+      }
+
+      return activity.proofStatus === 3 ? 'Quá hạn nộp lại' : 'Quá hạn nộp';
+    }
+
     if (activity.proofStatus === 1) {
       return 'Chờ duyệt';
     }
@@ -444,6 +481,20 @@ export class MyRecordsComponent implements OnInit {
   getRecordNote(activity: UiActivityRecord): string {
     if (activity.cancelReason) {
       return activity.cancelReason;
+    }
+
+    if (this.isActivityOverdue(activity)) {
+      if (activity.status === 0) {
+        return 'Đã quá hạn điểm danh';
+      }
+
+      if (activity.proofStatus === 0) {
+        return 'Đã quá hạn nộp minh chứng';
+      }
+
+      if (activity.proofStatus === 3) {
+        return 'Minh chứng đã quá hạn nộp lại';
+      }
     }
 
     if (activity.isStartingSoon && this.currentTab() === 'REGISTERED') {
@@ -482,7 +533,13 @@ export class MyRecordsComponent implements OnInit {
   }
 
   isFaceVerificationExhausted(activity: UiActivityRecord | null | undefined): boolean {
-    if (!activity || activity.status === 1 || activity.status === 2 || activity.isMissed) {
+    if (
+      !activity ||
+      activity.status === 1 ||
+      activity.status === 2 ||
+      activity.isMissed ||
+      this.isActivityOverdue(activity)
+    ) {
       return false;
     }
 
@@ -501,6 +558,7 @@ export class MyRecordsComponent implements OnInit {
     return (
       !!activity &&
       !this.isFaceVerificationExhausted(activity) &&
+      !this.isActivityOverdue(activity) &&
       (activity.nextAction === 'FACE_VERIFY' || activity.attendanceStatus === 'CHECKED_OUT')
     );
   }
