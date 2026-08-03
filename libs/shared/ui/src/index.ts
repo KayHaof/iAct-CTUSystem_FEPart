@@ -14,6 +14,7 @@ export * from './lib/components/loading-bar/loading-bar.component';
 export * from './lib/components/pagination/pagination.component';
 export * from './lib/components/page-header/page-header.component';
 export * from './lib/components/table-container/table-container.component';
+export * from './lib/components/custom-select/custom-select.component';
 export * from './lib/components/alert-snackbar/alert-snackbar.component';
 export * from './lib/components/confirm-dialog/confirm-dialog.component';
 export * from './lib/components/status-badge/status-badge.component';

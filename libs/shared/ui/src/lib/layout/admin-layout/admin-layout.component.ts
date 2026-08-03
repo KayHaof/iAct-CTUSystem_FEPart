@@ -48,6 +48,7 @@ export class AdminLayoutComponent implements OnInit {
       return [
         { label: 'Tổng quan', link: '/admin/dashboard', icon: 'bi bi-grid-fill' },
         { label: 'Quản lý hoạt động', link: '/admin/org/activities', icon: 'bi bi-calendar-plus' },
+        { label: 'Duyệt hoạt động', link: '/admin/org/approvals', icon: 'bi bi-check2-circle' },
         { label: 'Duyệt giấy khen', link: '/admin/org/certificates', icon: 'bi bi-award-fill' },
         { label: 'Địa điểm đơn vị', link: '/admin/org/locations', icon: 'bi bi-building-gear' },
         {
