@@ -18,7 +18,6 @@ import {
   AlertService,
   ConfirmService,
   ConfirmDialogComponent,
-  // PageHeaderComponent,
   TableContainerComponent,
 } from '@my-mfe/ui';
 import { CloudinaryPathPipe } from '@my-mfe/data-access-media';
@@ -38,12 +37,9 @@ import { ActivityComplaintsComponent } from './activity-complaints/activity-comp
     CommonModule,
     FormsModule,
     PaginationComponent,
-
-    // PageHeaderComponent,
-
     TableContainerComponent,
     NgOptimizedImage,
-    CloudinaryPathPipe, // Import pipe
+    CloudinaryPathPipe,
     ConfirmDialogComponent,
     ActivityComplaintsComponent,
   ],

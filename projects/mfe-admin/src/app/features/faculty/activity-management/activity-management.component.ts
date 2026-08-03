@@ -13,6 +13,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { Activity } from '../../../shared/models/activity.model';
 import { ActivityService } from '../services/activity.service';
+import { UserService } from '@my-mfe/auth';
 import { AlertService, ConfirmService } from '@my-mfe/ui';
 import { ApiResponse } from '@my-mfe/interface';
 
@@ -31,9 +32,11 @@ export class ActivityManagementComponent implements OnInit {
   private activityService = inject(ActivityService);
   private alertService = inject(AlertService);
   private confirmService = inject(ConfirmService);
+  private userService = inject(UserService);
 
   activity = signal<Activity | null>(null);
   isLoading = signal<boolean>(true);
+  readonly isDepartmentRole = computed(() => Number(this.userService.currentUser()?.roleType) === 2);
 
   showQrModal = signal<boolean>(false);
   qrCodeImage = signal<string | null>(null);
@@ -118,6 +121,52 @@ export class ActivityManagementComponent implements OnInit {
     } catch {
       // User cancelled, do nothing
     }
+  }
+
+  canEditOrDelete(activity: Activity): boolean {
+    if (activity.status === 3) {
+      return true;
+    }
+    if (activity.status !== 0) {
+      return false;
+    }
+    return !(this.isDepartmentRole() && this.isPendingAdminApproval(activity));
+  }
+
+  canRequestAdminSupport(activity: Activity): boolean {
+    return this.isDepartmentRole() && this.isPendingAdminApproval(activity);
+  }
+
+  isPendingAdminApproval(activity: Activity): boolean {
+    return activity.status === 0 && !!activity.requiresAdminApproval;
+  }
+
+  async requestAdminSupport(): Promise<void> {
+    const act = this.activity();
+    if (!act || !act.id) return;
+
+    await this.confirmService.confirm({
+      title: 'Gửi yêu cầu hỗ trợ?',
+      message: 'Admin sẽ nhận thông báo về hoạt động đang chờ duyệt này.',
+      confirmText: 'Gửi yêu cầu',
+      cancelText: 'Hủy',
+      type: 'warning',
+      onConfirm: () => {
+        this.isLoading.set(true);
+        this.activityService
+          .requestAdminSupport(act.id, 'Cần hỗ trợ hủy hoạt động đang chờ duyệt.')
+          .pipe(finalize(() => this.isLoading.set(false)))
+          .subscribe({
+            next: () => {
+              this.alertService.success('Đã gửi yêu cầu hỗ trợ lên admin.');
+            },
+            error: (err: HttpErrorResponse) => {
+              console.error('Lỗi khi gửi yêu cầu hỗ trợ:', err);
+              this.alertService.error(err.error?.message || 'Không thể gửi yêu cầu hỗ trợ.');
+            },
+          });
+      },
+    });
   }
 
   manageParticipants(): void {

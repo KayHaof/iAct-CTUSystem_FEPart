@@ -499,6 +499,15 @@ export class NotificationFacade {
       return this.adminCertificateTarget(topic);
     }
 
+    if (activityId && this.topicIncludes(topic, 'activity.submitted')) {
+      return {
+        commands: ['/admin/org/approvals'],
+        queryParams: { activityId },
+        label: 'Duyệt hoạt động',
+        contextLabel: 'Hoạt động chờ duyệt',
+      };
+    }
+
     if (activityId && this.topicIncludes(topic, 'proof')) {
       return {
         commands: ['/admin/org/activities/participants', activityId],

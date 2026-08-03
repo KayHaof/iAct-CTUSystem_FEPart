@@ -9,20 +9,6 @@
           đơn vị.
         </p>
       </div>
-      <div class="rep-stats" aria-label="Thống kê đại diện">
-        <article>
-          <span>{{ representatives().length }}</span>
-          <p>Bản ghi</p>
-        </article>
-        <article>
-          <span>{{ activeCount() }}</span>
-          <p>Đang hiệu lực</p>
-        </article>
-        <article>
-          <span>{{ manageableClasses().length }}</span>
-          <p>Lớp quản lý</p>
-        </article>
-      </div>
     </header>
 
     @if (!isDepartmentManager()) {

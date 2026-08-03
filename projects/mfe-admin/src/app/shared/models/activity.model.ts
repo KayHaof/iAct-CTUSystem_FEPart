@@ -70,6 +70,7 @@ export interface ActivityRequest {
   sourceLink?: string | null;
   isExternal: boolean;
   isFaculty: boolean;
+  requiresAdminApproval?: boolean;
   registrationStart?: string | null;
   registrationEnd?: string | null;
   startDate?: string | null;
@@ -94,6 +95,7 @@ export interface Activity {
   sourceLink: string | null;
   isExternal: boolean;
   isFaculty: boolean;
+  requiresAdminApproval?: boolean;
   registrationStart: string;
   registrationEnd: string;
   startDate: string;

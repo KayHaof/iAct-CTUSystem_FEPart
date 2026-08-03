@@ -402,17 +402,58 @@
   color: #075985;
 }
 
-.proposal-reason {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-  border-radius: 10px;
-  background: #fef2f2;
+.status--with-tooltip {
+  position: relative;
+  overflow: visible;
+  cursor: help;
+}
+
+.status__tooltip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 20;
+  width: max-content;
+  max-width: min(280px, 42vw);
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fff1f2;
+  box-shadow: 0 12px 24px rgb(15 23 42 / 0.16);
   color: #991b1b;
-  padding: 9px 10px;
+  padding: 8px 10px;
   font-size: 12px;
   font-weight: 700;
   line-height: 1.5;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease,
+    visibility 140ms ease;
+  visibility: hidden;
+  white-space: normal;
+}
+
+.status__tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 18px;
+  border: 7px solid transparent;
+  border-top-color: #fff1f2;
+}
+
+.status--with-tooltip:hover .status__tooltip,
+.status--with-tooltip:focus-visible .status__tooltip {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.status--with-tooltip:focus-visible {
+  outline: 2px solid rgb(37 99 235 / 0.22);
+  outline-offset: 2px;
 }
 
 .proposal-row__actions {

@@ -27,110 +27,146 @@ import { CommonModule } from '@angular/common';
       }
     </div>
   `,
-  styles: [`
-    .admin-stat-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      padding: 1.25rem 1.5rem;
-      transition: all 0.2s ease;
-      position: relative;
-      overflow: hidden;
+  styles: [
+    `
+      .admin-stat-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 1.25rem 1.5rem;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
 
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        opacity: 0.9;
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          opacity: 0.9;
+        }
+
+        &:hover {
+          border-color: rgba(37, 99, 235, 0.2);
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-lg);
+        }
+
+        &--primary::before {
+          background: var(--gradient-primary);
+        }
+        &--success::before {
+          background: var(--gradient-success);
+        }
+        &--warning::before {
+          background: var(--gradient-warning);
+        }
+        &--danger::before {
+          background: var(--gradient-danger);
+        }
+        &--info::before {
+          background: linear-gradient(135deg, #0284c7, #0ea5e9);
+        }
       }
 
-      &:hover {
-        border-color: rgba(37, 99, 235, 0.2);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
+      .stat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
       }
 
-      &--primary::before { background: var(--gradient-primary); }
-      &--success::before { background: var(--gradient-success); }
-      &--warning::before { background: var(--gradient-warning); }
-      &--danger::before { background: var(--gradient-danger); }
-      &--info::before { background: linear-gradient(135deg, #0284c7, #0ea5e9); }
-    }
+      .stat-icon {
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
 
-    .stat-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
+        &--primary {
+          background: var(--primary-light);
+          color: var(--primary);
+        }
+        &--info {
+          background: var(--info-bg);
+          color: var(--info);
+        }
+        &--success {
+          background: var(--success-bg);
+          color: var(--success);
+        }
+        &--warning {
+          background: var(--warning-bg);
+          color: var(--warning);
+        }
+      }
 
-    .stat-icon {
-      width: 2.75rem;
-      height: 2.75rem;
-      border-radius: var(--radius-lg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
+      .stat-trend {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--radius-full);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
 
-      &--primary { background: var(--primary-light); color: var(--primary); }
-      &--info { background: var(--info-bg); color: var(--info); }
-      &--success { background: var(--success-bg); color: var(--success); }
-      &--warning { background: var(--warning-bg); color: var(--warning); }
-    }
+        &--up {
+          background: var(--success-bg);
+          color: var(--success);
+        }
+        &--neutral {
+          background: rgba(148, 163, 184, 0.08);
+          color: #94a3b8;
+        }
+      }
 
-    .stat-trend {
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 0.25rem 0.5rem;
-      border-radius: var(--radius-full);
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
+      .stat-value {
+        font-size: 2.25rem;
+        font-weight: 900;
+        color: var(--text);
+        line-height: 1;
+        margin-bottom: 0.375rem;
+        letter-spacing: -0.02em;
+      }
 
-      &--up { background: var(--success-bg); color: var(--success); }
-      &--neutral { background: rgba(148, 163, 184, 0.08); color: #94a3b8; }
-    }
+      .stat-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
+      }
 
-    .stat-value {
-      font-size: 2.25rem;
-      font-weight: 900;
-      color: var(--text);
-      line-height: 1;
-      margin-bottom: 0.375rem;
-      letter-spacing: -0.02em;
-    }
+      .stat-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--text-disabled);
+        font-weight: 500;
+      }
 
-    .stat-label {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 0.75rem;
-    }
+      .stat-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
 
-    .stat-meta {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.75rem;
-      color: var(--text-disabled);
-      font-weight: 500;
-    }
-
-    .stat-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
-
-      &--emerald { background: var(--success); }
-      &--blue { background: var(--info); }
-      &--amber { background: var(--warning); }
-    }
-  `],
+        &--emerald {
+          background: var(--success);
+        }
+        &--blue {
+          background: var(--info);
+        }
+        &--amber {
+          background: var(--warning);
+        }
+      }
+    `,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminStatCardComponent {

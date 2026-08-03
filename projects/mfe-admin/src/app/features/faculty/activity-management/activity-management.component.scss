@@ -1,3 +1,7 @@
+@use '../faculty-layout' as faculty;
+
+@include faculty.page-base;
+
 // ==============================================
 // ADMIN ACTIVITY MANAGEMENT STYLES - Mobile Responsive
 // ==============================================

@@ -121,14 +121,32 @@ export const routes: Routes = [
       },
       {
         path: 'approvals',
-        redirectTo: 'activities',
-        pathMatch: 'full',
+        canActivate: [roleGuard],
+        data: { roles: ['department'] },
+        children: [
+          {
+            path: '',
+            title: 'Duyệt hoạt động | iAct CTU',
+            loadComponent: () =>
+              import('./features/faculty/activity-approval/activity-approval.component').then(
+                (m) => m.ActivityApprovalComponent,
+              ),
+          },
+          {
+            path: ':id',
+            title: 'Chi tiết duyệt hoạt động | iAct CTU',
+            loadComponent: () =>
+              import('./features/faculty/activity-approval/activity-approval.component').then(
+                (m) => m.ActivityApprovalComponent,
+              ),
+          },
+        ],
       },
       { path: 'students', redirectTo: 'activities', pathMatch: 'full' },
     ],
   },
 
-  { path: 'approvals', redirectTo: 'org/activities', pathMatch: 'full' },
+  { path: 'approvals', redirectTo: 'org/approvals', pathMatch: 'full' },
   { path: 'certificates', redirectTo: 'org/certificates', pathMatch: 'full' },
 
   {

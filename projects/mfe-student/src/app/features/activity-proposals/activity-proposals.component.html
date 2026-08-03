@@ -118,17 +118,21 @@
                 </span>
               </div>
 
-              @if (activity.status === 2) {
-                <div class="proposal-reason">
-                  <i class="bi bi-info-circle"></i>
-                  <span>{{ activity.reason || 'Đơn vị duyệt chưa nhập lý do từ chối.' }}</span>
-                </div>
-              }
             </div>
 
             <div class="proposal-row__actions">
-              <span [class]="statusClass(activity.status)">
+              <span
+                [ngClass]="statusClass(activity.status)"
+                [class.status--with-tooltip]="activity.status === 2"
+                [attr.aria-describedby]="activity.status === 2 ? 'rejection-reason-' + activity.id : null"
+                [attr.tabindex]="activity.status === 2 ? 0 : null"
+              >
                 {{ activity.statusLabel || statusLabel(activity.status) }}
+                @if (activity.status === 2) {
+                  <span class="status__tooltip" [id]="'rejection-reason-' + activity.id" role="tooltip">
+                    {{ rejectionReason(activity) }}
+                  </span>
+                }
               </span>
               <a [routerLink]="['/activity-proposal', activity.id]" class="secondary-link">
                 <i class="bi bi-pencil-square"></i>

@@ -55,6 +55,8 @@ export interface CertificateSubmissionQuery {
 export interface CertificateReviewRequest {
   approvedCategoryId: number;
   approvedPoint: number;
+  certificateTitle?: string | null;
+  achievement?: string | null;
   reviewNote?: string | null;
 }
 
@@ -92,11 +94,20 @@ export class CertificateApprovalService {
     id: number,
     request: CertificateReviewRequest,
   ): Observable<ApiResponse<CertificateSubmission>> {
-    return this.http.put<ApiResponse<CertificateSubmission>>(`${this.apiUrl}/${id}/approve`, request);
+    return this.http.put<ApiResponse<CertificateSubmission>>(
+      `${this.apiUrl}/${id}/approve`,
+      request,
+    );
   }
 
-  reject(id: number, request: CertificateRejectRequest): Observable<ApiResponse<CertificateSubmission>> {
-    return this.http.put<ApiResponse<CertificateSubmission>>(`${this.apiUrl}/${id}/reject`, request);
+  reject(
+    id: number,
+    request: CertificateRejectRequest,
+  ): Observable<ApiResponse<CertificateSubmission>> {
+    return this.http.put<ApiResponse<CertificateSubmission>>(
+      `${this.apiUrl}/${id}/reject`,
+      request,
+    );
   }
 
   getSemesters(): Observable<ApiResponse<Semester[]>> {

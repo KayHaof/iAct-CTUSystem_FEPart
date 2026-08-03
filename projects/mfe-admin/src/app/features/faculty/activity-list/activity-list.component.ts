@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -10,10 +10,10 @@ import {
   AlertService,
   ConfirmService,
   TableContainerComponent,
-  PageHeaderComponent,
 } from '@my-mfe/ui';
 import { CloudinaryPathPipe } from '@my-mfe/data-access-media';
 import { NotificationService } from '@my-mfe/data-access-notification';
+import { UserService } from '@my-mfe/auth';
 import { Activity } from '../../../shared/models/activity.model';
 import { ActivityService } from '../services/activity.service';
 import { ParticipantService } from '../services/participant.service';
@@ -33,12 +33,12 @@ interface ActivityNotificationForm {
     RouterModule,
     FormsModule,
     PaginationComponent,
-    PageHeaderComponent,
     TableContainerComponent,
     NgOptimizedImage,
     CloudinaryPathPipe,
   ],
   templateUrl: './activity-list.component.html',
+  styleUrl: './activity-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ActivityListComponent implements OnInit {
@@ -48,6 +48,7 @@ export class ActivityListComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private alertService = inject(AlertService);
   private confirmService = inject(ConfirmService);
+  private userService = inject(UserService);
 
   // --- QUẢN LÝ TRẠNG THÁI ---
   searchQuery = signal('');
@@ -63,6 +64,7 @@ export class ActivityListComponent implements OnInit {
   selectedNotificationActivity = signal<Activity | null>(null);
   isSendingNotification = signal(false);
   recipientCountPreview = signal<number | null>(null);
+  readonly isDepartmentRole = computed(() => Number(this.userService.currentUser()?.roleType) === 2);
 
   notificationForm: ActivityNotificationForm = {
     title: '',
@@ -158,7 +160,7 @@ export class ActivityListComponent implements OnInit {
 
   getCapacityPercentage(current: number, max: number): number {
     if (!max || max === 0) return 0;
-    return (current / max) * 100;
+    return Math.min(100, Math.max(0, (current / max) * 100));
   }
 
   viewDetails(id: number): void {
@@ -167,6 +169,45 @@ export class ActivityListComponent implements OnInit {
 
   editActivity(id: number): void {
     this.router.navigate(['/admin/org/activities/edit', id]);
+  }
+
+  canEditOrDelete(activity: Activity): boolean {
+    if (activity.status !== 0 && activity.status !== 3) {
+      return false;
+    }
+    return !(this.isDepartmentRole() && this.isPendingAdminApproval(activity));
+  }
+
+  canRequestAdminSupport(activity: Activity): boolean {
+    return this.isDepartmentRole() && this.isPendingAdminApproval(activity);
+  }
+
+  isPendingAdminApproval(activity: Activity): boolean {
+    return activity.status === 0 && !!activity.requiresAdminApproval;
+  }
+
+  async requestAdminSupport(activity: Activity): Promise<void> {
+    await this.confirmService.confirm({
+      title: 'Gửi yêu cầu hỗ trợ?',
+      message: 'Admin sẽ nhận thông báo về hoạt động đang chờ duyệt này.',
+      confirmText: 'Gửi yêu cầu',
+      cancelText: 'Hủy',
+      type: 'warning',
+      onConfirm: () => {
+        this.isLoading.set(true);
+        this.activityService
+          .requestAdminSupport(activity.id, 'Cần hỗ trợ hủy hoạt động đang chờ duyệt.')
+          .pipe(finalize(() => this.isLoading.set(false)))
+          .subscribe({
+            next: () => {
+              this.alertService.success('Đã gửi yêu cầu hỗ trợ lên admin.');
+              this.fetchActivities();
+            },
+            error: (err: HttpErrorResponse) =>
+              this.alertService.error(err.error?.message || 'Không thể gửi yêu cầu hỗ trợ.'),
+          });
+      },
+    });
   }
 
   openNotificationModal(activity: Activity): void {

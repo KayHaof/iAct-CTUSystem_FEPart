@@ -1,4 +1,4 @@
-import {
+﻿import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
@@ -75,11 +75,22 @@ export class ActivityCreateComponent implements OnInit {
   isLoadingData = signal<boolean>(false);
   isSaving = signal<boolean>(false);
   currentStatus = signal<number>(0);
+  currentRequiresAdminApproval = signal<boolean>(true);
   currentStep = signal<ActivityWizardStep>(1);
   highestVisitedStep = signal<ActivityWizardStep>(1);
-  canSave = computed(
-    () => !this.isEditMode() || this.currentStatus() === 0 || this.currentStatus() === 3,
-  );
+  readonly isDepartmentRole = computed(() => Number(this.userService.currentUser()?.roleType) === 2);
+  canSave = computed(() => {
+    if (!this.isEditMode()) {
+      return true;
+    }
+    if (this.currentStatus() === 3) {
+      return true;
+    }
+    if (this.currentStatus() === 0 && this.isDepartmentRole() && this.currentRequiresAdminApproval()) {
+      return false;
+    }
+    return this.currentStatus() === 0;
+  });
   stepProgress = computed(() => this.currentStep() * 25);
 
   readonly wizardSteps: WizardStep[] = [
@@ -148,6 +159,7 @@ export class ActivityCreateComponent implements OnInit {
     source_link: [''],
     is_external: [false],
     is_faculty: [false],
+    requires_admin_approval: [true],
     registration_start: ['', Validators.required],
     registration_end: ['', Validators.required],
     start_date: ['', Validators.required],
@@ -162,6 +174,9 @@ export class ActivityCreateComponent implements OnInit {
   });
 
   ngOnInit() {
+    this.activityForm
+      .get('requires_admin_approval')
+      ?.valueChanges.subscribe((value) => this.currentRequiresAdminApproval.set(!!value));
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.isEditMode.set(true);
@@ -194,6 +209,7 @@ export class ActivityCreateComponent implements OnInit {
       .subscribe({
         next: (act: Activity) => {
           this.currentStatus.set(act.status || 0);
+          this.currentRequiresAdminApproval.set(!!act.requiresAdminApproval);
           const baseLocation = this.resolveScheduleLocation(act, act.schedules?.[0]);
 
           this.activityForm.patchValue({
@@ -203,6 +219,7 @@ export class ActivityCreateComponent implements OnInit {
             source_link: act.sourceLink,
             is_external: act.isExternal,
             is_faculty: act.isFaculty,
+            requires_admin_approval: !!act.requiresAdminApproval,
             registration_start: this.formatDateForInput(act.registrationStart),
             registration_end: this.formatDateForInput(act.registrationEnd),
             start_date: this.formatDateForInput(act.startDate),
@@ -214,6 +231,11 @@ export class ActivityCreateComponent implements OnInit {
             thumbnail: act.thumbnail,
           });
           this.availableLocations.set(baseLocation ? [baseLocation] : []);
+          if (this.canSave()) {
+            this.activityForm.enable({ emitEvent: false });
+          } else {
+            this.activityForm.disable({ emitEvent: false });
+          }
 
           if (act.benefits && act.benefits.length > 0) {
             this.benefits.clear();
@@ -656,6 +678,14 @@ export class ActivityCreateComponent implements OnInit {
     return data.is_faculty ? 'Cấp Khoa' : 'Cấp Trường';
   }
 
+  getApprovalModeLabel(): string {
+    if (!this.isDepartmentRole()) {
+      return 'Trực tiếp';
+    }
+    const requiresAdminApproval = Boolean(this.activityForm.get('requires_admin_approval')?.value);
+    return requiresAdminApproval ? 'Cần duyệt' : 'Trực tiếp';
+  }
+
   private normalizeRomanCode(code: string | null | undefined): string {
     return (code || '')
       .replaceAll('[', '')
@@ -915,14 +945,19 @@ export class ActivityCreateComponent implements OnInit {
 
     const wasEditMode = this.isEditMode();
     const wasDraft = this.currentStatus() === 3;
+    const needsAdminApproval = this.isDepartmentRole() && Boolean(data.requires_admin_approval);
     const successMsg =
       finalStatus === 3
         ? wasEditMode
           ? 'Đã lưu lại bản nháp.'
           : 'Đã lưu bản nháp.'
-        : wasEditMode && !wasDraft
-          ? 'Đã lưu thay đổi.'
-          : 'Đã gửi hoạt động để xét duyệt.';
+        : needsAdminApproval
+          ? wasEditMode
+            ? 'Đã cập nhật và gửi lại để admin duyệt.'
+            : 'Đã gửi hoạt động để admin duyệt.'
+          : wasEditMode && !wasDraft
+            ? 'Đã lưu thay đổi.'
+            : 'Đã tạo hoạt động trực tiếp.';
 
     forkJoin([uploadCover$, uploadThumb$])
       .pipe(
@@ -1000,6 +1035,7 @@ export class ActivityCreateComponent implements OnInit {
             sourceLink: data.source_link || null,
             isExternal: Boolean(data.is_external),
             isFaculty: !data.is_external && Boolean(data.is_faculty),
+            requiresAdminApproval: finalStatus === 3 ? Boolean(data.requires_admin_approval) : needsAdminApproval,
 
             registrationStart: data.registration_start
               ? this.formatDateTime(data.registration_start)
@@ -1034,7 +1070,8 @@ export class ActivityCreateComponent implements OnInit {
       )
       .subscribe({
         next: (savedActivity: Activity) => {
-          this.currentStatus.set(finalStatus);
+          this.currentStatus.set(savedActivity.status ?? finalStatus);
+          this.currentRequiresAdminApproval.set(!!savedActivity.requiresAdminApproval);
 
           if (finalStatus === 3) {
             this.activityForm.markAsPristine();
@@ -1118,4 +1155,35 @@ export class ActivityCreateComponent implements OnInit {
         },
       });
   }
+  getStatusBadgeLabel(): string {
+    switch (this.currentStatus()) {
+      case 0:
+        return 'Đang chờ duyệt';
+      case 1:
+        return 'Đã duyệt';
+      case 2:
+        return 'Từ chối';
+      case 3:
+        return 'Bản nháp';
+      case 4:
+        return 'Đã hủy';
+      default:
+        return 'Đã lưu';
+    }
+  }
+
+  getStatusBadgeClass(): string {
+    switch (this.currentStatus()) {
+      case 1:
+        return 'bg-emerald-50 text-emerald-700';
+      case 2:
+      case 4:
+        return 'bg-rose-50 text-rose-700';
+      case 3:
+        return 'bg-slate-100 text-slate-600';
+      default:
+        return 'bg-amber-50 text-amber-700';
+    }
+  }
 }
+

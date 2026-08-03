@@ -19,6 +19,7 @@ export interface Activity {
   departmentName?: string;
   semesterId?: number;
   status?: number;
+  requiresAdminApproval?: boolean;
   registeredCount?: number;
   categoryId?: number;
   categoryName?: string;

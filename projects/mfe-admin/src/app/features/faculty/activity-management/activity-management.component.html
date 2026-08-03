@@ -1,4 +1,4 @@
-<div class="admin-page-wrapper">
+<main class="faculty-page admin-page-wrapper">
   @if (isLoading()) {
     <div class="admin-loading-state">
       <div class="admin-spinner"></div>
@@ -13,8 +13,9 @@
       </button>
 
       <!-- Header: Tieu de va Nut hanh dong -->
-      <div class="admin-activity-header">
+      <div class="admin-activity-header faculty-header">
         <div class="admin-activity-header__left">
+          <p class="faculty-eyebrow">Chi tiết hoạt động</p>
           <h1 class="admin-activity-header__title">{{ act.title }}</h1>
           <div class="admin-activity-header__badges">
             <span class="badge-admin" [ngClass]="getStatusBadgeClass(act.status)">
@@ -24,6 +25,13 @@
             <span class="badge-admin badge-admin--info">
               <i [ngClass]="getLevelIcon(act)"></i>
               {{ getLevelLabel(act) }}
+            </span>
+            <span
+              class="badge-admin"
+              [ngClass]="act.requiresAdminApproval ? 'badge-admin--warning' : 'badge-admin--success'"
+            >
+              <i class="bi" [ngClass]="act.requiresAdminApproval ? 'bi-shield-exclamation' : 'bi-lightning-fill'"></i>
+              {{ act.requiresAdminApproval ? 'Cần duyệt' : 'Trực tiếp' }}
             </span>
           </div>
         </div>
@@ -37,7 +45,7 @@
             <i class="bi bi-qr-code-scan"></i>
             QR Code
           </button>
-          @if (act.status === 0 || act.status === 3) {
+          @if (canEditOrDelete(act)) {
             <button type="button" class="btn-admin-primary" (click)="editActivity()">
               <i class="bi bi-pencil-fill"></i>
               Chỉnh sửa
@@ -45,6 +53,12 @@
             <button type="button" class="btn-admin-danger-outline" (click)="deleteActivity()">
               <i class="bi bi-trash-fill"></i>
               Xóa
+            </button>
+          }
+          @if (canRequestAdminSupport(act)) {
+            <button type="button" class="btn-admin-secondary" (click)="requestAdminSupport()">
+              <i class="bi bi-life-preserver"></i>
+              Gửi hỗ trợ
             </button>
           }
         </div>
@@ -313,4 +327,4 @@
       </div>
     }
   }
-</div>
+</main>

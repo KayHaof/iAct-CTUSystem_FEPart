@@ -41,9 +41,6 @@ export class ClassRepresentativeManagementComponent implements OnInit {
   readonly selectedClassId = signal<number | ''>('');
   readonly activeFilter = signal<'true' | 'false' | ''>('true');
   readonly isDepartmentManager = computed(() => this.userService.currentUser()?.roleType === 2);
-  readonly activeCount = computed(
-    () => this.representatives().filter((representative) => representative.isActive).length,
-  );
 
   readonly manageableClasses = computed(() => {
     const user = this.userService.currentUser();

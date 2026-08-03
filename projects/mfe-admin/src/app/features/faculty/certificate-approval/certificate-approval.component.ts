@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { finalize, catchError } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
-import { AlertService, PaginationComponent } from '@my-mfe/ui';
+import { AlertService, CustomSelectComponent, PaginationComponent } from '@my-mfe/ui';
 import { PageDTO, Semester } from '@my-mfe/interface';
 import { CategoryResponse } from '../../../shared/models/category.model';
 import { CategoryService } from '../services/category.service';
@@ -30,12 +30,13 @@ interface CategoryOption {
   category: CategoryResponse;
   depth: number;
   label: string;
+  description: string;
 }
 
 @Component({
   selector: 'app-certificate-approval',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, CustomSelectComponent, PaginationComponent],
   templateUrl: './certificate-approval.component.html',
   styleUrl: './certificate-approval.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -72,13 +73,26 @@ export class CertificateApprovalComponent implements OnInit {
 
   reviewCategoryId = signal<number | null>(null);
   reviewPoint = signal<number | null>(null);
+  reviewCertificateTitle = signal('');
+  reviewAchievement = signal('');
   reviewNote = signal('');
   rejectReason = signal('');
 
   readonly pendingCount = computed(() => this.statusTotals().pending);
   readonly approvedCount = computed(() => this.statusTotals().approved);
   readonly rejectedCount = computed(() => this.statusTotals().rejected);
+  readonly totalCount = computed(
+    () => this.pendingCount() + this.approvedCount() + this.rejectedCount(),
+  );
   readonly categoryOptions = computed(() => this.flattenCategoryOptions(this.categoryTree()));
+  readonly reviewCategoryOptions = computed(() =>
+    this.categoryOptions().map((option) => ({
+      value: option.category.id,
+      label: option.category.name,
+      description: option.description,
+      icon: 'bi-award',
+    })),
+  );
   readonly selectedCategory = computed(
     () =>
       this.categoryOptions().find((option) => option.category.id === this.reviewCategoryId())
@@ -175,6 +189,13 @@ export class CertificateApprovalComponent implements OnInit {
     this.loadSubmissions();
   }
 
+  statusCount(status: CertificateSubmissionStatus | null): number {
+    if (status === 0) return this.pendingCount();
+    if (status === 1) return this.approvedCount();
+    if (status === 2) return this.rejectedCount();
+    return this.totalCount();
+  }
+
   selectSemester(semesterId: number | null): void {
     this.selectedSemesterId.set(semesterId);
     this.currentPage.set(1);
@@ -213,20 +234,25 @@ export class CertificateApprovalComponent implements OnInit {
   }
 
   openApprove(submission: CertificateSubmission): void {
+    this.detailSubmission.set(null);
     this.approvingSubmission.set(submission);
     const suggestedCategory = this.categoryOptions().find(
       (option) => option.category.id === submission.suggestedCategoryId,
     );
     this.reviewCategoryId.set(suggestedCategory?.category.id ?? null);
     this.reviewPoint.set(submission.suggestedPoint ?? null);
+    this.reviewCertificateTitle.set(submission.certificateTitle || '');
+    this.reviewAchievement.set(submission.achievement || '');
     this.reviewNote.set(submission.suggestionReason || '');
   }
 
-  closeApprove(): void {
-    if (this.processingId()) return;
+  closeApprove(force = false): void {
+    if (this.processingId() && !force) return;
     this.approvingSubmission.set(null);
     this.reviewCategoryId.set(null);
     this.reviewPoint.set(null);
+    this.reviewCertificateTitle.set('');
+    this.reviewAchievement.set('');
     this.reviewNote.set('');
   }
 
@@ -245,13 +271,16 @@ export class CertificateApprovalComponent implements OnInit {
       .approve(submission.id, {
         approvedCategoryId: category.id,
         approvedPoint: point,
+        certificateTitle: this.reviewCertificateTitle().trim() || null,
+        achievement: this.reviewAchievement().trim() || null,
         reviewNote: this.reviewNote().trim() || null,
       })
       .pipe(finalize(() => this.processingId.set(null)))
       .subscribe({
         next: () => {
           this.alertService.success('Đã duyệt giấy khen và ghi nhận điểm.');
-          this.closeApprove();
+          this.processingId.set(null);
+          this.closeApprove(true);
           this.closeDetail();
           this.loadStatusTotals();
           this.loadSubmissions();
@@ -260,13 +289,24 @@ export class CertificateApprovalComponent implements OnInit {
       });
   }
 
+  setReviewCategoryValue(value: number | string | boolean | null): void {
+    if (value === null || value === '') {
+      this.reviewCategoryId.set(null);
+      return;
+    }
+
+    const parsed = Number(value);
+    this.reviewCategoryId.set(Number.isFinite(parsed) ? parsed : null);
+  }
+
   openReject(submission: CertificateSubmission): void {
+    this.detailSubmission.set(null);
     this.rejectingSubmission.set(submission);
     this.rejectReason.set(submission.rejectionReason || '');
   }
 
-  closeReject(): void {
-    if (this.processingId()) return;
+  closeReject(force = false): void {
+    if (this.processingId() && !force) return;
     this.rejectingSubmission.set(null);
     this.rejectReason.set('');
   }
@@ -283,7 +323,8 @@ export class CertificateApprovalComponent implements OnInit {
       .subscribe({
         next: () => {
           this.alertService.success('Đã từ chối giấy khen.');
-          this.closeReject();
+          this.processingId.set(null);
+          this.closeReject(true);
           this.closeDetail();
           this.loadStatusTotals();
           this.loadSubmissions();
@@ -337,8 +378,9 @@ export class CertificateApprovalComponent implements OnInit {
 
   displayExtractedStudent(submission: CertificateSubmission): string {
     return (
-      [submission.extractedStudentCode, submission.extractedStudentName].filter(Boolean).join(' - ') ||
-      'AI chưa nhận diện rõ'
+      [submission.extractedStudentCode, submission.extractedStudentName]
+        .filter(Boolean)
+        .join(' - ') || 'AI chưa nhận diện rõ'
     );
   }
 
@@ -355,7 +397,9 @@ export class CertificateApprovalComponent implements OnInit {
   getCategoryMaxLabel(): string {
     const category = this.selectedCategory();
     if (!category) return 'Chọn tiêu chí để xem mức điểm tối đa';
-    return category.maxPoint > 0 ? `Tối đa ${category.maxPoint} điểm` : 'Không giới hạn điểm tối đa';
+    return category.maxPoint > 0
+      ? `Tối đa ${category.maxPoint} điểm`
+      : 'Không giới hạn điểm tối đa';
   }
 
   trackSubmission(_: number, submission: CertificateSubmission): number {
@@ -385,11 +429,21 @@ export class CertificateApprovalComponent implements OnInit {
             {
               category,
               depth,
-              label: `${'-- '.repeat(depth)}${category.code ? `[${category.code}] ` : ''}${category.name}`,
+              label: category.name,
+              description: this.buildCategoryDescription(category),
             },
           ]
         : [];
       return [...current, ...children];
     });
+  }
+
+  private buildCategoryDescription(category: CategoryResponse): string {
+    const parts: string[] = [];
+    if (category.code) {
+      parts.push(`[${category.code}]`);
+    }
+    parts.push(category.maxPoint > 0 ? `Tối đa ${category.maxPoint} điểm` : 'Không giới hạn điểm');
+    return parts.join(' · ');
   }
 }

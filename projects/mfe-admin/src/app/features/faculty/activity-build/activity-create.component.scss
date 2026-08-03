@@ -1,3 +1,7 @@
+@use '../faculty-layout' as faculty;
+
+@include faculty.page-base;
+
 .animate-fade-in-up {
   animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -116,5 +120,63 @@
 @media (min-width: 640px) {
   .location-search-box__button {
     white-space: nowrap;
+  }
+}
+
+.activity-create-page {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.activity-create-header {
+  align-items: center;
+}
+
+.activity-create-header__content {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 1rem;
+}
+
+.activity-create-back-button {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 2.75rem;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+
+  &:hover {
+    color: #1d4ed8;
+    background: #dbeafe;
+    border-color: #93c5fd;
+  }
+}
+
+.activity-create-shell {
+  width: min(100%, 92rem);
+  margin-inline: auto;
+}
+
+.activity-create-page :is(.rounded-2xl, .rounded-xl) {
+  border-radius: 1rem;
+}
+
+@media (max-width: 640px) {
+  .activity-create-header__content {
+    align-items: flex-start;
   }
 }

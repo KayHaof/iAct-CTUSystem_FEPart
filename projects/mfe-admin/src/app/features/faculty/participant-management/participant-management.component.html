@@ -1,30 +1,31 @@
-<div class="min-h-screen bg-slate-50 px-4 py-6 font-sans text-slate-900 sm:px-6 lg:px-8">
+<main class="faculty-page participant-page">
   <lib-confirm-dialog></lib-confirm-dialog>
 
-  <header class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+  <header class="faculty-header participant-header">
     <div>
       <button
         type="button"
         (click)="goBack()"
-        class="mb-3 inline-flex items-center gap-2 rounded-xl px-1 py-1 text-sm font-bold text-blue-600 transition hover:text-blue-800"
+        class="participant-back-button"
       >
         <i class="bi bi-arrow-left"></i>
         Quay lại chi tiết
       </button>
-      <p class="text-xs font-black uppercase tracking-widest text-slate-500">Quản lý tham gia</p>
-      <h1 class="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+      <p class="faculty-eyebrow">Quản lý tham gia</p>
+      <h1>
         Danh sách sinh viên đăng ký
       </h1>
+      <p>Theo dõi điểm danh, minh chứng và khiếu nại của sinh viên trong hoạt động.</p>
     </div>
 
     <div
-      class="flex flex-col gap-2 sm:flex-row sm:items-center lg:justify-end"
+      class="faculty-header__actions"
       [class.hidden]="activeView() !== 'PARTICIPANTS'"
     >
       <button
         type="button"
         (click)="exportToExcel()"
-        class="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 disabled:bg-slate-300"
+        class="faculty-button faculty-button--success"
         [disabled]="isLoading() || totalRows() === 0"
       >
         <i class="bi bi-file-earmark-excel-fill text-lg"></i>
@@ -34,13 +35,14 @@
   </header>
 
   <nav
-    class="mb-5 grid gap-1.5 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm sm:inline-grid sm:grid-cols-3"
+    class="participant-view-tabs faculty-tabs"
     aria-label="Chọn nghiệp vụ quản lý hoạt động"
   >
     <button
       type="button"
       (click)="setActiveView('PARTICIPANTS')"
-      class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-black transition"
+      [class.is-active]="activeView() === 'PARTICIPANTS'"
+      class="participant-view-tab"
       [ngClass]="
         activeView() === 'PARTICIPANTS'
           ? 'bg-blue-600 text-white shadow-sm'
@@ -50,7 +52,7 @@
       <i class="bi bi-people-fill"></i>
       Sinh viên tham gia
       <span
-        class="inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-black"
+        class="participant-view-tab__count faculty-count-badge"
         [ngClass]="
           activeView() === 'PARTICIPANTS'
             ? 'bg-white/20 text-white'
@@ -63,7 +65,8 @@
     <button
       type="button"
       (click)="setActiveView('PROOFS')"
-      class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-black transition"
+      [class.is-active]="activeView() === 'PROOFS'"
+      class="participant-view-tab"
       [ngClass]="
         activeView() === 'PROOFS'
           ? 'bg-blue-600 text-white shadow-sm'
@@ -73,7 +76,7 @@
       <i class="bi bi-file-earmark-check-fill"></i>
       Minh chứng
       <span
-        class="inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-black"
+        class="participant-view-tab__count faculty-count-badge"
         [ngClass]="
           activeView() === 'PROOFS'
             ? 'bg-white/20 text-white'
@@ -86,7 +89,8 @@
     <button
       type="button"
       (click)="setActiveView('COMPLAINTS')"
-      class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-black transition"
+      [class.is-active]="activeView() === 'COMPLAINTS'"
+      class="participant-view-tab"
       [ngClass]="
         activeView() === 'COMPLAINTS'
           ? 'bg-blue-600 text-white shadow-sm'
@@ -96,7 +100,7 @@
       <i class="bi bi-chat-left-text-fill"></i>
       Khiếu nại
       <span
-        class="inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-black"
+        class="participant-view-tab__count faculty-count-badge"
         [ngClass]="
           activeView() === 'COMPLAINTS'
             ? 'bg-white/20 text-white'
@@ -108,36 +112,11 @@
     </button>
   </nav>
 
-  <section class="mb-4 grid gap-3 sm:grid-cols-3" [class.hidden]="activeView() !== 'PARTICIPANTS'">
-    <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-      <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Tổng đăng ký</p>
-      <p class="mt-1 text-2xl font-black text-slate-950">{{ totalRows() }}</p>
-    </div>
-    <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-      <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Đang hiển thị</p>
-      <p class="mt-1 text-2xl font-black text-blue-700">{{ participants().length }}</p>
-    </div>
-    <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-      <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Bộ lọc</p>
-      <p class="mt-2 text-sm font-bold text-slate-700">
-        {{
-          currentTab() === 'ALL'
-            ? 'Tất cả'
-            : currentTab() === '0'
-              ? 'Đã đăng ký'
-              : currentTab() === '1'
-                ? 'Đã điểm danh'
-                : 'Đã hủy'
-        }}
-      </p>
-    </div>
-  </section>
-
   <section
-    class="relative z-10 rounded-t-2xl border-x border-t border-slate-200 bg-white p-4 shadow-sm"
+    class="participant-filter-panel faculty-panel"
     [class.hidden]="activeView() !== 'PARTICIPANTS'"
   >
-    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div class="participant-filter-grid">
       <div class="relative w-full lg:max-w-md">
         <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input
@@ -202,7 +181,7 @@
     </div>
   </section>
 
-  <div class="relative" [class.hidden]="activeView() !== 'PARTICIPANTS'">
+  <div class="participant-table-region" [class.hidden]="activeView() !== 'PARTICIPANTS'">
     @if (isLoading()) {
       <div
         class="absolute inset-0 z-40 flex flex-col items-center justify-center rounded-b-2xl bg-white/70 backdrop-blur-sm"
@@ -214,7 +193,15 @@
       </div>
     }
 
-    <lib-admin-table-container class="block -mt-px">
+    <lib-admin-table-container class="participant-table-panel">
+      <div class="faculty-section-title">
+        <div>
+          <p>Danh sách</p>
+          <h2>Sinh viên theo bộ lọc</h2>
+        </div>
+        <span>{{ totalRows() }} bản ghi</span>
+      </div>
+
       <table class="w-full min-w-[980px] table-fixed border-collapse bg-white text-left">
         <colgroup>
           <col class="w-[34%]" />
@@ -835,5 +822,5 @@
     </div>
   }
 
-</div>
+</main>
 

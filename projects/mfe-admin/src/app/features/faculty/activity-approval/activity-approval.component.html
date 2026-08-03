@@ -1,0 +1,433 @@
+<div class="approval-page">
+  <header class="approval-header">
+    <div>
+      <p class="admin-eyebrow">Duyệt hoạt động</p>
+      <h1>Hoạt động đại diện chi đoàn gửi lên</h1>
+      <p>Kiểm tra nội dung, chỉnh sửa khi cần và ra quyết định cho từng đề xuất.</p>
+    </div>
+
+    <button type="button" class="ghost-button" (click)="refresh()">
+      <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+      Làm mới
+    </button>
+  </header>
+
+  <section class="filter-panel">
+    <div class="status-tabs" role="tablist" aria-label="Lọc trạng thái hoạt động">
+      @for (tab of statusTabs; track tab.value) {
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="selectedStatus() === tab.value"
+          [attr.aria-selected]="selectedStatus() === tab.value"
+          (click)="changeStatus(tab.value)"
+        >
+          <i class="bi" [ngClass]="tab.icon" aria-hidden="true"></i>
+          <span>{{ tab.label }}</span>
+          <strong>{{ tabCount(tab.value) }}</strong>
+        </button>
+      }
+    </div>
+
+    <div class="filter-grid">
+      <label class="search-field">
+        <span>Tìm kiếm</span>
+        <div class="input-with-icon">
+          <i class="bi bi-search" aria-hidden="true"></i>
+          <input
+            type="search"
+            [ngModel]="keyword()"
+            (ngModelChange)="onKeywordChange($event)"
+            (keydown.enter)="search()"
+            placeholder="Tên hoạt động, người gửi..."
+          />
+        </div>
+      </label>
+
+      <label>
+        <span>Chi đoàn</span>
+        <select [ngModel]="selectedClassId()" (ngModelChange)="changeClass($event)">
+          <option [ngValue]="null">Tất cả chi đoàn</option>
+          @for (clazz of classOptions(); track clazz.classId) {
+            <option [ngValue]="clazz.classId">{{ clazz.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>Sắp xếp</span>
+        <select [ngModel]="sortBy()" (ngModelChange)="changeSort($event)">
+          @for (option of sortOptions; track option.value) {
+            <option [ngValue]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+
+      <div class="filter-actions">
+        <button type="button" class="sort-direction-button" (click)="toggleSortDirection()">
+          <i
+            class="bi"
+            [ngClass]="sortDirection() === 'DESC' ? 'bi-sort-down' : 'bi-sort-up'"
+            aria-hidden="true"
+          ></i>
+          {{ sortDirection() === 'DESC' ? 'Giảm dần' : 'Tăng dần' }}
+        </button>
+        <button type="button" class="primary-button" (click)="search()">
+          <i class="bi bi-funnel" aria-hidden="true"></i>
+          Lọc
+        </button>
+        @if (hasActiveFilter()) {
+          <button type="button" class="ghost-button" (click)="clearFilters()">Xóa lọc</button>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="activity-panel">
+    @if (isLoading()) {
+      <div class="state-block" aria-live="polite">
+        <span class="spinner"></span>
+        <p>Đang tải hoạt động chờ duyệt...</p>
+      </div>
+    } @else if (activities().length === 0) {
+      <div class="state-block">
+        <span class="state-icon">
+          <i class="bi bi-inbox" aria-hidden="true"></i>
+        </span>
+        <h2>Không có hoạt động phù hợp</h2>
+        <p>Thay đổi bộ lọc hoặc quay lại sau khi đại diện chi đoàn gửi đề xuất mới.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Hoạt động</th>
+              <th>Đại diện chi đoàn</th>
+              <th>Thời gian</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (activity of activities(); track activity.id) {
+              <tr>
+                <td class="activity-cell">
+                  <div class="activity-thumb">
+                    <img
+                      [src]="displayImage(activity)"
+                      alt="Ảnh hoạt động"
+                      (error)="onActivityImageError($event)"
+                    />
+                  </div>
+                  <div>
+                    <button type="button" class="activity-title" (click)="openDetail(activity.id)">
+                      {{ activity.title }}
+                    </button>
+                    <div class="activity-meta">
+                      <span>{{ activityLevelLabel(activity) }}</span>
+                      <span>{{ activity.departmentName || 'Đơn vị chưa xác định' }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <strong>{{ displayCreator(activity) }}</strong>
+                  <span class="muted">{{ displayClass(activity) }}</span>
+                </td>
+                <td>
+                  <strong>{{
+                    activity.startDate ? (activity.startDate | date: 'dd/MM/yyyy') : 'Chưa có lịch'
+                  }}</strong>
+                  <span class="muted"
+                    >Gửi
+                    {{
+                      activity.createdAt
+                        ? (activity.createdAt | date: 'dd/MM/yyyy HH:mm')
+                        : 'chưa ghi nhận'
+                    }}</span
+                  >
+                </td>
+                <td>
+                  <span
+                    class="status-pill"
+                    [ngClass]="'status-pill--' + statusTone(activity.status)"
+                  >
+                    <i class="bi" [ngClass]="statusIcon(activity.status)" aria-hidden="true"></i>
+                    {{ statusLabel(activity.status) }}
+                  </span>
+                  @if (activity.reason && activity.status === 2) {
+                    <span class="reason-preview">{{ activity.reason }}</span>
+                  }
+                </td>
+                <td>
+                  <div class="row-actions">
+                    <button
+                      type="button"
+                      class="icon-button"
+                      title="Xem chi tiết"
+                      (click)="openDetail(activity.id)"
+                    >
+                      <i class="bi bi-eye" aria-hidden="true"></i>
+                    </button>
+                    @if (canEdit(activity)) {
+                      <button
+                        type="button"
+                        class="icon-button icon-button--info"
+                        title="Chỉnh sửa"
+                        (click)="editActivity(activity.id)"
+                      >
+                        <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                      </button>
+                    }
+                    @if (canDecide(activity)) {
+                      <button
+                        type="button"
+                        class="icon-button icon-button--success"
+                        title="Duyệt hoạt động"
+                        [disabled]="processingId() === activity.id"
+                        (click)="approveActivity(activity)"
+                      >
+                        <i class="bi bi-check2" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="icon-button icon-button--danger"
+                        title="Từ chối hoạt động"
+                        [disabled]="processingId() === activity.id"
+                        (click)="openReject(activity)"
+                      >
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <lib-pagination
+        [currentPage]="currentPage()"
+        [totalItems]="totalRows()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onSizeChange($event)"
+      ></lib-pagination>
+    }
+  </section>
+</div>
+
+@if (isDetailLoading() || selectedActivity()) {
+  <div class="modal-backdrop">
+    <button
+      type="button"
+      class="modal-scrim"
+      aria-label="Đóng hộp thoại chi tiết"
+      (click)="closeDetail()"
+    ></button>
+    <section
+      class="detail-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="detail-modal-title"
+    >
+      @if (isDetailLoading()) {
+        <div class="state-block state-block--modal">
+          <span class="spinner"></span>
+          <p>Đang mở chi tiết hoạt động...</p>
+        </div>
+      } @else if (selectedActivity(); as activity) {
+        <header class="modal-header">
+          <div>
+            <span class="admin-eyebrow">Chi tiết đề xuất</span>
+            <h2 id="detail-modal-title">{{ activity.title }}</h2>
+            <span class="status-pill" [ngClass]="'status-pill--' + statusTone(activity.status)">
+              <i class="bi" [ngClass]="statusIcon(activity.status)" aria-hidden="true"></i>
+              {{ statusLabel(activity.status) }}
+            </span>
+          </div>
+          <button type="button" class="close-button" aria-label="Đóng" (click)="closeDetail()">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <div class="detail-layout">
+          <aside class="detail-summary">
+            <div class="summary-tile">
+              <span>Người gửi</span>
+              <strong>{{ displayCreator(activity) }}</strong>
+              <small>{{ displayClass(activity) }}</small>
+            </div>
+            <div class="summary-tile">
+              <span>Thời gian tổ chức</span>
+              <strong>{{ formatDateTime(activity.startDate) }}</strong>
+              <small>Kết thúc {{ formatDateTime(activity.endDate) }}</small>
+            </div>
+            <div class="summary-tile">
+              <span>Địa điểm</span>
+              <strong>{{ activity.location || 'Chưa cập nhật' }}</strong>
+              <small>{{ activity.maxParticipants || 0 }} suất tham gia</small>
+            </div>
+            <div class="summary-tile">
+              <span>Ghi danh</span>
+              <strong>{{ activity.registeredCount || 0 }}</strong>
+              <small>hồ sơ hợp lệ</small>
+            </div>
+          </aside>
+
+          <div class="detail-content">
+            <section>
+              <h3>Nội dung hoạt động</h3>
+              <p>{{ activity.description || 'Chưa có mô tả ngắn.' }}</p>
+              @if (activity.content) {
+                <div class="content-preview" [innerHTML]="activity.content"></div>
+              }
+            </section>
+
+            <section>
+              <h3>Lịch trình</h3>
+              @if ((activity.schedules || []).length > 0) {
+                <div class="schedule-list">
+                  @for (
+                    schedule of activity.schedules || [];
+                    track schedule.id || schedule.title || $index
+                  ) {
+                    <div>
+                      <strong>{{ schedule.title || 'Buổi hoạt động' }}</strong>
+                      <span
+                        >{{ formatDateTime(schedule.startTime) }} -
+                        {{ formatDateTime(schedule.endTime) }}</span
+                      >
+                      <small>{{
+                        schedule.locationName || schedule.location || 'Chưa có địa điểm'
+                      }}</small>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="muted">Chưa khai báo lịch trình chi tiết.</p>
+              }
+            </section>
+
+            @if ((activity.benefits || []).length > 0) {
+              <section>
+                <h3>Điểm rèn luyện</h3>
+                <div class="benefit-list">
+                  @for (
+                    benefit of activity.benefits || [];
+                    track benefit.id || benefit.categoryId || $index
+                  ) {
+                    <span>
+                      {{ benefit.categoryName || benefit.name || 'Tiêu chí' }}
+                      @if (benefit.point !== null && benefit.point !== undefined) {
+                        <strong>{{ benefit.point }} điểm</strong>
+                      }
+                    </span>
+                  }
+                </div>
+              </section>
+            }
+
+            @if (activity.status === 2) {
+              <section class="reason-panel">
+                <h3>Lý do từ chối</h3>
+                <p>{{ activity.reason || 'Chưa ghi nhận lý do.' }}</p>
+                @if (activity.handledBy || activity.handledAt) {
+                  <small>
+                    Xử lý bởi
+                    {{ activity.handledBy?.fullName || activity.handledBy?.username || 'đơn vị' }}
+                    lúc {{ formatDateTime(activity.handledAt) }}
+                  </small>
+                }
+              </section>
+            }
+
+            @if (activity.status === 1) {
+              <section class="approved-panel">
+                <h3>Thông tin duyệt</h3>
+                <p>
+                  Đã duyệt bởi
+                  {{ activity.handledBy?.fullName || activity.handledBy?.username || 'đơn vị' }} lúc
+                  {{ formatDateTime(activity.handledAt) }}.
+                </p>
+              </section>
+            }
+          </div>
+        </div>
+
+        <footer class="modal-actions">
+          @if (canEdit(activity)) {
+            <button type="button" class="ghost-button" (click)="editActivity(activity.id)">
+              <i class="bi bi-pencil-square" aria-hidden="true"></i>
+              Chỉnh sửa
+            </button>
+          }
+          @if (canDecide(activity)) {
+            <button type="button" class="danger-button" (click)="openReject(activity)">
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+              Từ chối
+            </button>
+            <button type="button" class="primary-button" (click)="approveActivity(activity)">
+              <i class="bi bi-check2" aria-hidden="true"></i>
+              Duyệt hoạt động
+            </button>
+          }
+        </footer>
+      }
+    </section>
+  </div>
+}
+
+@if (rejectingActivity(); as activity) {
+  <div class="modal-backdrop">
+    <button
+      type="button"
+      class="modal-scrim"
+      aria-label="Đóng hộp thoại từ chối"
+      (click)="closeReject()"
+    ></button>
+    <section
+      class="reject-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reject-modal-title"
+    >
+      <header class="modal-header">
+        <div>
+          <span class="admin-eyebrow">Từ chối hoạt động</span>
+          <h2 id="reject-modal-title">{{ activity.title }}</h2>
+        </div>
+        <button type="button" class="close-button" aria-label="Đóng" (click)="closeReject()">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <label class="reject-field">
+        <span>Lý do từ chối</span>
+        <textarea
+          rows="5"
+          [ngModel]="rejectReason()"
+          (ngModelChange)="rejectReason.set($event)"
+          placeholder="Nêu rõ nội dung cần điều chỉnh hoặc lý do hoạt động chưa phù hợp."
+        ></textarea>
+      </label>
+
+      <footer class="modal-actions">
+        <button type="button" class="ghost-button" (click)="closeReject()">Hủy</button>
+        <button
+          type="button"
+          class="danger-button"
+          [disabled]="!rejectReason().trim() || processingId() === activity.id"
+          (click)="submitReject()"
+        >
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+          Xác nhận từ chối
+        </button>
+      </footer>
+    </section>
+  </div>
+}
+
+<lib-confirm-dialog></lib-confirm-dialog>

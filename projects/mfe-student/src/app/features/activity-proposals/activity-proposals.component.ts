@@ -103,6 +103,10 @@ export class ActivityProposalsComponent implements OnInit {
     return 'status';
   }
 
+  rejectionReason(activity: Activity): string {
+    return activity.reason?.trim() || 'Đơn vị duyệt chưa nhập lý do từ chối.';
+  }
+
   activityImage(activity: Activity): string {
     return activity.thumbnail || activity.coverImage || this.fallbackActivityImage;
   }

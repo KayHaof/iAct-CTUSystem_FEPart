@@ -2,6 +2,16 @@ export interface ModerationStats {
   pendingReview: number;
   approvedThisTerm: number;
   rejected: number;
+  byDepartment?: ModerationDepartmentStats[];
+}
+
+export interface ModerationDepartmentStats {
+  departmentId: number | null;
+  departmentName: string;
+  pendingReview: number;
+  approvedThisTerm: number;
+  rejected: number;
+  total: number;
 }
 
 export interface ModerationFilters {

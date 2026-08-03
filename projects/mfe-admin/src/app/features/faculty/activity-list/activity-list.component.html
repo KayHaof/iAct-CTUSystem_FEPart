@@ -1,14 +1,20 @@
-<div class="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 font-sans text-slate-900">
-  <lib-admin-page-header
-    title="Danh sách Hoạt động"
-    actionLabel="Tạo hoạt động mới"
-    actionLink="create"
-    class="mb-6 block"
-  ></lib-admin-page-header>
+﻿<main class="faculty-page activity-list-page">
+  <header class="faculty-header">
+    <div>
+      <p class="faculty-eyebrow">Quản lý hoạt động</p>
+      <h1>Danh sách hoạt động</h1>
+      <p>Theo dõi các hoạt động thuộc khoa/trường, lọc nhanh theo phạm vi và trạng thái xử lý.</p>
+    </div>
 
-  <div
-    class="relative z-10 flex flex-col gap-3 rounded-t-2xl border-x border-t border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between"
-  >
+    <div class="faculty-header__actions">
+      <a routerLink="create" class="faculty-button faculty-button--primary">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        Tạo hoạt động mới
+      </a>
+    </div>
+  </header>
+
+  <section class="faculty-panel activity-list-filter">
     <div class="relative w-full lg:max-w-md">
       <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
       <input
@@ -22,9 +28,10 @@
       />
     </div>
 
-    <div class="flex w-full overflow-x-auto rounded-xl bg-slate-100 p-1 custom-scrollbar lg:w-auto">
+    <div class="activity-list-tabs faculty-tabs custom-scrollbar">
       <button
         (click)="onTabChange('ALL')"
+        [class.is-active]="currentTab() === 'ALL'"
         [class.bg-white]="currentTab() === 'ALL'"
         [class.shadow-sm]="currentTab() === 'ALL'"
         [class.text-blue-600]="currentTab() === 'ALL'"
@@ -35,6 +42,7 @@
       </button>
       <button
         (click)="onTabChange('UNIVERSITY')"
+        [class.is-active]="currentTab() === 'UNIVERSITY'"
         [class.bg-white]="currentTab() === 'UNIVERSITY'"
         [class.shadow-sm]="currentTab() === 'UNIVERSITY'"
         [class.text-blue-600]="currentTab() === 'UNIVERSITY'"
@@ -45,6 +53,7 @@
       </button>
       <button
         (click)="onTabChange('FACULTY')"
+        [class.is-active]="currentTab() === 'FACULTY'"
         [class.bg-white]="currentTab() === 'FACULTY'"
         [class.shadow-sm]="currentTab() === 'FACULTY'"
         [class.text-blue-600]="currentTab() === 'FACULTY'"
@@ -55,6 +64,7 @@
       </button>
       <button
         (click)="onTabChange('EXTERNAL')"
+        [class.is-active]="currentTab() === 'EXTERNAL'"
         [class.bg-white]="currentTab() === 'EXTERNAL'"
         [class.shadow-sm]="currentTab() === 'EXTERNAL'"
         [class.text-blue-600]="currentTab() === 'EXTERNAL'"
@@ -66,6 +76,7 @@
 
       <button
         (click)="onTabChange('DRAFT')"
+        [class.is-active]="currentTab() === 'DRAFT'"
         [class.bg-white]="currentTab() === 'DRAFT'"
         [class.shadow-sm]="currentTab() === 'DRAFT'"
         [class.text-blue-600]="currentTab() === 'DRAFT'"
@@ -75,9 +86,16 @@
         <i class="bi bi-pencil-square mr-1"></i> Bản nháp
       </button>
     </div>
-  </div>
+  </section>
 
-  <lib-admin-table-container class="block -mt-px relative z-0">
+  <lib-admin-table-container class="activity-list-table-panel">
+    <div class="faculty-section-title">
+      <div>
+        <p>Danh sách</p>
+        <h2>Hoạt động theo bộ lọc</h2>
+      </div>
+      <span>{{ totalRows() }} bản ghi</span>
+    </div>
     @if (isLoading()) {
       <div
         class="absolute inset-0 bg-white/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-b-2xl"
@@ -165,6 +183,16 @@
                             ? 'Cấp Khoa'
                             : 'Cấp Trường'
                       }}
+                    </span>
+                    <span
+                      class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ring-1"
+                      [ngClass]="
+                        item.requiresAdminApproval
+                          ? 'bg-amber-50 text-amber-700 ring-amber-100'
+                          : 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+                      "
+                    >
+                      {{ item.requiresAdminApproval ? 'Cần duyệt' : 'Trực tiếp' }}
                     </span>
                     <span
                       class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 ring-1 ring-slate-200"
@@ -359,7 +387,7 @@
                   <i class="bi bi-megaphone-fill text-sm"></i>
                 </button>
 
-                @if (item.status === 0 || item.status === 3) {
+                @if (canEditOrDelete(item)) {
                   <button
                     (click)="editActivity(item.id)"
                     class="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 w-9 h-9 rounded-xl transition flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-100"
@@ -376,20 +404,16 @@
                     <i class="bi bi-trash3-fill text-sm"></i>
                   </button>
                 }
-              </div>
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="5" class="py-20 text-center bg-slate-50/50">
-              <div class="flex flex-col items-center justify-center text-slate-400">
-                <div
-                  class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 mb-4"
-                >
-                  <i class="bi bi-inboxes text-2xl text-slate-300"></i>
-                </div>
-                <h3 class="text-slate-700 font-bold mb-1">Không tìm thấy hoạt động nào</h3>
-                <p class="text-xs font-medium">Vui lòng thử thay đổi từ khóa hoặc bộ lọc</p>
+
+                @if (canRequestAdminSupport(item)) {
+                  <button
+                    (click)="requestAdminSupport(item)"
+                    class="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-amber-50 hover:text-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-100"
+                    title="Gửi yêu cầu hỗ trợ admin"
+                  >
+                    <i class="bi bi-life-preserver"></i>
+                  </button>
+                }
               </div>
             </td>
           </tr>
@@ -403,7 +427,7 @@
       [pageSize]="pageSize()"
       theme="dark"
       (pageChange)="onPageChange($event)"
-      (pageSizeChange)="pageSize.set($event)"
+      (pageSizeChange)="onSizeChange($event)"
     ></lib-pagination>
   </lib-admin-table-container>
 
@@ -535,4 +559,4 @@
       </div>
     </div>
   }
-</div>
+</main>

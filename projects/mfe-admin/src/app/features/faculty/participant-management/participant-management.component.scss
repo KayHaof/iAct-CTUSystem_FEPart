@@ -1,3 +1,7 @@
+@use '../faculty-layout' as faculty;
+
+@include faculty.page-base;
+
 .proof-panel {
   border-color: #dbe4f0;
 }
@@ -71,5 +75,127 @@
 
   .proof-status-filter > button {
     padding-inline: 0.45rem;
+  }
+}
+
+.participant-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.participant-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0;
+  color: #2563eb;
+  background: transparent;
+  border: 0;
+  font-size: 0.875rem;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover {
+    color: #1d4ed8;
+  }
+}
+
+.participant-header {
+  align-items: flex-end;
+
+  > div:first-child > p:first-of-type {
+    margin: 0 0 0.25rem;
+    color: #2563eb;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+}
+
+.participant-view-tabs {
+  width: fit-content;
+  max-width: 100%;
+  grid-template-columns: repeat(3, minmax(max-content, 1fr));
+  overflow-x: auto;
+}
+
+.participant-view-tab {
+  padding: 0 1rem;
+
+  &.is-active {
+    color: #1d4ed8 !important;
+    background: #ffffff !important;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12) !important;
+  }
+}
+
+.participant-view-tab__count {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+.participant-view-tab.is-active .participant-view-tab__count {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+.participant-filter-panel {
+  padding: 1.25rem 1.5rem;
+}
+
+.participant-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(18rem, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.participant-table-region {
+  position: relative;
+}
+
+.participant-table-panel {
+  display: block;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+:host ::ng-deep .participant-table-panel .admin-table-container {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.proof-panel {
+  border-color: #e2e8f0;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.proof-panel__header {
+  padding: 1.25rem 1.5rem;
+}
+
+.proof-status-filter {
+  background: #f1f5f9;
+  border-radius: 0.875rem;
+  padding: 0.375rem;
+}
+
+.proof-status-filter > button {
+  border-radius: 0.625rem;
+
+  &.bg-white {
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
   }
 }

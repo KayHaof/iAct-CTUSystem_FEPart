@@ -1,10 +1,10 @@
-<div class="min-h-full bg-slate-50 animate-fade-in-up">
-  <header class="border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
-    <div class="mx-auto flex w-full max-w-content items-center gap-3">
+<main class="faculty-page activity-create-page animate-fade-in-up">
+  <header class="faculty-header activity-create-header">
+    <div class="activity-create-header__content">
       <button
         type="button"
         (click)="goBack()"
-        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="activity-create-back-button"
         aria-label="Quay lại"
       >
         <i class="bi bi-arrow-left text-xl"></i>
@@ -18,11 +18,9 @@
           @if (isEditMode()) {
             <span
               class="rounded-full px-2.5 py-1 text-xs font-semibold"
-              [ngClass]="
-                currentStatus() === 3 ? 'bg-slate-100 text-slate-600' : 'bg-blue-50 text-blue-700'
-              "
+              [ngClass]="getStatusBadgeClass()"
             >
-              {{ currentStatus() === 3 ? 'Bản nháp' : 'Đang chờ duyệt' }}
+              {{ getStatusBadgeLabel() }}
             </span>
           }
         </div>
@@ -33,7 +31,7 @@
     </div>
   </header>
 
-  <main id="activity-wizard" class="mx-auto w-full max-w-content px-4 py-5 sm:px-6 lg:px-8">
+  <section id="activity-wizard" class="activity-create-shell">
     @if (isLoadingData()) {
       <div
         class="flex min-h-96 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white"
@@ -250,10 +248,7 @@
                       }
                       <div class="min-w-0">
                         <p class="truncate font-bold text-slate-900">
-                          {{
-                            selectedOrganizer()?.fullName ||
-                              selectedOrganizer()?.username
-                          }}
+                          {{ selectedOrganizer()?.fullName || selectedOrganizer()?.username }}
                         </p>
                         <p class="truncate text-sm text-slate-500">
                           {{ selectedOrganizer()?.email || 'Đại diện đơn vị tổ chức' }}
@@ -478,7 +473,11 @@
                         >
                           <i
                             class="bi"
-                            [ngClass]="isSearchingMainLocation() ? 'bi-arrow-repeat animate-spin' : 'bi-search'"
+                            [ngClass]="
+                              isSearchingMainLocation()
+                                ? 'bi-arrow-repeat animate-spin'
+                                : 'bi-search'
+                            "
                           ></i>
                           {{ isSearchingMainLocation() ? 'Đang tìm...' : 'Tìm phòng trống' }}
                         </button>
@@ -504,7 +503,9 @@
                         activityForm.get('location_id')?.touched &&
                         !activityForm.get('location_id')?.value
                       ) {
-                        <p class="location-search-box__error">Vui lòng chọn địa điểm từ danh sách.</p>
+                        <p class="location-search-box__error">
+                          Vui lòng chọn địa điểm từ danh sách.
+                        </p>
                       }
                     </div>
                   }
@@ -556,6 +557,40 @@
                             class="h-4 w-4 text-blue-600 focus:ring-blue-500"
                           />
                           <span class="text-sm font-semibold">Cấp Khoa</span>
+                        </label>
+                      </div>
+                    </fieldset>
+                  }
+
+                  @if (isDepartmentRole()) {
+                    <fieldset class="rounded-xl border border-amber-100 bg-amber-50/70 p-4">
+                      <legend
+                        class="px-1 text-xs font-bold uppercase tracking-wider text-amber-700"
+                      >
+                        Luồng xử lý
+                      </legend>
+                      <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <label
+                          class="flex cursor-pointer items-center gap-2 rounded-lg bg-white p-3"
+                        >
+                          <input
+                            type="radio"
+                            formControlName="requires_admin_approval"
+                            [value]="true"
+                            class="h-4 w-4 text-amber-600 focus:ring-amber-500"
+                          />
+                          <span class="text-sm font-semibold">Cần duyệt</span>
+                        </label>
+                        <label
+                          class="flex cursor-pointer items-center gap-2 rounded-lg bg-white p-3"
+                        >
+                          <input
+                            type="radio"
+                            formControlName="requires_admin_approval"
+                            [value]="false"
+                            class="h-4 w-4 text-amber-600 focus:ring-amber-500"
+                          />
+                          <span class="text-sm font-semibold">Trực tiếp</span>
                         </label>
                       </div>
                     </fieldset>
@@ -668,9 +703,7 @@
                           />
                         </div>
                         <div class="sm:col-span-2">
-                          <div
-                            class="location-search-box"
-                          >
+                          <div class="location-search-box">
                             <div class="location-search-box__head">
                               <label
                                 [for]="'schedule_location_id_' + i"
@@ -704,7 +737,8 @@
                               </button>
                             </div>
                             <p class="location-search-box__hint">
-                              Hệ thống chỉ hiển thị địa điểm đang khả dụng và chưa bị giữ chỗ trong khung giờ này.
+                              Hệ thống chỉ hiển thị địa điểm đang khả dụng và chưa bị giữ chỗ trong
+                              khung giờ này.
                             </p>
                           </div>
                         </div>
@@ -935,9 +969,7 @@
                     <dt class="text-slate-500">Người phụ trách</dt>
                     <dd class="mt-1 font-semibold text-slate-800">
                       {{
-                        selectedOrganizer()?.fullName ||
-                          selectedOrganizer()?.email ||
-                          'Chưa chọn'
+                        selectedOrganizer()?.fullName || selectedOrganizer()?.email || 'Chưa chọn'
                       }}
                     </dd>
                   </div>
@@ -1168,5 +1200,5 @@
         </footer>
       }
     }
-  </main>
-</div>
+  </section>
+</main>

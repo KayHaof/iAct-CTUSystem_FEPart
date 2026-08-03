@@ -15,21 +15,6 @@
     </button>
   </header>
 
-  <section class="cert-review-stats" aria-label="Thống kê hồ sơ giấy khen">
-    <article>
-      <span>Chờ duyệt</span>
-      <strong>{{ pendingCount() }}</strong>
-    </article>
-    <article>
-      <span>Đã duyệt</span>
-      <strong>{{ approvedCount() }}</strong>
-    </article>
-    <article>
-      <span>Bị từ chối</span>
-      <strong>{{ rejectedCount() }}</strong>
-    </article>
-  </section>
-
   <section class="filter-panel">
     <div class="status-tabs" role="tablist" aria-label="Lọc trạng thái">
       @for (option of statusOptions; track option.label) {
@@ -40,7 +25,8 @@
           [attr.aria-selected]="selectedStatus() === option.value"
           (click)="changeStatus(option.value)"
         >
-          {{ option.label }}
+          <span>{{ option.label }}</span>
+          <strong>{{ statusCount(option.value) }}</strong>
         </button>
       }
     </div>
@@ -332,7 +318,7 @@
         @if (canApprove(submission)) {
           <button type="button" class="primary-button" (click)="openApprove(submission)">
             <i class="bi bi-check2" aria-hidden="true"></i>
-            Duyệt điểm
+            Chỉnh sửa & duyệt
           </button>
         }
       </footer>
@@ -369,15 +355,36 @@
       </div>
 
       <label class="form-field">
-        <span>Tiêu chí điểm rèn luyện</span>
-        <select [ngModel]="reviewCategoryId()" (ngModelChange)="reviewCategoryId.set($event)">
-          <option [ngValue]="null">Chọn tiêu chí nhỏ nhất</option>
-          @for (option of categoryOptions(); track trackCategory($index, option)) {
-            <option [ngValue]="option.category.id">{{ option.label }}</option>
-          }
-        </select>
-        <small>{{ getCategoryMaxLabel() }}</small>
+        <span>Tên minh chứng</span>
+        <input
+          type="text"
+          [ngModel]="reviewCertificateTitle()"
+          (ngModelChange)="reviewCertificateTitle.set($event)"
+          placeholder="Nhập tên minh chứng"
+        />
       </label>
+
+      <label class="form-field">
+        <span>Nội dung minh chứng</span>
+        <textarea
+          rows="4"
+          [ngModel]="reviewAchievement()"
+          (ngModelChange)="reviewAchievement.set($event)"
+          placeholder="Nhập nội dung minh chứng"
+        ></textarea>
+      </label>
+
+      <div class="form-field form-field--select">
+        <lib-custom-select
+          label="Tiêu chí điểm rèn luyện"
+          icon="bi-list-check"
+          placeholder="Chọn tiêu chí"
+          [options]="reviewCategoryOptions()"
+          [value]="reviewCategoryId()"
+          [helperText]="getCategoryMaxLabel()"
+          (valueChange)="setReviewCategoryValue($event)"
+        ></lib-custom-select>
+      </div>
 
       <label class="form-field">
         <span>Điểm được duyệt</span>

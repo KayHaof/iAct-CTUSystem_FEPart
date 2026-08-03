@@ -61,6 +61,16 @@ export class ActivityService {
     );
   }
 
+  requestAdminSupport(id: string | number, reason: string): Observable<void> {
+    return this.http
+      .put<ApiResponse<unknown>>(`${this.apiUrl}/${id}/support-admin`, { reason })
+      .pipe(
+        map(() => {
+          return;
+        }),
+      );
+  }
+
   getQrCode(id: number | string): Observable<ApiResponse<string>> {
     return this.http.get<ApiResponse<string>>(`${this.apiUrl}/${id}/qr-code`);
   }
