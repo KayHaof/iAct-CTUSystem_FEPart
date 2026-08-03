@@ -2,7 +2,7 @@
   <header class="major-header">
     <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
       <div>
-        <p class="header-eyebrow">Ma trận chương trình</p>
+        <p class="header-eyebrow">Chuyên ngành đào tạo</p>
         <h1 class="header-title">Quản lý chuyên ngành</h1>
         <p class="header-subtitle">
           Kết nối chuyên ngành với đơn vị phụ trách và hệ đào tạo để dữ liệu lớp, người dùng và
@@ -19,61 +19,21 @@
   <app-major-filters
     [filters]="filters()"
     [departments]="departments()"
-    [openDropdown]="filterDropdown()"
+    [allMajors]="allMajors()"
     [statusFilterOptions]="statusFilterOptions"
     [programTypeOptions]="programTypeOptions"
     (filterKeywordChange)="updateFilter('keyword', $event)"
     (applyFilters)="applyFilters()"
     (resetFilters)="resetFilters()"
-    (dropdownToggle)="toggleDropdown($event)"
     (selectStatus)="selectStatusFilter($event)"
     (selectDepartment)="selectDepartmentFilter($event)"
     (selectProgram)="selectProgramFilter($event)"
   ></app-major-filters>
 
-  <section class="major-summary-strip">
-    <div class="summary-item">
-      <div class="summary-icon summary-icon-amber">
-        <i class="bi bi-diagram-3-fill"></i>
-      </div>
-      <div class="summary-content">
-        <span class="summary-value">{{ allMajors().length }}</span>
-        <span class="summary-label">Tổng chuyên ngành</span>
-      </div>
-    </div>
-    <div class="summary-item">
-      <div class="summary-icon summary-icon-emerald">
-        <i class="bi bi-check-circle-fill"></i>
-      </div>
-      <div class="summary-content">
-        <span class="summary-value">{{ activeCount() }}</span>
-        <span class="summary-label">Đang hoạt động</span>
-      </div>
-    </div>
-    <div class="summary-item">
-      <div class="summary-icon summary-icon-teal">
-        <i class="bi bi-building-fill"></i>
-      </div>
-      <div class="summary-content">
-        <span class="summary-value">{{ departmentCount() }}</span>
-        <span class="summary-label">Đơn vị phụ trách</span>
-      </div>
-    </div>
-    <div class="summary-item">
-      <div class="summary-icon summary-icon-sky">
-        <i class="bi bi-award-fill"></i>
-      </div>
-      <div class="summary-content">
-        <span class="summary-value">{{ topProgramType() }}</span>
-        <span class="summary-label">Hệ phổ biến</span>
-      </div>
-    </div>
-  </section>
-
   <div class="table-wrapper">
     <div class="table-header-bar">
       <div>
-        <p class="table-header-eyebrow">Ma trận chương trình</p>
+        <p class="table-header-eyebrow">Chương trình đào tạo</p>
         <h2 class="table-header-title">Chuyên ngành theo đơn vị và hệ đào tạo</h2>
       </div>
       <span class="record-count">{{ totalItems() }} bản ghi</span>
@@ -183,7 +143,6 @@
   [isSaving]="isSaving()"
   [editingMajor]="editingMajor()"
   [form]="form()"
-  [openDropdown]="formDropdown()"
   [activeDepartments]="activeDepartments()"
   [programTypeOptions]="programTypeOptions"
   [activeFormOptions]="activeFormOptions"
@@ -191,7 +150,6 @@
   (save)="saveMajor()"
   (nameChange)="updateForm('name', $event)"
   (codeChange)="updateForm('code', $event)"
-  (dropdownToggle)="toggleDropdown($event)"
   (selectDepartment)="selectDepartmentForm($event)"
   (selectProgram)="selectProgramForm($event)"
   (selectActive)="selectActiveForm($event)"

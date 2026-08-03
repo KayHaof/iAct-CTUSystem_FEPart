@@ -51,32 +51,36 @@
         </a>
       </div>
 
-      <div class="activity-list">
+      <div class="monitoring-list">
         @if (isLoading()) {
           <div class="empty-state">
             <i class="bi bi-arrow-repeat"></i>
-            <span>Đang tải dữ liệu...</span>
+            <span>Đang tải dữ liệu vận hành...</span>
           </div>
-        } @else if (recentActivities().length === 0) {
+        } @else if (monitoringItems().length === 0) {
           <div class="empty-state">
             <i class="bi bi-inbox"></i>
-            <span>Chưa có hoạt động nào.</span>
+            <span>Chưa có việc cần theo dõi.</span>
           </div>
         } @else {
-          @for (item of recentActivities(); track item.id) {
-            <a class="activity-item" [routerLink]="dashboardCopy().recentLink">
-              <span class="activity-item__thumb">
-                <i [class]="getActivityIcon(item)"></i>
+          @for (item of monitoringItems(); track item.link + item.label) {
+            <a
+              class="monitoring-item"
+              [ngClass]="'monitoring-item--' + item.tone"
+              [routerLink]="item.link"
+            >
+              <span class="monitoring-item__thumb">
+                <i [class]="item.icon"></i>
               </span>
-              <span class="activity-item__info">
-                <span class="activity-item__name">{{ item.title }}</span>
-                <span class="activity-item__meta">
-                  {{ item.departmentName || 'Chưa rõ đơn vị' }} • {{ getTimeAgo(item.startDate) }}
-                </span>
+              <span class="monitoring-item__info">
+                <span class="monitoring-item__name">{{ item.label }}</span>
+                <span class="monitoring-item__meta">{{ item.description }}</span>
               </span>
-              <span [class]="getStatusClass(item.status)">
-                {{ getStatusLabel(item.status) }}
+              <span class="monitoring-item__metric">
+                <strong>{{ item.value }}</strong>
+                <span>{{ item.valueLabel }}</span>
               </span>
+              <i class="monitoring-item__arrow bi bi-arrow-right"></i>
             </a>
           }
         }

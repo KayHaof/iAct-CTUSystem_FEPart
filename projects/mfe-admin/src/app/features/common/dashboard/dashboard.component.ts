@@ -38,6 +38,16 @@ interface QuickAction {
   tone: 'primary' | 'success' | 'info' | 'warning' | 'teal' | 'slate';
 }
 
+interface MonitoringItem {
+  label: string;
+  description: string;
+  icon: string;
+  link: string;
+  value: string;
+  valueLabel: string;
+  tone: 'primary' | 'success' | 'info' | 'warning' | 'teal' | 'slate';
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -68,7 +78,7 @@ export class DashboardComponent implements OnInit {
         title: 'Tổng quan vận hành toàn trường',
         subtitle: 'Theo dõi dữ liệu nền, hoạt động cần duyệt và các cấu hình dùng chung của iAct.',
         roleLabel: 'Admin',
-        recentTitle: 'Hoạt động cần theo dõi',
+        recentTitle: 'Việc cần xử lý của Trường',
         recentLink: '/admin/activity-moderation',
         primaryAction: {
           label: 'Duyệt hoạt động',
@@ -86,8 +96,8 @@ export class DashboardComponent implements OnInit {
       subtitle:
         'Theo dõi hoạt động đang phụ trách, trạng thái duyệt và thao tác vận hành hằng ngày.',
       roleLabel: 'BTC / Đơn vị',
-      recentTitle: 'Hoạt động của đơn vị',
-      recentLink: '/admin/org/activities',
+      recentTitle: 'Việc cần xử lý của đơn vị',
+      recentLink: '/admin/org/approvals',
       primaryAction: {
         label: 'Tạo hoạt động',
         description: 'Khởi tạo bản nháp hoặc gửi duyệt',
@@ -164,6 +174,88 @@ export class DashboardComponent implements OnInit {
     ];
   });
 
+  readonly monitoringItems = computed<MonitoringItem[]>(() => {
+    if (this.isAdminRole()) {
+      return [
+        {
+          label: 'Hoạt động cấp Trường chờ duyệt',
+          description: 'Rà soát đề xuất từ các đơn vị trước khi công bố trên hệ thống.',
+          icon: 'bi bi-check2-circle',
+          link: '/admin/activity-moderation',
+          value: `${this.pendingActivities()}`,
+          valueLabel: 'chờ duyệt',
+          tone: 'warning',
+        },
+        {
+          label: 'Tài khoản và hồ sơ người dùng',
+          description: 'Quản lý tài khoản, vai trò và dữ liệu hồ sơ sinh viên trong iAct.',
+          icon: 'bi bi-person-video3',
+          link: '/admin/user-management',
+          value: `${this.totalStudents()}`,
+          valueLabel: 'sinh viên',
+          tone: 'info',
+        },
+        {
+          label: 'Đơn vị đào tạo',
+          description: 'Theo dõi khoa, trường, viện và dữ liệu tổ chức đang được khai báo.',
+          icon: 'bi bi-building-fill',
+          link: '/admin/departments',
+          value: `${this.totalDepartments()}`,
+          valueLabel: 'đơn vị',
+          tone: 'success',
+        },
+        {
+          label: 'Học kỳ và tiêu chí DRL',
+          description: 'Kiểm tra học kỳ, nhóm tiêu chí và thang điểm dùng chung cho toàn trường.',
+          icon: 'bi bi-diagram-3-fill',
+          link: '/admin/categories',
+          value: 'DRL',
+          valueLabel: 'cấu hình',
+          tone: 'slate',
+        },
+      ];
+    }
+
+    return [
+      {
+        label: 'Đề xuất từ đại diện chi đoàn',
+        description: 'Duyệt, yêu cầu chỉnh sửa hoặc từ chối các hoạt động sinh viên gửi lên đơn vị.',
+        icon: 'bi bi-hourglass-split',
+        link: '/admin/org/approvals',
+        value: `${this.pendingActivities()}`,
+        valueLabel: 'chờ xử lý',
+        tone: 'warning',
+      },
+      {
+        label: 'Hoạt động của đơn vị',
+        description: 'Quản lý bản nháp, lịch tổ chức, địa điểm và thông tin công bố.',
+        icon: 'bi bi-calendar-plus',
+        link: '/admin/org/activities',
+        value: `${this.totalActivities()}`,
+        valueLabel: 'hoạt động',
+        tone: 'primary',
+      },
+      {
+        label: 'Hoạt động đang diễn ra',
+        description: 'Theo dõi đăng ký, điểm danh và tình hình tham gia trong thời gian tổ chức.',
+        icon: 'bi bi-broadcast-pin',
+        link: '/admin/org/activities',
+        value: `${this.activeActivities()}`,
+        valueLabel: 'đang mở',
+        tone: 'success',
+      },
+      {
+        label: 'Giấy khen cần xét',
+        description: 'Kiểm tra hồ sơ minh chứng trước khi chuyển sang quyết định cộng điểm.',
+        icon: 'bi bi-award-fill',
+        link: '/admin/org/certificates',
+        value: 'Hồ sơ',
+        valueLabel: 'cần xét',
+        tone: 'teal',
+      },
+    ];
+  });
+
   readonly quickActions = computed<QuickAction[]>(() => {
     if (this.isAdminRole()) {
       return [
@@ -216,10 +308,10 @@ export class DashboardComponent implements OnInit {
         tone: 'success',
       },
       {
-        label: 'Duyệt minh chứng',
-        description: 'Xử lý tham gia của sinh viên',
-        icon: 'bi bi-patch-check-fill',
-        link: '/admin/org/activities',
+        label: 'Duyệt hoạt động',
+        description: 'Xử lý đề xuất từ đại diện chi đoàn',
+        icon: 'bi bi-check2-circle',
+        link: '/admin/org/approvals',
         tone: 'warning',
       },
       {
@@ -267,60 +359,5 @@ export class DashboardComponent implements OnInit {
         this.recentActivities.set([]);
       },
     });
-  }
-
-  getActivityIcon(activity: RecentActivity): string {
-    if (activity.status === 0) return 'bi bi-hourglass-split';
-    if (activity.status === 1) return 'bi bi-broadcast-pin';
-    if (activity.status === 2) return 'bi bi-check-circle';
-    if (activity.status === 3) return 'bi bi-x-circle';
-    return 'bi bi-calendar-event';
-  }
-
-  getStatusClass(status: number): string {
-    switch (status) {
-      case 0:
-        return 'badge-status badge-status--pending';
-      case 1:
-        return 'badge-status badge-status--active';
-      case 2:
-        return 'badge-status badge-status--ended';
-      case 3:
-        return 'badge-status badge-status--rejected';
-      default:
-        return 'badge-status badge-status--pending';
-    }
-  }
-
-  getStatusLabel(status: number): string {
-    switch (status) {
-      case 0:
-        return 'Chờ duyệt';
-      case 1:
-        return 'Đang diễn ra';
-      case 2:
-        return 'Đã kết thúc';
-      case 3:
-        return 'Bị từ chối';
-      default:
-        return 'Không xác định';
-    }
-  }
-
-  getTimeAgo(dateStr: string): string {
-    if (!dateStr) return '';
-
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffHours < 1) return 'Vừa xong';
-    if (diffHours < 24) return `${diffHours} giờ trước`;
-    if (diffDays === 1) return '1 ngày trước';
-    if (diffDays < 7) return `${diffDays} ngày trước`;
-
-    return date.toLocaleDateString('vi-VN');
   }
 }

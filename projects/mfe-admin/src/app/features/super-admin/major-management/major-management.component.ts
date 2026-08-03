@@ -29,14 +29,6 @@ type MajorForm = {
   isActive: boolean;
 };
 
-type MajorDropdownKey =
-  | 'statusFilter'
-  | 'departmentFilter'
-  | 'programFilter'
-  | 'departmentForm'
-  | 'programForm'
-  | 'activeForm';
-
 type SelectOption<T> = {
   label: string;
   value: T;
@@ -74,7 +66,6 @@ export class MajorManagementComponent implements OnInit {
   public currentPage = signal(1);
   public pageSize = signal(10);
   public totalItems = signal(0);
-  public openDropdown = signal<MajorDropdownKey | null>(null);
   public filters = signal<MajorFilters>({
     active: '',
     departmentId: '',
@@ -103,35 +94,6 @@ export class MajorManagementComponent implements OnInit {
     { label: 'Văn bằng 2', value: 'Văn bằng 2', description: 'Chương trình văn bằng 2' },
   ];
 
-  public filterDropdown = computed<import('./components/major-filters/major-filters.component').MajorFilterDropdownKey | null>(() => {
-    const dropdown = this.openDropdown();
-    return dropdown === 'departmentFilter' || dropdown === 'statusFilter' || dropdown === 'programFilter'
-      ? dropdown
-      : null;
-  });
-
-  public formDropdown = computed<import('./components/major-form-modal/major-form-modal.component').MajorFormDropdownKey | null>(() => {
-    const dropdown = this.openDropdown();
-    return dropdown === 'departmentForm' || dropdown === 'programForm' || dropdown === 'activeForm'
-      ? dropdown
-      : null;
-  });
-
-  public activeCount = computed(
-    () => this.allMajors().filter((major) => major.isActive !== false).length,
-  );
-  public inactiveCount = computed(
-    () => this.allMajors().filter((major) => major.isActive === false).length,
-  );
-  public departmentCount = computed(() => {
-    const ids = new Set<number>();
-    for (const major of this.allMajors()) {
-      if (major.departmentId != null) {
-        ids.add(major.departmentId);
-      }
-    }
-    return ids.size;
-  });
   public activeDepartments = computed(() => {
     const currentDepartmentId = this.form().departmentId;
     return this.departments().filter(
@@ -139,15 +101,6 @@ export class MajorManagementComponent implements OnInit {
         department.isActive !== false ||
         (currentDepartmentId !== '' && department.id === currentDepartmentId),
     );
-  });
-  public topProgramType = computed(() => {
-    const counts = new Map<string, number>();
-    for (const major of this.allMajors()) {
-      const programType = major.programType || 'Chưa phân loại';
-      counts.set(programType, (counts.get(programType) || 0) + 1);
-    }
-
-    return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 'Chưa có dữ liệu';
   });
 
   ngOnInit(): void {
@@ -188,7 +141,6 @@ export class MajorManagementComponent implements OnInit {
     this.editingMajor.set(null);
     this.form.set(this.createEmptyForm());
     this.isFormOpen.set(true);
-    this.openDropdown.set(null);
   }
 
   openEditForm(major: MajorResponse): void {
@@ -201,59 +153,39 @@ export class MajorManagementComponent implements OnInit {
       isActive: major.isActive !== false,
     });
     this.isFormOpen.set(true);
-    this.openDropdown.set(null);
   }
 
   closeForm(): void {
     this.isFormOpen.set(false);
     this.editingMajor.set(null);
     this.form.set(this.createEmptyForm());
-    this.openDropdown.set(null);
-  }
-
-  toggleDropdown(key: MajorDropdownKey): void {
-    this.openDropdown.update((current) => (current === key ? null : key));
-  }
-
-  isDropdownOpen(key: MajorDropdownKey): boolean {
-    return this.openDropdown() === key;
-  }
-
-  closeDropdown(): void {
-    this.openDropdown.set(null);
   }
 
   selectStatusFilter(value: MajorFilters['active']): void {
     this.updateFilter('active', value);
-    this.closeDropdown();
     this.applyFilters();
   }
 
   selectDepartmentFilter(value: MajorFilters['departmentId']): void {
     this.updateFilter('departmentId', value);
-    this.closeDropdown();
     this.applyFilters();
   }
 
   selectProgramFilter(value: string): void {
     this.updateFilter('programType', value);
-    this.closeDropdown();
     this.applyFilters();
   }
 
   selectDepartmentForm(value: number | ''): void {
     this.updateForm('departmentId', value);
-    this.closeDropdown();
   }
 
   selectProgramForm(value: string): void {
     this.updateForm('programType', value);
-    this.closeDropdown();
   }
 
   selectActiveForm(value: boolean): void {
     this.updateForm('isActive', value);
-    this.closeDropdown();
   }
 
   updateForm<K extends keyof MajorForm>(key: K, value: MajorForm[K]): void {
@@ -272,7 +204,6 @@ export class MajorManagementComponent implements OnInit {
   resetFilters(): void {
     this.filters.set({ active: '', departmentId: '', keyword: '', programType: '' });
     this.currentPage.set(1);
-    this.openDropdown.set(null);
     this.loadMajors();
   }
 
@@ -339,43 +270,6 @@ export class MajorManagementComponent implements OnInit {
         });
       },
     });
-  }
-
-  getStatusFilterLabel(): string {
-    return (
-      this.statusFilterOptions.find((option) => option.value === this.filters().active)?.label ||
-      'Tất cả'
-    );
-  }
-
-  getDepartmentFilterLabel(): string {
-    const departmentId = this.filters().departmentId;
-    if (departmentId === '') {
-      return 'Tất cả đơn vị';
-    }
-
-    return this.departments().find((department) => department.id === departmentId)?.name || 'Đơn vị đã chọn';
-  }
-
-  getProgramFilterLabel(): string {
-    return this.filters().programType || 'Tất cả hệ đào tạo';
-  }
-
-  getDepartmentFormLabel(): string {
-    const departmentId = this.form().departmentId;
-    if (departmentId === '') {
-      return 'Chọn đơn vị quản lý';
-    }
-
-    return this.departments().find((department) => department.id === departmentId)?.name || 'Đơn vị đã chọn';
-  }
-
-  getProgramFormLabel(): string {
-    return this.form().programType || 'Chọn hệ đào tạo';
-  }
-
-  getActiveFormLabel(): string {
-    return this.form().isActive ? 'Đang hoạt động' : 'Tạm ngưng';
   }
 
   formatDate(value?: string | null): string {

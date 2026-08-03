@@ -68,9 +68,10 @@
               <div class="relative h-40 bg-slate-200 sm:h-52 lg:h-60">
                 @if (act.coverImage) {
                   <img
-                    [src]="act.coverImage"
+                    [src]="resolveImageUrl(act.coverImage)"
                     alt="Ảnh bìa hoạt động"
                     class="h-full w-full object-cover"
+                    (error)="onImageError($event)"
                   />
                   <div
                     class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent"
@@ -86,13 +87,14 @@
                 <div class="absolute inset-x-0 bottom-0 p-4 sm:p-5">
                   <div class="flex items-end gap-4">
                     <div
-                      class="hidden h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/70 bg-white shadow-sm sm:block"
+                      class="relative hidden h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/70 bg-white shadow-sm sm:block"
                     >
                       @if (act.thumbnail) {
                         <img
-                          [src]="act.thumbnail"
+                          [src]="resolveImageUrl(act.thumbnail)"
                           alt="Ảnh thu nhỏ hoạt động"
                           class="h-full w-full object-cover"
+                          (error)="onImageError($event)"
                         />
                       } @else {
                         <div

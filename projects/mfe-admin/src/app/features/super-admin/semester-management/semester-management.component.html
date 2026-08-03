@@ -10,143 +10,119 @@
         </p>
       </div>
       <button type="button" class="btn-create" (click)="openCreateForm()">
-        <span class="btn-create-icon">+</span>
+        <i class="bi bi-plus-circle"></i>
         Thêm học kỳ
       </button>
     </div>
   </header>
 
-  <section class="sem-hero">
-    <div class="sem-hero-content">
-      <div class="sem-hero-label">Học kỳ đang áp dụng</div>
-      <h2 class="sem-hero-name">
-        {{ activeSemester() ? getSemesterName(activeSemester()!) : 'Chưa có học kỳ hiện hành' }}
-      </h2>
-      <p class="sem-hero-meta">
-        Tổng {{ semesters().length }} học kỳ, {{ lockedCount() }} đã khóa, {{ openCount() }} còn mở.
-      </p>
-    </div>
-    <div class="sem-hero-meter">
-      <span class="meter-value">{{ lockedCount() }}</span>
-      <span class="meter-label">đã khóa</span>
-    </div>
-  </section>
+  <app-semester-filters
+    [filters]="filters()"
+    [semesters]="allSemesters()"
+    [activeFilterOptions]="activeFilterOptions"
+    [lockedFilterOptions]="lockedFilterOptions"
+    (academicYearChange)="updateFilter('academicYear', $event)"
+    (applyFilters)="applyFilters()"
+    (resetFilters)="resetFilters()"
+    (selectActiveFilter)="selectActiveFilter($event)"
+    (selectLockedFilter)="selectLockedFilter($event)"
+  ></app-semester-filters>
 
-  <div class="sem-layout">
-    <aside class="sem-sidebar">
-      <app-semester-filters
-        [filters]="filters()"
-        [openDropdown]="filterDropdown()"
-        [activeFilterOptions]="activeFilterOptions"
-        [lockedFilterOptions]="lockedFilterOptions"
-        (academicYearChange)="updateFilter('academicYear', $event)"
-        (applyFilters)="applyFilters()"
-        (resetFilters)="resetFilters()"
-        (dropdownToggle)="toggleDropdown($event)"
-        (selectActiveFilter)="selectActiveFilter($event)"
-        (selectLockedFilter)="selectLockedFilter($event)"
-      ></app-semester-filters>
-    </aside>
-
-    <main class="sem-main">
-      <div class="timeline-panel">
-        <div class="timeline-header">
-          <div>
-            <p class="timeline-eyebrow">Danh sách học kỳ</p>
-            <h2 class="timeline-title">Danh sách học kỳ</h2>
-          </div>
-          <span class="timeline-count">{{ semesters().length }} bản ghi</span>
-        </div>
-
-        <div class="timeline-list">
-          @if (isLoading()) {
-            <div class="timeline-empty">
-              <i class="bi bi-arrow-repeat"></i>
-              <span>Đang tải dữ liệu...</span>
-            </div>
-          } @else if (semesters().length === 0) {
-            <div class="timeline-empty">
-              <i class="bi bi-inbox"></i>
-              <span>Chưa có học kỳ phù hợp.</span>
-            </div>
-          } @else {
-            @for (semester of pagedSemesters(); track semester.id) {
-              <article class="timeline-item" [class.timeline-item-active]="semester.isActive">
-                <div class="timeline-rail" [class.timeline-rail-active]="semester.isActive"></div>
-
-                <div class="timeline-item-content">
-                  <div class="timeline-item-top">
-                    <div class="timeline-item-meta">
-                      <span class="timeline-year-tag">{{ semester.academicYear }}</span>
-                      <h3 class="timeline-item-name">{{ getSemesterName(semester) }}</h3>
-                      <p class="timeline-item-dates">
-                        {{ formatDate(semester.startDate) }} - {{ formatDate(semester.endDate) }}
-                      </p>
-                    </div>
-
-                    <div class="timeline-badges">
-                      <span
-                        class="status-badge"
-                        [class.status-badge-active]="semester.isActive"
-                        [class.status-badge-inactive]="!semester.isActive"
-                      >
-                        {{ semester.isActive ? 'Đang áp dụng' : 'Chưa áp dụng' }}
-                      </span>
-                      <span
-                        class="status-badge"
-                        [class.status-badge-locked]="semester.isLocked"
-                        [class.status-badge-open]="!semester.isLocked"
-                      >
-                        {{ semester.isLocked ? 'Đã khóa' : 'Mở' }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div class="timeline-actions">
-                    <button
-                      type="button"
-                      class="action-btn action-btn-activate"
-                      [disabled]="semester.isActive"
-                      (click)="activateSemester(semester)"
-                    >
-                      Áp dụng
-                    </button>
-                    <button type="button" class="action-btn" (click)="toggleLock(semester)">
-                      {{ semester.isLocked ? 'Mở khóa' : 'Khóa' }}
-                    </button>
-                    <button
-                      type="button"
-                      class="action-btn"
-                      [disabled]="semester.isLocked"
-                      (click)="openEditForm(semester)"
-                    >
-                      Sửa
-                    </button>
-                    <button
-                      type="button"
-                      class="action-btn action-btn-danger"
-                      [disabled]="semester.isLocked"
-                      (click)="deleteSemester(semester)"
-                    >
-                      Xóa
-                    </button>
-                  </div>
-                </div>
-              </article>
-            }
-          }
-        </div>
-
-        <lib-pagination
-          [totalItems]="semesters().length"
-          [pageSize]="pageSize()"
-          [currentPage]="currentPage()"
-          theme="dark"
-          (pageChange)="onPageChange($event)"
-          (pageSizeChange)="onPageSizeChange($event)"
-        ></lib-pagination>
+  <div class="timeline-panel">
+    <div class="timeline-header">
+      <div>
+        <p class="timeline-eyebrow">Danh sách học kỳ</p>
+        <h2 class="timeline-title">Danh sách học kỳ</h2>
       </div>
-    </main>
+      <span class="timeline-count">{{ semesters().length }} bản ghi</span>
+    </div>
+
+    <div class="timeline-list">
+      @if (isLoading()) {
+        <div class="timeline-empty">
+          <i class="bi bi-arrow-repeat"></i>
+          <span>Đang tải dữ liệu...</span>
+        </div>
+      } @else if (semesters().length === 0) {
+        <div class="timeline-empty">
+          <i class="bi bi-inbox"></i>
+          <span>Chưa có học kỳ phù hợp.</span>
+        </div>
+      } @else {
+        @for (semester of pagedSemesters(); track semester.id) {
+          <article class="timeline-item" [class.timeline-item-active]="semester.isActive">
+            <div class="timeline-rail" [class.timeline-rail-active]="semester.isActive"></div>
+
+            <div class="timeline-item-content">
+              <div class="timeline-item-top">
+                <div class="timeline-item-meta">
+                  <span class="timeline-year-tag">{{ semester.academicYear }}</span>
+                  <h3 class="timeline-item-name">{{ getSemesterName(semester) }}</h3>
+                  <p class="timeline-item-dates">
+                    {{ formatDate(semester.startDate) }} - {{ formatDate(semester.endDate) }}
+                  </p>
+                </div>
+
+                <div class="timeline-badges">
+                  <span
+                    class="status-badge"
+                    [class.status-badge-active]="semester.isActive"
+                    [class.status-badge-inactive]="!semester.isActive"
+                  >
+                    {{ semester.isActive ? 'Đang áp dụng' : 'Chưa áp dụng' }}
+                  </span>
+                  <span
+                    class="status-badge"
+                    [class.status-badge-locked]="semester.isLocked"
+                    [class.status-badge-open]="!semester.isLocked"
+                  >
+                    {{ semester.isLocked ? 'Đã khóa' : 'Mở' }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="timeline-actions">
+                <button
+                  type="button"
+                  class="action-btn action-btn-activate"
+                  [disabled]="semester.isActive"
+                  (click)="activateSemester(semester)"
+                >
+                  Áp dụng
+                </button>
+                <button type="button" class="action-btn" (click)="toggleLock(semester)">
+                  {{ semester.isLocked ? 'Mở khóa' : 'Khóa' }}
+                </button>
+                <button
+                  type="button"
+                  class="action-btn"
+                  [disabled]="semester.isLocked"
+                  (click)="openEditForm(semester)"
+                >
+                  Sửa
+                </button>
+                <button
+                  type="button"
+                  class="action-btn action-btn-danger"
+                  [disabled]="semester.isLocked"
+                  (click)="deleteSemester(semester)"
+                >
+                  Xóa
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      }
+    </div>
+
+    <lib-pagination
+      [totalItems]="semesters().length"
+      [pageSize]="pageSize()"
+      [currentPage]="currentPage()"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    ></lib-pagination>
   </div>
 </div>
 
@@ -161,7 +137,6 @@
   [isSaving]="isSaving()"
   [editingSemester]="editingSemester()"
   [form]="form()"
-  [openDropdown]="formDropdown()"
   [statusFormOptions]="statusFormOptions"
   (modalClosed)="closeForm()"
   (save)="saveSemester()"
@@ -170,6 +145,5 @@
   (startDateChange)="updateForm('startDate', $event)"
   (endDateChange)="updateForm('endDate', $event)"
   (isLockedChange)="updateForm('isLocked', $event)"
-  (dropdownToggle)="toggleDropdown($event)"
   (selectStatus)="selectStatusForm($event)"
 ></app-semester-form-modal>

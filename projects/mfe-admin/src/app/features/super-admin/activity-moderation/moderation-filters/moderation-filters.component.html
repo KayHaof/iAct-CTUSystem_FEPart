@@ -1,71 +1,54 @@
-<div class="filter-container-card">
-  <!-- Cột 1: Tìm kiếm -->
-  <div class="filter-group search-group">
-    <label for="keyword-input">Tìm kiếm</label>
-    <div class="input-wrapper">
-      <div class="icon-left"><i class="bi bi-search"></i></div>
+<form
+  class="moderation-filters"
+  aria-label="Bộ lọc hoạt động"
+  (submit)="$event.preventDefault(); applyFilters()"
+>
+  <div class="moderation-filters__field moderation-filters__field--search">
+    <label class="moderation-filters__label" for="keyword-input">Tìm kiếm</label>
+    <div class="search-input">
+      <i class="bi bi-search search-input__icon"></i>
       <input
         id="keyword-input"
         type="text"
+        autocomplete="off"
         [value]="keyword()"
         (input)="onKeywordChange($event)"
         (keyup.enter)="applyFilters()"
-        class="custom-input"
+        class="search-input__control"
         placeholder="Nhập tên hoạt động..."
       />
       @if (keyword()) {
-        <button class="btn-clear" (click)="clearKeyword()">
-          <i class="bi bi-x-circle-fill"></i>
+        <button type="button" class="search-input__clear" (click)="clearKeyword()" aria-label="Xóa tìm kiếm">
+          <i class="bi bi-x-lg"></i>
         </button>
       }
     </div>
   </div>
 
-  <!-- Cột 2: Khoa / Đơn vị -->
-  <div class="filter-group">
-    <label for="department-select">Khoa / Đơn vị</label>
-    <div class="input-wrapper">
-      <div class="icon-left"><i class="bi bi-buildings"></i></div>
-      <select
-        id="department-select"
-        [ngModel]="selectedDepartment()"
-        (ngModelChange)="selectedDepartment.set($event)"
-        class="custom-select"
-      >
-        <option value="">Tất cả Khoa</option>
-        @for (dept of departments(); track dept.id) {
-          <option [value]="dept.id">{{ dept.name }}</option>
-        }
-      </select>
-      <div class="icon-right"><i class="bi bi-chevron-down"></i></div>
-    </div>
+  <div class="moderation-filters__field">
+    <lib-custom-select
+      label="Khoa / Đơn vị"
+      icon="bi-buildings"
+      [options]="departmentOptions()"
+      [value]="selectedDepartment()"
+      (valueChange)="onDepartmentChange($event)"
+    ></lib-custom-select>
   </div>
 
-  <!-- Cột 4: Trạng thái -->
-  <div class="filter-group">
-    <label for="status-select">Trạng thái</label>
-    <div class="input-wrapper">
-      <div class="icon-left"><i class="bi bi-ui-radios"></i></div>
-      <select
-        id="status-select"
-        [ngModel]="selectedStatus()"
-        (ngModelChange)="selectedStatus.set($event)"
-        class="custom-select"
-      >
-        <option value="ALL">Tất cả Trạng thái</option>
-        <option value="PENDING">Chờ duyệt</option>
-        <option value="APPROVED">Đã duyệt</option>
-        <option value="REJECTED">Đã từ chối</option>
-      </select>
-      <div class="icon-right"><i class="bi bi-chevron-down"></i></div>
-    </div>
+  <div class="moderation-filters__field">
+    <lib-custom-select
+      label="Trạng thái"
+      icon="bi-ui-radios"
+      [options]="statusOptions"
+      [value]="selectedStatus()"
+      (valueChange)="onStatusChange($event)"
+    ></lib-custom-select>
   </div>
 
-  <!-- Cột 5: Nút Submit -->
-  <div class="action-group">
-    <button (click)="applyFilters()" class="btn-filter">
+  <div class="moderation-filters__actions">
+    <button type="submit" class="apply-button">
       <i class="bi bi-funnel-fill"></i>
       <span>Áp dụng</span>
     </button>
   </div>
-</div>
+</form>

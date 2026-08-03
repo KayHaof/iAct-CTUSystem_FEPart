@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { CLOUDINARY_CONFIG } from '@my-mfe/data-access-media';
 import { Activity } from '../../../../../shared/models/activity.model';
 import { ActivityModerationService } from '../../../services/activity-moderation.service';
 import { ApiResponse } from '@my-mfe/interface';
@@ -30,6 +31,10 @@ export class ViewActivityModalComponent implements OnInit {
 
   activity = signal<Activity | null>(null);
   isLoading = signal<boolean>(true);
+
+  private readonly cloudinaryImageBaseUrl = `${CLOUDINARY_CONFIG.loaderBaseUrl}/image/upload/`;
+  private readonly fallbackActivityImageUrl =
+    'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772505926/default_activity_coverImage.jpg';
 
   ngOnInit() {
     this.fetchActivityDetails();
@@ -98,5 +103,30 @@ export class ViewActivityModalComponent implements OnInit {
 
   activityTypeLabel(activity: Activity): string {
     return activity.isExternal ? 'Hoạt động ngoài hệ thống' : 'Hoạt động nội bộ';
+  }
+
+  resolveImageUrl(value?: string | null): string {
+    const imageUrl = value?.trim();
+    if (!imageUrl) {
+      return this.fallbackActivityImageUrl;
+    }
+
+    if (
+      imageUrl.startsWith('http://') ||
+      imageUrl.startsWith('https://') ||
+      imageUrl.startsWith('data:') ||
+      imageUrl.startsWith('blob:')
+    ) {
+      return imageUrl;
+    }
+
+    return `${this.cloudinaryImageBaseUrl}${imageUrl.replace(/^\/+/, '')}`;
+  }
+
+  onImageError(event: Event): void {
+    const image = event.target as HTMLImageElement | null;
+    if (image && image.src !== this.fallbackActivityImageUrl) {
+      image.src = this.fallbackActivityImageUrl;
+    }
   }
 }

@@ -41,6 +41,7 @@ type SelectOption<T> = {
   label: string;
   value: T;
   description?: string;
+  icon?: string;
 };
 
 @Component({
@@ -81,9 +82,24 @@ export class DepartmentManagementComponent implements OnInit {
   public form = signal<DepartmentForm>(this.createEmptyForm());
 
   public readonly statusFilterOptions: Array<SelectOption<DepartmentFilters['active']>> = [
-    { label: 'Tất cả', value: '', description: 'Không giới hạn trạng thái' },
-    { label: 'Đang hoạt động', value: 'true', description: 'Đơn vị đang được sử dụng' },
-    { label: 'Tạm ngưng', value: 'false', description: 'Đơn vị đã tạm ngưng' },
+    {
+      label: 'Tất cả',
+      value: '',
+      description: 'Không giới hạn trạng thái',
+      icon: 'bi-ui-checks-grid',
+    },
+    {
+      label: 'Đang hoạt động',
+      value: 'true',
+      description: 'Đơn vị đang được sử dụng',
+      icon: 'bi-check2-circle',
+    },
+    {
+      label: 'Tạm ngưng',
+      value: 'false',
+      description: 'Đơn vị đã tạm ngưng',
+      icon: 'bi-pause-circle',
+    },
   ];
 
   public readonly activeFormOptions: Array<SelectOption<boolean>> = [
@@ -107,7 +123,6 @@ export class DepartmentManagementComponent implements OnInit {
     }
     return counts;
   });
-  public departmentsWithMajors = computed(() => this.majorCountMap().size);
 
   public formDropdown = computed<
     | import('./components/department-form-modal/department-form-modal.component').DepartmentFormDropdownKey
@@ -194,7 +209,11 @@ export class DepartmentManagementComponent implements OnInit {
 
   selectStatusFilter(value: DepartmentFilters['active']): void {
     this.updateFilter('active', value);
-    this.closeDropdown();
+    this.applyFilters();
+  }
+
+  clearKeyword(): void {
+    this.updateFilter('keyword', '');
     this.applyFilters();
   }
 
@@ -295,12 +314,24 @@ export class DepartmentManagementComponent implements OnInit {
     );
   }
 
-  getActiveFormLabel(): string {
-    return this.form().isActive ? 'Đang hoạt động' : 'Tạm ngưng';
+  getStatusTabCount(value: DepartmentFilters['active']): number {
+    if (value === 'true') {
+      return this.activeCount();
+    }
+
+    if (value === 'false') {
+      return this.inactiveCount();
+    }
+
+    return this.allDepartments().length;
   }
 
   getMajorCount(departmentId: number): number {
     return this.majorCountMap().get(departmentId) || 0;
+  }
+
+  getActiveFormLabel(): string {
+    return this.form().isActive ? 'Đang hoạt động' : 'Tạm ngưng';
   }
 
   formatDate(value?: string | null): string {

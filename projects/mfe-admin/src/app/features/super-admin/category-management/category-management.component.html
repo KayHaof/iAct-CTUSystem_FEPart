@@ -1,277 +1,226 @@
 <div class="cat-page">
-  <!-- Page Header -->
   <header class="cat-header">
-    <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+    <div class="cat-header__content">
       <div>
-        <p class="header-eyebrow">Taxonomy workspace</p>
-        <h1 class="header-title">Danh mục điểm rèn luyện</h1>
+        <p class="header-eyebrow">Danh mục DRL</p>
+        <h1 class="header-title">Quản lý danh mục điểm rèn luyện</h1>
         <p class="header-subtitle">
-          Quản trị cấu trúc tiêu chí, điểm tối đa và quan hệ cha con theo một không gian phân cấp riêng.
+          Quản trị tiêu chí, điểm tối đa và quan hệ cha con của hệ thống điểm rèn luyện.
         </p>
       </div>
-      <div class="flex flex-wrap gap-3">
-        <button type="button" class="btn-tree" (click)="openTree()">
+
+      <div class="header-actions">
+        <button type="button" class="btn-secondary" (click)="openTree()">
           <i class="bi bi-diagram-3"></i>
-          Xem cây
+          <span>Xem cây DRL</span>
         </button>
-        <button type="button" class="btn-create" (click)="openCreateForm()">
+        <button type="button" class="btn-primary" (click)="openCreateForm()">
           <i class="bi bi-plus-circle"></i>
-          Thêm danh mục
+          <span>Thêm danh mục</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Two Column Layout -->
-  <div class="cat-layout">
-    <!-- Sidebar -->
-    <aside class="cat-sidebar">
-      <!-- Sidebar Header -->
-      <div class="sidebar-hero">
-        <div class="sidebar-hero-icon">
-          <i class="bi bi-diagram-3-fill"></i>
-        </div>
-        <div class="sidebar-hero-stats">
-          <span class="sidebar-hero-count">{{ categories().length }}</span>
-          <span class="sidebar-hero-label">danh mục đang hiển thị</span>
-        </div>
-      </div>
+  <section class="summary-strip" aria-label="Thống kê danh mục DRL">
+    <div class="summary-item">
+      <span class="summary-item__value">{{ flattenedTree().length }}</span>
+      <span class="summary-item__label">Tổng danh mục</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-item__value">{{ rootCount() }}</span>
+      <span class="summary-item__label">Danh mục cấp 1</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-item__value">{{ activeCount() }}</span>
+      <span class="summary-item__label">Đang hoạt động</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-item__value">{{ totalPoint() }}</span>
+      <span class="summary-item__label">Tổng điểm tối đa</span>
+    </div>
+  </section>
 
-      <!-- Metrics -->
-      <div class="sidebar-metrics">
-        <div class="metric-card">
-          <i class="bi bi-check-circle-fill metric-icon metric-icon-emerald"></i>
-          <div class="metric-info">
-            <span class="metric-value">{{ activeCount() }}</span>
-            <span class="metric-label">Hoạt động</span>
-          </div>
-        </div>
-        <div class="metric-card">
-          <i class="bi bi-diagram-2-fill metric-icon metric-icon-sky"></i>
-          <div class="metric-info">
-            <span class="metric-value">{{ rootCount() }}</span>
-            <span class="metric-label">Cấp 1</span>
-          </div>
-        </div>
-        <div class="metric-card">
-          <i class="bi bi-diagram-3-fill metric-icon metric-icon-amber"></i>
-          <div class="metric-info">
-            <span class="metric-value">{{ levelTwoCount() }}</span>
-            <span class="metric-label">Cấp 2</span>
-          </div>
-        </div>
-        <div class="metric-card">
-          <i class="bi bi-star-fill metric-icon metric-icon-blue"></i>
-          <div class="metric-info">
-            <span class="metric-value">{{ totalPoint() }}</span>
-            <span class="metric-label">Tổng điểm</span>
-          </div>
-        </div>
-      </div>
+  <section class="filter-panel" aria-label="Bộ lọc danh mục">
+    <div class="status-tabs" role="tablist" aria-label="Lọc trạng thái danh mục">
+      @for (tab of statusTabs; track tab.value) {
+        <button
+          type="button"
+          class="status-tab"
+          role="tab"
+          [class.is-active]="filters().active === tab.value"
+          [attr.aria-selected]="filters().active === tab.value"
+          (click)="selectStatusFilter(tab.value)"
+        >
+          <i class="bi" [ngClass]="tab.icon"></i>
+          <span class="status-tab__text">
+            <span class="status-tab__label">{{ tab.label }}</span>
+            <span class="status-tab__desc">{{ tab.description }}</span>
+          </span>
+          <strong>{{ getStatusTabCount(tab.value) }}</strong>
+        </button>
+      }
+    </div>
 
-      <!-- Filters -->
-      <div class="sidebar-filters">
-        <div class="filter-group">
-          <span class="filter-label">Trạng thái</span>
-          <div class="select-field">
-            <button
-              type="button"
-              class="select-trigger"
-              aria-haspopup="listbox"
-              [attr.aria-expanded]="isDropdownOpen('statusFilter')"
-              (click)="toggleDropdown('statusFilter')"
-            >
-              <span>{{ getStatusFilterLabel() }}</span>
-              <i class="bi bi-chevron-down text-xs"></i>
+    <div class="filter-grid">
+      <div class="filter-field filter-field--search">
+        <label class="filter-label" for="categoryKeyword">Tìm nhanh</label>
+        <div class="search-field">
+          <i class="bi bi-search search-field__icon"></i>
+          <input
+            id="categoryKeyword"
+            type="text"
+            autocomplete="off"
+            class="search-field__input"
+            placeholder="Tên, mã hoặc danh mục cha..."
+            [ngModel]="keyword()"
+            (ngModelChange)="onKeywordChange($event)"
+          />
+          @if (keyword()) {
+            <button type="button" class="search-field__clear" aria-label="Xóa tìm kiếm" (click)="clearKeyword()">
+              <i class="bi bi-x-lg"></i>
             </button>
-            @if (isDropdownOpen('statusFilter')) {
-              <div class="select-panel" role="listbox">
-                @for (option of statusFilterOptions; track option.value) {
+          }
+        </div>
+      </div>
+
+      <div class="filter-field">
+        <lib-custom-select
+          label="Danh mục cấp 1"
+          icon="bi-diagram-3"
+          [options]="parentFilterOptions()"
+          [value]="filters().parentId"
+          (valueChange)="onParentFilterChange($event)"
+        ></lib-custom-select>
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" class="btn-reset" (click)="resetFilters()">
+          <i class="bi bi-arrow-counterclockwise"></i>
+          <span>Đặt lại</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <main class="table-panel">
+    <div class="table-panel__header">
+      <div>
+        <p class="panel-eyebrow">Danh sách tiêu chí</p>
+        <h2 class="panel-title">Danh mục đang quản lý</h2>
+      </div>
+      <span class="node-count-badge">{{ filteredCategories().length }} bản ghi</span>
+    </div>
+
+    <lib-admin-table-container>
+      <table class="cat-table">
+        <thead>
+          <tr>
+            <th>Danh mục</th>
+            <th>Mã</th>
+            <th>Cấp</th>
+            <th>Danh mục cha</th>
+            <th class="th-center">Điểm</th>
+            <th class="th-center">Trạng thái</th>
+            <th class="th-right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (isLoading()) {
+            <tr>
+              <td colspan="7" class="td-empty">
+                <div class="empty-state">
+                  <i class="bi bi-arrow-repeat"></i>
+                  <span>Đang tải dữ liệu...</span>
+                </div>
+              </td>
+            </tr>
+          } @else if (filteredCategories().length === 0) {
+            <tr>
+              <td colspan="7" class="td-empty">
+                <div class="empty-state">
+                  <i class="bi bi-inbox"></i>
+                  <span>Chưa có danh mục phù hợp.</span>
+                </div>
+              </td>
+            </tr>
+          } @else {
+            @for (category of pagedCategories(); track category.id) {
+              <tr class="tr-data">
+                <td class="td-cat-name">
+                  <div class="cat-name-cell">
+                    <span class="cat-name-cell__icon">
+                      <i class="bi" [ngClass]="getCategoryLevel(category.id) === 0 ? 'bi-folder2-open' : 'bi-file-earmark-text'"></i>
+                    </span>
+                    <span>{{ category.name }}</span>
+                  </div>
+                </td>
+                <td><span class="code-badge">{{ getNodeCode(category) }}</span></td>
+                <td><span class="level-badge">{{ getLevelLabel(getCategoryLevel(category.id)) }}</span></td>
+                <td class="td-parent">{{ getParentName(category.parentId) }}</td>
+                <td class="td-center"><span class="point-badge">{{ category.maxPoint }}</span></td>
+                <td class="td-center">
                   <button
                     type="button"
-                    role="option"
-                    [attr.aria-selected]="filters().active === option.value"
-                    class="select-option"
-                    [class.select-option-active]="filters().active === option.value"
-                    (click)="selectStatusFilter(option.value)"
+                    class="status-toggle"
+                    [class.status-toggle-active]="category.isActive !== false"
+                    [class.status-toggle-inactive]="category.isActive === false"
+                    (click)="toggleActive(category)"
                   >
-                    <span class="option-label">{{ option.label }}</span>
-                    <span class="option-desc">{{ option.description }}</span>
+                    <span class="status-dot"></span>
+                    {{ category.isActive !== false ? 'Đang hoạt động' : 'Tạm ngừng' }}
                   </button>
-                }
-              </div>
-            }
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <span class="filter-label">Danh mục cấp 1</span>
-          <div class="select-field">
-            <button
-              type="button"
-              class="select-trigger"
-              aria-haspopup="listbox"
-              [attr.aria-expanded]="isDropdownOpen('parentFilter')"
-              (click)="toggleDropdown('parentFilter')"
-            >
-              <span>{{ getParentFilterLabel() }}</span>
-              <i class="bi bi-chevron-down text-xs"></i>
-            </button>
-            @if (isDropdownOpen('parentFilter')) {
-              <div class="select-panel" role="listbox">
-                <button
-                  type="button"
-                  role="option"
-                  [attr.aria-selected]="filters().parentId === ''"
-                  class="select-option"
-                  [class.select-option-active]="filters().parentId === ''"
-                  (click)="selectParentFilter('')"
-                >
-                  <span class="option-label">Tất cả danh mục cấp 1</span>
-                  <span class="option-desc">Không lọc theo danh mục cấp 1</span>
-                </button>
-                @for (category of levelOneCategories(); track category.id) {
-                  <button
-                    type="button"
-                    role="option"
-                    [attr.aria-selected]="filters().parentId === category.id"
-                    class="select-option"
-                    [class.select-option-active]="filters().parentId === category.id"
-                    (click)="selectParentFilter(category.id)"
-                  >
-                    <span class="option-label">{{ category.name }}</span>
-                    <span class="option-desc">{{ getNodeCode(category) }}</span>
-                  </button>
-                }
-              </div>
-            }
-          </div>
-        </div>
-
-        <button type="button" class="filter-reset-btn" (click)="resetFilters()">Đặt lại bộ lọc</button>
-      </div>
-    </aside>
-
-    <!-- Main Panel -->
-    <main class="cat-main">
-      <div class="cat-panel">
-        <div class="panel-top-bar">
-          <div>
-            <p class="panel-eyebrow">Danh sách tiêu chí</p>
-            <h2 class="panel-title">Bảng danh mục</h2>
-          </div>
-          <span class="node-count-badge">{{ flattenedTree().length }} nút trong cây</span>
-        </div>
-
-        <lib-admin-table-container>
-          <table class="cat-table">
-            <thead>
-              <tr>
-                <th>Danh mục</th>
-                <th>Mã</th>
-                <th>Cấp</th>
-                <th>Danh mục cha</th>
-                <th class="th-center">Điểm tối đa</th>
-                <th class="th-center">Trạng thái</th>
-                <th class="th-right">Thao tác</th>
+                </td>
+                <td class="td-right">
+                  <div class="action-group">
+                    <button type="button" class="icon-btn icon-btn-edit" title="Sửa" (click)="openEditForm(category)">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button type="button" class="icon-btn icon-btn-delete" title="Xóa" (click)="deleteCategory(category)">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              @if (isLoading()) {
-                <tr>
-                  <td colspan="7" class="td-empty">
-                    <div class="empty-state">
-                      <i class="bi bi-arrow-repeat"></i>
-                      <span>Đang tải dữ liệu...</span>
-                    </div>
-                  </td>
-                </tr>
-              } @else if (categories().length === 0) {
-                <tr>
-                  <td colspan="7" class="td-empty">
-                    <div class="empty-state">
-                      <i class="bi bi-inbox"></i>
-                      <span>Chưa có danh mục phù hợp.</span>
-                    </div>
-                  </td>
-                </tr>
-              } @else {
-                @for (category of pagedCategories(); track category.id) {
-                  <tr class="tr-data">
-                    <td class="td-cat-name">{{ category.name }}</td>
-                    <td><span class="code-badge">{{ category.code || ' ' }}</span></td>
-                    <td><span class="level-badge">{{ getLevelLabel(getCategoryLevel(category.id)) }}</span></td>
-                    <td class="td-parent">{{ getParentName(category.parentId) }}</td>
-                    <td class="td-center"><span class="point-badge">{{ category.maxPoint }}</span></td>
-                    <td class="td-center">
-                      <button
-                        type="button"
-                        class="status-toggle"
-                        [class.status-toggle-active]="category.isActive !== false"
-                        [class.status-toggle-inactive]="category.isActive === false"
-                        (click)="toggleActive(category)"
-                      >
-                        <span class="status-dot"></span>
-                        {{ category.isActive !== false ? 'Đang hoạt động' : 'Tạm ngừng' }}
-                      </button>
-                    </td>
-                    <td class="td-right">
-                      <div class="action-group">
-                        <button type="button" class="icon-btn icon-btn-edit" title="Sửa" (click)="openEditForm(category)">
-                          <i class="bi bi-pencil-square"></i>
-                        </button>
-                        <button type="button" class="icon-btn icon-btn-delete" title="Xóa" (click)="deleteCategory(category)">
-                          <i class="bi bi-trash3"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-  }
-}
+            }
+          }
+        </tbody>
+      </table>
+    </lib-admin-table-container>
 
-<lib-confirm-dialog></lib-confirm-dialog>
-            </tbody>
-          </table>
-        </lib-admin-table-container>
-
-        <lib-pagination
-          [totalItems]="categories().length"
-          [pageSize]="pageSize()"
-          [currentPage]="currentPage()"
-          (pageChange)="onPageChange($event)"
-          (pageSizeChange)="onPageSizeChange($event)"
-        ></lib-pagination>
-      </div>
-    </main>
-  </div>
+    <lib-pagination
+      [totalItems]="filteredCategories().length"
+      [pageSize]="pageSize()"
+      [currentPage]="currentPage()"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    ></lib-pagination>
+  </main>
 </div>
 
 <button type="button" class="top-button" [class.top-button-hidden]="isTreeOpen()" (click)="scrollToTop()">
   <i class="bi bi-arrow-up-circle"></i>
 </button>
 
-<!-- Tree View Modal -->
 @if (isTreeOpen()) {
   <div class="tree-overlay" role="dialog" aria-modal="true" aria-labelledby="category-tree-title">
-    <div class="tree-container">
-      <div class="tree-toolbar">
+    <section class="tree-container">
+      <header class="tree-toolbar">
         <div>
-          <p class="tree-eyebrow">Cấu trúc DRL</p>
-          <h2 id="category-tree-title" class="tree-title">Cây danh mục điểm rèn luyện</h2>
-          <p class="tree-desc">Theo dõi toàn bộ cấu trúc tiêu chí theo dạng bảng phân cấp, có mã, danh mục cha, điểm tối đa và trạng thái.</p>
+          <p class="tree-eyebrow">Cây DRL</p>
+          <h2 id="category-tree-title" class="tree-title">Cấu trúc danh mục điểm rèn luyện</h2>
+          <p class="tree-desc">Theo dõi cấp cha con, mã tiêu chí, điểm tối đa và trạng thái trong một cây đầy đủ.</p>
         </div>
-        <div class="tree-toolbar-actions">
-          <div class="tree-summary-row">
-            <span class="tree-summary-item"><strong>{{ flattenedTree().length }}</strong> tổng nút</span>
-            <span class="tree-summary-item"><strong>{{ rootCount() }}</strong> cấp 1</span>
-            <span class="tree-summary-item"><strong>{{ levelTwoCount() }}</strong> cấp 2</span>
-            <span class="tree-summary-item"><strong>{{ totalPoint() }}</strong> tổng điểm</span>
-          </div>
-          <button type="button" class="tree-close-btn" (click)="closeTree()">
-            <i class="bi bi-x-lg"></i>
-            Đóng
-          </button>
-        </div>
+        <button type="button" class="tree-close-btn" (click)="closeTree()" aria-label="Đóng cây DRL">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <div class="tree-summary-row">
+        <span><strong>{{ flattenedTree().length }}</strong> tổng nút</span>
+        <span><strong>{{ rootCount() }}</strong> cấp 1</span>
+        <span><strong>{{ levelTwoCount() }}</strong> cấp 2</span>
+        <span><strong>{{ totalPoint() }}</strong> tổng điểm</span>
       </div>
 
       <div class="tree-body">
@@ -281,42 +230,47 @@
             <span>Chưa có dữ liệu cây danh mục.</span>
           </div>
         } @else {
-          <div class="tree-scroll">
-            <div class="tree-grid-header">
-              <div>Mã tiêu chí</div>
-              <div>Tên tiêu chí</div>
-              <div>Danh mục cha</div>
-              <div class="th-center">Điểm tối đa</div>
-              <div class="th-center">Cấp</div>
-              <div class="th-center">Trạng thái</div>
-            </div>
+          <div class="tree-list">
             @for (node of flattenedTree(); track node.id) {
-              <div class="tree-row" [class.tree-row-root]="node.level === 0" [class.tree-row-l2]="node.level === 1">
-                <div class="tree-cell-code">{{ getNodeCode(node) }}</div>
-                <div>
-                  <div class="tree-cell-name" [style.padding-left.px]="node.level * 28">
-                    <span class="tree-rail" [class.tree-rail-hidden]="node.level === 0"></span>
-                    <span>{{ node.name }}</span>
+              <article
+                class="tree-node"
+                [class.tree-node--root]="node.level === 0"
+                [style.margin-left.px]="node.level * 24"
+              >
+                <div class="tree-node__branch" aria-hidden="true"></div>
+                <div class="tree-node__main">
+                  <div class="tree-node__title-row">
+                    <span class="tree-node__icon">
+                      <i class="bi" [ngClass]="node.level === 0 ? 'bi-folder2-open' : 'bi-file-earmark-text'"></i>
+                    </span>
+                    <div class="tree-node__title">
+                      <strong>{{ node.name }}</strong>
+                      <span>{{ getNodeCode(node) }}</span>
+                    </div>
+                  </div>
+                  <div class="tree-node__meta">
+                    <span>{{ getLevelLabel(node.level) }}</span>
+                    <span>{{ getParentName(node.parentId) }}</span>
+                    @if (node.level === 0) {
+                      <span>{{ getRootChildrenCount(node) }} mục con</span>
+                    }
                   </div>
                 </div>
-                <div class="tree-cell-parent">{{ getParentName(node.parentId) }}</div>
-                <div class="td-center"><span class="point-badge">{{ node.maxPoint }}</span></div>
-                <div class="td-center"><span class="level-badge">{{ getLevelLabel(node.level) }}</span></div>
-                <div class="td-center">
+                <div class="tree-node__right">
+                  <span class="point-badge">{{ node.maxPoint }} điểm</span>
                   <span class="status-badge" [class.status-badge-active]="node.isActive !== false" [class.status-badge-inactive]="node.isActive === false">
                     {{ node.isActive !== false ? 'Hoạt động' : 'Tạm ngừng' }}
                   </span>
                 </div>
-              </div>
+              </article>
             }
           </div>
         }
       </div>
-    </div>
+    </section>
   </div>
 }
 
-<!-- Form Modal -->
 @if (isFormOpen()) {
   <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="category-form-title">
     <form class="modal-form" (ngSubmit)="saveCategory()">
@@ -327,7 +281,7 @@
           </h2>
           <p class="modal-form-desc">Thiết lập nhóm điểm và quan hệ cha con cho danh mục.</p>
         </div>
-        <button type="button" class="modal-close-btn" (click)="closeForm()">
+        <button type="button" class="modal-close-btn" (click)="closeForm()" aria-label="Đóng">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
@@ -345,6 +299,7 @@
             (ngModelChange)="updateForm('name', $event)"
           />
         </div>
+
         <div class="form-group">
           <label for="categoryCode" class="form-label">Mã danh mục</label>
           <input
@@ -356,6 +311,7 @@
             (ngModelChange)="updateForm('code', $event)"
           />
         </div>
+
         <div class="form-group">
           <label for="categoryMaxPoint" class="form-label">Điểm tối đa</label>
           <input
@@ -368,80 +324,25 @@
             (ngModelChange)="updateMaxPoint($event)"
           />
         </div>
+
         <div class="form-group">
-          <span class="form-label">Danh mục cha</span>
-          <div class="select-field">
-            <button
-              type="button"
-              class="select-trigger"
-              aria-haspopup="listbox"
-              [attr.aria-expanded]="isDropdownOpen('parentForm')"
-              (click)="toggleDropdown('parentForm')"
-            >
-              <span>{{ getParentFormLabel() }}</span>
-              <i class="bi bi-chevron-down text-xs"></i>
-            </button>
-            @if (isDropdownOpen('parentForm')) {
-              <div class="select-panel" role="listbox">
-                <button
-                  type="button"
-                  role="option"
-                  [attr.aria-selected]="form().parentId === ''"
-                  class="select-option"
-                  [class.select-option-active]="form().parentId === ''"
-                  (click)="selectParent('')"
-                >
-                  <span class="option-label">Danh mục gốc</span>
-                  <span class="option-desc">Không có danh mục cha</span>
-                </button>
-                @for (category of parentOptions(); track category.id) {
-                  <button
-                    type="button"
-                    role="option"
-                    [attr.aria-selected]="form().parentId === category.id"
-                    class="select-option"
-                    [class.select-option-active]="form().parentId === category.id"
-                    (click)="selectParent(category.id)"
-                  >
-                    <span class="option-label">{{ category.name }}</span>
-                    <span class="option-desc">{{ getLevelLabel(category.level) }} - {{ getNodeCode(category) }}</span>
-                  </button>
-                }
-              </div>
-            }
-          </div>
+          <lib-custom-select
+            label="Danh mục cha"
+            icon="bi-diagram-3"
+            [options]="parentFormOptions()"
+            [value]="form().parentId"
+            (valueChange)="onParentFormChange($event)"
+          ></lib-custom-select>
         </div>
+
         <div class="form-group">
-          <span class="form-label">Trạng thái</span>
-          <div class="select-field">
-            <button
-              type="button"
-              class="select-trigger"
-              aria-haspopup="listbox"
-              [attr.aria-expanded]="isDropdownOpen('activeForm')"
-              (click)="toggleDropdown('activeForm')"
-            >
-              <span>{{ getActiveFormLabel() }}</span>
-              <i class="bi bi-chevron-down text-xs"></i>
-            </button>
-            @if (isDropdownOpen('activeForm')) {
-              <div class="select-panel" role="listbox">
-                @for (option of activeFormOptions; track option.label) {
-                  <button
-                    type="button"
-                    role="option"
-                    [attr.aria-selected]="form().isActive === option.value"
-                    class="select-option"
-                    [class.select-option-active]="form().isActive === option.value"
-                    (click)="selectActiveForm(option.value)"
-                  >
-                    <span class="option-label">{{ option.label }}</span>
-                    <span class="option-desc">{{ option.description }}</span>
-                  </button>
-                }
-              </div>
-            }
-          </div>
+          <lib-custom-select
+            label="Trạng thái"
+            icon="bi-toggle-on"
+            [options]="activeFormOptions"
+            [value]="form().isActive"
+            (valueChange)="onActiveFormChange($event)"
+          ></lib-custom-select>
         </div>
       </div>
 
@@ -454,3 +355,5 @@
     </form>
   </div>
 }
+
+<lib-confirm-dialog></lib-confirm-dialog>

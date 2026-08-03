@@ -1,12 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, NgOptimizedImage } from '@angular/common';
 import { TableContainerComponent, PaginationComponent } from '@my-mfe/ui';
+import { CloudinaryPathPipe } from '@my-mfe/data-access-media';
 import { Activity } from '../../../../shared/models/activity.model';
 
 @Component({
   selector: 'app-moderation-table',
   standalone: true,
-  imports: [CommonModule, TableContainerComponent, PaginationComponent],
+  imports: [
+    CommonModule,
+    TableContainerComponent,
+    PaginationComponent,
+    NgOptimizedImage,
+    CloudinaryPathPipe,
+  ],
   providers: [DatePipe],
   templateUrl: './moderation-table.component.html',
   styleUrls: ['./moderation-table.component.scss'],
@@ -21,6 +28,7 @@ export class ModerationTableComponent {
 
   sortColumn = signal<string>('createdAt');
   sortDirection = signal<'asc' | 'desc'>('desc');
+  failedImageKeys = signal<Record<string, boolean>>({});
 
   sortedData = computed(() => {
     const rawData = this.data();
@@ -57,5 +65,24 @@ export class ModerationTableComponent {
       this.sortColumn.set(column);
       this.sortDirection.set('desc');
     }
+  }
+
+  trackActivity(index: number, item: Activity): string {
+    return `${item?.id ?? 'activity'}-${index}`;
+  }
+
+  markImageFailed(item: Activity): void {
+    if (!item?.id) {
+      return;
+    }
+
+    this.failedImageKeys.update((state) => ({
+      ...state,
+      [String(item.id)]: true,
+    }));
+  }
+
+  hasImageFailed(item: Activity): boolean {
+    return !!item?.id && !!this.failedImageKeys()[String(item.id)];
   }
 }

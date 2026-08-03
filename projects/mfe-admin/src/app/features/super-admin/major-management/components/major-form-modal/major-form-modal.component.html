@@ -43,106 +43,36 @@
         </div>
 
         <div class="form-group">
-          <span class="form-label">Đơn vị quản lý</span>
-          <div class="select-field">
-            <button
-              type="button"
-              class="select-trigger"
-              aria-haspopup="listbox"
-              [attr.aria-expanded]="isDropdownOpen('departmentForm')"
-              (click)="dropdownToggle.emit('departmentForm')"
-            >
-              <span>{{ getDepartmentFormLabel() }}</span>
-              <i class="bi bi-chevron-down text-xs"></i>
-            </button>
-            @if (isDropdownOpen('departmentForm')) {
-              <div class="select-panel" role="listbox">
-                @if (activeDepartments.length === 0) {
-                  <div class="px-3 py-3 text-sm text-slate-500">Chưa có đơn vị đang hoạt động.</div>
-                } @else {
-                  @for (department of activeDepartments; track department.id) {
-                    <button
-                      type="button"
-                      role="option"
-                      [attr.aria-selected]="form.departmentId === department.id"
-                      class="select-option"
-                      [class.select-option-active]="form.departmentId === department.id"
-                      (click)="selectDepartment.emit(department.id)"
-                    >
-                      <span class="option-label">{{ department.name }}</span>
-                      <span class="option-desc">{{ department.code || 'Chưa có mã' }}</span>
-                    </button>
-                  }
-                }
-              </div>
-            }
-          </div>
+          <lib-custom-select
+            label="Đơn vị quản lý"
+            placeholder="Chọn đơn vị quản lý"
+            icon="bi-building"
+            [options]="getDepartmentOptions()"
+            [value]="form.departmentId === '' ? null : form.departmentId"
+            (valueChange)="onDepartmentChange($event)"
+          ></lib-custom-select>
         </div>
 
         <div class="form-group">
-          <span class="form-label">Hệ đào tạo</span>
-          <div class="select-field">
-            <button
-              type="button"
-              class="select-trigger"
-              aria-haspopup="listbox"
-              [attr.aria-expanded]="isDropdownOpen('programForm')"
-              (click)="dropdownToggle.emit('programForm')"
-            >
-              <span>{{ getProgramFormLabel() }}</span>
-              <i class="bi bi-chevron-down text-xs"></i>
-            </button>
-            @if (isDropdownOpen('programForm')) {
-              <div class="select-panel" role="listbox">
-                @for (option of programTypeOptions; track option.value) {
-                  <button
-                    type="button"
-                    role="option"
-                    [attr.aria-selected]="form.programType === option.value"
-                    class="select-option"
-                    [class.select-option-active]="form.programType === option.value"
-                    (click)="selectProgram.emit(option.value)"
-                  >
-                    <span class="option-label">{{ option.label }}</span>
-                    <span class="option-desc">{{ option.description }}</span>
-                  </button>
-                }
-              </div>
-            }
-          </div>
+          <lib-custom-select
+            label="Hệ đào tạo"
+            placeholder="Chọn hệ đào tạo"
+            icon="bi-mortarboard"
+            [options]="getProgramOptions()"
+            [value]="form.programType || null"
+            (valueChange)="onProgramChange($event)"
+          ></lib-custom-select>
         </div>
 
         <div class="form-group">
-          <span class="form-label">Trạng thái</span>
-          <div class="select-field">
-            <button
-              type="button"
-              class="select-trigger"
-              aria-haspopup="listbox"
-              [attr.aria-expanded]="isDropdownOpen('activeForm')"
-              (click)="dropdownToggle.emit('activeForm')"
-            >
-              <span>{{ getActiveFormLabel() }}</span>
-              <i class="bi bi-chevron-down text-xs"></i>
-            </button>
-            @if (isDropdownOpen('activeForm')) {
-              <div class="select-panel" role="listbox">
-                @for (option of activeFormOptions; track option.label) {
-                  <button
-                    type="button"
-                    role="option"
-                    [attr.aria-selected]="form.isActive === option.value"
-                    class="select-option"
-                    [class.select-option-active]="form.isActive === option.value"
-                    (click)="selectActive.emit(option.value)"
-                  >
-                    <span class="option-label">{{ option.label }}</span>
-                    <span class="option-desc">{{ option.description }}</span>
-                  </button>
-                }
-              </div>
-            }
-          </div>
+          <lib-custom-select
+            label="Trạng thái"
+            placeholder="Chọn trạng thái"
+            icon="bi-check-circle"
+            [options]="getActiveOptions()"
+            [value]="form.isActive"
+            (valueChange)="onActiveChange($event)"
+          ></lib-custom-select>
         </div>
       </div>
 

@@ -7,7 +7,6 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import {
   AlertService,
@@ -34,8 +33,6 @@ type SemesterForm = {
   isLocked: boolean;
 };
 
-type SemesterDropdownKey = 'activeFilter' | 'lockedFilter' | 'statusForm';
-
 type SelectOption<T> = {
   label: string;
   value: T;
@@ -47,7 +44,6 @@ type SelectOption<T> = {
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     PaginationComponent,
     ConfirmDialogComponent,
     SemesterFiltersComponent,
@@ -63,13 +59,13 @@ export class SemesterManagementComponent implements OnInit {
   private readonly confirmService = inject(ConfirmService);
 
   public semesters = signal<SemesterResponse[]>([]);
+  public allSemesters = signal<SemesterResponse[]>([]);
   public isLoading = signal(false);
   public isSaving = signal(false);
   public isFormOpen = signal(false);
   public editingSemester = signal<SemesterResponse | null>(null);
   public currentPage = signal(1);
   public pageSize = signal(10);
-  public openDropdown = signal<SemesterDropdownKey | null>(null);
   public filters = signal<SemesterFilters>({
     active: '',
     locked: '',
@@ -95,35 +91,14 @@ export class SemesterManagementComponent implements OnInit {
     { label: 'Đang áp dụng', value: true, description: 'Đặt làm học kỳ hiện hành' },
   ];
 
-  public activeSemester = computed(
-    () => this.semesters().find((semester) => semester.isActive) || null,
-  );
-  public lockedCount = computed(
-    () => this.semesters().filter((semester) => semester.isLocked).length,
-  );
-  public openCount = computed(
-    () => this.semesters().filter((semester) => !semester.isLocked).length,
-  );
   public pagedSemesters = computed(() => {
     const start = (this.currentPage() - 1) * this.pageSize();
     return this.semesters().slice(start, start + this.pageSize());
   });
 
-  public filterDropdown = computed<'activeFilter' | 'lockedFilter' | null>(() => {
-    const dropdown = this.openDropdown();
-    return dropdown === 'activeFilter' || dropdown === 'lockedFilter' ? dropdown : null;
-  });
-
-  public formDropdown = computed<
-    | import('./components/semester-form-modal/semester-form-modal.component').SemesterFormDropdownKey
-    | null
-  >(() => {
-    const dropdown = this.openDropdown();
-    return dropdown === 'statusForm' ? dropdown : null;
-  });
-
   ngOnInit(): void {
     this.loadSemesters();
+    this.loadAllSemesters();
   }
 
   loadSemesters(): void {
@@ -141,11 +116,19 @@ export class SemesterManagementComponent implements OnInit {
       });
   }
 
+  loadAllSemesters(): void {
+    this.masterDataService
+      .getSemesters({ active: '', locked: '', academicYear: '' })
+      .subscribe({
+        next: (response) => this.allSemesters.set(response.data || []),
+        error: () => this.allSemesters.set([]),
+      });
+  }
+
   openCreateForm(): void {
     this.editingSemester.set(null);
     this.form.set(this.createEmptyForm());
     this.isFormOpen.set(true);
-    this.openDropdown.set(null);
   }
 
   openEditForm(semester: SemesterResponse): void {
@@ -164,41 +147,26 @@ export class SemesterManagementComponent implements OnInit {
       isLocked: semester.isLocked,
     });
     this.isFormOpen.set(true);
-    this.openDropdown.set(null);
   }
 
   closeForm(): void {
     this.isFormOpen.set(false);
     this.editingSemester.set(null);
     this.form.set(this.createEmptyForm());
-    this.openDropdown.set(null);
-  }
-
-  toggleDropdown(key: SemesterDropdownKey): void {
-    this.openDropdown.update((current) => (current === key ? null : key));
-  }
-
-  isDropdownOpen(key: SemesterDropdownKey): boolean {
-    return this.openDropdown() === key;
-  }
-
-  closeDropdown(): void {
-    this.openDropdown.set(null);
   }
 
   selectActiveFilter(value: SemesterFilters['active']): void {
     this.updateFilter('active', value);
-    this.closeDropdown();
+    this.applyFilters();
   }
 
   selectLockedFilter(value: SemesterFilters['locked']): void {
     this.updateFilter('locked', value);
-    this.closeDropdown();
+    this.applyFilters();
   }
 
   selectStatusForm(value: boolean): void {
     this.updateForm('isActive', value);
-    this.closeDropdown();
   }
 
   updateForm<K extends keyof SemesterForm>(key: K, value: SemesterForm[K]): void {
@@ -217,7 +185,6 @@ export class SemesterManagementComponent implements OnInit {
   resetFilters(): void {
     this.filters.set({ active: '', locked: '', academicYear: '' });
     this.currentPage.set(1);
-    this.openDropdown.set(null);
     this.loadSemesters();
   }
 
@@ -246,7 +213,7 @@ export class SemesterManagementComponent implements OnInit {
       next: () => {
         this.alertService.success(current ? 'Đã cập nhật học kỳ.' : 'Đã tạo học kỳ mới.');
         this.closeForm();
-        this.loadSemesters();
+        this.reloadData();
       },
       error: () => this.alertService.error('Không thể lưu học kỳ. Vui lòng kiểm tra dữ liệu.'),
     });
@@ -263,7 +230,7 @@ export class SemesterManagementComponent implements OnInit {
         this.masterDataService.activateSemester(semester.id).subscribe({
           next: () => {
             this.alertService.success('Đã kích hoạt học kỳ.');
-            this.loadSemesters();
+            this.reloadData();
           },
           error: () => this.alertService.error('Không thể kích hoạt học kỳ.'),
         });
@@ -279,7 +246,7 @@ export class SemesterManagementComponent implements OnInit {
     request.subscribe({
       next: () => {
         this.alertService.success(semester.isLocked ? 'Đã mở khóa học kỳ.' : 'Đã khóa học kỳ.');
-        this.loadSemesters();
+        this.reloadData();
       },
       error: () => this.alertService.error('Không thể cập nhật trạng thái khóa học kỳ.'),
     });
@@ -299,30 +266,12 @@ export class SemesterManagementComponent implements OnInit {
         this.masterDataService.deleteSemester(semester.id).subscribe({
           next: () => {
             this.alertService.success('Đã xóa học kỳ.');
-            this.loadSemesters();
+            this.reloadData();
           },
           error: () => this.alertService.error('Không thể xóa học kỳ này.'),
         });
       },
     });
-  }
-
-  getActiveFilterLabel(): string {
-    return (
-      this.activeFilterOptions.find((option) => option.value === this.filters().active)?.label ||
-      'Tất cả'
-    );
-  }
-
-  getLockedFilterLabel(): string {
-    return (
-      this.lockedFilterOptions.find((option) => option.value === this.filters().locked)?.label ||
-      'Tất cả'
-    );
-  }
-
-  getStatusFormLabel(): string {
-    return this.form().isActive ? 'Đang áp dụng' : 'Chưa áp dụng';
   }
 
   getSemesterName(semester: SemesterResponse): string {
@@ -339,6 +288,11 @@ export class SemesterManagementComponent implements OnInit {
 
   scrollToTop(): void {
     this.getScrollContainer().scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  private reloadData(): void {
+    this.loadSemesters();
+    this.loadAllSemesters();
   }
 
   private buildPayload(): SemesterRequest | null {

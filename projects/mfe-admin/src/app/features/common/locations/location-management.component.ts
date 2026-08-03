@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AlertService } from '@my-mfe/ui';
+import { AlertService, CustomSelectComponent, CustomSelectOption } from '@my-mfe/ui';
 import { UserService } from '@my-mfe/auth';
 import { finalize } from 'rxjs';
 import { DepartmentResponse } from '../../../shared/models/master-data.model';
@@ -20,12 +20,22 @@ import {
   LocationService,
 } from './location.service';
 
+type LocationTabKey = 'ALL' | 'AVAILABLE' | 'MAINTENANCE' | 'UNAVAILABLE' | 'INACTIVE';
+
 type LocationModalMode = 'create' | 'edit' | 'availability' | 'schedule' | null;
+
+interface LocationTab {
+  key: LocationTabKey;
+  label: string;
+  icon: string;
+  tone: 'primary' | 'success' | 'warning' | 'info' | 'slate';
+  count: number;
+}
 
 @Component({
   selector: 'app-location-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, CustomSelectComponent],
   templateUrl: './location-management.component.html',
   styleUrl: './location-management.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +56,7 @@ export class LocationManagementComponent implements OnInit {
   readonly isSaving = signal(false);
   readonly isLoadingBookings = signal(false);
   readonly isLoadingDepartments = signal(false);
+  readonly currentTab = signal<LocationTabKey>('ALL');
 
   readonly isAdmin = computed(() => this.userService.currentUser()?.roleType === 3);
   readonly isDepartment = computed(() => this.userService.currentUser()?.roleType === 2);
@@ -58,36 +69,123 @@ export class LocationManagementComponent implements OnInit {
       ? 'Theo dõi khả dụng và lịch sử dụng các địa điểm do khoa/trường của bạn quản lý.'
       : 'Theo dõi khả dụng, lịch sử dụng và danh mục địa điểm phục vụ hoạt động.',
   );
-  readonly availableCount = computed(
-    () =>
-      this.locations().filter(
-        (location) =>
-          location.isActive && location.isBookable && location.availabilityStatus === 'AVAILABLE',
-      ).length,
-  );
-  readonly maintenanceCount = computed(
-    () =>
-      this.locations().filter((location) => location.availabilityStatus === 'MAINTENANCE').length,
-  );
-  readonly bookableCount = computed(
-    () => this.locations().filter((location) => location.isBookable).length,
+  readonly visibleLocations = computed(() =>
+    this.locations().filter((location) => this.matchesCurrentTab(location)),
   );
 
-  readonly locationTypes = [
-    { value: 'HALL', label: 'Hội trường' },
-    { value: 'CLASSROOM', label: 'Phòng học' },
-    { value: 'SPORT_FIELD', label: 'Sân thể thao' },
-    { value: 'LAB', label: 'Phòng thực hành' },
-    { value: 'ONLINE', label: 'Trực tuyến' },
-    { value: 'OTHER', label: 'Khác' },
+  readonly locationTabs = computed<LocationTab[]>(() => {
+    const locations = this.locations();
+    return [
+      {
+        key: 'ALL',
+        label: 'Tất cả',
+        icon: 'bi-grid-1x2-fill',
+        tone: 'primary',
+        count: locations.length,
+      },
+      {
+        key: 'AVAILABLE',
+        label: 'Sẵn sàng',
+        icon: 'bi-check2-circle',
+        tone: 'success',
+        count: locations.filter(
+          (location) =>
+            location.isActive !== false &&
+            location.isBookable !== false &&
+            location.availabilityStatus === 'AVAILABLE',
+        ).length,
+      },
+      {
+        key: 'MAINTENANCE',
+        label: 'Bảo trì',
+        icon: 'bi-wrench-adjustable-circle',
+        tone: 'warning',
+        count: locations.filter(
+          (location) =>
+            location.isActive !== false && location.availabilityStatus === 'MAINTENANCE',
+        ).length,
+      },
+      {
+        key: 'UNAVAILABLE',
+        label: 'Tạm ngưng',
+        icon: 'bi-pause-circle',
+        tone: 'info',
+        count: locations.filter(
+          (location) =>
+            location.isActive !== false &&
+            (location.availabilityStatus === 'UNAVAILABLE' || location.isBookable === false),
+        ).length,
+      },
+      {
+        key: 'INACTIVE',
+        label: 'Đã khóa',
+        icon: 'bi-lock-fill',
+        tone: 'slate',
+        count: locations.filter((location) => location.isActive === false).length,
+      },
+    ];
+  });
+
+  readonly locationTypeOptions: CustomSelectOption[] = [
+    { value: '', label: 'Tất cả loại', description: 'Không lọc theo loại địa điểm', icon: 'bi-grid' },
+    { value: 'HALL', label: 'Hội trường', icon: 'bi-building' },
+    { value: 'CLASSROOM', label: 'Phòng học', icon: 'bi-easel' },
+    { value: 'SPORT_FIELD', label: 'Sân thể thao', icon: 'bi-dribbble' },
+    { value: 'LAB', label: 'Phòng thực hành', icon: 'bi-flask' },
+    { value: 'ONLINE', label: 'Trực tuyến', icon: 'bi-camera-video' },
+    { value: 'OTHER', label: 'Khác', icon: 'bi-three-dots' },
+  ];
+
+  readonly locationTypeSelectOptions = this.locationTypeOptions.slice(1);
+  readonly departmentSelectOptions = computed<CustomSelectOption[]>(() => [
+    {
+      value: null,
+      label: this.isLoadingDepartments() ? 'Đang tải đơn vị...' : 'Chọn khoa/trường quản lý',
+      description: this.isLoadingDepartments()
+        ? 'Danh sách đơn vị đang được tải'
+        : 'Không chọn nếu địa điểm do admin quản lý',
+      icon: 'bi-building',
+      disabled: this.isLoadingDepartments(),
+    },
+    ...this.departments().map((department) => ({
+      value: department.id,
+      label: department.name,
+      description: department.code ? `Mã ${department.code}` : 'Khoa / Trường',
+      icon: 'bi-buildings',
+    })),
+  ]);
+
+  readonly adminManagedOptions: CustomSelectOption[] = [
+    { value: '', label: 'Tất cả hình thức quản lý', description: 'Hiển thị mọi địa điểm', icon: 'bi-ui-checks-grid' },
+    { value: true, label: 'Admin quản lý', description: 'Địa điểm do admin phụ trách', icon: 'bi-shield-lock-fill' },
+    {
+      value: false,
+      label: 'Khoa / Trường quản lý',
+      description: 'Địa điểm do đơn vị quản lý',
+      icon: 'bi-building',
+    },
+  ];
+
+  readonly availabilityOptions: CustomSelectOption[] = [
+    { value: 'AVAILABLE', label: 'Sẵn sàng', icon: 'bi-check2-circle' },
+    { value: 'MAINTENANCE', label: 'Bảo trì', icon: 'bi-wrench-adjustable-circle' },
+    { value: 'UNAVAILABLE', label: 'Tạm ngưng', icon: 'bi-pause-circle' },
+  ];
+
+  readonly scheduleViewOptions: CustomSelectOption[] = [
+    { value: 'day', label: 'Ngày', icon: 'bi-calendar-day' },
+    { value: 'week', label: 'Tuần', icon: 'bi-calendar-week' },
+    { value: 'month', label: 'Tháng', icon: 'bi-calendar-month' },
+  ];
+
+  readonly bookingModeOptions: CustomSelectOption[] = [
+    { value: 'blocking', label: 'Đang giữ chỗ', icon: 'bi-shield-lock-fill' },
+    { value: 'all', label: 'Tất cả', icon: 'bi-grid' },
   ];
 
   readonly filterForm = this.fb.group({
     keyword: [''],
     type: [''],
-    availabilityStatus: [''],
-    active: [''],
-    bookable: [''],
     adminManaged: [''],
   });
 
@@ -145,9 +243,6 @@ export class LocationManagementComponent implements OnInit {
       .getLocations({
         keyword: raw.keyword || null,
         type: raw.type || null,
-        availabilityStatus: raw.availabilityStatus || null,
-        active: this.toBoolean(raw.active),
-        bookable: this.toBoolean(raw.bookable),
         managerDepartmentId: this.isDepartment() ? departmentId : null,
         adminManaged: this.isDepartment() ? false : this.toBoolean(raw.adminManaged),
       })
@@ -162,11 +257,9 @@ export class LocationManagementComponent implements OnInit {
     this.filterForm.reset({
       keyword: '',
       type: '',
-      availabilityStatus: '',
-      active: '',
-      bookable: '',
       adminManaged: this.isDepartment() ? 'false' : '',
     });
+    this.currentTab.set('ALL');
     this.loadLocations();
   }
 
@@ -354,7 +447,8 @@ export class LocationManagementComponent implements OnInit {
   }
 
   getTypeLabel(type?: string | null): string {
-    return this.locationTypes.find((item) => item.value === type)?.label || 'Khác';
+    const matched = this.locationTypeOptions.find((item) => item.value === type);
+    return matched?.value ? matched.label : 'Khác';
   }
 
   getAvailabilityLabel(status?: string | null): string {
@@ -391,6 +485,10 @@ export class LocationManagementComponent implements OnInit {
     return 'bg-slate-100 text-slate-600';
   }
 
+  selectTab(tab: LocationTabKey): void {
+    this.currentTab.set(tab);
+  }
+
   formatDisplayDate(value?: string | null): string {
     if (!value) return 'Chưa cung cấp';
     const date = new Date(value);
@@ -425,6 +523,28 @@ export class LocationManagementComponent implements OnInit {
     };
   }
 
+  private matchesCurrentTab(location: LocationResponse): boolean {
+    switch (this.currentTab()) {
+      case 'AVAILABLE':
+        return (
+          location.isActive !== false &&
+          location.isBookable !== false &&
+          location.availabilityStatus === 'AVAILABLE'
+        );
+      case 'MAINTENANCE':
+        return location.isActive !== false && location.availabilityStatus === 'MAINTENANCE';
+      case 'UNAVAILABLE':
+        return (
+          location.isActive !== false &&
+          (location.availabilityStatus === 'UNAVAILABLE' || location.isBookable === false)
+        );
+      case 'INACTIVE':
+        return location.isActive === false;
+      default:
+        return true;
+    }
+  }
+
   private loadDepartments(): void {
     if (!this.isAdmin()) {
       this.hydrateCurrentDepartmentOption();
@@ -440,7 +560,8 @@ export class LocationManagementComponent implements OnInit {
       });
   }
 
-  private toBoolean(value?: string | null): boolean | null {
+  private toBoolean(value?: string | boolean | null): boolean | null {
+    if (typeof value === 'boolean') return value;
     if (value === 'true') return true;
     if (value === 'false') return false;
     return null;

@@ -8,6 +8,20 @@
           Chuẩn hóa thông tin đơn vị đào tạo, mã định danh và trạng thái sử dụng cho lớp, chuyên
           ngành và người dùng.
         </p>
+        <div class="dept-header__meta">
+          <span class="dept-chip">
+            <strong>{{ allDepartments().length }}</strong>
+            tổng đơn vị
+          </span>
+          <span class="dept-chip dept-chip--active">
+            <strong>{{ activeCount() }}</strong>
+            hoạt động
+          </span>
+          <span class="dept-chip dept-chip--inactive">
+            <strong>{{ inactiveCount() }}</strong>
+            tạm ngừng
+          </span>
+        </div>
       </div>
       <button type="button" class="btn-create" (click)="openCreateForm()">
         <span class="btn-create-icon">+</span>
@@ -18,6 +32,29 @@
 
   <section class="dept-filter-bar">
     <div class="dept-filter-inner">
+      <div class="filter-status-col">
+        <span class="filter-label">Trạng thái</span>
+        <div class="status-tabs" role="tablist" aria-label="Lọc trạng thái đơn vị">
+          @for (option of statusFilterOptions; track option.value) {
+            <button
+              type="button"
+              class="status-tab"
+              role="tab"
+              [class.is-active]="filters().active === option.value"
+              [attr.aria-selected]="filters().active === option.value"
+              (click)="selectStatusFilter(option.value)"
+            >
+              <i class="bi" [ngClass]="option.icon"></i>
+              <span class="status-tab__text">
+                <span class="status-tab__label">{{ option.label }}</span>
+                <span class="status-tab__desc">{{ option.description }}</span>
+              </span>
+              <strong>{{ getStatusTabCount(option.value) }}</strong>
+            </button>
+          }
+        </div>
+      </div>
+
       <div class="filter-search-col">
         <label for="departmentKeyword" class="filter-label">Tìm kiếm đơn vị</label>
         <div class="filter-search-wrap">
@@ -31,20 +68,14 @@
             (ngModelChange)="updateFilter('keyword', $event)"
             (keyup.enter)="applyFilters()"
           />
-        </div>
-      </div>
-
-      <div class="filter-status-col">
-        <span class="filter-label">Trạng thái</span>
-        <div class="status-segment">
-          @for (option of statusFilterOptions; track option.value) {
+          @if (filters().keyword) {
             <button
               type="button"
-              class="segment-btn"
-              [class.segment-btn-active]="filters().active === option.value"
-              (click)="selectStatusFilter(option.value)"
+              class="filter-search-clear"
+              aria-label="Xóa tìm kiếm"
+              (click)="clearKeyword()"
             >
-              {{ option.label }}
+              <i class="bi bi-x-lg"></i>
             </button>
           }
         </div>
@@ -53,45 +84,6 @@
       <div class="filter-actions-col">
         <button type="button" class="filter-btn-reset" (click)="resetFilters()">Đặt lại</button>
         <button type="button" class="filter-btn-primary" (click)="applyFilters()">Tìm kiếm</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="dept-summary-strip">
-    <div class="summary-item">
-      <div class="summary-icon summary-icon-blue">
-        <i class="bi bi-building-fill"></i>
-      </div>
-      <div class="summary-content">
-        <span class="summary-value">{{ allDepartments().length }}</span>
-        <span class="summary-label">Tổng đơn vị</span>
-      </div>
-    </div>
-    <div class="summary-item">
-      <div class="summary-icon summary-icon-emerald">
-        <i class="bi bi-check-circle-fill"></i>
-      </div>
-      <div class="summary-content">
-        <span class="summary-value">{{ activeCount() }}</span>
-        <span class="summary-label">Đang hoạt động</span>
-      </div>
-    </div>
-    <div class="summary-item">
-      <div class="summary-icon summary-icon-amber">
-        <i class="bi bi-diagram-3-fill"></i>
-      </div>
-      <div class="summary-content">
-        <span class="summary-value">{{ departmentsWithMajors() }}</span>
-        <span class="summary-label">Có chuyên ngành</span>
-      </div>
-    </div>
-    <div class="summary-item">
-      <div class="summary-icon summary-icon-rose">
-        <i class="bi bi-pause-circle-fill"></i>
-      </div>
-      <div class="summary-content">
-        <span class="summary-value">{{ inactiveCount() }}</span>
-        <span class="summary-label">Tạm ngừng</span>
       </div>
     </div>
   </section>

@@ -7,7 +7,7 @@
 .dashboard-header,
 .content-panel,
 .stat-card,
-.activity-item,
+.monitoring-item,
 .quick-action {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -288,18 +288,19 @@
   }
 }
 
-.activity-list,
+.monitoring-list,
 .quick-actions-grid {
   display: grid;
   gap: 0.625rem;
 }
 
-.activity-item {
+.monitoring-item {
   display: grid;
-  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto 1.25rem;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem;
+  min-height: 5rem;
+  padding: 0.8125rem;
   color: var(--text);
   text-decoration: none;
   transition:
@@ -311,19 +312,27 @@
     transform: translateY(-0.0625rem);
     border-color: rgba(37, 99, 235, 0.26);
     background: rgba(239, 246, 255, 0.45);
+
+    .monitoring-item__arrow {
+      transform: translateX(0.125rem);
+    }
   }
 
   @media (max-width: 639px) {
     grid-template-columns: 2.5rem minmax(0, 1fr);
 
-    .badge-status {
+    .monitoring-item__metric {
       grid-column: 2;
       justify-self: flex-start;
+    }
+
+    .monitoring-item__arrow {
+      display: none;
     }
   }
 }
 
-.activity-item__thumb,
+.monitoring-item__thumb,
 .quick-action__icon {
   display: inline-flex;
   align-items: center;
@@ -333,13 +342,38 @@
   color: var(--primary);
 }
 
-.activity-item__thumb {
+.monitoring-item__thumb {
   width: 2.75rem;
   height: 2.75rem;
   font-size: 1.1875rem;
 }
 
-.activity-item__info,
+.monitoring-item--success .monitoring-item__thumb {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.monitoring-item--info .monitoring-item__thumb {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.monitoring-item--warning .monitoring-item__thumb {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.monitoring-item--teal .monitoring-item__thumb {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.monitoring-item--slate .monitoring-item__thumb {
+  background: var(--bg-input);
+  color: var(--text-muted);
+}
+
+.monitoring-item__info,
 .quick-action__text {
   display: flex;
   min-width: 0;
@@ -347,26 +381,74 @@
   gap: 0.1875rem;
 }
 
-.activity-item__name,
+.monitoring-item__name,
 .quick-action__label,
 .quick-action__description,
-.activity-item__meta {
+.monitoring-item__meta {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.activity-item__name {
+.monitoring-item__name {
   color: var(--text);
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.35;
 }
 
-.activity-item__meta {
+.monitoring-item__meta {
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 400;
+}
+
+.monitoring-item__metric {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 5.625rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  padding: 0.3125rem 0.625rem;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  strong {
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1;
+  }
+}
+
+.monitoring-item--primary .monitoring-item__metric {
+  background: var(--primary-light);
+  color: var(--primary-hover);
+}
+
+.monitoring-item--success .monitoring-item__metric,
+.monitoring-item--teal .monitoring-item__metric {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.monitoring-item--info .monitoring-item__metric {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.monitoring-item--warning .monitoring-item__metric {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.monitoring-item__arrow {
+  color: var(--text-disabled);
+  font-size: 1rem;
+  transition: transform 0.18s ease;
 }
 
 .empty-state {
@@ -463,36 +545,4 @@
   color: var(--text-disabled);
   font-size: 1rem;
   transition: transform 0.18s ease;
-}
-
-.badge-status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.625rem;
-  border-radius: var(--radius-full);
-  padding: 0.25rem 0.625rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.badge-status--pending {
-  background: var(--warning-bg);
-  color: var(--warning);
-}
-
-.badge-status--active {
-  background: var(--success-bg);
-  color: var(--success);
-}
-
-.badge-status--ended {
-  background: var(--bg-input);
-  color: var(--text-muted);
-}
-
-.badge-status--rejected {
-  background: var(--danger-bg);
-  color: var(--danger);
 }

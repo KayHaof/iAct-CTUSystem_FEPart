@@ -89,8 +89,10 @@ export class ActivityModerationComponent implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
-          this.activities.set(res.data?.data || []);
-          this.totalItems.set(res.data?.totalRows || 0);
+          const page = res.data;
+          const rows = page?.data || [];
+          this.activities.set(rows);
+          this.totalItems.set(page?.totalRows && page.totalRows > 0 ? page.totalRows : rows.length);
         },
         error: () => this.alertService.error('Lỗi khi tải danh sách hoạt động!'),
       });

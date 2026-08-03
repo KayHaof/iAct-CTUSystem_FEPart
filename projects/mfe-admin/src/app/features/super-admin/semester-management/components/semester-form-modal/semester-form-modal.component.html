@@ -42,36 +42,14 @@
         </div>
 
         <div class="form-group">
-          <span class="form-label">Trạng thái</span>
-          <div class="select-field">
-            <button
-              type="button"
-              class="select-trigger"
-              aria-haspopup="listbox"
-              [attr.aria-expanded]="isDropdownOpen('statusForm')"
-              (click)="dropdownToggle.emit('statusForm')"
-            >
-              <span>{{ getStatusFormLabel() }}</span>
-              <i class="bi bi-chevron-down text-xs"></i>
-            </button>
-            @if (isDropdownOpen('statusForm')) {
-              <div class="select-panel" role="listbox">
-                @for (option of statusFormOptions; track option.label) {
-                  <button
-                    type="button"
-                    role="option"
-                    class="select-option"
-                    [attr.aria-selected]="form.isActive === option.value ? 'true' : 'false'"
-                    [class.select-option-active]="form.isActive === option.value"
-                    (click)="selectStatus.emit(option.value)"
-                  >
-                    <span class="option-label">{{ option.label }}</span>
-                    <span class="option-desc">{{ option.description }}</span>
-                  </button>
-                }
-              </div>
-            }
-          </div>
+          <lib-custom-select
+            label="Trạng thái"
+            placeholder="Chọn trạng thái"
+            icon="bi-ui-checks-grid"
+            [options]="getStatusOptions()"
+            [value]="form.isActive"
+            (valueChange)="onStatusChange($event)"
+          ></lib-custom-select>
         </div>
 
         <div class="form-group">

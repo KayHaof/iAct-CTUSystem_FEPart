@@ -2,7 +2,7 @@
   <header class="class-header">
     <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
       <div>
-        <p class="header-eyebrow">Ma trận lớp</p>
+        <p class="header-eyebrow">Lớp chuyên ngành</p>
         <h1 class="header-title">Quản lý lớp sinh hoạt</h1>
         <p class="header-subtitle">
           Kết nối lớp với chuyên ngành và khóa tuyển sinh để quản lý danh sách sinh viên chính xác
@@ -18,64 +18,24 @@
 
   <app-class-filters
     [filters]="filters()"
+    [allClasses]="allClasses()"
     [departments]="departments()"
     [majors]="filterMajorsByDepartment()"
     [academicYearOptions]="academicYearOptions"
     [statusFilterOptions]="statusFilterOptions"
-    [openDropdown]="filterDropdown()"
     (keywordChange)="updateFilter('keyword', $event)"
     (applyFilters)="applyFilters()"
     (resetFilters)="resetFilters()"
-    (dropdownToggle)="toggleDropdown($event)"
     (selectStatus)="selectStatusFilter($event)"
     (selectDepartment)="selectDepartmentFilter($event)"
     (selectMajor)="selectMajorFilter($event)"
     (selectAcademicYear)="selectAcademicYearFilter($event)"
   ></app-class-filters>
 
-  <section class="class-summary-strip">
-    <div class="summary-item">
-      <div class="summary-icon summary-icon-emerald">
-        <i class="bi bi-collection-fill"></i>
-      </div>
-      <div class="summary-content">
-        <span class="summary-value">{{ allClasses().length }}</span>
-        <span class="summary-label">Tổng lớp</span>
-      </div>
-    </div>
-    <div class="summary-item">
-      <div class="summary-icon summary-icon-teal">
-        <i class="bi bi-check-circle-fill"></i>
-      </div>
-      <div class="summary-content">
-        <span class="summary-value">{{ activeCount() }}</span>
-        <span class="summary-label">Đang hoạt động</span>
-      </div>
-    </div>
-    <div class="summary-item">
-      <div class="summary-icon summary-icon-blue">
-        <i class="bi bi-building-fill"></i>
-      </div>
-      <div class="summary-content">
-        <span class="summary-value">{{ departmentCount() }}</span>
-        <span class="summary-label">Đơn vị có lớp</span>
-      </div>
-    </div>
-    <div class="summary-item">
-      <div class="summary-icon summary-icon-amber">
-        <i class="bi bi-calendar-event-fill"></i>
-      </div>
-      <div class="summary-content">
-        <span class="summary-value">{{ topAcademicYear() }}</span>
-        <span class="summary-label">Khóa phổ biến</span>
-      </div>
-    </div>
-  </section>
-
   <div class="table-wrapper">
     <div class="table-header-bar">
       <div>
-        <p class="table-header-eyebrow">Ma trận lớp</p>
+        <p class="table-header-eyebrow">Lớp chuyên ngành</p>
         <h2 class="table-header-title">Lớp sinh hoạt theo đơn vị và khóa tuyển sinh</h2>
       </div>
       <span class="record-count">{{ totalItems() }} bản ghi</span>
@@ -174,7 +134,6 @@
       [totalItems]="totalItems()"
       [pageSize]="pageSize()"
       [currentPage]="currentPage()"
-      theme="dark"
       (pageChange)="onPageChange($event)"
       (pageSizeChange)="onPageSizeChange($event)"
     ></lib-pagination>
@@ -190,7 +149,6 @@
   [isSaving]="isSaving()"
   [editingClass]="editingClass()"
   [form]="form()"
-  [openDropdown]="formDropdown()"
   [activeDepartments]="activeDepartments()"
   [activeMajorsByDepartment]="activeMajorsByDepartment()"
   [academicYearOptions]="academicYearOptions"
@@ -199,7 +157,6 @@
   (save)="saveClass()"
   (nameChange)="updateForm('name', $event)"
   (classCodeChange)="updateForm('classCode', $event)"
-  (dropdownToggle)="toggleDropdown($event)"
   (selectDepartment)="selectDepartmentForm($event)"
   (selectMajor)="selectMajorForm($event)"
   (selectAcademicYear)="selectAcademicYearForm($event)"

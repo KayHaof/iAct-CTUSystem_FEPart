@@ -18,80 +18,56 @@
       }
     </header>
 
-    <section class="location-stats" aria-label="Thống kê địa điểm">
-      <article>
-        <span>{{ locations().length }}</span>
-        <p>{{ isDepartment() ? 'Địa điểm đơn vị' : 'Tổng địa điểm' }}</p>
-      </article>
-      <article>
-        <span>{{ availableCount() }}</span>
-        <p>Sẵn sàng</p>
-      </article>
-      <article>
-        <span>{{ maintenanceCount() }}</span>
-        <p>Bảo trì</p>
-      </article>
-      <article>
-        <span>{{ bookableCount() }}</span>
-        <p>Cho phép mượn</p>
-      </article>
+    <section class="location-tabs-panel" aria-label="Bộ lọc nhanh">
+      <div class="location-tabs" role="tablist" aria-label="Lọc trạng thái địa điểm">
+        @for (tab of locationTabs(); track tab.key) {
+          <button
+            type="button"
+            class="location-tab"
+            [class.is-active]="currentTab() === tab.key"
+            [ngClass]="'location-tab--' + tab.tone"
+            role="tab"
+            [attr.aria-selected]="currentTab() === tab.key"
+            (click)="selectTab(tab.key)"
+          >
+            <i [class]="tab.icon"></i>
+            <span class="location-tab__label">{{ tab.label }}</span>
+            <strong class="location-tab__count">{{ tab.count }}</strong>
+          </button>
+        }
+      </div>
     </section>
 
     <section class="location-filter-panel">
-      <form [formGroup]="filterForm" class="location-filter-grid">
+      <form
+        [formGroup]="filterForm"
+        class="location-filter-grid"
+        [class.location-filter-grid--admin]="isAdmin()"
+        (ngSubmit)="loadLocations()"
+      >
         <label class="location-field location-field--search">
           <span>Tìm kiếm</span>
           <input type="search" formControlName="keyword" placeholder="Tên, mã, tòa nhà, phòng" />
         </label>
 
-        <label class="location-field">
-          <span>Loại</span>
-          <select formControlName="type">
-            <option value="">Tất cả</option>
-            @for (type of locationTypes; track type.value) {
-              <option [value]="type.value">{{ type.label }}</option>
-            }
-          </select>
-        </label>
-
-        <label class="location-field">
-          <span>Khả dụng</span>
-          <select formControlName="availabilityStatus">
-            <option value="">Tất cả</option>
-            <option value="AVAILABLE">Sẵn sàng</option>
-            <option value="MAINTENANCE">Bảo trì</option>
-            <option value="UNAVAILABLE">Tạm ngưng</option>
-          </select>
-        </label>
-
-        <label class="location-field">
-          <span>Trạng thái</span>
-          <select formControlName="active">
-            <option value="">Tất cả</option>
-            <option value="true">Đang dùng</option>
-            <option value="false">Đã khóa</option>
-          </select>
-        </label>
+        <lib-custom-select
+          label="Loại"
+          icon="bi-grid"
+          [options]="locationTypeOptions"
+          formControlName="type"
+        ></lib-custom-select>
 
         @if (isAdmin()) {
-          <label class="location-field">
-            <span>Quản lý</span>
-            <select formControlName="adminManaged">
-              <option value="">Tất cả</option>
-              <option value="true">Admin</option>
-              <option value="false">Khoa/Trường</option>
-            </select>
-          </label>
+          <lib-custom-select
+            label="Quản lý"
+            icon="bi-shield-lock-fill"
+            [options]="adminManagedOptions"
+            formControlName="adminManaged"
+          ></lib-custom-select>
         }
 
         <div class="location-filter-actions">
-          <button
-            type="button"
-            class="location-button location-button--primary"
-            (click)="loadLocations()"
-          >
-            Lọc
-          </button>
+          <button type="submit" class="location-button location-button--primary">Lọc</button>
           <button
             type="button"
             class="location-button location-button--secondary"
@@ -109,13 +85,15 @@
           <p>Danh sách</p>
           <h2>{{ isDepartment() ? 'Địa điểm thuộc khoa/trường của bạn' : 'Địa điểm hiện có' }}</h2>
         </div>
-        <span>{{ locations().length }} bản ghi</span>
+        <span>{{ visibleLocations().length }} bản ghi</span>
       </div>
 
       @if (isLoading()) {
         <div class="location-empty">Đang tải danh sách địa điểm...</div>
       } @else if (!locations().length) {
-        <div class="location-empty">Chưa có địa điểm phù hợp.</div>
+        <div class="location-empty">Chưa có địa điểm phù hợp với bộ lọc.</div>
+      } @else if (!visibleLocations().length) {
+        <div class="location-empty">Không có địa điểm trong trạng thái đang chọn.</div>
       } @else {
         <div class="location-table-wrap">
           <table class="location-table">
@@ -130,7 +108,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (location of locations(); track location.id) {
+              @for (location of visibleLocations(); track location.id) {
                 <tr>
                   <td>
                     <strong>{{ location.name }}</strong>
@@ -234,14 +212,14 @@
                 <span>Mã địa điểm</span>
                 <input formControlName="code" />
               </label>
-              <label class="location-field">
-                <span>Loại</span>
-                <select formControlName="type">
-                  @for (type of locationTypes; track type.value) {
-                    <option [value]="type.value">{{ type.label }}</option>
-                  }
-                </select>
-              </label>
+              <div class="location-field">
+                <lib-custom-select
+                  label="Loại"
+                  icon="bi-grid"
+                  [options]="locationTypeSelectOptions"
+                  formControlName="type"
+                ></lib-custom-select>
+              </div>
               <label class="location-field">
                 <span>Sức chứa</span>
                 <input type="number" min="0" formControlName="capacity" />
@@ -270,19 +248,15 @@
             </label>
 
             @if (!locationForm.get('adminManaged')?.value) {
-              <label class="location-field">
-                <span>Đơn vị quản lý</span>
-                <select formControlName="managerDepartmentId">
-                  <option [ngValue]="null">
-                    {{ isLoadingDepartments() ? 'Đang tải đơn vị...' : 'Chọn khoa/trường quản lý' }}
-                  </option>
-                  @for (department of departments(); track department.id) {
-                    <option [ngValue]="department.id">
-                      {{ department.name }}{{ department.code ? ' - ' + department.code : '' }}
-                    </option>
-                  }
-                </select>
-              </label>
+              <div class="location-field">
+                <lib-custom-select
+                  label="Đơn vị quản lý"
+                  icon="bi-building"
+                  [placeholder]="isLoadingDepartments() ? 'Đang tải đơn vị...' : 'Chọn khoa/trường quản lý'"
+                  [options]="departmentSelectOptions()"
+                  formControlName="managerDepartmentId"
+                ></lib-custom-select>
+              </div>
             } @else {
               <div class="location-managed-note">
                 <strong>Admin quản lý địa điểm này</strong>
@@ -339,14 +313,14 @@
               <input type="checkbox" formControlName="isBookable" />
               <span>Cho phép mượn địa điểm này</span>
             </label>
-            <label class="location-field">
-              <span>Trạng thái</span>
-              <select formControlName="availabilityStatus">
-                <option value="AVAILABLE">Sẵn sàng</option>
-                <option value="MAINTENANCE">Bảo trì</option>
-                <option value="UNAVAILABLE">Tạm ngưng</option>
-              </select>
-            </label>
+            <div class="location-field">
+              <lib-custom-select
+                label="Trạng thái"
+                icon="bi-lightning-charge"
+                [options]="availabilityOptions"
+                formControlName="availabilityStatus"
+              ></lib-custom-select>
+            </div>
             <label class="location-field">
               <span>Lý do</span>
               <textarea formControlName="unavailableReason"></textarea>
@@ -377,21 +351,22 @@
                 <span>Ngày</span>
                 <input type="date" formControlName="date" />
               </label>
-              <label class="location-field">
-                <span>Kiểu lịch</span>
-                <select formControlName="view">
-                  <option value="day">Ngày</option>
-                  <option value="week">Tuần</option>
-                  <option value="month">Tháng</option>
-                </select>
-              </label>
-              <label class="location-field">
-                <span>Trạng thái</span>
-                <select formControlName="statusMode">
-                  <option value="blocking">Đang giữ chỗ</option>
-                  <option value="all">Tất cả</option>
-                </select>
-              </label>
+              <div class="location-field">
+                <lib-custom-select
+                  label="Kiểu lịch"
+                  icon="bi-calendar-range"
+                  [options]="scheduleViewOptions"
+                  formControlName="view"
+                ></lib-custom-select>
+              </div>
+              <div class="location-field">
+                <lib-custom-select
+                  label="Trạng thái"
+                  icon="bi-funnel"
+                  [options]="bookingModeOptions"
+                  formControlName="statusMode"
+                ></lib-custom-select>
+              </div>
               <button
                 type="button"
                 class="location-button location-button--primary"

@@ -1,10 +1,17 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  EventEmitter,
+  Input,
+  Output,
+  ViewEncapsulation,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CustomSelectComponent, CustomSelectOption, CustomSelectValue } from '@my-mfe/ui';
 
 import { SemesterResponse } from '../../../../../shared/models/master-data.model';
-
-export type SemesterFormDropdownKey = 'statusForm';
 
 type SelectOption<T> = {
   label: string;
@@ -15,11 +22,12 @@ type SelectOption<T> = {
 @Component({
   selector: 'app-semester-form-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CustomSelectComponent],
   templateUrl: './semester-form-modal.component.html',
   styleUrls: ['./semester-form-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class SemesterFormModalComponent {
   @Input() isOpen = false;
@@ -33,7 +41,6 @@ export class SemesterFormModalComponent {
     isActive: boolean;
     isLocked: boolean;
   };
-  @Input() openDropdown: SemesterFormDropdownKey | null = null;
   @Input() statusFormOptions: Array<SelectOption<boolean>> = [];
 
   @Output() modalClosed = new EventEmitter<void>();
@@ -43,14 +50,18 @@ export class SemesterFormModalComponent {
   @Output() startDateChange = new EventEmitter<string>();
   @Output() endDateChange = new EventEmitter<string>();
   @Output() isLockedChange = new EventEmitter<boolean>();
-  @Output() dropdownToggle = new EventEmitter<SemesterFormDropdownKey>();
   @Output() selectStatus = new EventEmitter<boolean>();
 
-  isDropdownOpen(key: SemesterFormDropdownKey): boolean {
-    return this.openDropdown === key;
+  getStatusOptions(): CustomSelectOption[] {
+    return this.statusFormOptions.map((option) => ({
+      label: option.label,
+      value: option.value,
+      description: option.description,
+      icon: option.value ? 'bi-check-circle' : 'bi-circle',
+    }));
   }
 
-  getStatusFormLabel(): string {
-    return this.form.isActive ? 'Đang áp dụng' : 'Chưa áp dụng';
+  onStatusChange(value: CustomSelectValue): void {
+    this.selectStatus.emit(value === true);
   }
 }

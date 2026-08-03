@@ -1,53 +1,60 @@
-<div class="stats-container-card">
-  <div class="chart-wrapper">
-    <apx-chart
-      [series]="chartOptions().series"
-      [chart]="chartOptions().chart"
-      [labels]="chartOptions().labels"
-      [colors]="chartOptions().colors"
-      [plotOptions]="chartOptions().plotOptions"
-      [dataLabels]="chartOptions().dataLabels"
-      [legend]="chartOptions().legend"
-      [stroke]="chartOptions().stroke"
-      [tooltip]="chartOptions().tooltip"
-    ></apx-chart>
-  </div>
+<section class="stats-panel">
+  <div class="stats-panel__header">
+    <div class="stats-panel__heading">
+      <p class="stats-panel__eyebrow">Thống kê duyệt hoạt động</p>
+      <h2 class="stats-panel__title">Hoạt động theo Khoa / Đơn vị</h2>
+    </div>
 
-  <div class="legend-wrapper">
-    <div class="legend-list">
-
-      <!-- Mini Card: Chờ duyệt -->
-      <div class="legend-item card-amber">
-        <div class="info">
-          <span class="name">Chờ duyệt</span>
-          <span class="count">{{ statsData()?.pendingReview || 0 }}</span>
-        </div>
-      </div>
-
-      <!-- Mini Card: Đã duyệt -->
-      <div class="legend-item card-blue">
-        <div class="info">
-          <span class="name">Đã duyệt</span>
-          <span class="count">{{ statsData()?.approvedThisTerm || 0 }}</span>
-        </div>
-      </div>
-
-      <!-- Mini Card: Từ chối -->
-      <div class="legend-item card-red">
-        <div class="info">
-          <span class="name">Từ chối</span>
-          <span class="count">{{ statsData()?.rejected || 0 }}</span>
-        </div>
-      </div>
-
-      <!-- Mini Card: Tổng cộng -->
-      <div class="legend-item card-gray">
-        <div class="info">
-          <span class="name">Tổng cộng</span>
-          <span class="count">{{ totalCount() }}</span>
-        </div>
-      </div>
-
+    <div class="stats-panel__total">
+      <span>Tổng cộng</span>
+      <strong>{{ totalCount() }}</strong>
     </div>
   </div>
-</div>
+
+  <div class="stats-panel__body">
+    <div class="stats-panel__chart">
+      @if (hasChartData()) {
+        <apx-chart
+          [series]="chartOptions().series"
+          [chart]="chartOptions().chart"
+          [plotOptions]="chartOptions().plotOptions"
+          [dataLabels]="chartOptions().dataLabels"
+          [stroke]="chartOptions().stroke"
+          [fill]="chartOptions().fill"
+          [grid]="chartOptions().grid"
+          [xaxis]="chartOptions().xaxis"
+          [yaxis]="chartOptions().yaxis"
+          [legend]="chartOptions().legend"
+          [tooltip]="chartOptions().tooltip"
+          [colors]="chartOptions().colors"
+        ></apx-chart>
+      } @else {
+        <div class="stats-empty">
+          <i class="bi bi-bar-chart-line"></i>
+          <p>Chưa có dữ liệu cho biểu đồ.</p>
+        </div>
+      }
+    </div>
+
+    <aside class="stats-panel__legend">
+      <div class="legend-card">
+        <div class="legend-card__header">
+          <h3>Chú thích</h3>
+          <span>Trạng thái</span>
+        </div>
+
+        <div class="legend-list">
+          @for (item of legendItems(); track item.label) {
+            <div class="legend-row">
+              <span class="legend-row__label">
+                <i class="legend-row__dot" [style.background]="item.color"></i>
+                {{ item.label }}
+              </span>
+              <strong>{{ item.value }}</strong>
+            </div>
+          }
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>

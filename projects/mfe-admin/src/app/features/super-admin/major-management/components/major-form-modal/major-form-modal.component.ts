@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  CUSTOM_ELEMENTS_SCHEMA,
   EventEmitter,
   Input,
   Output,
@@ -8,16 +9,12 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CustomSelectComponent, CustomSelectOption, CustomSelectValue } from '@my-mfe/ui';
 
 import {
   DepartmentResponse,
-  MajorRequest,
   MajorResponse,
 } from '../../../../../shared/models/master-data.model';
-
-export type MajorFormDropdownKey = 'departmentForm' | 'programForm' | 'activeForm';
-
-type MajorDropdownKey = 'departmentForm' | 'programForm' | 'activeForm';
 
 type SelectOption<T> = {
   label: string;
@@ -28,11 +25,12 @@ type SelectOption<T> = {
 @Component({
   selector: 'app-major-form-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CustomSelectComponent],
   templateUrl: './major-form-modal.component.html',
   styleUrls: ['./major-form-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class MajorFormModalComponent {
   @Input({ required: true }) isOpen = false;
@@ -45,7 +43,6 @@ export class MajorFormModalComponent {
     departmentId: number | '';
     isActive: boolean;
   };
-  @Input() openDropdown: MajorFormDropdownKey | null = null;
   @Input() activeDepartments: DepartmentResponse[] = [];
   @Input() programTypeOptions: Array<SelectOption<string>> = [];
   @Input() activeFormOptions: Array<SelectOption<boolean>> = [];
@@ -54,33 +51,59 @@ export class MajorFormModalComponent {
   @Output() save = new EventEmitter<void>();
   @Output() nameChange = new EventEmitter<string>();
   @Output() codeChange = new EventEmitter<string>();
-  @Output() dropdownToggle = new EventEmitter<MajorDropdownKey>();
   @Output() selectDepartment = new EventEmitter<number | ''>();
   @Output() selectProgram = new EventEmitter<string>();
   @Output() selectActive = new EventEmitter<boolean>();
 
-  isDropdownOpen(key: MajorFormDropdownKey): boolean {
-    return this.openDropdown === key;
-  }
-
-  getDepartmentFormLabel(): string {
-    const departmentId = this.form.departmentId;
-    if (departmentId === '') {
-      return 'Chọn đơn vị quản lý';
+  getDepartmentOptions(): CustomSelectOption[] {
+    if (this.activeDepartments.length === 0) {
+      return [
+        {
+          label: 'Chưa có đơn vị đang hoạt động',
+          value: '',
+          description: 'Cần kích hoạt đơn vị trước khi gán chuyên ngành',
+          icon: 'bi-building-slash',
+          disabled: true,
+        },
+      ];
     }
 
-    return (
-      this.activeDepartments.find((department) => department.id === departmentId)?.name ||
-      'Đơn vị đã chọn'
-    );
+    return this.activeDepartments.map((department) => ({
+      label: department.name,
+      value: department.id,
+      description: department.code || 'Chưa có mã',
+      icon: 'bi-building',
+    }));
   }
 
-  getProgramFormLabel(): string {
-    return this.form.programType || 'Chọn hệ đào tạo';
+  getProgramOptions(): CustomSelectOption[] {
+    return this.programTypeOptions.map((option) => ({
+      label: option.label,
+      value: option.value,
+      description: option.description,
+      icon: 'bi-mortarboard',
+    }));
   }
 
-  getActiveFormLabel(): string {
-    return this.form.isActive ? 'Đang hoạt động' : 'Tạm ngừng';
+  getActiveOptions(): CustomSelectOption[] {
+    return this.activeFormOptions.map((option) => ({
+      label: option.label,
+      value: option.value,
+      description: option.description,
+      icon: option.value ? 'bi-check-circle' : 'bi-pause-circle',
+    }));
+  }
+
+  onDepartmentChange(value: CustomSelectValue): void {
+    this.selectDepartment.emit(typeof value === 'number' ? value : '');
+  }
+
+  onProgramChange(value: CustomSelectValue): void {
+    this.selectProgram.emit(typeof value === 'string' ? value : '');
+  }
+
+  onActiveChange(value: CustomSelectValue): void {
+    this.selectActive.emit(value === false ? false : true);
   }
 
   onSubmit(): void {

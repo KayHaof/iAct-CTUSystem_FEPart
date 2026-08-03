@@ -1,70 +1,63 @@
 <div class="mod-page">
-  <!-- Page Header -->
   <header class="mod-header">
-    <div class="mod-header-inner">
-      <div class="mod-header-icon">
-        <i class="bi bi-shield-check"></i>
-      </div>
-      <div class="mod-header-text">
-        <h1 class="mod-header-title">Quản lý hoạt động trong hệ thống</h1>
-        <p class="mod-header-subtitle">Xem xét và phê duyệt các hoạt động được gửi từ các đơn vị trong toàn hệ thống.</p>
+    <div class="mod-header__copy">
+      <p class="mod-header__eyebrow">Quản trị hệ thống</p>
+      <h1 class="mod-header__title">Quản lý hoạt động</h1>
+      <p class="mod-header__subtitle">
+        Chỉ hiển thị hoạt động được gửi bởi Khoa / Đơn vị để duyệt.
+      </p>
+    </div>
+
+    <div class="mod-header__count" aria-label="Số hoạt động đang xem">
+      <i class="bi bi-calendar2-check"></i>
+      <div>
+        <span>Đang xem</span>
+        <strong>{{ totalItems() }}</strong>
+        <small>hoạt động</small>
       </div>
     </div>
   </header>
 
-  <!-- Stats -->
-  <section class="mod-stats">
-    <app-moderation-stats [statsData]="stats()"></app-moderation-stats>
-  </section>
+  <app-moderation-stats [statsData]="stats()"></app-moderation-stats>
 
-  <!-- Main Content -->
-  <main class="mod-main">
-    <div class="mod-content-card">
-      <div class="mod-filters-bar">
-        <app-moderation-filters (filterApplied)="handleFilterApplied($event)"></app-moderation-filters>
-      </div>
+  <app-moderation-filters (filterApplied)="handleFilterApplied($event)"></app-moderation-filters>
 
-      <div class="mod-table-area">
-        <app-moderation-table
-          [isLoading]="isLoading()"
-          [data]="activities()"
-          [total]="totalItems()"
-          [currentPage]="currentPage()"
-          [pageSize]="pageSize()"
-          (pageChanged)="handlePageChange($event)"
-          (sizeChanged)="handlePageSizeChange($event)"
-          (approve)="onApproveActivity($event)"
-          (reject)="openRejectModal($event)"
-          (view)="openViewModal($event)"
-          (viewReason)="openViewReasonModal($event)">
-        </app-moderation-table>
-      </div>
-    </div>
-  </main>
+  <app-moderation-table
+    [isLoading]="isLoading()"
+    [data]="activities()"
+    [total]="totalItems()"
+    [currentPage]="currentPage()"
+    [pageSize]="pageSize()"
+    (pageChanged)="handlePageChange($event)"
+    (sizeChanged)="handlePageSizeChange($event)"
+    (approve)="onApproveActivity($event)"
+    (reject)="openRejectModal($event)"
+    (view)="openViewModal($event)"
+    (viewReason)="openViewReasonModal($event)"
+  ></app-moderation-table>
 </div>
 
-<!-- Modals -->
 @if (modalStates().view && selectedActivityForAction()) {
   <app-view-activity-modal
     [activityId]="selectedActivityForAction()!.id"
     (approve)="handleViewApprove($event)"
     (reject)="handleViewReject($event)"
-    (modalClosed)="toggleModal('view', false)">
-  </app-view-activity-modal>
+    (modalClosed)="toggleModal('view', false)"
+  ></app-view-activity-modal>
 }
 
 @if (modalStates().reject && selectedActivityForAction()) {
   <app-reject-activity-modal
     [activityName]="selectedActivityForAction()!.title"
     (confirm)="onConfirmReject($event)"
-    (modalClosed)="toggleModal('reject', false)">
-  </app-reject-activity-modal>
+    (modalClosed)="toggleModal('reject', false)"
+  ></app-reject-activity-modal>
 }
 
 @if (modalStates().viewReason && selectedActivityForAction()) {
   <app-view-reject-reason-modal
     [activityName]="selectedActivityForAction()!.title"
     [reason]="selectedActivityForAction()!.reason || 'Không có lý do cụ thể được ghi nhận.'"
-    (modalClosed)="toggleModal('viewReason', false)">
-  </app-view-reject-reason-modal>
+    (modalClosed)="toggleModal('viewReason', false)"
+  ></app-view-reject-reason-modal>
 }

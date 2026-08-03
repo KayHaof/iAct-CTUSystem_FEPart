@@ -9,7 +9,16 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { AlertService, ConfirmDialogComponent, ConfirmService, PaginationComponent, TableContainerComponent } from '@my-mfe/ui';
+import {
+  AlertService,
+  ConfirmDialogComponent,
+  ConfirmService,
+  CustomSelectComponent,
+  CustomSelectOption,
+  CustomSelectValue,
+  PaginationComponent,
+  TableContainerComponent,
+} from '@my-mfe/ui';
 
 import { MasterDataService } from '../services/master-data.service';
 import {
@@ -26,12 +35,11 @@ type CategoryForm = {
   isActive: boolean;
 };
 
-type CategoryDropdownKey = 'statusFilter' | 'parentFilter' | 'parentForm' | 'activeForm';
-
 type SelectOption<T> = {
   label: string;
   value: T;
   description?: string;
+  icon?: string;
 };
 
 type TreeCategoryNode = CategoryResponse & { level: number };
@@ -39,7 +47,14 @@ type TreeCategoryNode = CategoryResponse & { level: number };
 @Component({
   selector: 'app-category-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, ConfirmDialogComponent, PaginationComponent, TableContainerComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ConfirmDialogComponent,
+    CustomSelectComponent,
+    PaginationComponent,
+    TableContainerComponent,
+  ],
   templateUrl: './category-management.component.html',
   styleUrls: ['./category-management.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,6 +66,7 @@ export class CategoryManagementComponent implements OnInit {
 
   public categories = signal<CategoryResponse[]>([]);
   public categoryTree = signal<CategoryResponse[]>([]);
+  public keyword = signal('');
   public isLoading = signal(false);
   public isSaving = signal(false);
   public isFormOpen = signal(false);
@@ -58,7 +74,6 @@ export class CategoryManagementComponent implements OnInit {
   public editingCategory = signal<CategoryResponse | null>(null);
   public currentPage = signal(1);
   public pageSize = signal(10);
-  public openDropdown = signal<CategoryDropdownKey | null>(null);
   public filters = signal<CategoryFilters>({
     active: '',
     parentId: '',
@@ -66,38 +81,96 @@ export class CategoryManagementComponent implements OnInit {
 
   public form = signal<CategoryForm>(this.createEmptyForm());
 
-  public readonly statusFilterOptions: Array<SelectOption<CategoryFilters['active']>> = [
-    { label: 'Tất cả', value: '', description: 'Không giới hạn trạng thái' },
-    { label: 'Đang hoạt động', value: 'true', description: 'Chỉ danh mục đang dùng' },
-    { label: 'Tạm ngưng', value: 'false', description: 'Danh mục đã tạm ngưng' },
+  public readonly statusTabs: Array<SelectOption<CategoryFilters['active']>> = [
+    { label: 'Tất cả', value: '', description: 'Toàn bộ danh mục', icon: 'bi-ui-checks-grid' },
+    { label: 'Hoạt động', value: 'true', description: 'Đang được sử dụng', icon: 'bi-check2-circle' },
+    { label: 'Tạm ngừng', value: 'false', description: 'Đã ẩn khỏi nghiệp vụ mới', icon: 'bi-pause-circle' },
   ];
 
-  public readonly activeFormOptions: Array<SelectOption<boolean>> = [
-    { label: 'Đang hoạt động', value: true, description: 'Cho phép sử dụng trong cấu hình điểm' },
-    { label: 'Tạm ngưng', value: false, description: 'Ẩn khỏi các lựa chọn nghiệp vụ mới' },
+  public readonly activeFormOptions: CustomSelectOption[] = [
+    {
+      label: 'Đang hoạt động',
+      value: true,
+      description: 'Cho phép sử dụng trong cấu hình điểm',
+      icon: 'bi-check2-circle',
+    },
+    {
+      label: 'Tạm ngừng',
+      value: false,
+      description: 'Ẩn khỏi các lựa chọn nghiệp vụ mới',
+      icon: 'bi-pause-circle',
+    },
   ];
 
-  public activeCount = computed(
-    () => this.categories().filter((category) => category.isActive !== false).length,
-  );
   public flattenedTree = computed(() => this.flattenTree(this.categoryTree()));
   public rootCount = computed(() => this.flattenedTree().filter((node) => node.level === 0).length);
   public levelTwoCount = computed(
     () => this.flattenedTree().filter((node) => node.level === 1).length,
   );
+  public activeCount = computed(
+    () => this.flattenedTree().filter((category) => category.isActive !== false).length,
+  );
+  public inactiveCount = computed(() => Math.max(this.flattenedTree().length - this.activeCount(), 0));
   public levelOneCategories = computed(() =>
     this.flattenedTree().filter((node) => node.level === 0),
   );
   public totalPoint = computed(() =>
-    this.categories().reduce((total, category) => total + (Number(category.maxPoint) || 0), 0),
+    this.flattenedTree().reduce((total, category) => total + (Number(category.maxPoint) || 0), 0),
   );
+  public filteredCategories = computed(() => {
+    const normalizedKeyword = this.normalizeText(this.keyword());
+    if (!normalizedKeyword) {
+      return this.categories();
+    }
+
+    return this.categories().filter((category) => {
+      const haystack = [
+        category.name,
+        category.code,
+        this.getParentName(category.parentId),
+        this.getLevelLabel(this.getCategoryLevel(category.id)),
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+      return this.normalizeText(haystack).includes(normalizedKeyword);
+    });
+  });
   public pagedCategories = computed(() => {
     const start = (this.currentPage() - 1) * this.pageSize();
-    return this.categories().slice(start, start + this.pageSize());
+    return this.filteredCategories().slice(start, start + this.pageSize());
   });
   public parentOptions = computed(() =>
     this.flattenedTree().filter((category) => this.canUseAsParent(category)),
   );
+  public parentFilterOptions = computed<CustomSelectOption[]>(() => [
+    {
+      value: '',
+      label: 'Tất cả danh mục cấp 1',
+      description: 'Không lọc theo nhóm cha',
+      icon: 'bi-diagram-3',
+    },
+    ...this.levelOneCategories().map((category) => ({
+      value: category.id,
+      label: category.name,
+      description: this.getNodeCode(category),
+      icon: 'bi-folder2-open',
+    })),
+  ]);
+  public parentFormOptions = computed<CustomSelectOption[]>(() => [
+    {
+      value: '',
+      label: 'Danh mục gốc',
+      description: 'Không có danh mục cha',
+      icon: 'bi-diagram-2',
+    },
+    ...this.parentOptions().map((category) => ({
+      value: category.id,
+      label: category.name,
+      description: `${this.getLevelLabel(category.level)} - ${this.getNodeCode(category)}`,
+      icon: category.level === 0 ? 'bi-folder2-open' : 'bi-file-earmark-text',
+    })),
+  ]);
 
   ngOnInit(): void {
     this.loadCategories();
@@ -117,17 +190,13 @@ export class CategoryManagementComponent implements OnInit {
         error: () => this.alertService.error('Không thể tải danh mục điểm rèn luyện.'),
       });
 
-    this.masterDataService.getCategoryTree(this.filters().active).subscribe({
-      next: (response) => this.categoryTree.set(response.data || []),
-      error: () => this.categoryTree.set([]),
-    });
+    this.loadCategoryTree();
   }
 
   openCreateForm(): void {
     this.editingCategory.set(null);
     this.form.set(this.createEmptyForm());
     this.isFormOpen.set(true);
-    this.openDropdown.set(null);
   }
 
   openEditForm(category: CategoryResponse): void {
@@ -140,74 +209,60 @@ export class CategoryManagementComponent implements OnInit {
       isActive: category.isActive !== false,
     });
     this.isFormOpen.set(true);
-    this.openDropdown.set(null);
   }
 
   closeForm(): void {
     this.isFormOpen.set(false);
     this.editingCategory.set(null);
     this.form.set(this.createEmptyForm());
-    this.openDropdown.set(null);
   }
 
   openTree(): void {
     this.isTreeOpen.set(true);
-    this.openDropdown.set(null);
   }
 
   closeTree(): void {
     this.isTreeOpen.set(false);
   }
 
-  toggleDropdown(key: CategoryDropdownKey): void {
-    this.openDropdown.update((current) => (current === key ? null : key));
-  }
-
-  isDropdownOpen(key: CategoryDropdownKey): boolean {
-    return this.openDropdown() === key;
-  }
-
-  closeDropdown(): void {
-    this.openDropdown.set(null);
-  }
-
   selectStatusFilter(value: CategoryFilters['active']): void {
-    this.updateFilter('active', value);
-    this.updateFilter('parentId', '');
-    this.closeDropdown();
+    this.filters.update((current) => ({ ...current, active: value, parentId: '' }));
     this.applyFilters();
   }
 
-  selectParentFilter(value: CategoryFilters['parentId']): void {
-    this.updateFilter('parentId', value);
-    this.closeDropdown();
+  onKeywordChange(value: string): void {
+    this.keyword.set(value);
+    this.currentPage.set(1);
+    this.normalizeCurrentPage();
+  }
+
+  clearKeyword(): void {
+    this.keyword.set('');
+    this.currentPage.set(1);
+    this.normalizeCurrentPage();
+  }
+
+  onParentFilterChange(value: CustomSelectValue): void {
+    this.filters.update((current) => ({ ...current, parentId: typeof value === 'number' ? value : '' }));
     this.applyFilters();
   }
 
-  selectParent(value: number | ''): void {
-    this.updateParent(value === '' ? '' : String(value));
-    this.closeDropdown();
+  onParentFormChange(value: CustomSelectValue): void {
+    this.updateForm('parentId', typeof value === 'number' ? value : '');
   }
 
-  selectActiveForm(value: boolean): void {
-    this.updateForm('isActive', value);
-    this.closeDropdown();
+  onActiveFormChange(value: CustomSelectValue): void {
+    if (typeof value === 'boolean') {
+      this.updateForm('isActive', value);
+    }
   }
 
   updateForm<K extends keyof CategoryForm>(key: K, value: CategoryForm[K]): void {
     this.form.update((current) => ({ ...current, [key]: value }));
   }
 
-  updateMaxPoint(value: string): void {
+  updateMaxPoint(value: string | number): void {
     this.updateForm('maxPoint', Math.max(Number(value) || 0, 0));
-  }
-
-  updateParent(value: string): void {
-    this.updateForm('parentId', value === '' ? '' : Number(value));
-  }
-
-  updateFilter<K extends keyof CategoryFilters>(key: K, value: CategoryFilters[K]): void {
-    this.filters.update((current) => ({ ...current, [key]: value }));
   }
 
   applyFilters(): void {
@@ -217,8 +272,8 @@ export class CategoryManagementComponent implements OnInit {
 
   resetFilters(): void {
     this.filters.set({ active: '', parentId: '' });
+    this.keyword.set('');
     this.currentPage.set(1);
-    this.openDropdown.set(null);
     this.loadCategories();
   }
 
@@ -261,7 +316,7 @@ export class CategoryManagementComponent implements OnInit {
 
     request.subscribe({
       next: () => {
-        this.alertService.success(isActive ? 'Đã tạm ngưng danh mục.' : 'Đã kích hoạt danh mục.');
+        this.alertService.success(isActive ? 'Đã tạm ngừng danh mục.' : 'Đã kích hoạt danh mục.');
         this.loadCategories();
       },
       error: () => this.alertService.error('Không thể cập nhật trạng thái danh mục.'),
@@ -285,40 +340,6 @@ export class CategoryManagementComponent implements OnInit {
     });
   }
 
-  getStatusFilterLabel(): string {
-    return (
-      this.statusFilterOptions.find((option) => option.value === this.filters().active)?.label ||
-      'Tất cả'
-    );
-  }
-
-  getParentFilterLabel(): string {
-    const parentId = this.filters().parentId;
-    if (parentId === '') {
-      return 'Tất cả danh mục cấp 1';
-    }
-
-    return (
-      this.levelOneCategories().find((category) => category.id === parentId)?.name ||
-      'Danh mục đã chọn'
-    );
-  }
-
-  getParentFormLabel(): string {
-    const parentId = this.form().parentId;
-    if (parentId === '') {
-      return 'Danh mục gốc';
-    }
-
-    return (
-      this.parentOptions().find((category) => category.id === parentId)?.name || 'Danh mục đã chọn'
-    );
-  }
-
-  getActiveFormLabel(): string {
-    return this.form().isActive ? 'Đang hoạt động' : 'Tạm ngưng';
-  }
-
   getParentName(parentId: number | null): string {
     if (parentId === null) {
       return 'Danh mục gốc';
@@ -338,7 +359,23 @@ export class CategoryManagementComponent implements OnInit {
   }
 
   getNodeCode(node: CategoryResponse): string {
-    return node.code || ' ';
+    return node.code || 'Chưa có mã';
+  }
+
+  getStatusTabCount(value: CategoryFilters['active']): number {
+    if (value === 'true') {
+      return this.activeCount();
+    }
+
+    if (value === 'false') {
+      return this.inactiveCount();
+    }
+
+    return this.flattenedTree().length;
+  }
+
+  getRootChildrenCount(category: CategoryResponse): number {
+    return category.children?.length ?? 0;
   }
 
   scrollToTop(): void {
@@ -350,6 +387,13 @@ export class CategoryManagementComponent implements OnInit {
       { ...node, level },
       ...this.flattenTree(node.children || [], level + 1),
     ]);
+  }
+
+  private loadCategoryTree(): void {
+    this.masterDataService.getCategoryTree('').subscribe({
+      next: (response) => this.categoryTree.set(response.data || []),
+      error: () => this.categoryTree.set([]),
+    });
   }
 
   private buildPayload(): CategoryRequest | null {
@@ -430,10 +474,14 @@ export class CategoryManagementComponent implements OnInit {
   }
 
   private normalizeCurrentPage(): void {
-    const totalPages = Math.max(Math.ceil(this.categories().length / this.pageSize()), 1);
+    const totalPages = Math.max(Math.ceil(this.filteredCategories().length / this.pageSize()), 1);
     if (this.currentPage() > totalPages) {
       this.currentPage.set(totalPages);
     }
+  }
+
+  private normalizeText(value: string | null | undefined): string {
+    return (value || '').trim().toLowerCase();
   }
 
   private createEmptyForm(): CategoryForm {
