@@ -15,17 +15,12 @@
 }
 
 .complaints-hero {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: stretch;
-  justify-content: space-between;
+  display: block;
   margin-bottom: 1rem;
 }
 
 .complaints-hero__copy {
-  min-width: min(100%, 28rem);
-  flex: 1 1 28rem;
+  max-width: 58rem;
 }
 
 .eyebrow {
@@ -40,7 +35,7 @@
 .complaints-hero h1,
 .complaint-modal__header h2 {
   margin: 0;
-  font-size: clamp(1.6rem, 2vw, 2rem);
+  font-size: 1.75rem;
   font-weight: 900;
   line-height: 1.15;
   color: #081120;
@@ -53,133 +48,71 @@
   line-height: 1.6;
 }
 
-.complaints-summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  flex: 0 1 28rem;
-  min-width: min(100%, 28rem);
-}
-
-.summary-item {
-  border: 1px solid #dbe4f0;
-  border-radius: 1rem;
-  padding: 0.85rem 1rem;
-  background: #fff;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.04);
-}
-
-.summary-item__label {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #98a2b3;
-}
-
-.summary-item strong {
-  font-size: 1.45rem;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.summary-item--open strong {
-  color: #2563eb;
-}
-
-.summary-item--pending strong {
-  color: #d97706;
-}
-
-.summary-item--responded strong {
-  color: #059669;
-}
-
 .complaints-toolbar {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(13rem, 18rem) minmax(0, 1fr);
   gap: 0.75rem;
-  align-items: center;
-  justify-content: space-between;
+  align-items: end;
   padding: 0.7rem 0.85rem;
   margin-bottom: 0.85rem;
   border: 1px solid #dbe4f0;
-  border-radius: 1rem;
+  border-radius: 0.5rem;
   background: #fff;
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
-}
-
-.semester-field {
-  display: grid;
-  gap: 0.25rem;
-  min-width: 13.5rem;
-  max-width: 22rem;
-  flex: 0 1 22rem;
-
-  > span {
-    font-size: 0.66rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #98a2b3;
-  }
-}
-
-.semester-field__control {
   position: relative;
+  z-index: 5;
+  overflow: visible;
+}
 
-  select {
-    width: 100%;
-    appearance: none;
-    border: 1px solid #dbe4f0;
-    border-radius: 0.75rem;
-    background: #f8fbff;
-    padding: 0.62rem 2rem 0.62rem 0.8rem;
-    font-size: 0.86rem;
-    font-weight: 700;
-    color: #0f172a;
-    outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+.semester-filter {
+  display: block;
+  min-width: 0;
+  width: 100%;
 
-    &:focus {
-      border-color: #2f6fed;
-      background: #fff;
-      box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.14);
+  ::ng-deep {
+    .select-label {
+      margin-bottom: 0.25rem;
+      color: #98a2b3;
+      font-size: 0.66rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
-  }
 
-  i {
-    position: absolute;
-    right: 0.78rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #98a2b3;
-    pointer-events: none;
+    .select-trigger {
+      min-height: 2.6rem;
+      border-radius: 0.5rem;
+      background: #f8fbff;
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .select-option {
+      font-size: 0.82rem;
+    }
   }
 }
 
 .filter-pills {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.25rem;
   padding: 0.25rem;
   border: 1px solid #dbe4f0;
-  border-radius: 999px;
+  border-radius: 0.5rem;
   background: #f8fbff;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  overflow: visible;
 
   button {
-    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-width: 0;
+    min-height: 2.6rem;
     border: 0;
-    border-radius: 999px;
-    padding: 0.58rem 0.85rem;
+    border-radius: 0.4rem;
+    padding: 0.45rem 0.5rem;
     background: transparent;
     color: #64748b;
     font-size: 0.82rem;
@@ -189,6 +122,7 @@
 
     &:hover {
       color: #0f172a;
+      background: #eef4fc;
     }
 
     &.is-active {
@@ -196,7 +130,26 @@
       color: #2f6fed;
       box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
     }
+
+    i {
+      flex: 0 0 auto;
+      font-size: 0.9rem;
+    }
   }
+}
+
+.filter-pill__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: #e5eefc;
+  color: #1d5bd7;
+  font-size: 0.72rem;
+  line-height: 1;
 }
 
 .complaints-list {
@@ -208,7 +161,7 @@
   overflow: hidden;
   border: 1px solid #dbe4f0;
   border-left: 4px solid #2f6fed;
-  border-radius: 1rem;
+  border-radius: 0.5rem;
   background: #fff;
   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.04);
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
@@ -414,13 +367,20 @@
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  border-radius: 0.9rem;
+  border-radius: 0.5rem;
   padding: 0.58rem 0.8rem;
   font-size: 0.78rem;
   font-weight: 800;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease,
     border-color 0.18s ease;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+    transform: none;
+    box-shadow: none;
+  }
 }
 
 .action-link {
@@ -549,7 +509,7 @@
   max-height: calc(100dvh - 1.5rem);
   overflow: hidden;
   border: 1px solid #dbe4f0;
-  border-radius: 1.4rem;
+  border-radius: 0.5rem;
   background: #fff;
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.25);
 }
@@ -709,7 +669,7 @@
   margin-bottom: 0.9rem;
   padding: 0.82rem 0.95rem;
   border: 1px solid #d7e6ff;
-  border-radius: 0.95rem;
+  border-radius: 0.5rem;
   background: #eef5ff;
   line-height: 1.65;
 }
@@ -726,7 +686,7 @@
   min-height: 8.5rem;
   resize: vertical;
   border: 1px solid #dbe4f0;
-  border-radius: 0.95rem;
+  border-radius: 0.5rem;
   padding: 0.92rem 1rem;
   background: #fff;
   font: inherit;
@@ -737,6 +697,11 @@
   &:focus {
     border-color: #2f6fed;
     box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.14);
+  }
+
+  &:disabled {
+    background: #f8fafc;
+    cursor: not-allowed;
   }
 }
 
@@ -750,7 +715,7 @@
 .upload-zone {
   margin-top: 0.9rem;
   border: 2px dashed #cfd9e7;
-  border-radius: 0.95rem;
+  border-radius: 0.5rem;
   padding: 0.95rem 1rem;
   background: #fff;
   text-align: center;
@@ -845,7 +810,7 @@
   input {
     width: 100%;
     border: 1px solid #dbe4f0;
-    border-radius: 0.95rem;
+    border-radius: 0.5rem;
     padding: 0.88rem 1rem 0.88rem 2.35rem;
     background: #fff;
     font: inherit;
@@ -856,6 +821,11 @@
     &:focus {
       border-color: #2f6fed;
       box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.14);
+    }
+
+    &:disabled {
+      background: #f8fafc;
+      cursor: not-allowed;
     }
   }
 }
@@ -868,6 +838,21 @@
   padding: 0.9rem 1.15rem 1rem;
   border-top: 1px solid #e7edf7;
   background: #fff;
+
+  button {
+    min-height: 2.55rem;
+  }
+}
+
+.filter-pills button:focus-visible,
+.action-link:focus-visible,
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.success-button:focus-visible,
+.icon-button:focus-visible,
+.upload-preview__remove:focus-visible {
+  outline: 3px solid rgba(47, 111, 237, 0.24);
+  outline-offset: 2px;
 }
 
 .custom-scrollbar {
@@ -886,11 +871,6 @@
 }
 
 @media (max-width: 960px) {
-  .complaints-summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    flex-basis: 100%;
-  }
-
   .complaint-record__body {
     flex-direction: column;
   }
@@ -945,16 +925,12 @@
   }
 
   .complaints-toolbar {
+    grid-template-columns: 1fr;
     padding: 0.8rem;
   }
 
-  .semester-field {
-    max-width: none;
-    flex-basis: 100%;
-  }
-
-  .complaints-summary {
-    grid-template-columns: 1fr;
+  .filter-pills {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .complaints-hero {
@@ -985,7 +961,7 @@
   .complaint-modal {
     width: calc(100vw - 1rem);
     max-height: calc(100vh - 1rem);
-    border-radius: 1rem;
+    border-radius: 0.5rem;
   }
 
   .complaint-modal__header,
@@ -1001,5 +977,11 @@
   .detail-card,
   .detail-callout {
     padding: 0.78rem 0.88rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .filter-pills {
+    grid-template-columns: 1fr;
   }
 }

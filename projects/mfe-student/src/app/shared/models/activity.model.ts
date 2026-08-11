@@ -118,6 +118,12 @@ export interface ActivityRecord {
   canSubmitComplaint?: boolean;
   cancelReason?: string;
   point?: number | null;
+  scheduleId?: number;
+  scheduleIds?: number[];
+  attendanceSessions?: AttendanceSessionRecord[];
+  registeredSessionCount?: number;
+  faceVerifiedSessionCount?: number;
+  absentSessionCount?: number;
 }
 
 export interface RawRegistrationDto {
@@ -143,6 +149,27 @@ export interface RawRegistrationDto {
   faceVerificationExhausted?: boolean;
   canSubmitComplaint?: boolean;
   cancelReason?: string;
+  scheduleId?: number;
+  scheduleIds?: number[];
+  attendanceSessions?: AttendanceSessionRecord[];
+  registeredSessionCount?: number;
+  faceVerifiedSessionCount?: number;
+  absentSessionCount?: number;
+}
+
+export interface AttendanceSessionRecord {
+  id: number;
+  registrationId: number;
+  scheduleId?: number;
+  scheduleTitle?: string;
+  scheduleStartTime?: string;
+  scheduleEndTime?: string;
+  checkinTime?: string;
+  checkoutTime?: string;
+  attendanceStatus?: string;
+  status?: number;
+  method?: number;
+  message?: string;
 }
 
 export interface ActivityTimeResponse {

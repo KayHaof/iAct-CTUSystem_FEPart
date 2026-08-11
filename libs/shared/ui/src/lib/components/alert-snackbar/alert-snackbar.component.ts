@@ -9,6 +9,7 @@ export type AlertSnackbarData = {
   message: string;
   variant: AlertSnackbarVariant;
   dismissible: boolean;
+  durationMs?: number;
 };
 
 @Component({
@@ -22,6 +23,10 @@ export type AlertSnackbarData = {
 export class AlertSnackbarComponent {
   private readonly snackBarRef = inject(MatSnackBarRef<AlertSnackbarComponent>);
   public readonly data = inject<AlertSnackbarData>(MAT_SNACK_BAR_DATA);
+
+  get isUrgent(): boolean {
+    return this.data.variant === 'error' || this.data.variant === 'warning';
+  }
 
   dismiss(): void {
     this.snackBarRef.dismiss();

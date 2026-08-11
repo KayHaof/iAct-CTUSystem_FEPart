@@ -2,113 +2,72 @@
   <lib-confirm-dialog></lib-confirm-dialog>
 
   <header class="faculty-header participant-header">
-    <div>
-      <button
-        type="button"
-        (click)="goBack()"
-        class="participant-back-button"
-      >
-        <i class="bi bi-arrow-left"></i>
+    <div class="participant-header__main">
+      <button type="button" (click)="goBack()" class="participant-back-button">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
         Quay lại chi tiết
       </button>
       <p class="faculty-eyebrow">Quản lý tham gia</p>
-      <h1>
-        Danh sách sinh viên đăng ký
-      </h1>
-      <p>Theo dõi điểm danh, minh chứng và khiếu nại của sinh viên trong hoạt động.</p>
+      <h1>Danh sách sinh viên tham gia</h1>
+      <p>
+        Theo dõi đăng ký, điểm danh, sinh viên cần xử lý, minh chứng và khiếu nại của hoạt động.
+      </p>
     </div>
 
-    <div
-      class="faculty-header__actions"
-      [class.hidden]="activeView() !== 'PARTICIPANTS'"
-    >
+    <div class="participant-header__actions" [class.hidden]="activeView() !== 'PARTICIPANTS'">
       <button
         type="button"
         (click)="exportToExcel()"
-        class="faculty-button faculty-button--success"
-        [disabled]="isLoading() || totalRows() === 0"
+        class="participant-toolbar-button participant-toolbar-button--success"
+        [disabled]="isLoading() || totalRows() === 0 || !canExportCurrentTab()"
+        [title]="exportButtonTitle()"
       >
-        <i class="bi bi-file-earmark-excel-fill text-lg"></i>
+        <i class="bi bi-file-earmark-excel-fill" aria-hidden="true"></i>
         Xuất Excel
       </button>
     </div>
   </header>
 
-  <nav
-    class="participant-view-tabs faculty-tabs"
-    aria-label="Chọn nghiệp vụ quản lý hoạt động"
-  >
+  <nav class="participant-view-tabs" aria-label="Chọn nghiệp vụ quản lý hoạt động">
     <button
       type="button"
-      (click)="setActiveView('PARTICIPANTS')"
+      class="participant-view-tab"
       [class.is-active]="activeView() === 'PARTICIPANTS'"
-      class="participant-view-tab"
-      [ngClass]="
-        activeView() === 'PARTICIPANTS'
-          ? 'bg-blue-600 text-white shadow-sm'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-      "
+      (click)="setActiveView('PARTICIPANTS')"
     >
-      <i class="bi bi-people-fill"></i>
-      Sinh viên tham gia
-      <span
-        class="participant-view-tab__count faculty-count-badge"
-        [ngClass]="
-          activeView() === 'PARTICIPANTS'
-            ? 'bg-white/20 text-white'
-            : 'bg-slate-100 text-slate-600'
-        "
-      >
-        {{ totalRows() }}
-      </span>
+      <i class="bi bi-people-fill" aria-hidden="true"></i>
+      <span>Sinh viên tham gia</span>
+      <strong>{{ totalRows() }}</strong>
     </button>
     <button
       type="button"
-      (click)="setActiveView('PROOFS')"
+      class="participant-view-tab"
       [class.is-active]="activeView() === 'PROOFS'"
-      class="participant-view-tab"
-      [ngClass]="
-        activeView() === 'PROOFS'
-          ? 'bg-blue-600 text-white shadow-sm'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-      "
+      (click)="setActiveView('PROOFS')"
     >
-      <i class="bi bi-file-earmark-check-fill"></i>
-      Minh chứng
-      <span
-        class="participant-view-tab__count faculty-count-badge"
-        [ngClass]="
-          activeView() === 'PROOFS'
-            ? 'bg-white/20 text-white'
-            : 'bg-amber-100 text-amber-700'
-        "
-      >
-        {{ proofStatus() === 0 ? proofTotalRows() : pendingProofCount() }}
-      </span>
+      <i class="bi bi-file-earmark-check-fill" aria-hidden="true"></i>
+      <span>Minh chứng</span>
+      <strong>{{ proofTotalRows() }}</strong>
     </button>
     <button
       type="button"
-      (click)="setActiveView('COMPLAINTS')"
-      [class.is-active]="activeView() === 'COMPLAINTS'"
       class="participant-view-tab"
-      [ngClass]="
-        activeView() === 'COMPLAINTS'
-          ? 'bg-blue-600 text-white shadow-sm'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-      "
+      [class.is-active]="activeView() === 'ABSENCES'"
+      (click)="setActiveView('ABSENCES')"
     >
-      <i class="bi bi-chat-left-text-fill"></i>
-      Khiếu nại
-      <span
-        class="participant-view-tab__count faculty-count-badge"
-        [ngClass]="
-          activeView() === 'COMPLAINTS'
-            ? 'bg-white/20 text-white'
-            : 'bg-rose-100 text-rose-700'
-        "
-      >
-        Xử lý
-      </span>
+      <i class="bi bi-person-x-fill" aria-hidden="true"></i>
+      <span>Vắng mặt</span>
+      <strong>{{ absenceTotalRows() }}</strong>
+    </button>
+    <button
+      type="button"
+      class="participant-view-tab"
+      [class.is-active]="activeView() === 'COMPLAINTS'"
+      (click)="setActiveView('COMPLAINTS')"
+    >
+      <i class="bi bi-chat-left-text-fill" aria-hidden="true"></i>
+      <span>Khiếu nại</span>
+      <strong>{{ complaintTotalRows() }}</strong>
     </button>
   </nav>
 
@@ -117,259 +76,227 @@
     [class.hidden]="activeView() !== 'PARTICIPANTS'"
   >
     <div class="participant-filter-grid">
-      <div class="relative w-full lg:max-w-md">
-        <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+      <div class="participant-search-field">
+        <i class="bi bi-search" aria-hidden="true"></i>
         <input
           type="text"
           placeholder="Tìm MSSV hoặc tên sinh viên..."
           [ngModel]="searchQuery()"
           (ngModelChange)="onSearch($event)"
-          class="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
         />
       </div>
 
-      <div class="grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1 text-center">
-        <button
-          type="button"
-          (click)="onTabChange('ALL')"
-          class="rounded-lg px-4 py-2 text-xs font-black transition"
-          [ngClass]="
-            currentTab() === 'ALL'
-              ? 'bg-white text-blue-700 shadow-sm'
-              : 'text-slate-500 hover:text-slate-800'
-          "
-        >
-          Tất cả
-        </button>
-        <button
-          type="button"
-          (click)="onTabChange('0')"
-          class="rounded-lg px-4 py-2 text-xs font-black transition"
-          [ngClass]="
-            currentTab() === '0'
-              ? 'bg-white text-sky-700 shadow-sm'
-              : 'text-slate-500 hover:text-slate-800'
-          "
-        >
-          Đã đăng ký
-        </button>
-        <button
-          type="button"
-          (click)="onTabChange('1')"
-          class="rounded-lg px-4 py-2 text-xs font-black transition"
-          [ngClass]="
-            currentTab() === '1'
-              ? 'bg-white text-emerald-700 shadow-sm'
-              : 'text-slate-500 hover:text-slate-800'
-          "
-        >
-          Đã điểm danh
-        </button>
-        <button
-          type="button"
-          (click)="onTabChange('2')"
-          class="rounded-lg px-4 py-2 text-xs font-black transition"
-          [ngClass]="
-            currentTab() === '2'
-              ? 'bg-white text-rose-700 shadow-sm'
-              : 'text-slate-500 hover:text-slate-800'
-          "
-        >
-          Đã hủy
-        </button>
+      <div class="participant-cohort-filter">
+        <lib-custom-select
+          label="Khóa"
+          placeholder="Tất cả khóa"
+          icon="bi-mortarboard"
+          [options]="cohortOptions()"
+          [value]="selectedAcademicYear()"
+          (valueChange)="onAcademicYearChange($event)"
+        ></lib-custom-select>
+      </div>
+
+      <div class="participant-status-tabs" role="tablist" aria-label="Lọc trạng thái tham gia">
+        @for (tab of participantTabs; track tab.value) {
+          <button
+            type="button"
+            role="tab"
+            class="participant-status-tab"
+            [class.is-active]="currentTab() === tab.value"
+            [class.participant-status-tab--slate]="tab.tone === 'slate'"
+            [class.participant-status-tab--sky]="tab.tone === 'sky'"
+            [class.participant-status-tab--emerald]="tab.tone === 'emerald'"
+            [class.participant-status-tab--amber]="tab.tone === 'amber'"
+            [class.participant-status-tab--rose]="tab.tone === 'rose'"
+            [attr.aria-selected]="currentTab() === tab.value"
+            (click)="onTabChange(tab.value)"
+          >
+            <i class="bi" [ngClass]="tab.icon" aria-hidden="true"></i>
+            {{ tab.label }}
+          </button>
+        }
       </div>
     </div>
   </section>
 
-  <div class="participant-table-region" [class.hidden]="activeView() !== 'PARTICIPANTS'">
+  <section class="participant-table-region" [class.hidden]="activeView() !== 'PARTICIPANTS'">
     @if (isLoading()) {
-      <div
-        class="absolute inset-0 z-40 flex flex-col items-center justify-center rounded-b-2xl bg-white/70 backdrop-blur-sm"
-      >
-        <div
-          class="mb-3 h-9 w-9 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600"
-        ></div>
-        <span class="text-sm font-bold text-slate-500">Đang tải dữ liệu...</span>
+      <div class="participant-loading">
+        <span></span>
+        <strong>Đang tải dữ liệu...</strong>
       </div>
     }
 
     <lib-admin-table-container class="participant-table-panel">
       <div class="faculty-section-title">
         <div>
-          <p>Danh sách</p>
+          <p>{{ currentTabLabel() }}</p>
           <h2>Sinh viên theo bộ lọc</h2>
         </div>
-        <span>{{ totalRows() }} bản ghi</span>
+        <span>{{ displayedTotalRows() }} bản ghi</span>
       </div>
 
-      <table class="w-full min-w-[980px] table-fixed border-collapse bg-white text-left">
+      <table>
         <colgroup>
-          <col class="w-[34%]" />
-          <col class="w-[25%]" />
-          <col class="w-[21%]" />
-          <col class="w-[20%]" />
+          <col class="participant-col-student" />
+          <col class="participant-col-time" />
+          <col class="participant-col-status" />
+          <col class="participant-col-action" />
         </colgroup>
 
         <thead>
-          <tr
-            class="border-y border-slate-200 bg-slate-50 text-[11px] uppercase tracking-widest text-slate-500"
-          >
-            <th class="px-5 py-4 font-black" (click)="toggleSort('studentName')">
-              <button type="button" class="inline-flex items-center gap-1 font-black">
+          <tr>
+            <th>
+              <button type="button" (click)="toggleSort('studentName')">
                 Thông tin sinh viên
                 <i
-                  class="bi text-slate-300"
+                  class="bi"
                   [ngClass]="
                     sortColumn() === 'studentName' && sortDirection() === 'desc'
                       ? 'bi-sort-alpha-up-alt'
                       : 'bi-sort-alpha-down'
                   "
+                  aria-hidden="true"
                 ></i>
               </button>
             </th>
-            <th class="px-5 py-4 font-black" (click)="toggleSort('registeredAt')">
-              <button type="button" class="inline-flex items-center gap-1 font-black">
+            <th>
+              <button type="button" (click)="toggleSort('registeredAt')">
                 Thời gian
                 <i
-                  class="bi text-slate-300"
+                  class="bi"
                   [ngClass]="
                     sortColumn() === 'registeredAt' && sortDirection() === 'desc'
                       ? 'bi-sort-numeric-up-alt'
                       : 'bi-sort-numeric-down'
                   "
+                  aria-hidden="true"
                 ></i>
               </button>
             </th>
-            <th class="px-5 py-4 text-center font-black">Trạng thái</th>
-            <th class="px-5 py-4 text-right font-black">Thao tác</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-slate-100">
+        <tbody>
           @for (item of sortedParticipants(); track item.id) {
-            <tr class="group transition hover:bg-blue-50/40">
-              <td class="px-5 py-4 align-middle">
-                <div class="flex min-w-0 items-center gap-4">
-                  <div
-                    class="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-blue-100 bg-blue-50 text-lg font-black text-blue-700 shadow-sm"
-                  >
+            <tr>
+              <td>
+                <div class="participant-student">
+                  <div class="participant-avatar">
                     @if (item.avatarUrl) {
-                      <img
-                        [ngSrc]="item.avatarUrl | cloudinaryPath"
-                        alt="avatar"
-                        fill
-                        class="object-cover"
-                      />
+                      <img [ngSrc]="item.avatarUrl | cloudinaryPath" alt="avatar" fill />
                     } @else {
                       {{ getInitial(item.studentName) }}
                     }
                   </div>
-                  <div class="min-w-0">
-                    <p class="truncate text-sm font-black text-slate-950">
-                      {{ item.studentName || 'Chưa cập nhật' }}
-                    </p>
+                  <div>
+                    <strong>{{ item.studentName || 'Chưa cập nhật' }}</strong>
                     <button
                       type="button"
-                      (click)="toggleSort('studentCode')"
-                      class="mt-1 inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2 py-1 font-mono text-xs font-black text-blue-700 transition hover:bg-blue-100"
+                      class="participant-code"
                       title="Sắp xếp theo MSSV"
+                      (click)="toggleSort('studentCode')"
                     >
                       {{ item.studentCode || 'N/A' }}
                       @if (sortColumn() === 'studentCode') {
                         <i
-                          class="bi text-[10px]"
+                          class="bi"
                           [ngClass]="sortDirection() === 'asc' ? 'bi-arrow-down' : 'bi-arrow-up'"
+                          aria-hidden="true"
                         ></i>
                       }
                     </button>
+                    @if (item.academicYear) {
+                      <span class="participant-cohort-chip">
+                        {{ displayCohortLabel(item.academicYear) }}
+                      </span>
+                    }
                   </div>
                 </div>
               </td>
 
-              <td class="px-5 py-4 align-middle">
-                <div class="space-y-1 text-sm font-semibold text-slate-700">
-                  <p class="inline-flex items-center gap-2">
-                    <i class="bi bi-calendar-check text-slate-400"></i>
+              <td>
+                <div class="participant-time">
+                  <span>
+                    <i class="bi bi-calendar-check" aria-hidden="true"></i>
                     ĐK: {{ item.registeredAt | date: 'dd/MM/yyyy HH:mm' }}
-                  </p>
+                  </span>
                   @if (item.isAttended || item.attendedAt) {
-                    <p class="inline-flex items-center gap-2 text-emerald-700">
-                      <i class="bi bi-upc-scan"></i>
+                    <span class="is-attended">
+                      <i class="bi bi-upc-scan" aria-hidden="true"></i>
                       Tham gia: {{ item.attendedAt | date: 'dd/MM/yyyy HH:mm' }}
-                    </p>
+                    </span>
                   }
                 </div>
               </td>
 
-              <td class="px-5 py-4 text-center align-middle">
+              <td>
                 <span
-                  class="inline-flex min-w-[8.5rem] items-center justify-center gap-2 rounded-full border px-3 py-2 text-xs font-black uppercase tracking-wide"
-                  [ngClass]="{
-                    'border-sky-200 bg-sky-50 text-sky-700': item.status === 0,
-                    'border-emerald-200 bg-emerald-50 text-emerald-700': item.status === 1,
-                    'border-rose-200 bg-rose-50 text-rose-700': item.status === 2,
-                  }"
+                  class="participant-status-pill"
+                  [ngClass]="'participant-status-pill--' + participantStatusTone(item)"
                 >
-                  <i
-                    class="bi"
-                    [ngClass]="{
-                      'bi-hourglass-split': item.status === 0,
-                      'bi-check2-circle': item.status === 1,
-                      'bi-x-circle': item.status === 2,
-                    }"
-                  ></i>
-                  {{
-                    item.status === 0 ? 'Đã đăng ký' : item.status === 1 ? 'Đã tham gia' : 'Đã hủy'
-                  }}
+                  <i class="bi" [ngClass]="participantStatusIcon(item)" aria-hidden="true"></i>
+                  {{ participantStatusLabel(item) }}
                 </span>
                 @if (item.status === 2 && item.cancelReason) {
-                  <p
-                    class="mx-auto mt-2 max-w-[11rem] truncate text-xs font-semibold text-rose-500"
-                    [title]="item.cancelReason"
-                  >
+                  <p class="participant-cancel-reason" [title]="item.cancelReason">
                     {{ item.cancelReason }}
                   </p>
                 }
               </td>
 
-              <td class="px-5 py-4 text-right align-middle">
+              <td>
                 @if (item.status === 0) {
-                  <div class="inline-flex items-center justify-end gap-2">
+                  @if (isNeedsProcessingRegistration(item)) {
                     <button
                       type="button"
-                      (click)="changeStatus(item.id, 1, 'điểm danh')"
-                      class="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                      title="Xác nhận tham gia"
-                      aria-label="Xác nhận tham gia"
+                      class="participant-action-button participant-action-button--danger"
+                      title="Xử lý vi phạm vắng điểm danh"
+                      aria-label="Xử lý vi phạm vắng điểm danh"
+                      (click)="changeStatus(item.id, 2, 'xử lý vi phạm', true)"
                     >
-                      <i class="bi bi-upc-scan text-lg"></i>
+                      <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                      Xử lý vi phạm
                     </button>
-                    <button
-                      type="button"
-                      (click)="changeStatus(item.id, 2, 'hủy đăng ký')"
-                      class="flex h-10 w-10 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-rose-600 transition hover:bg-rose-100 hover:text-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-200"
-                      title="Hủy đăng ký"
-                      aria-label="Hủy đăng ký"
-                    >
-                      <i class="bi bi-x-lg text-lg"></i>
-                    </button>
-                  </div>
+                  } @else {
+                    <div class="participant-row-actions">
+                      <button
+                        type="button"
+                        class="participant-action-button participant-action-button--success"
+                        title="Xác nhận tham gia"
+                        (click)="changeStatus(item.id, 1, 'điểm danh')"
+                      >
+                        <i class="bi bi-upc-scan" aria-hidden="true"></i>
+                        Điểm danh
+                      </button>
+                      <button
+                        type="button"
+                        class="participant-action-button participant-action-button--ghost-danger"
+                        title="Hủy đăng ký"
+                        (click)="changeStatus(item.id, 2, 'hủy đăng ký')"
+                      >
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        Hủy
+                      </button>
+                    </div>
+                  }
                 } @else {
-                  <span class="text-xs font-bold text-slate-400">Không có thao tác</span>
+                  <span class="participant-no-action">Không có thao tác</span>
                 }
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="4" class="px-5 py-16 text-center">
-                <div class="mx-auto max-w-sm">
-                  <div
-                    class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400"
-                  >
-                    <i class="bi bi-people text-2xl"></i>
+              <td colspan="4">
+                <div class="participant-empty-state">
+                  <div class="participant-empty-state__icon">
+                    <i class="bi bi-people" aria-hidden="true"></i>
                   </div>
-                  <p class="font-black text-slate-700">Không tìm thấy sinh viên nào</p>
-                  <p class="mt-1 text-sm text-slate-500">Thử đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
+                  <strong>Không tìm thấy sinh viên nào</strong>
+                  <p>Thử đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
                 </div>
               </td>
             </tr>
@@ -379,448 +306,207 @@
 
       <lib-pagination
         [currentPage]="currentPage()"
-        [totalItems]="totalRows()"
+        [totalItems]="displayedTotalRows()"
         [pageSize]="pageSize()"
         theme="dark"
         (pageChange)="onPageChange($event)"
         (pageSizeChange)="onSizeChange($event)"
       ></lib-pagination>
     </lib-admin-table-container>
-  </div>
+  </section>
 
-  <section
-    class="proof-panel overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
-    [class.hidden]="activeView() !== 'PROOFS'"
-  >
-    <div class="proof-panel__header border-b border-slate-200 bg-white px-4 py-4 sm:px-5">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div class="flex min-w-0 items-start gap-4">
-          <div
-            class="proof-panel__icon flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-xl text-blue-700 ring-1 ring-blue-100"
-          >
-            <i class="bi bi-patch-check-fill"></i>
-          </div>
-          <div class="min-w-0">
-            <p class="proof-panel__eyebrow text-xs font-black uppercase tracking-widest text-blue-600">
-              Minh chứng hoạt động #{{ activityId() }}
-            </p>
-            <h2 class="mt-1 text-xl font-black text-slate-950">Duyệt minh chứng tham gia</h2>
-            <div class="mt-2 flex flex-wrap gap-2 text-xs font-black">
-              <span class="rounded-full bg-amber-50 px-3 py-1 text-amber-700 ring-1 ring-amber-100">
-                {{ proofStatus() === 0 ? proofTotalRows() : pendingProofCount() }} chờ duyệt
-              </span>
-              <span class="rounded-full bg-slate-100 px-3 py-1 text-slate-600 ring-1 ring-slate-200">
-                Bộ lọc: {{ proofStatus() === null ? 'Tất cả' : proofStatusLabel(proofStatus() || 0) }}
-              </span>
-            </div>
-          </div>
-        </div>
+  <section [class.hidden]="activeView() !== 'PROOFS'">
+    <app-activity-proofs
+      [activityId]="activityId()"
+      (proofChanged)="fetchParticipants()"
+      (totalChanged)="proofTotalRows.set($event)"
+    ></app-activity-proofs>
+  </section>
 
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div class="proof-status-filter grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1 text-center shadow-inner">
-            <button
-              type="button"
-              (click)="onProofStatusChange(0)"
-              class="inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-black transition"
-              [ngClass]="
-                proofStatus() === 0
-                  ? 'bg-white text-amber-700 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
-              "
-            >
-              <i class="bi bi-hourglass-split"></i>
-              Chờ
-            </button>
-            <button
-              type="button"
-              (click)="onProofStatusChange(1)"
-              class="inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-black transition"
-              [ngClass]="
-                proofStatus() === 1
-                  ? 'bg-white text-emerald-700 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
-              "
-            >
-              <i class="bi bi-check2-circle"></i>
-              Duyệt
-            </button>
-            <button
-              type="button"
-              (click)="onProofStatusChange(2)"
-              class="inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-black transition"
-              [ngClass]="
-                proofStatus() === 2
-                  ? 'bg-white text-rose-700 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
-              "
-            >
-              <i class="bi bi-x-circle"></i>
-              Từ chối
-            </button>
-            <button
-              type="button"
-              (click)="onProofStatusChange(null)"
-              class="inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-black transition"
-              [ngClass]="
-                proofStatus() === null
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
-              "
-            >
-              <i class="bi bi-grid-3x3-gap"></i>
-              Tất cả
-            </button>
-          </div>
-
-          <button
-            type="button"
-            (click)="fetchProofs()"
-            class="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-100 disabled:text-slate-300"
-            [disabled]="isProofLoading()"
-            title="Tải lại minh chứng"
-          >
-            <i class="bi bi-arrow-clockwise"></i>
-            Tải lại
-          </button>
-        </div>
+  <section class="absence-management" [class.hidden]="activeView() !== 'ABSENCES'">
+    <header class="absence-management__header">
+      <div>
+        <p>ĐIỂM DANH</p>
+        <h2>Sinh viên đã đăng ký nhưng vắng mặt</h2>
+        <span>Danh sách được hệ thống tự động ghi nhận sau khi hoạt động kết thúc.</span>
       </div>
-    </div>
+      <div class="absence-management__tools">
+        <lib-custom-select
+          label="Tình trạng xử lý"
+          icon="bi-filter-circle"
+          [options]="absenceReviewOptions"
+          [value]="absenceReviewFilter()"
+          (valueChange)="onAbsenceReviewFilterChange($event)"
+        ></lib-custom-select>
+        <button
+          type="button"
+          class="participant-toolbar-button participant-toolbar-button--light"
+          (click)="loadAbsences()"
+          [disabled]="absenceLoading()"
+        >
+          <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+          Tải lại
+        </button>
+      </div>
+    </header>
 
-    <div class="relative bg-slate-50/70 p-4 sm:p-5">
-      @if (isProofLoading()) {
-        <div class="flex min-h-64 flex-col items-center justify-center rounded-2xl bg-slate-50">
-          <div
-            class="mb-3 h-9 w-9 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600"
-          ></div>
-          <span class="text-sm font-bold text-slate-500">Đang tải minh chứng...</span>
+    <div class="absence-management__body">
+      @if (absenceLoading()) {
+        <div class="absence-state">
+          <span class="absence-spinner"></span>
+          <strong>Đang tải danh sách vắng mặt...</strong>
         </div>
-      } @else if (proofs().length === 0) {
-        <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-14 text-center">
-          <span
-            class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl text-slate-400 shadow-sm"
-            aria-hidden="true"
-          >
-            <i class="bi bi-file-earmark-check"></i>
-          </span>
-          <h3 class="mt-5 text-base font-black text-slate-800">Chưa có minh chứng phù hợp</h3>
-          <p class="mx-auto mt-2 max-w-md text-sm font-semibold leading-6 text-slate-500">
-            Danh sách chỉ hiển thị minh chứng của hoạt động hiện tại.
-          </p>
+      } @else if (absentParticipants().length === 0) {
+        <div class="absence-empty">
+          <i class="bi bi-person-check" aria-hidden="true"></i>
+          <strong>Không có trường hợp vắng mặt cần hiển thị</strong>
+          <span>Các trường hợp đã được xử lý sẽ nằm ở bộ lọc “Đã xử lý”.</span>
         </div>
       } @else {
-        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div class="overflow-x-auto">
-            <table class="w-full min-w-[70rem] table-fixed border-collapse text-left">
-              <colgroup>
-                <col class="w-32" />
-                <col class="w-64" />
-                <col class="w-48" />
-                <col class="w-[28rem]" />
-                <col class="w-36" />
-              </colgroup>
-              <thead>
-                <tr class="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-widest text-slate-500">
-                  <th class="whitespace-nowrap px-4 py-3 font-black">Ảnh</th>
-                  <th class="whitespace-nowrap px-4 py-3 font-black">Sinh viên</th>
-                  <th class="whitespace-nowrap px-4 py-3 font-black">Thời gian nộp</th>
-                  <th class="whitespace-nowrap px-4 py-3 font-black">Nhận xét</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-right font-black">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100">
-                @for (proof of proofs(); track proof.id) {
-                  <tr class="align-middle transition hover:bg-blue-50/40">
-                    <td class="px-4 py-3">
-                      <a
-                        [href]="proof.imageUrl"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="group relative block h-16 w-24 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm"
-                        title="Mở ảnh minh chứng"
-                      >
-                        <img
-                          [src]="proof.imageUrl"
-                          [alt]="'Minh chứng của ' + proofStudentName(proof)"
-                          class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                        />
-                        <span
-                          class="absolute inset-0 flex items-center justify-center bg-slate-950/0 text-white opacity-0 transition group-hover:bg-slate-950/35 group-hover:opacity-100"
-                        >
-                          <i class="bi bi-search text-lg"></i>
-                        </span>
-                      </a>
-                    </td>
-
-                    <td class="px-4 py-3">
-                      <div class="min-w-0">
-                        <p class="truncate text-sm font-black text-slate-950">
-                          {{ proofStudentName(proof) }}
-                        </p>
-                        <div class="mt-2 flex flex-wrap gap-1.5 text-[11px] font-black">
-                          <span class="rounded-full bg-blue-50 px-2 py-0.5 font-mono text-blue-700">
-                            {{ proof.studentCode || 'N/A' }}
-                          </span>
-                          <span class="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">
-                            ĐK #{{ proof.registrationId }}
-                          </span>
-                        </div>
+        <div class="absence-table-wrap">
+          <table class="absence-table">
+            <thead>
+              <tr>
+                <th>Sinh viên</th>
+                <th>Đăng ký</th>
+                <th>Điểm danh các buổi</th>
+                <th>Lý do hệ thống</th>
+                <th>Tình trạng</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of absentParticipants(); track item.id) {
+                <tr>
+                  <td>
+                    <div class="absence-student">
+                      <div class="participant-avatar">
+                        @if (item.avatarUrl) {
+                          <img [ngSrc]="item.avatarUrl | cloudinaryPath" alt="avatar" fill />
+                        } @else {
+                          {{ getInitial(item.studentName) }}
+                        }
                       </div>
-                    </td>
-
-                    <td class="whitespace-nowrap px-4 py-3">
-                      <div class="space-y-1 text-sm font-semibold text-slate-600">
-                        <p class="inline-flex items-center gap-2">
-                          <i class="bi bi-clock text-slate-400"></i>
-                          {{ proof.submittedAt ? (proof.submittedAt | date: 'dd/MM/yyyy HH:mm') : 'Chưa ghi nhận' }}
-                        </p>
-                      </div>
-                    </td>
-
-                    <td class="px-4 py-3">
-                      <p
-                        class="line-clamp-2 max-w-[26rem] text-sm font-medium leading-6 text-slate-700"
-                        [title]="proof.description || 'Sinh viên không nhập nhận xét.'"
-                      >
-                        {{ proof.description || 'Sinh viên không nhập nhận xét.' }}
-                      </p>
-                      @if (proof.status === 2 && proof.rejectionReason) {
-                        <p
-                          class="mt-1 line-clamp-1 text-xs font-bold text-rose-600"
-                          [title]="proof.rejectionReason"
-                        >
-                          Lý do: {{ proof.rejectionReason }}
-                        </p>
-                      }
-                    </td>
-
-                    <td class="whitespace-nowrap px-4 py-3 text-right">
-                      @if (proof.status === 0) {
-                        <div class="inline-flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            (click)="approveProof(proof)"
-                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 transition hover:bg-emerald-100 disabled:bg-slate-100 disabled:text-slate-300 disabled:ring-slate-200"
-                            [disabled]="processingProofId() === proof.id"
-                            title="Duyệt minh chứng"
-                          >
-                            <i class="bi bi-check-circle text-base"></i>
-                          </button>
-                          <button
-                            type="button"
-                            (click)="rejectProof(proof)"
-                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100 disabled:bg-slate-100 disabled:text-slate-300 disabled:ring-slate-200"
-                            [disabled]="processingProofId() === proof.id"
-                            title="Từ chối minh chứng"
-                          >
-                            <i class="bi bi-x-circle text-base"></i>
-                          </button>
-                        </div>
-                      } @else {
-                        <span class="text-xs font-bold text-slate-400">Đã xử lý</span>
-                      }
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="hidden grid-cols-1 gap-4 xl:grid-cols-2">
-          @for (proof of proofs(); track proof.id) {
-            <article
-              class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
-            >
-              <div class="grid gap-0 md:grid-cols-[14rem_1fr]">
-                <a
-                  [href]="proof.imageUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="group relative flex h-60 items-center justify-center overflow-hidden bg-slate-100 md:h-full"
-                  title="Mở ảnh minh chứng"
-                >
-                  <img
-                    [src]="proof.imageUrl"
-                    [alt]="'Minh chứng của ' + proofStudentName(proof)"
-                    class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                  />
-                  <span
-                    class="absolute bottom-3 right-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-950/70 text-white opacity-0 shadow-sm transition group-hover:opacity-100"
-                  >
-                    <i class="bi bi-arrows-fullscreen"></i>
-                  </span>
-                </a>
-
-                <div class="flex min-w-0 flex-col gap-4 p-4 sm:p-5">
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                      <p class="truncate text-base font-black text-slate-950">
-                        {{ proofStudentName(proof) }}
-                      </p>
-                      <div class="mt-2 flex flex-wrap gap-2 text-xs font-black">
-                        <span class="rounded-full bg-blue-50 px-2.5 py-1 font-mono text-blue-700">
-                          {{ proof.studentCode || 'N/A' }}
-                        </span>
-                        <span class="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">
-                          ĐK #{{ proof.registrationId }}
-                        </span>
+                      <div>
+                        <strong>{{ item.studentName || 'Chưa cập nhật' }}</strong>
+                        <span>{{ item.studentCode || 'Chưa có MSSV' }}</span>
+                        @if (item.classCode) {
+                          <small>{{ item.classCode }}</small>
+                        }
                       </div>
                     </div>
-                    <span
-                      class="shrink-0 rounded-full border px-3 py-1 text-xs font-black"
-                      [ngClass]="{
-                        'border-amber-200 bg-amber-50 text-amber-700': proof.status === 0,
-                        'border-emerald-200 bg-emerald-50 text-emerald-700': proof.status === 1,
-                        'border-rose-200 bg-rose-50 text-rose-700': proof.status === 2,
-                      }"
-                    >
-                      {{ proofStatusLabel(proof.status) }}
+                  </td>
+                  <td>
+                    <span class="absence-time">
+                      <i class="bi bi-calendar-check" aria-hidden="true"></i>
+                      {{ item.registeredAt | date: 'dd/MM/yyyy HH:mm' }}
                     </span>
-                  </div>
-
-                  <div class="grid gap-2 text-sm font-semibold text-slate-600 sm:grid-cols-2">
-                    <p class="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
-                      <i class="bi bi-clock text-slate-400"></i>
-                      {{ proof.submittedAt ? (proof.submittedAt | date: 'dd/MM/yyyy HH:mm') : 'Chưa ghi nhận' }}
+                  </td>
+                  <td>
+                    <div class="absence-session-progress">
+                      <strong>{{ item.faceVerifiedSessionCount || 0 }}/{{ item.registeredSessionCount || item.scheduleIds?.length || 0 }}</strong>
+                      <span>buổi xác thực đủ check-in/checkout</span>
+                    </div>
+                  </td>
+                  <td>
+                    <p class="absence-reason" [title]="item.absenceReason || 'Chưa có ghi chú'">
+                      {{ item.absenceReason || 'Chưa hoàn tất điểm danh sau thời hạn.' }}
                     </p>
-                    @if (proof.verifiedTime) {
-                      <p class="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
-                        <i class="bi bi-person-check text-slate-400"></i>
-                        {{ proof.verifiedTime | date: 'dd/MM/yyyy HH:mm' }}
-                      </p>
+                  </td>
+                  <td>
+                    <span class="absence-status" [class.is-reviewed]="item.absenceReviewed">
+                      <i
+                        class="bi"
+                        [ngClass]="item.absenceReviewed ? 'bi-check2-circle' : 'bi-hourglass-split'"
+                        aria-hidden="true"
+                      ></i>
+                      {{ item.absenceReviewed ? 'Đã xử lý' : 'Chờ xử lý' }}
+                    </span>
+                    @if (item.absenceReviewNote) {
+                      <small class="absence-review-note" [title]="item.absenceReviewNote">
+                        {{ item.absenceReviewNote }}
+                      </small>
                     }
-                  </div>
-
-                  <div class="min-h-20 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm font-medium leading-6 text-slate-700">
-                    {{ proof.description || 'Sinh viên không nhập nhận xét.' }}
-                  </div>
-
-                  @if (proof.status === 2 && proof.rejectionReason) {
-                    <div class="rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm font-bold text-rose-700">
-                      {{ proof.rejectionReason }}
-                    </div>
-                  }
-
-                  @if (proof.status === 0) {
-                    <div class="mt-auto grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        (click)="approveProof(proof)"
-                        class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-black text-white transition hover:bg-emerald-700 disabled:bg-slate-300"
-                        [disabled]="processingProofId() === proof.id"
-                      >
-                        <i class="bi bi-check-circle"></i>
-                        Duyệt
-                      </button>
-                      <button
-                        type="button"
-                        (click)="rejectProof(proof)"
-                        class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 text-sm font-black text-white transition hover:bg-rose-700 disabled:bg-slate-300"
-                        [disabled]="processingProofId() === proof.id"
-                      >
-                        <i class="bi bi-x-circle"></i>
-                        Từ chối
-                      </button>
-                    </div>
-                  }
-                </div>
-              </div>
-            </article>
-          }
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      class="participant-action-button participant-action-button--success"
+                      (click)="openAbsenceReview(item)"
+                    >
+                      <i class="bi bi-clipboard-check" aria-hidden="true"></i>
+                      {{ item.absenceReviewed ? 'Cập nhật' : 'Ghi nhận xử lý' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
 
         <lib-pagination
-          class="mt-4 block"
-          [currentPage]="proofPage()"
-          [totalItems]="proofTotalRows()"
-          [pageSize]="proofPageSize()"
+          [currentPage]="absencePage()"
+          [totalItems]="absenceTotalRows()"
+          [pageSize]="absencePageSize()"
           theme="dark"
-          (pageChange)="onProofPageChange($event)"
-          (pageSizeChange)="onProofSizeChange($event)"
+          (pageChange)="onAbsencePageChange($event)"
+          (pageSizeChange)="onAbsenceSizeChange($event)"
         ></lib-pagination>
       }
     </div>
   </section>
 
   <section [class.hidden]="activeView() !== 'COMPLAINTS'">
-    <app-activity-complaints [activityId]="activityId()"></app-activity-complaints>
+    <app-activity-complaints
+      [activityId]="activityId()"
+      (totalChanged)="complaintTotalRows.set($event)"
+    ></app-activity-complaints>
   </section>
 
-  @if (rejectingProof(); as proof) {
-    <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-      <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
-        <div class="border-b border-slate-200 bg-rose-50 px-5 py-4">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <p class="text-xs font-black uppercase tracking-widest text-rose-600">
-                Từ chối minh chứng
-              </p>
-              <h2 class="mt-1 text-lg font-black text-slate-950">
-                {{ proofStudentName(proof) }}
-              </h2>
-              <p class="mt-1 text-sm font-semibold text-slate-500">
-                {{ proof.studentCode || 'Chưa có MSSV' }} · ĐK #{{ proof.registrationId }}
-              </p>
-            </div>
-            <button
-              type="button"
-              (click)="closeRejectProofModal()"
-              class="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-800"
-              [disabled]="processingProofId() === proof.id"
-              aria-label="Đóng"
-            >
-              <i class="bi bi-x-lg"></i>
-            </button>
+  @if (absenceReviewTarget(); as absence) {
+    <div class="absence-modal-backdrop">
+      <section class="absence-modal" role="dialog" aria-modal="true" aria-labelledby="absenceReviewTitle">
+        <header class="absence-modal__header">
+          <div>
+            <p>GHI NHẬN XỬ LÝ VẮNG MẶT</p>
+            <h2 id="absenceReviewTitle">{{ absence.studentName || absence.studentCode }}</h2>
+            <span>{{ absence.studentCode || 'Chưa có MSSV' }} · ĐK #{{ absence.id }}</span>
           </div>
+          <button type="button" (click)="closeAbsenceReview()" aria-label="Đóng">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <div class="absence-modal__summary">
+          <span>Hệ thống đã đánh dấu sinh viên vắng mặt vì chưa đủ điều kiện điểm danh các buổi đã đăng ký.</span>
         </div>
 
-        <div class="space-y-4 px-5 py-5">
-          <label for="proofRejectReason" class="block text-sm font-black text-slate-800">
-            Lý do từ chối
-          </label>
+        <label class="absence-modal__field">
+          <span>Ghi chú xử lý</span>
           <textarea
-            id="proofRejectReason"
             rows="5"
-            [ngModel]="rejectReason()"
-            (ngModelChange)="rejectReason.set($event)"
             maxlength="500"
-            class="min-h-32 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-rose-300 focus:bg-white focus:ring-2 focus:ring-rose-100"
-            placeholder="Nhập lý do để sinh viên biết cần bổ sung hoặc chỉnh sửa gì..."
-            [disabled]="processingProofId() === proof.id"
+            [ngModel]="absenceReviewNote()"
+            (ngModelChange)="absenceReviewNote.set($event)"
+            placeholder="Nhập nội dung xử lý thủ công hoặc lý do được chấp nhận..."
           ></textarea>
-          <div class="flex items-center justify-between gap-3 text-xs font-semibold text-slate-500">
-            <span>Lý do này sẽ hiển thị cho sinh viên.</span>
-            <span>{{ rejectReason().length }}/500</span>
-          </div>
-        </div>
+        </label>
 
-        <div class="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            (click)="closeRejectProofModal()"
-            class="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-black text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
-            [disabled]="processingProofId() === proof.id"
-          >
+        <footer class="absence-modal__actions">
+          <button type="button" class="participant-action-button participant-action-button--ghost-danger" (click)="closeAbsenceReview()">
             Hủy
           </button>
           <button
             type="button"
-            (click)="submitRejectProof()"
-            class="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-            [disabled]="processingProofId() === proof.id || !rejectReason().trim()"
+            class="participant-action-button participant-action-button--success"
+            (click)="submitAbsenceReview()"
+            [disabled]="absenceLoading()"
           >
-            @if (processingProofId() === proof.id) {
-              <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
-              Đang xử lý...
-            } @else {
-              <i class="bi bi-x-circle"></i>
-              Từ chối minh chứng
-            }
+            <i class="bi bi-check2-circle" aria-hidden="true"></i>
+            Ghi nhận đã xử lý
           </button>
-        </div>
-      </div>
+        </footer>
+      </section>
     </div>
   }
-
 </main>
-

@@ -10,16 +10,14 @@
   </section>
 
   <section class="records-toolbar" aria-label="Bộ lọc hoạt động">
-    <label class="semester-filter" for="semesterSelect">
-      <span>Học kỳ</span>
-      <select id="semesterSelect" [(ngModel)]="selectedSemesterId" (change)="onFilterChange()">
-        <option [ngValue]="null">Tất cả học kỳ</option>
-        @for (sem of semesters(); track sem.id) {
-          <option [ngValue]="sem.id">{{ sem.semesterName }} ({{ sem.academicYear }})</option>
-        }
-      </select>
-      <i class="bi bi-chevron-expand" aria-hidden="true"></i>
-    </label>
+    <lib-custom-select
+      class="semester-filter"
+      label="Học kỳ"
+      icon="bi-calendar3"
+      [options]="semesterOptions()"
+      [value]="selectedSemesterId()"
+      (valueChange)="onSemesterChange($event)"
+    ></lib-custom-select>
 
     <div class="records-tabs" role="tablist" aria-label="Trạng thái hoạt động">
       <button
@@ -70,6 +68,29 @@
       <button
         type="button"
         role="tab"
+        [attr.aria-selected]="currentTab() === 'NEEDS_PROCESSING'"
+        [class.is-active]="currentTab() === 'NEEDS_PROCESSING'"
+        [class.is-danger]="currentTab() === 'NEEDS_PROCESSING'"
+        (click)="changeTab('NEEDS_PROCESSING')"
+      >
+        <i class="bi bi-exclamation-octagon" aria-hidden="true"></i>
+        Cần xử lý
+        <span>{{ tabCount('NEEDS_PROCESSING') }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="currentTab() === 'CANCELLED'"
+        [class.is-active]="currentTab() === 'CANCELLED'"
+        (click)="changeTab('CANCELLED')"
+      >
+        <i class="bi bi-x-circle" aria-hidden="true"></i>
+        Đã hủy
+        <span>{{ tabCount('CANCELLED') }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
         [attr.aria-selected]="currentTab() === 'COMPLETED'"
         [class.is-active]="currentTab() === 'COMPLETED'"
         (click)="changeTab('COMPLETED')"
@@ -97,23 +118,30 @@
       </div>
 
       <div class="records-table__body">
-        @for (act of filteredActivities(); track act.id) {
+        @for (act of pagedActivities(); track act.id) {
           <article
             class="activity-record"
-            [class.is-locked]="act.status === 2"
-            [class.is-overdue]="isActivityOverdue(act)"
+            [class.is-locked]="isCancelledRecord(act)"
+            [class.is-overdue]="isActivityOverdue(act) && !isNeedsProcessing(act)"
+            [class.is-violation]="isViolationRecord(act)"
+            [class.is-needs-processing]="isNeedsProcessing(act)"
             [class.needs-complaint]="isFaceVerificationExhausted(act)"
             [class.needs-action]="
               act.nextAction === 'QR_CHECK_IN' ||
               act.nextAction === 'QR_CHECK_OUT' ||
               act.nextAction === 'FACE_VERIFY' ||
               isFaceVerificationExhausted(act) ||
+              isNeedsProcessing(act) ||
               canOpenProof(act)
             "
           >
             <div class="activity-record__main">
               <div class="activity-record__icon" aria-hidden="true">
-                @if (act.status === 2) {
+                @if (isViolationRecord(act)) {
+                  <i class="bi bi-exclamation-octagon"></i>
+                } @else if (isNeedsProcessing(act)) {
+                  <i class="bi bi-exclamation-triangle"></i>
+                } @else if (isCancelledRecord(act)) {
                   <i class="bi bi-lock"></i>
                 } @else if (isActivityOverdue(act)) {
                   <i class="bi bi-exclamation-triangle"></i>
@@ -137,7 +165,7 @@
                   @if (getRecordNote(act)) {
                     <span
                       class="activity-record__note"
-                      [class.activity-record__note--danger]="isFaceVerificationExhausted(act)"
+                      [class.activity-record__note--danger]="isFaceVerificationExhausted(act) || isNeedsProcessing(act)"
                     >
                       {{ getRecordNote(act) }}
                     </span>
@@ -159,10 +187,10 @@
               <span class="mobile-label">Xác thực</span>
               <span
                 class="status-pill"
-                [class.status-pill--success]="act.status === 1"
-                [class.status-pill--warning]="act.status === 0 && !isActivityOverdue(act) && !isFaceVerificationExhausted(act)"
-                [class.status-pill--danger]="isFaceVerificationExhausted(act) || isActivityOverdue(act)"
-                [class.status-pill--muted]="act.status === 2"
+                [class.status-pill--success]="isCompletedRecord(act)"
+                [class.status-pill--warning]="!isCompletedRecord(act) && !isNeedsProcessing(act) && !isActivityOverdue(act) && !isFaceVerificationExhausted(act) && !isCancelledRecord(act)"
+                [class.status-pill--danger]="isFaceVerificationExhausted(act) || isNeedsProcessing(act) || (isActivityOverdue(act) && !isNeedsProcessing(act))"
+                [class.status-pill--muted]="isCancelledRecord(act)"
               >
                 {{ getAttendanceLabel(act) }}
               </span>
@@ -172,35 +200,72 @@
               @if (act.checkoutAt) {
                 <small>Check-out: {{ act.checkoutAt | date: 'dd/MM/yyyy HH:mm' }}</small>
               }
+              @if ((act.registeredSessionCount || 0) > 1) {
+                <small>
+                  Đã xác thực {{ act.faceVerifiedSessionCount || 0 }}/{{ act.registeredSessionCount }} buổi
+                </small>
+              }
+              @if ((act.absentSessionCount || 0) > 0) {
+                <small class="activity-record__note activity-record__note--danger">
+                  Vắng {{ act.absentSessionCount }} buổi
+                </small>
+              }
             </div>
 
             <div class="activity-record__cell">
               <span class="mobile-label">Minh chứng</span>
               <span
                 class="status-pill"
-                [class.status-pill--warning]="act.proofStatus === 0 && act.status === 1 && !isActivityOverdue(act)"
-                [class.status-pill--info]="act.proofStatus === 1"
-                [class.status-pill--success]="act.proofStatus === 2 && !isActivityOverdue(act)"
-                [class.status-pill--danger]="act.proofStatus === 3 || isActivityOverdue(act)"
-                [class.status-pill--muted]="act.status !== 1 && act.status !== 2"
+                [class.status-pill--warning]="act.proofStatus === 0 && act.status === 1 && !isMissedRecord(act) && !isActivityOverdue(act)"
+                [class.status-pill--info]="act.proofStatus === 1 && !isMissedRecord(act)"
+                [class.status-pill--success]="act.proofStatus === 2 && !isMissedRecord(act) && !isActivityOverdue(act)"
+                [class.status-pill--danger]="act.proofStatus === 3 || (isActivityOverdue(act) && !isMissedRecord(act))"
+                [class.status-pill--muted]="isCancelledRecord(act) || isMissedRecord(act) || (act.status !== 1 && act.status !== 2)"
               >
                 {{ getProofLabel(act) }}
               </span>
             </div>
 
             <div class="activity-record__actions">
-              @if (act.status === 2) {
+              @if (isViolationRecord(act)) {
+                <button
+                  type="button"
+                  class="btn-action btn-action--danger"
+                  (click)="openComplaint(act)"
+                >
+                  <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+                  Gửi phản hồi
+                </button>
+              } @else if (isCancelledRecord(act)) {
                 <button type="button" class="btn-action btn-action--disabled" disabled>
                   <i class="bi bi-lock-fill" aria-hidden="true"></i>
                   Đã khóa
+                </button>
+              } @else if (isNeedsProcessing(act) && canSubmitComplaint(act)) {
+                <button
+                  type="button"
+                  class="btn-action btn-action--danger"
+                  (click)="openComplaint(act)"
+                >
+                  <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+                  Gửi phản hồi
                 </button>
               } @else if (isActivityOverdue(act) && act.status === 0) {
                 <button type="button" class="btn-action btn-action--disabled" disabled>
                   <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
                   Đã quá hạn
                 </button>
+              } @else if (isRegisteredBeforeStart(act)) {
+                <button type="button" class="btn-action btn-action--disabled" disabled>
+                  <i class="bi bi-clock" aria-hidden="true"></i>
+                  Chưa đến giờ
+                </button>
               } @else if (act.nextAction === 'QR_CHECK_IN' || act.nextAction === 'QR_CHECK_OUT') {
-                <a class="btn-action btn-action--primary" [routerLink]="['/qr-checkin']">
+                <a
+                  class="btn-action btn-action--primary"
+                  [routerLink]="['/qr-checkin']"
+                  [queryParams]="{ activityId: act.activityId, scheduleId: act.scheduleId }"
+                >
                   <i class="bi bi-qr-code-scan" aria-hidden="true"></i>
                   Quét QR
                 </a>
@@ -250,6 +315,19 @@
           </div>
         }
       </div>
+
+      @if (filteredActivities().length > 0) {
+        <div class="records-pagination">
+          <lib-pagination
+            [currentPage]="currentPage()"
+            [totalItems]="filteredActivities().length"
+            [pageSize]="pageSize()"
+            [pageSizeOptions]="[5, 8, 12, 20]"
+            (pageChange)="onPageChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)"
+          ></lib-pagination>
+        </div>
+      }
     </section>
   }
 
@@ -386,11 +464,20 @@
               </section>
             } @else {
               <section class="proof-state">
-                <span><i class="bi bi-check2-circle" aria-hidden="true"></i></span>
-                <h3>Đã ghi nhận minh chứng</h3>
+                <span>
+                  <i
+                    class="bi"
+                    [class.bi-exclamation-triangle]="isMissedRecord(selectedActivity())"
+                    [class.bi-check2-circle]="!isMissedRecord(selectedActivity())"
+                    aria-hidden="true"
+                  ></i>
+                </span>
+                <h3>{{ isMissedRecord(selectedActivity()) ? 'Minh chứng không áp dụng' : 'Đã ghi nhận minh chứng' }}</h3>
                 <p>
                   {{
-                    selectedActivity()?.proofStatus === 1
+                    isMissedRecord(selectedActivity())
+                      ? 'Bạn chưa hoàn tất điểm danh các buổi đã đăng ký nên minh chứng không được dùng để công nhận hoàn thành.'
+                      : selectedActivity()?.proofStatus === 1
                       ? 'Minh chứng của bạn đang chờ Ban tổ chức duyệt.'
                       : 'Minh chứng đã được duyệt và hoạt động đã hoàn thành.'
                   }}
@@ -405,10 +492,11 @@
             @if (modalMode() === 'PROOF' && selectedActivity()?.status === 1) {
               <span
                 class="status-pill"
-                [class.status-pill--warning]="selectedActivity()?.proofStatus === 0"
-                [class.status-pill--info]="selectedActivity()?.proofStatus === 1"
-                [class.status-pill--success]="selectedActivity()?.proofStatus === 2"
+                [class.status-pill--warning]="selectedActivity()?.proofStatus === 0 && !isMissedRecord(selectedActivity())"
+                [class.status-pill--info]="selectedActivity()?.proofStatus === 1 && !isMissedRecord(selectedActivity())"
+                [class.status-pill--success]="selectedActivity()?.proofStatus === 2 && !isMissedRecord(selectedActivity())"
                 [class.status-pill--danger]="selectedActivity()?.proofStatus === 3"
+                [class.status-pill--muted]="isMissedRecord(selectedActivity())"
               >
                 {{ selectedActivity() ? getProofLabel(selectedActivity()!) : '' }}
               </span>

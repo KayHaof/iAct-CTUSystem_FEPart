@@ -21,13 +21,6 @@ export interface ProofItem {
   deadline?: string;
 }
 
-export interface CriteriaScore {
-  name: string;
-  current: number;
-  max: number;
-  color: string;
-}
-
 export interface DashboardData {
   totalScore: number;
   rank: string;
@@ -36,5 +29,4 @@ export interface DashboardData {
   activities: ActivityItem[];
   pendingProofs: ProofItem[];
   featuredActivities: ActivityItem[];
-  criteriaScores: CriteriaScore[];
 }

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
-import { ApiResponse, PageDTO } from '@my-mfe/interface';
+import { ApiResponse, PageDTO, normalizeActivityDateFields } from '@my-mfe/interface';
 import { IACT_API_ORIGIN } from '@my-mfe/ui';
 import { Activity } from '../../../shared/models/activity.model';
 
@@ -79,7 +79,15 @@ export class ActivityApprovalService {
 
     return this.http
       .get<ApiResponse<PageDTO<Activity>>>(`${this.activityUrl}/department-approvals`, { params })
-      .pipe(map((response) => this.unwrap(response) as PageDTO<Activity>));
+      .pipe(
+        map((response) => {
+          const page = this.unwrap(response) as PageDTO<Activity>;
+          return {
+            ...page,
+            data: (page.data || []).map((activity) => normalizeActivityDateFields(activity)),
+          };
+        }),
+      );
   }
 
   getStats(query: Pick<ActivityApprovalQuery, 'keyword' | 'classId'> = {}): Observable<ActivityApprovalStats> {
@@ -107,7 +115,7 @@ export class ActivityApprovalService {
   getActivityDetails(id: number | string): Observable<Activity> {
     return this.http
       .get<ApiResponse<Activity>>(`${this.activityUrl}/${id}`)
-      .pipe(map((response) => this.unwrap(response) as Activity));
+      .pipe(map((response) => normalizeActivityDateFields(this.unwrap(response) as Activity)));
   }
 
   approveActivity(id: number | string): Observable<void> {

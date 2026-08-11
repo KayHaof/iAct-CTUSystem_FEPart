@@ -165,6 +165,36 @@
   select {
     padding: 0 12px;
   }
+
+  lib-custom-select {
+    display: block;
+    width: 100%;
+  }
+}
+
+:host ::ng-deep .filter-grid lib-custom-select .select-shell {
+  gap: 7px;
+}
+
+:host ::ng-deep .filter-grid lib-custom-select .select-trigger {
+  min-height: 42px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0 12px;
+}
+
+:host ::ng-deep .filter-grid lib-custom-select .select-control-open .select-trigger,
+:host ::ng-deep .filter-grid lib-custom-select .select-trigger:focus-visible {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+:host ::ng-deep .filter-grid lib-custom-select .select-menu {
+  z-index: 90;
 }
 
 .input-with-icon {

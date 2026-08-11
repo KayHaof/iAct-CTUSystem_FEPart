@@ -1,142 +1,226 @@
 :host {
   display: block;
-  max-width: min(92vw, 420px);
+  width: min(100%, 26rem);
+  max-width: calc(100vw - 2rem);
 }
 
 .alert-toast {
+  --alert-color: var(--primary, #2563eb);
+  --alert-soft: var(--primary-light, rgba(37, 99, 235, 0.1));
+  --alert-text: var(--text, #0f172a);
+
   position: relative;
   display: flex;
-  min-width: 0;
   align-items: flex-start;
   gap: 0.75rem;
+  min-width: 0;
+  box-sizing: border-box;
   overflow: hidden;
-  border-radius: 1rem;
-  padding: 1rem;
-  padding-right: 0.75rem;
-  background: var(--bg);
-  color: var(--text);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--border);
+  padding: 0.875rem 0.75rem 1rem 1rem;
+  color: var(--alert-text);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98)),
+    var(--bg, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-2xl, 1rem);
+  box-shadow:
+    0 1.25rem 2.5rem -1.5rem rgba(15, 23, 42, 0.35),
+    0 0.25rem 0.75rem rgba(15, 23, 42, 0.08);
 }
 
 .alert-accent {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 0.25rem;
-  background: var(--primary);
+  inset: 0 auto 0 0;
+  width: 0.3rem;
+  background: var(--alert-color);
 }
 
 .alert-state {
-  margin-top: 0.125rem;
   display: inline-flex;
-  height: 2.25rem;
-  width: 2.25rem;
-  flex-shrink: 0;
+  flex: 0 0 2.5rem;
   align-items: center;
   justify-content: center;
-  border-radius: 0.75rem;
-  background: var(--primary-light);
-  color: var(--primary);
-  font-size: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-top: 0.0625rem;
+  box-sizing: border-box;
+  color: var(--alert-color);
+  background: var(--alert-soft);
+  border-radius: var(--radius-xl, 0.75rem);
+  font-size: 1.25rem;
 }
 
-.state-dot {
-  height: 0.75rem;
-  width: 0.75rem;
-  border-radius: 50%;
-  background: currentColor;
+.alert-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-top: 0.0625rem;
 }
 
-.loading-ring {
-  height: 1rem;
-  width: 1rem;
-  border-radius: 50%;
-  border: 2px solid var(--primary-light);
-  border-top-color: var(--primary);
-
-  animation: alert-spin 0.75s linear infinite;
+.alert-title,
+.alert-message {
+  overflow-wrap: anywhere;
 }
 
 .alert-title {
-  font-size: 0.875rem;
-  font-weight: 900;
+  margin: 0;
+  color: var(--alert-text);
+  font-size: 0.9375rem;
+  font-weight: 800;
   line-height: 1.25rem;
-  color: var(--text);
 }
 
 .alert-message {
-  margin-top: 0.25rem;
-  word-break: break-word;
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary, #475569);
   font-size: 0.875rem;
   font-weight: 500;
-  line-height: 1.25rem;
-  color: var(--text-secondary);
+  line-height: 1.3rem;
 }
 
 .alert-close {
-  flex-shrink: 0;
-  border-radius: 0.75rem;
-  background: var(--bg-elevated);
-  padding: 0.5rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: var(--text-secondary);
-  transition: all 0.2s;
-  border: none;
+  display: inline-flex;
+  flex: 0 0 2rem;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin: -0.125rem -0.125rem 0 0;
+  padding: 0;
+  color: var(--text-muted, #64748b);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg, 0.5rem);
   cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 
   &:hover {
-    background: var(--border);
+    color: var(--alert-color);
+    background: var(--alert-soft);
   }
 
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  &:focus-visible {
+    color: var(--alert-color);
+    border-color: var(--alert-color);
+    outline: 0;
+    box-shadow: 0 0 0 3px var(--primary-light, rgba(37, 99, 235, 0.15));
   }
+}
+
+.alert-progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 0.2rem;
+  background: var(--alert-color);
+  transform-origin: left center;
+  animation: alert-progress-shrink var(--alert-duration) linear forwards;
+  opacity: 0.7;
 }
 
 .alert-toast-success {
-  .alert-accent { background: #22c55e; }
-  .alert-state {
-    background: rgba(34, 197, 94, 0.1);
-    color: #16a34a;
-  }
+  --alert-color: #15803d;
+  --alert-soft: rgba(34, 197, 94, 0.12);
 }
 
 .alert-toast-error {
-  .alert-accent { background: #ef4444; }
-  .alert-state {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-  }
+  --alert-color: #dc2626;
+  --alert-soft: rgba(239, 68, 68, 0.12);
 }
 
 .alert-toast-warning {
-  .alert-accent { background: #f59e0b; }
-  .alert-state {
-    background: rgba(245, 158, 11, 0.1);
-    color: #d97706;
-  }
+  --alert-color: #b45309;
+  --alert-soft: rgba(245, 158, 11, 0.16);
 }
 
 .alert-toast-info {
-  .alert-accent { background: var(--primary); }
-  .alert-state {
-    background: var(--primary-light);
-    color: var(--primary);
-  }
+  --alert-color: var(--primary, #2563eb);
+  --alert-soft: var(--primary-light, rgba(37, 99, 235, 0.1));
 }
 
 .alert-toast-loading {
-  .alert-accent {
-    background: linear-gradient(180deg, var(--primary), var(--info));
+  --alert-color: var(--primary, #2563eb);
+  --alert-soft: var(--primary-light, rgba(37, 99, 235, 0.1));
+
+  .alert-state {
+    background: linear-gradient(135deg, var(--primary-light), rgba(14, 165, 233, 0.12));
   }
+}
+
+.loading-ring {
+  display: block;
+  width: 1.125rem;
+  height: 1.125rem;
+  box-sizing: border-box;
+  border: 2px solid rgba(37, 99, 235, 0.2);
+  border-top-color: var(--alert-color);
+  border-radius: 50%;
+  animation: alert-spin 0.75s linear infinite;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @keyframes alert-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes alert-progress-shrink {
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (max-width: 600px) {
+  :host {
+    width: 100%;
+    max-width: calc(100vw - 1rem);
+  }
+
+  .alert-toast {
+    gap: 0.625rem;
+    padding: 0.75rem 0.625rem 0.875rem 0.875rem;
+  }
+
+  .alert-state {
+    flex-basis: 2.25rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 1.125rem;
+  }
+
+  .alert-title {
+    font-size: 0.875rem;
+  }
+
+  .alert-message {
+    font-size: 0.8125rem;
+    line-height: 1.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert-close,
+  .loading-ring,
+  .alert-progress {
+    transition: none;
+    animation: none;
   }
 }

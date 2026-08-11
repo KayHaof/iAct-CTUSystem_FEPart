@@ -9,7 +9,7 @@
       (keydown.enter)="close()"
     ></div>
 
-    <div class="modal-content">
+    <div class="modal-content user-modal-content">
       <header class="modal-header">
         <div class="modal-header-left">
           <span class="modal-header-icon">
@@ -117,6 +117,15 @@
                 <option [ngValue]="2">Khoa / đơn vị</option>
                 <option [ngValue]="3">Quản trị viên</option>
               </select>
+              <lib-custom-select
+                id="addRoleCustomSelect"
+                label=""
+                placeholder="Chọn vai trò"
+                icon="bi-person-badge"
+                [options]="roleOptions"
+                [value]="newUser.roleType"
+                (valueChange)="onRoleChange($event)"
+              ></lib-custom-select>
             </div>
           </div>
         </section>
@@ -163,6 +172,15 @@
                       <option [ngValue]="dept.id">{{ dept.name }}</option>
                     }
                   </select>
+                  <lib-custom-select
+                    id="addDepartmentCustomSelect"
+                    label=""
+                    placeholder="Chọn trường / khoa"
+                    icon="bi-building"
+                    [options]="getDepartmentOptions()"
+                    [value]="newUser.departmentId"
+                    (valueChange)="onDepartmentSelected($event)"
+                  ></lib-custom-select>
                 </div>
                 <div>
                   <label
@@ -183,6 +201,16 @@
                       <option [ngValue]="major.id">{{ major.name }}</option>
                     }
                   </select>
+                  <lib-custom-select
+                    id="addMajorCustomSelect"
+                    label=""
+                    placeholder="Chọn chuyên ngành"
+                    icon="bi-mortarboard"
+                    [options]="getMajorOptions()"
+                    [value]="newUser.majorId"
+                    [disabled]="!newUser.departmentId"
+                    (valueChange)="onMajorSelected($event)"
+                  ></lib-custom-select>
                 </div>
                 <div class="form-group-full">
                   <label
@@ -202,6 +230,16 @@
                       <option [ngValue]="cls.id">{{ cls.classCode || cls.name }}</option>
                     }
                   </select>
+                  <lib-custom-select
+                    id="addClassCustomSelect"
+                    label=""
+                    placeholder="Chọn lớp sinh hoạt"
+                    icon="bi-people"
+                    [options]="getClassOptions()"
+                    [value]="newUser.classId"
+                    [disabled]="!newUser.majorId"
+                    (valueChange)="onClassSelected($event)"
+                  ></lib-custom-select>
                 </div>
               </div>
             }

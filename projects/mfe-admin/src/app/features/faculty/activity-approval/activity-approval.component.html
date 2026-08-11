@@ -46,21 +46,24 @@
 
       <label>
         <span>Chi đoàn</span>
-        <select [ngModel]="selectedClassId()" (ngModelChange)="changeClass($event)">
-          <option [ngValue]="null">Tất cả chi đoàn</option>
-          @for (clazz of classOptions(); track clazz.classId) {
-            <option [ngValue]="clazz.classId">{{ clazz.label }}</option>
-          }
-        </select>
+        <lib-custom-select
+          placeholder="Tất cả chi đoàn"
+          icon="bi-people"
+          [options]="classSelectOptions()"
+          [ngModel]="selectedClassId()"
+          (ngModelChange)="changeClass($event)"
+        ></lib-custom-select>
       </label>
 
       <label>
         <span>Sắp xếp</span>
-        <select [ngModel]="sortBy()" (ngModelChange)="changeSort($event)">
-          @for (option of sortOptions; track option.value) {
-            <option [ngValue]="option.value">{{ option.label }}</option>
-          }
-        </select>
+        <lib-custom-select
+          placeholder="Chọn cách sắp xếp"
+          icon="bi-sort-down"
+          [options]="sortSelectOptions()"
+          [ngModel]="sortBy()"
+          (ngModelChange)="changeSort($event)"
+        ></lib-custom-select>
       </label>
 
       <div class="filter-actions">

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApiResponse } from '@my-mfe/interface';
+import { Observable, map } from 'rxjs';
+import { ApiResponse, normalizeApiUtcDateTime } from '@my-mfe/interface';
 import { IACT_API_ORIGIN } from '@my-mfe/ui';
 import {
   ComplaintEligibleActivity,
@@ -24,10 +24,29 @@ export class ComplaintService {
       params = params.set('semesterId', semesterId.toString());
     }
 
-    return this.http.get<ApiResponse<ComplaintEligibleActivity[]>>(
-      `${this.apiUrl}/my-eligible-activities`,
-      { params },
-    );
+    return this.http
+      .get<ApiResponse<ComplaintEligibleActivity[]>>(`${this.apiUrl}/my-eligible-activities`, {
+        params,
+      })
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: (response.data || []).map((activity) => ({
+            ...activity,
+            startDate: normalizeApiUtcDateTime(activity.startDate),
+            endDate: normalizeApiUtcDateTime(activity.endDate),
+            checkinTime: normalizeApiUtcDateTime(activity.checkinTime),
+            complaint: activity.complaint
+              ? {
+                  ...activity.complaint,
+                  createdAt: normalizeApiUtcDateTime(activity.complaint.createdAt),
+                  updatedAt: normalizeApiUtcDateTime(activity.complaint.updatedAt),
+                  resolvedAt: normalizeApiUtcDateTime(activity.complaint.resolvedAt),
+                }
+              : activity.complaint,
+          })),
+        })),
+      );
   }
 
   submitComplaint(request: ComplaintRequest): Observable<ApiResponse<ComplaintResponse>> {

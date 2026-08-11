@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { ApiResponse, PageDTO, Semester } from '@my-mfe/interface';
+import { Observable, map } from 'rxjs';
+import { ApiResponse, PageDTO, Semester, normalizeApiUtcDateTime } from '@my-mfe/interface';
 
 export type CertificateSubmissionStatus = 0 | 1 | 2 | 3;
 
@@ -48,6 +48,7 @@ export interface CertificateSubmissionQuery {
   status?: CertificateSubmissionStatus | null;
   semesterId?: number | null;
   keyword?: string | null;
+  excludeAutoRejected?: boolean;
   page?: number;
   size?: number;
 }
@@ -86,31 +87,68 @@ export class CertificateApprovalService {
     if (query.keyword?.trim()) {
       params = params.set('keyword', query.keyword.trim());
     }
+    if (query.excludeAutoRejected) {
+      params = params.set('excludeAutoRejected', 'true');
+    }
 
-    return this.http.get<ApiResponse<PageDTO<CertificateSubmission>>>(this.apiUrl, { params });
+    return this.http
+      .get<ApiResponse<PageDTO<CertificateSubmission>>>(this.apiUrl, { params })
+      .pipe(map((response) => this.normalizePageResponse(response)));
   }
 
   approve(
     id: number,
     request: CertificateReviewRequest,
   ): Observable<ApiResponse<CertificateSubmission>> {
-    return this.http.put<ApiResponse<CertificateSubmission>>(
-      `${this.apiUrl}/${id}/approve`,
-      request,
-    );
+    return this.http
+      .put<ApiResponse<CertificateSubmission>>(`${this.apiUrl}/${id}/approve`, request)
+      .pipe(map((response) => this.normalizeSubmissionResponse(response)));
   }
 
   reject(
     id: number,
     request: CertificateRejectRequest,
   ): Observable<ApiResponse<CertificateSubmission>> {
-    return this.http.put<ApiResponse<CertificateSubmission>>(
-      `${this.apiUrl}/${id}/reject`,
-      request,
-    );
+    return this.http
+      .put<ApiResponse<CertificateSubmission>>(`${this.apiUrl}/${id}/reject`, request)
+      .pipe(map((response) => this.normalizeSubmissionResponse(response)));
   }
 
   getSemesters(): Observable<ApiResponse<Semester[]>> {
     return this.http.get<ApiResponse<Semester[]>>(this.semesterUrl);
+  }
+
+  private normalizePageResponse(
+    response: ApiResponse<PageDTO<CertificateSubmission>>,
+  ): ApiResponse<PageDTO<CertificateSubmission>> {
+    return {
+      ...response,
+      data: response.data
+        ? {
+            ...response.data,
+            data: (response.data.data || []).map((submission) =>
+              this.normalizeSubmission(submission),
+            ),
+          }
+        : response.data,
+    };
+  }
+
+  private normalizeSubmissionResponse(
+    response: ApiResponse<CertificateSubmission>,
+  ): ApiResponse<CertificateSubmission> {
+    return {
+      ...response,
+      data: response.data ? this.normalizeSubmission(response.data) : response.data,
+    };
+  }
+
+  private normalizeSubmission(submission: CertificateSubmission): CertificateSubmission {
+    return {
+      ...submission,
+      reviewedAt: normalizeApiUtcDateTime(submission.reviewedAt),
+      createdAt: normalizeApiUtcDateTime(submission.createdAt) || undefined,
+      updatedAt: normalizeApiUtcDateTime(submission.updatedAt) || undefined,
+    };
   }
 }

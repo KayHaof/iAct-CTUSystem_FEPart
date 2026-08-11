@@ -9,8 +9,15 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '@my-mfe/auth';
-import { UserInfo } from '@my-mfe/interface';
-import { AlertService, ConfirmDialogComponent, ConfirmService } from '@my-mfe/ui';
+import { UserInfo, toLocalDateInput } from '@my-mfe/interface';
+import {
+  AlertService,
+  ConfirmDialogComponent,
+  ConfirmService,
+  CustomSelectComponent,
+  CustomSelectOption,
+  CustomSelectValue,
+} from '@my-mfe/ui';
 import { ClassResponse } from '../../../shared/models/master-data.model';
 import { AdminUserService } from '../../super-admin/services/admin-user.service';
 import { MasterDataService } from '../../super-admin/services/master-data.service';
@@ -19,7 +26,7 @@ import { ClassRepresentative, ClassRepresentativeService } from './class-represe
 @Component({
   selector: 'app-class-representative-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, ConfirmDialogComponent, CustomSelectComponent],
   templateUrl: './class-representative-management.component.html',
   styleUrl: './class-representative-management.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,11 +48,84 @@ export class ClassRepresentativeManagementComponent implements OnInit {
   readonly selectedClassId = signal<number | ''>('');
   readonly activeFilter = signal<'true' | 'false' | ''>('true');
   readonly isDepartmentManager = computed(() => this.userService.currentUser()?.roleType === 2);
+  readonly representativeTypeOptions: CustomSelectOption[] = [
+    {
+      label: 'Lớp trưởng',
+      value: 'CLASS_MONITOR',
+      description: 'Đại diện chính của lớp',
+      icon: 'bi-person-badge',
+    },
+    {
+      label: 'Bí thư chi đoàn',
+      value: 'SECRETARY',
+      description: 'Phụ trách hoạt động chi đoàn',
+      icon: 'bi-patch-check',
+    },
+    {
+      label: 'Phó Bí thư chi đoàn',
+      value: 'DEPUTY_SECRETARY',
+      description: 'Hỗ trợ Bí thư chi đoàn',
+      icon: 'bi-person-check',
+    },
+    {
+      label: 'Ban cán sự',
+      value: 'ASSISTANT',
+      description: 'Thành viên ban cán sự lớp',
+      icon: 'bi-people',
+    },
+    {
+      label: 'Đại diện lớp',
+      value: 'CLASS_REPRESENTATIVE',
+      description: 'Được ủy quyền thao tác hoạt động',
+      icon: 'bi-person-lines-fill',
+    },
+  ];
+  readonly activeFilterOptions: CustomSelectOption[] = [
+    {
+      label: 'Đang hiệu lực',
+      value: 'true',
+      description: 'Chỉ hiển thị đại diện đang hoạt động',
+      icon: 'bi-check2-circle',
+    },
+    {
+      label: 'Tất cả trạng thái',
+      value: '',
+      description: 'Không giới hạn trạng thái',
+      icon: 'bi-ui-checks-grid',
+    },
+    {
+      label: 'Đã ngưng',
+      value: 'false',
+      description: 'Đại diện đã bị ngưng quyền',
+      icon: 'bi-pause-circle',
+    },
+  ];
 
   readonly manageableClasses = computed(() => {
     const user = this.userService.currentUser();
     return this.classes().filter((cls) => cls.departmentId === user?.departmentId);
   });
+  readonly createClassOptions = computed<CustomSelectOption[]>(() =>
+    this.toClassSelectOptions(this.manageableClasses(), 'Chọn lớp'),
+  );
+  readonly filterClassOptions = computed<CustomSelectOption[]>(() =>
+    this.toClassSelectOptions(this.manageableClasses(), 'Tất cả lớp', ''),
+  );
+  readonly studentOptions = computed<CustomSelectOption[]>(() => [
+    {
+      label: 'Chọn sinh viên',
+      value: null,
+      description: this.form.classId ? 'Chọn sinh viên trong lớp' : 'Chọn lớp trước',
+      icon: 'bi-person',
+      disabled: !this.form.classId,
+    },
+    ...this.students().map((student) => ({
+      label: student.fullName || student.username || 'Sinh viên',
+      value: student.id,
+      description: student.studentCode || student.username || 'Chưa có MSSV',
+      icon: 'bi-person-badge',
+    })),
+  ]);
 
   form: {
     classId: number | null;
@@ -57,7 +137,7 @@ export class ClassRepresentativeManagementComponent implements OnInit {
     classId: null,
     studentId: null,
     representativeType: 'CLASS_MONITOR',
-    startDate: new Date().toISOString().slice(0, 10),
+    startDate: toLocalDateInput(new Date()),
     endDate: '',
   };
 
@@ -94,6 +174,14 @@ export class ClassRepresentativeManagementComponent implements OnInit {
     this.form.studentId = null;
     this.students.set([]);
     this.loadStudentsForSelectedClass();
+  }
+
+  onFilterClassSelected(classId: CustomSelectValue): void {
+    this.selectedClassId.set(typeof classId === 'number' ? classId : '');
+  }
+
+  onActiveFilterSelected(active: CustomSelectValue): void {
+    this.activeFilter.set(active === 'false' ? 'false' : active === 'true' ? 'true' : '');
   }
 
   loadStudentsForSelectedClass(): void {
@@ -188,6 +276,27 @@ export class ClassRepresentativeManagementComponent implements OnInit {
       CLASS_REPRESENTATIVE: 'Đại diện lớp',
     };
     return type ? labels[type] || type : 'Đại diện lớp';
+  }
+
+  private toClassSelectOptions(
+    classes: ClassResponse[],
+    emptyLabel: string,
+    emptyValue: number | '' | null = null,
+  ): CustomSelectOption[] {
+    return [
+      {
+        label: emptyLabel,
+        value: emptyValue,
+        description: 'Không chọn lớp cụ thể',
+        icon: 'bi-mortarboard',
+      },
+      ...classes.map((cls) => ({
+        label: `${cls.classCode || 'Lớp'} - ${cls.name}`,
+        value: cls.id,
+        description: [cls.academicYear, cls.majorName].filter(Boolean).join(' · ') || 'Lớp sinh hoạt',
+        icon: 'bi-people',
+      })),
+    ];
   }
 
   private loadClasses(): void {

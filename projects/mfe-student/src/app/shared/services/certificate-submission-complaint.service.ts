@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { ApiResponse, PageDTO } from '@my-mfe/interface';
+import { Observable, map } from 'rxjs';
+import { ApiResponse, PageDTO, normalizeApiUtcDateTime } from '@my-mfe/interface';
 import { IACT_API_ORIGIN } from '@my-mfe/ui';
 import {
   CertificateSubmissionComplaint,
@@ -43,8 +43,23 @@ export class CertificateSubmissionComplaintService {
       params = params.set('status', String(query.status));
     }
 
-    return this.http.get<ApiResponse<PageDTO<CertificateSubmissionComplaint>>>(`${this.apiUrl}/me`, {
-      params,
-    });
+    return this.http
+      .get<ApiResponse<PageDTO<CertificateSubmissionComplaint>>>(`${this.apiUrl}/me`, { params })
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: response.data
+            ? {
+                ...response.data,
+                data: (response.data.data || []).map((complaint) => ({
+                  ...complaint,
+                  reviewedAt: normalizeApiUtcDateTime(complaint.reviewedAt),
+                  createdAt: normalizeApiUtcDateTime(complaint.createdAt) || undefined,
+                  updatedAt: normalizeApiUtcDateTime(complaint.updatedAt) || undefined,
+                })),
+              }
+            : response.data,
+        })),
+      );
   }
 }

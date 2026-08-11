@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  computed,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Activity } from '../../../shared/models/activity.model';
 
@@ -8,7 +16,7 @@ import { Activity } from '../../../shared/models/activity.model';
   imports: [CommonModule],
   template: `
     @if (isOpen()) {
-      <div class="fixed inset-0 flex items-center justify-center p-4 sm:p-6" style="z-index: 9999">
+      <div class="activity-registration-modal fixed inset-0 flex items-center justify-center p-4 sm:p-6" style="z-index: 9999">
         <div
           class="absolute inset-0 bg-slate-950/55 backdrop-blur-sm transition-opacity"
           role="button"
@@ -19,13 +27,18 @@ import { Activity } from '../../../shared/models/activity.model';
         ></div>
 
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="activity-registration-title"
           class="relative flex max-h-[90vh] w-full max-w-xl animate-fade-in-up flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         >
           <div
             class="flex items-start justify-between gap-4 border-b border-slate-200 bg-slate-50 px-5 py-4"
           >
             <div class="min-w-0">
-              <h3 class="text-lg font-black tracking-tight text-slate-950">Đăng ký tham gia</h3>
+              <h3 id="activity-registration-title" class="text-lg font-black tracking-tight text-slate-950">
+                Đăng ký tham gia
+              </h3>
               <p class="mt-1 line-clamp-1 text-xs font-bold text-blue-700">
                 {{ activity()?.title }}
               </p>
@@ -33,6 +46,7 @@ import { Activity } from '../../../shared/models/activity.model';
             <button
               type="button"
               (click)="closeModal()"
+              aria-label="Đóng hộp thoại đăng ký"
               class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-rose-100 hover:bg-rose-50 hover:text-rose-600"
             >
               <i class="bi bi-x-lg"></i>
@@ -50,6 +64,7 @@ import { Activity } from '../../../shared/models/activity.model';
                   (click)="toggleAll()"
                   class="w-fit rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 transition hover:bg-blue-100"
                 >
+                  <i class="bi bi-check2-square mr-1" aria-hidden="true"></i>
                   {{ isAllSelected() ? 'Bỏ chọn tất cả' : 'Chọn tất cả' }}
                 </button>
               </div>
@@ -57,7 +72,7 @@ import { Activity } from '../../../shared/models/activity.model';
               <div class="space-y-3">
                 @for (schedule of activity()?.schedules; track schedule.id) {
                   <label
-                    class="flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition-all duration-200"
+                    class="schedule-option flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition-all duration-200"
                     [ngClass]="
                       selectedScheduleIds().has(schedule.id!)
                         ? 'border-blue-500 bg-blue-50'
@@ -65,7 +80,7 @@ import { Activity } from '../../../shared/models/activity.model';
                     "
                   >
                     <div
-                      class="relative mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-colors"
+                      class="schedule-option__check relative mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-colors"
                       [ngClass]="
                         selectedScheduleIds().has(schedule.id!)
                           ? 'border-blue-600 bg-blue-600'
@@ -76,11 +91,11 @@ import { Activity } from '../../../shared/models/activity.model';
                         <i class="bi bi-check text-lg leading-none text-white"></i>
                       }
                     </div>
-                    <div class="flex-1">
-                      <h4 class="mb-1 text-sm font-bold leading-tight text-slate-950">
+                    <div class="schedule-option__body flex-1">
+                      <h4 class="schedule-option__title mb-1 text-sm font-bold leading-tight text-slate-950">
                         {{ schedule.title }}
                       </h4>
-                      <div class="flex flex-col gap-1 text-xs font-semibold text-slate-500">
+                      <div class="schedule-option__meta flex flex-col gap-1 text-xs font-semibold text-slate-500">
                         <span class="flex items-center gap-1.5">
                           <i class="bi bi-clock text-blue-500"></i>
                           {{ schedule.startTime | date: 'dd/MM HH:mm' }} -
@@ -124,7 +139,7 @@ import { Activity } from '../../../shared/models/activity.model';
             <button
               type="button"
               (click)="closeModal()"
-              class="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100"
+              class="registration-modal__cancel rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100"
             >
               Hủy bỏ
             </button>
@@ -137,7 +152,7 @@ import { Activity } from '../../../shared/models/activity.model';
                   activity()!.schedules!.length > 0 &&
                   selectedScheduleIds().size === 0)
               "
-              class="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              class="registration-modal__submit flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               @if (isSubmitting()) {
                 <div
@@ -195,6 +210,40 @@ import { Activity } from '../../../shared/models/activity.model';
         background: rgb(203 213 225);
         border-radius: 9999px;
       }
+
+      .activity-registration-modal [role='dialog'] {
+        border-radius: 8px;
+      }
+
+      .activity-registration-modal button:focus-visible,
+      .activity-registration-modal input:focus-visible {
+        outline: 3px solid rgba(37, 99, 235, 0.22);
+        outline-offset: 2px;
+      }
+
+      .schedule-option {
+        border-radius: 8px;
+      }
+
+      .schedule-option__check {
+        border-radius: 6px;
+      }
+
+      .registration-modal__cancel,
+      .registration-modal__submit {
+        min-height: 2.6rem;
+        border-radius: 8px;
+      }
+
+      .registration-modal__cancel:hover:not(:disabled) {
+        border-color: #b9c9e3;
+        background: #f8fbff;
+        color: #1d4ed8;
+      }
+
+      .registration-modal__submit:hover:not(:disabled) {
+        background: #1d4ed8;
+      }
     `,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -214,6 +263,13 @@ export class ActivityRegistrationModalComponent {
     if (!schedules || schedules.length === 0) return false;
     return this.selectedScheduleIds().size === schedules.length;
   });
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isOpen()) {
+      this.closeModal();
+    }
+  }
 
   toggleSchedule(id: number) {
     const current = new Set(this.selectedScheduleIds());
@@ -245,6 +301,11 @@ export class ActivityRegistrationModalComponent {
   }
 
   submit() {
+    const schedules = this.activity()?.schedules;
+    if (this.isSubmitting() || (schedules?.length && this.selectedScheduleIds().size === 0)) {
+      return;
+    }
+
     this.confirm.emit(Array.from(this.selectedScheduleIds()));
   }
 }

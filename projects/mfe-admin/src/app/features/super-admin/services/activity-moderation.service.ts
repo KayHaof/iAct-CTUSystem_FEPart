@@ -1,7 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApiResponse, PageDTO, Department, Semester } from '@my-mfe/interface';
+import { Observable, map } from 'rxjs';
+import {
+  ApiResponse,
+  PageDTO,
+  Department,
+  Semester,
+  normalizeActivityDateFields,
+} from '@my-mfe/interface';
 import {
   ModerationStats,
   ModerationFilters,
@@ -43,7 +49,21 @@ export class ActivityModerationService {
     if (filters.keyword) params = params.set('keyword', filters.keyword);
     params = params.set('adminApprovalOnly', 'true');
 
-    return this.http.get<ApiResponse<PageDTO<Activity>>>(this.apiUrl, { params });
+    return this.http
+      .get<ApiResponse<PageDTO<Activity>>>(this.apiUrl, { params })
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: response.data
+            ? {
+                ...response.data,
+                data: (response.data.data || []).map((activity) =>
+                  normalizeActivityDateFields(activity),
+                ),
+              }
+            : response.data,
+        })),
+      );
   }
 
   approveActivity(activityId: string): Observable<ApiResponse<void>> {
@@ -59,6 +79,15 @@ export class ActivityModerationService {
   }
 
   getActivityDetails(activityId: string): Observable<ApiResponse<Activity>> {
-    return this.http.get<ApiResponse<Activity>>(`${this.apiUrl}/${activityId}`);
+    return this.http
+      .get<ApiResponse<Activity>>(`${this.apiUrl}/${activityId}`)
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: response.data
+            ? normalizeActivityDateFields(response.data)
+            : response.data,
+        })),
+      );
   }
 }

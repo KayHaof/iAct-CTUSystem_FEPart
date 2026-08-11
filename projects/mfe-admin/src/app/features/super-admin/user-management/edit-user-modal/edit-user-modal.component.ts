@@ -1,24 +1,29 @@
 import {
   ChangeDetectionStrategy,
+  CUSTOM_ELEMENTS_SCHEMA,
   Component,
   EventEmitter,
   Input,
   Output,
   inject,
   signal,
+  ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiResponse, ClassInfo, Department, MajorInfo, UserInfo } from '@my-mfe/interface';
+import { CustomSelectComponent, CustomSelectOption, CustomSelectValue } from '@my-mfe/ui';
 import { AdminUserService } from '../../services/admin-user.service';
 
 @Component({
   selector: 'app-edit-user-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CustomSelectComponent],
   templateUrl: './edit-user-modal.component.html',
   styleUrls: ['./edit-user-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class EditUserModalComponent {
   private adminUserService = inject(AdminUserService);
@@ -48,6 +53,65 @@ export class EditUserModalComponent {
   editSelectedDept = signal<number | ''>('');
   editSelectedMajor = signal<number | ''>('');
   editSelectedClass = signal<number | ''>('');
+
+  getDepartmentOptions(): CustomSelectOption[] {
+    return [
+      { label: 'Chọn trường / khoa', value: '', icon: 'bi-building' },
+      ...this.departments.map((department) => ({
+        label: department.name,
+        value: department.id,
+        icon: 'bi-building',
+      })),
+    ];
+  }
+
+  getMajorOptions(): CustomSelectOption[] {
+    return [
+      {
+        label: 'Chọn chuyên ngành',
+        value: '',
+        icon: 'bi-mortarboard',
+        disabled: !this.editSelectedDept(),
+      },
+      ...this.majors().map((major) => ({
+        label: major.name,
+        value: major.id,
+        icon: 'bi-mortarboard',
+        disabled: !this.editSelectedDept(),
+      })),
+    ];
+  }
+
+  getClassOptions(): CustomSelectOption[] {
+    return [
+      {
+        label: 'Chọn lớp sinh hoạt',
+        value: '',
+        icon: 'bi-people',
+        disabled: !this.editSelectedMajor(),
+      },
+      ...this.classesForEdit().map((cls) => ({
+        label: cls.classCode || cls.name,
+        value: cls.id,
+        icon: 'bi-people',
+        disabled: !this.editSelectedMajor(),
+      })),
+    ];
+  }
+
+  onDepartmentSelected(value: CustomSelectValue): void {
+    this.editSelectedDept.set(typeof value === 'number' ? value : '');
+    this.onEditDeptChange();
+  }
+
+  onMajorSelected(value: CustomSelectValue): void {
+    this.editSelectedMajor.set(typeof value === 'number' ? value : '');
+    this.onEditMajorChange();
+  }
+
+  onClassSelected(value: CustomSelectValue): void {
+    this.editSelectedClass.set(typeof value === 'number' ? value : '');
+  }
 
   close() {
     this.closeModal.emit();

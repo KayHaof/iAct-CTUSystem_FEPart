@@ -1,8 +1,10 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  EventEmitter,
   Input,
   OnChanges,
+  Output,
   SimpleChanges,
   computed,
   inject,
@@ -34,6 +36,7 @@ export class ActivityComplaintsComponent implements OnChanges {
   private alertService = inject(AlertService);
 
   @Input({ required: true }) activityId: number | null = null;
+  @Output() totalChanged = new EventEmitter<number>();
 
   complaints = signal<ActivityComplaint[]>([]);
   isLoading = signal(false);
@@ -70,11 +73,18 @@ export class ActivityComplaintsComponent implements OnChanges {
         next: (response) => {
           const pageData = response.data;
           this.complaints.set(pageData?.data || []);
-          this.totalRows.set(pageData?.totalRows || 0);
+          const total = pageData?.totalRows || 0;
+          this.totalRows.set(total);
+          if (this.statusFilter() === 0) {
+            this.totalChanged.emit(total);
+          }
         },
         error: (err: HttpErrorResponse) => {
           this.complaints.set([]);
           this.totalRows.set(0);
+          if (this.statusFilter() === 0) {
+            this.totalChanged.emit(0);
+          }
           this.alertService.error(
             err.error?.message || 'Chưa thể tải danh sách khiếu nại của hoạt động.',
           );

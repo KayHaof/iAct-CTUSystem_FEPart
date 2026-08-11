@@ -11,11 +11,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { Activity } from '../../../shared/models/activity.model';
+import { Activity, ActivityScheduleDto } from '../../../shared/models/activity.model';
 import { ActivityService } from '../services/activity.service';
 import { UserService } from '@my-mfe/auth';
 import { AlertService, ConfirmService } from '@my-mfe/ui';
-import { ApiResponse } from '@my-mfe/interface';
+
+type QrSchedule = ActivityScheduleDto & { id: number };
 
 @Component({
   selector: 'app-activity-management',
@@ -41,6 +42,18 @@ export class ActivityManagementComponent implements OnInit {
   showQrModal = signal<boolean>(false);
   qrCodeImage = signal<string | null>(null);
   isGeneratingQr = signal<boolean>(false);
+  selectedQrScheduleId = signal<number | null>(null);
+  qrCodeImagesBySchedule = signal<Record<number, string>>({});
+  qrSchedules = computed<QrSchedule[]>(() =>
+    (this.activity()?.schedules || []).filter(
+      (schedule): schedule is QrSchedule =>
+        typeof schedule.id === 'number' && Number.isFinite(schedule.id),
+    ),
+  );
+  selectedQrSchedule = computed<QrSchedule | null>(() => {
+    const selectedId = this.selectedQrScheduleId();
+    return this.qrSchedules().find((schedule) => schedule.id === selectedId) || null;
+  });
 
   capacityPercentage = computed(() => {
     const act = this.activity();
@@ -180,16 +193,53 @@ export class ActivityManagementComponent implements OnInit {
     const act = this.activity();
     if (!act || !act.id) return;
 
-    this.showQrModal.set(true);
-    if (this.qrCodeImage()) return;
+    const schedules = this.qrSchedules();
+    if (schedules.length === 0) {
+      this.alertService.error('Hoạt động chưa có buổi chi tiết để tạo mã QR điểm danh.');
+      return;
+    }
 
+    this.showQrModal.set(true);
+    const selectedId = this.selectedQrScheduleId();
+    const scheduleId =
+      selectedId && schedules.some((schedule) => schedule.id === selectedId)
+        ? selectedId
+        : schedules[0].id;
+
+    this.selectQrSchedule(scheduleId);
+  }
+
+  selectQrSchedule(scheduleId: number): void {
+    const act = this.activity();
+    if (!act || !act.id) return;
+
+    this.selectedQrScheduleId.set(scheduleId);
+    const cachedImage = this.qrCodeImagesBySchedule()[scheduleId];
+    if (cachedImage) {
+      this.qrCodeImage.set(cachedImage);
+      return;
+    }
+
+    this.qrCodeImage.set(null);
     this.isGeneratingQr.set(true);
     this.activityService
-      .getQrCode(act.id)
+      .getScheduleQrCode(act.id, scheduleId)
       .pipe(finalize(() => this.isGeneratingQr.set(false)))
       .subscribe({
-        next: (res: ApiResponse<string>) => {
-          this.qrCodeImage.set(res.data ?? null);
+        next: (res) => {
+          const image = res.data?.qrCodeImage ?? null;
+          if (!image) {
+            this.qrCodeImage.set(null);
+            return;
+          }
+
+          this.qrCodeImagesBySchedule.update((items) => ({
+            ...items,
+            [scheduleId]: image,
+          }));
+          if (this.selectedQrScheduleId() === scheduleId) {
+            this.qrCodeImage.set(image);
+          }
         },
         error: (err: HttpErrorResponse) => {
           console.error('Lỗi khi tải mã QR:', err);

@@ -34,102 +34,53 @@
 
 .semester-select {
   position: relative;
-  display: grid;
-  gap: 0.25rem;
+  display: block;
   z-index: 20;
   width: min(100%, 22rem);
   min-width: 18rem;
-  border: 1px solid #d9e2ef;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgb(16 24 39 / 5%);
-  padding: 0.75rem 1rem;
 
-  &:focus-within,
-  &.is-open {
-    border-color: #1456d9;
-    box-shadow:
-      0 8px 20px rgb(16 24 39 / 5%),
-      0 0 0 3px rgb(20 86 217 / 12%);
-  }
+  ::ng-deep {
+    .select-shell {
+      gap: 0.3rem;
+    }
 
-  span {
-    color: #68758a;
-    font-size: 0.72rem;
-    font-weight: 700;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-}
+    .select-label {
+      color: #68758a;
+      font-size: 0.72rem;
+      font-weight: 800;
+      line-height: 1;
+      text-transform: uppercase;
+    }
 
-.semester-select__trigger {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  min-height: 1.75rem;
-  border: 0;
-  background: transparent;
-  color: #101827;
-  cursor: pointer;
-  font: inherit;
-  padding: 0;
-  text-align: left;
+    .select-trigger {
+      min-height: 2.75rem;
+      border-radius: 8px;
+      background: #fff;
+      color: #101827;
+      font-size: 0.9rem;
+      box-shadow: 0 8px 20px rgb(16 24 39 / 5%);
 
-  i {
-    color: #68758a;
-    transition: transform 0.16s ease;
-  }
+      &:hover:not(:disabled),
+      &:focus-visible {
+        border-color: #1456d9;
+        background: #fff;
+      }
+    }
 
-  strong {
-    min-width: 0;
-    font-size: 0.98rem;
-    font-weight: 600;
-    line-height: 1.35;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
+    .select-control-open .select-trigger {
+      border-color: #1456d9;
+      box-shadow: 0 0 0 3px rgb(20 86 217 / 12%);
+    }
 
-.semester-select.is-open .semester-select__trigger i {
-  transform: rotate(180deg);
-}
+    .select-menu {
+      border-radius: 8px;
+      box-shadow: 0 16px 34px rgb(16 24 39 / 14%);
+    }
 
-.semester-select__menu {
-  position: absolute;
-  z-index: 30;
-  top: calc(100% + 0.35rem);
-  right: 0;
-  left: 0;
-  display: grid;
-  overflow: hidden;
-  border: 1px solid #c8d7ea;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 16px 34px rgb(16 24 39 / 14%);
-  padding: 0.25rem;
-}
-
-.semester-select__option {
-  width: 100%;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: #101827;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.95rem;
-  font-weight: 400;
-  line-height: 1.35;
-  padding: 0.6rem 0.75rem;
-  text-align: left;
-
-  &:hover,
-  &.is-selected {
-    background: #eef4ff;
-    color: #1456d9;
+    .select-option {
+      border-radius: 6px;
+      font-size: 0.84rem;
+    }
   }
 }
 
@@ -167,7 +118,7 @@
 
   strong {
     color: #1456d9;
-    font-size: clamp(2.6rem, 5vw, 4.3rem);
+    font-size: 3.5rem;
     font-weight: 800;
     line-height: 0.92;
   }
@@ -261,6 +212,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.45rem;
   min-height: 2.8rem;
   border: 1px solid #d9e2ef;
   border-radius: 8px;
@@ -277,13 +229,28 @@
     color 0.18s ease,
     box-shadow 0.18s ease;
 
-  &:hover,
+  &:hover {
+    border-color: #9cb8eb;
+    background: #f7faff;
+    color: #1456d9;
+  }
+
   &.is-active {
     border-color: #1456d9;
     background: #1456d9;
     color: #fff;
     box-shadow: 0 10px 22px rgb(20 86 217 / 18%);
   }
+
+  i {
+    font-size: 0.95rem;
+  }
+}
+
+.points-page button:focus-visible,
+.points-page a:focus-visible {
+  outline: 3px solid rgb(20 86 217 / 24%);
+  outline-offset: 2px;
 }
 
 .status-badge {
@@ -1027,6 +994,10 @@ td {
     font-weight: 850;
     padding: 0 1rem;
     text-decoration: none;
+
+    &:hover {
+      background: #0f47ba;
+    }
   }
 }
 
@@ -1094,6 +1065,15 @@ td {
   .points-tree-card,
   .points-detail-card {
     padding: 1rem;
+  }
+
+  .semester-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .points-score strong {
+    font-size: 2.75rem;
   }
 
   .category-row {

@@ -9,62 +9,63 @@
         </p>
       </div>
 
-      <div class="complaints-summary">
-        <div class="summary-item summary-item--open">
-          <span class="summary-item__label">Có thể gửi</span>
-          <strong>{{ openCount() }}</strong>
-        </div>
-        <div class="summary-item summary-item--pending">
-          <span class="summary-item__label">Đang chờ</span>
-          <strong>{{ pendingCount() }}</strong>
-        </div>
-        <div class="summary-item summary-item--responded">
-          <span class="summary-item__label">Đã phản hồi</span>
-          <strong>{{ respondedCount() }}</strong>
-        </div>
-      </div>
     </header>
 
     <section class="complaints-toolbar">
-      <label class="semester-field" for="semesterSelect">
-        <span>Học kỳ</span>
-        <div class="semester-field__control">
-          <select
-            id="semesterSelect"
-            [(ngModel)]="selectedSemesterId"
-            (change)="onFilterChange()"
-          >
-            <option [ngValue]="null">Tất cả học kỳ</option>
-            @for (semester of semesters(); track semester.id) {
-              <option [ngValue]="semester.id">
-                {{ semester.semesterName }} ({{ semester.academicYear }})
-              </option>
-            }
-          </select>
-          <i class="bi bi-chevron-down"></i>
-        </div>
-      </label>
+      <lib-custom-select
+        class="semester-filter"
+        id="complaintSemester"
+        label="Học kỳ"
+        icon="bi-calendar3"
+        [options]="semesterOptions()"
+        [value]="selectedSemesterId()"
+        (valueChange)="onSemesterChange($event)"
+      ></lib-custom-select>
 
-      <div class="filter-pills custom-scrollbar">
-        <button type="button" (click)="changeFilter('ALL')" [class.is-active]="filter() === 'ALL'">
+      <div class="filter-pills" role="tablist" aria-label="Bộ lọc khiếu nại">
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="filter() === 'ALL'"
+          (click)="changeFilter('ALL')"
+          [class.is-active]="filter() === 'ALL'"
+        >
+          <i class="bi bi-collection"></i>
           Tất cả
-        </button>
-        <button type="button" (click)="changeFilter('OPEN')" [class.is-active]="filter() === 'OPEN'">
-          Chưa gửi
+          <span class="filter-pill__count">{{ filterCount('ALL') }}</span>
         </button>
         <button
           type="button"
+          role="tab"
+          [attr.aria-selected]="filter() === 'OPEN'"
+          (click)="changeFilter('OPEN')"
+          [class.is-active]="filter() === 'OPEN'"
+        >
+          <i class="bi bi-chat-left-text"></i>
+          Chưa gửi
+          <span class="filter-pill__count">{{ filterCount('OPEN') }}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="filter() === 'PENDING'"
           (click)="changeFilter('PENDING')"
           [class.is-active]="filter() === 'PENDING'"
         >
+          <i class="bi bi-hourglass-split"></i>
           Đang chờ
+          <span class="filter-pill__count">{{ filterCount('PENDING') }}</span>
         </button>
         <button
           type="button"
+          role="tab"
+          [attr.aria-selected]="filter() === 'RESPONDED'"
           (click)="changeFilter('RESPONDED')"
           [class.is-active]="filter() === 'RESPONDED'"
         >
+          <i class="bi bi-check2-circle"></i>
           Đã phản hồi
+          <span class="filter-pill__count">{{ filterCount('RESPONDED') }}</span>
         </button>
       </div>
     </section>
@@ -141,18 +142,30 @@
                 </div>
 
                 <div class="complaint-record__actions">
-                  <button type="button" class="action-link" (click)="openDetailModal(activity)">
+                  <button
+                    type="button"
+                    class="action-link"
+                    (click)="$event.stopPropagation(); openDetailModal(activity)"
+                  >
                     <i class="bi bi-eye"></i>
                     Chi tiết
                   </button>
 
                   @if (!activity.complaint) {
-                    <button type="button" class="action-link action-link--primary" (click)="openComplaintModal(activity)">
+                    <button
+                      type="button"
+                      class="action-link action-link--primary"
+                      (click)="$event.stopPropagation(); openComplaintModal(activity)"
+                    >
                       <i class="bi bi-chat-left-text"></i>
                       Gửi khiếu nại
                     </button>
                   } @else if (activity.complaint.status === 0) {
-                    <button type="button" class="action-link action-link--primary" (click)="openComplaintModal(activity)">
+                    <button
+                      type="button"
+                      class="action-link action-link--primary"
+                      (click)="$event.stopPropagation(); openComplaintModal(activity)"
+                    >
                       <i class="bi bi-pencil-square"></i>
                       Chỉnh sửa khiếu nại
                     </button>
@@ -160,13 +173,17 @@
                     <button
                       type="button"
                       class="action-link action-link--success"
-                      (click)="openProofSubmission(activity)"
+                      (click)="$event.stopPropagation(); openProofSubmission(activity)"
                     >
                       <i class="bi bi-cloud-upload"></i>
                       Nộp minh chứng bổ sung
                     </button>
                   } @else {
-                    <button type="button" class="action-link action-link--primary" (click)="openComplaintModal(activity)">
+                    <button
+                      type="button"
+                      class="action-link action-link--primary"
+                      (click)="$event.stopPropagation(); openComplaintModal(activity)"
+                    >
                       <i class="bi bi-arrow-repeat"></i>
                       Gửi lại khiếu nại
                     </button>
@@ -195,11 +212,16 @@
     <div class="complaint-modal-overlay">
       <button type="button" class="complaint-modal-overlay__backdrop" aria-label="Đóng" (click)="closeModal()"></button>
 
-      <section class="complaint-modal">
+      <section
+        class="complaint-modal"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="'complaint-modal-title-' + activity.activityId"
+      >
         <header class="complaint-modal__header">
           <div>
             <p class="eyebrow">{{ modalMode() === 'DETAIL' ? 'Chi tiết record' : 'Biểu mẫu khiếu nại' }}</p>
-            <h2>{{ activity.activityTitle }}</h2>
+            <h2 [id]="'complaint-modal-title-' + activity.activityId">{{ activity.activityTitle }}</h2>
             <p class="complaint-modal__meta">
               #{{ activity.activityId }} · {{ activity.startDate | date: 'dd/MM/yyyy HH:mm' }} ·
               {{ activity.location || 'Chưa cập nhật địa điểm' }}
@@ -267,8 +289,9 @@
               maxlength="2000"
               placeholder="Nhập nội dung cần hỗ trợ..."
               class="complaint-textarea"
+              aria-describedby="complaintDetailHint"
             ></textarea>
-            <p class="field-hint">{{ detail().length }}/2000</p>
+            <p id="complaintDetailHint" class="field-hint">{{ detail().length }}/2000</p>
 
             <div
               class="upload-zone"
@@ -294,7 +317,12 @@
               @if (previewUrl()) {
                 <div class="upload-preview">
                   <img [src]="previewUrl()" alt="Minh chứng" />
-                  <button type="button" class="upload-preview__remove" (click)="removeFile($event)">
+                  <button
+                    type="button"
+                    class="upload-preview__remove"
+                    aria-label="Xóa minh chứng đã chọn"
+                    (click)="removeFile($event)"
+                  >
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
@@ -315,6 +343,7 @@
                   type="text"
                   [(ngModel)]="evidenceUrl"
                   placeholder="Hoặc dán link minh chứng"
+                  aria-label="Link minh chứng"
                 />
               </div>
             }
@@ -323,10 +352,14 @@
 
         <footer class="complaint-modal__footer">
           @if (modalMode() === 'DETAIL') {
-            <button type="button" class="secondary-button" (click)="closeModal()">Đóng</button>
+            <button type="button" class="secondary-button" (click)="closeModal()">
+              <i class="bi bi-x-lg"></i>
+              Đóng
+            </button>
 
             @if (!activity.complaint || activity.complaint.status === 0 || activity.complaint.status === 2) {
               <button type="button" class="primary-button" (click)="openComplaintModal(activity)">
+                <i class="bi bi-pencil-square"></i>
                 @if (activity.complaint?.status === 2) {
                   Gửi lại khiếu nại
                 } @else {
@@ -335,12 +368,22 @@
               </button>
             } @else if (activity.complaint.status === 1) {
               <button type="button" class="success-button" (click)="openProofSubmission(activity)">
+                <i class="bi bi-cloud-upload"></i>
                 Nộp minh chứng bổ sung
               </button>
             }
           } @else {
-            <button type="button" class="secondary-button" (click)="closeModal()">Đóng</button>
-            <button type="button" class="primary-button" (click)="submitComplaint()" [disabled]="isSubmitting()">
+            <button type="button" class="secondary-button" (click)="closeModal()">
+              <i class="bi bi-x-lg"></i>
+              Đóng
+            </button>
+            <button
+              type="button"
+              class="primary-button"
+              (click)="submitComplaint()"
+              [disabled]="isSubmitting()"
+              [attr.aria-busy]="isSubmitting()"
+            >
               @if (isSubmitting()) {
                 <span class="spinner spinner--button"></span>
               } @else {

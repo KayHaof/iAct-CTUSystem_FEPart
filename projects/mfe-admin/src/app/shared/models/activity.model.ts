@@ -44,6 +44,17 @@ export interface ActivityScheduleDto {
   locationCode?: string | null;
 }
 
+export interface ActivityScheduleQrCodeResponse {
+  activityId: number;
+  activityTitle?: string | null;
+  scheduleId: number;
+  scheduleTitle?: string | null;
+  scheduleStartTime?: string | null;
+  scheduleEndTime?: string | null;
+  location?: string | null;
+  qrCodeImage: string;
+}
+
 export interface LocationBookingDto {
   id?: number;
   activityId?: number;

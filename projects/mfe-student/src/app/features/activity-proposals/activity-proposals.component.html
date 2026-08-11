@@ -5,57 +5,76 @@
       <h1>Hoạt động đã gửi</h1>
       <p>Theo dõi các đề xuất tổ chức hoạt động, trạng thái duyệt và phản hồi từ khoa/trường.</p>
     </div>
-    <div class="proposal-summary" aria-label="Thong ke de xuat">
-      <div>
-        <p>&#272;&#227; g&#7917;i</p>
-        <strong>{{ proposals().length }}</strong>
-      </div>
-      <div>
-        <p>Ch&#7901; duy&#7879;t</p>
-        <strong class="text-amber">{{ pendingCount() }}</strong>
-      </div>
-      <div>
-        <p>&#272;&#227; duy&#7879;t</p>
-        <strong class="text-emerald">{{ approvedCount() }}</strong>
-      </div>
-      <div>
-        <p>T&#7915; ch&#7889;i</p>
-        <strong class="text-rose">{{ rejectedCount() }}</strong>
-      </div>
-      <div>
-        <p>B&#7843;n nh&#225;p</p>
-        <strong class="text-slate">{{ draftCount() }}</strong>
-      </div>
-    </div>
   </section>
 
   <section class="proposal-filter-panel" aria-label="Bo loc de xuat">
-    <a routerLink="/activity-proposal" class="primary-link">
-      <i class="bi bi-send-plus"></i>
-      Gửi đề xuất mới
-    </a>
-
-    <div class="proposal-filter-tabs">
-      <button type="button" class="stat" [class.stat--active]="currentStatus() === 'ALL'" (click)="setStatus('ALL')">
+    <div class="proposal-filter-tabs" role="tablist" aria-label="Trạng thái đề xuất">
+      <button
+        type="button"
+        class="stat"
+        role="tab"
+        [attr.aria-selected]="currentStatus() === 'ALL'"
+        [class.stat--active]="currentStatus() === 'ALL'"
+        (click)="setStatus('ALL')"
+      >
         <span>Tất cả</span>
         <strong>{{ proposals().length }}</strong>
       </button>
-      <button type="button" class="stat" [class.stat--active]="currentStatus() === '0'" (click)="setStatus('0')">
+      <button
+        type="button"
+        class="stat"
+        role="tab"
+        [attr.aria-selected]="currentStatus() === '0'"
+        [class.stat--active]="currentStatus() === '0'"
+        (click)="setStatus('0')"
+      >
         <span>Chờ duyệt</span>
         <strong>{{ pendingCount() }}</strong>
       </button>
-      <button type="button" class="stat" [class.stat--active]="currentStatus() === '1'" (click)="setStatus('1')">
+      <button
+        type="button"
+        class="stat"
+        role="tab"
+        [attr.aria-selected]="currentStatus() === '1'"
+        [class.stat--active]="currentStatus() === '1'"
+        (click)="setStatus('1')"
+      >
         <span>Đã duyệt</span>
         <strong>{{ approvedCount() }}</strong>
       </button>
-      <button type="button" class="stat" [class.stat--active]="currentStatus() === '2'" (click)="setStatus('2')">
+      <button
+        type="button"
+        class="stat"
+        role="tab"
+        [attr.aria-selected]="currentStatus() === '2'"
+        [class.stat--active]="currentStatus() === '2'"
+        (click)="setStatus('2')"
+      >
         <span>Từ chối</span>
         <strong>{{ rejectedCount() }}</strong>
       </button>
-      <button type="button" class="stat" [class.stat--active]="currentStatus() === '3'" (click)="setStatus('3')">
+      <button
+        type="button"
+        class="stat"
+        role="tab"
+        [attr.aria-selected]="currentStatus() === '3'"
+        [class.stat--active]="currentStatus() === '3'"
+        (click)="setStatus('3')"
+      >
         <span>Bản nháp</span>
         <strong>{{ draftCount() }}</strong>
       </button>
+    </div>
+
+    <div class="proposal-filter-actions">
+      <button type="button" class="icon-action" aria-label="Tải lại" (click)="loadProposals()">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+
+      <a routerLink="/activity-proposal" class="primary-link">
+        <i class="bi bi-send-plus"></i>
+        Gửi đề xuất mới
+      </a>
     </div>
   </section>
 
@@ -63,11 +82,7 @@
     <div class="proposal-panel__header">
       <div>
         <h2>Danh sách đề xuất</h2>
-        <p>{{ filteredProposals().length }} hoạt động đang hiển thị</p>
       </div>
-      <button type="button" class="icon-action" aria-label="Tải lại" (click)="loadProposals()">
-        <i class="bi bi-arrow-clockwise"></i>
-      </button>
     </div>
 
     @if (isLoading()) {
@@ -83,7 +98,7 @@
       </div>
     } @else {
       <div class="proposal-list">
-        @for (activity of filteredProposals(); track activity.id) {
+        @for (activity of pagedProposals(); track activity.id) {
           <article class="proposal-row">
             <div class="proposal-row__media">
               <img
@@ -142,6 +157,19 @@
           </article>
         }
       </div>
+
+      @if (filteredProposals().length > 0) {
+        <div class="proposal-pagination">
+          <lib-pagination
+            [currentPage]="currentPage()"
+            [totalItems]="filteredProposals().length"
+            [pageSize]="pageSize()"
+            [pageSizeOptions]="[5, 8, 12, 20]"
+            (pageChange)="onPageChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)"
+          ></lib-pagination>
+        </div>
+      }
     }
   </section>
 </div>

@@ -1,5 +1,5 @@
-<div class="min-h-screen bg-slate-50 pb-16 font-sans text-slate-950">
-  <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+<div class="activity-detail-page min-h-screen bg-slate-50 pb-16 font-sans text-slate-950">
+  <header class="activity-detail-topbar border-b border-slate-200 bg-white">
     <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
       <button
         type="button"
@@ -22,7 +22,7 @@
 
   @if (isLoading()) {
     <div
-      class="mx-auto flex max-w-7xl flex-col items-center justify-center px-4 py-32 sm:px-6 lg:px-8"
+      class="activity-detail-state mx-auto flex max-w-7xl flex-col items-center justify-center px-4 py-32 sm:px-6 lg:px-8"
     >
       <div
         class="mb-4 h-11 w-11 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"
@@ -30,11 +30,11 @@
       <p class="text-sm font-bold text-slate-500">Đang lấy dữ liệu hoạt động...</p>
     </div>
   } @else if (activity(); as act) {
-    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <section class="min-w-0 space-y-6">
-          <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div class="relative aspect-[16/10] overflow-hidden bg-slate-100 md:aspect-[21/9]">
+    <main class="activity-detail__main mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div class="activity-detail__layout grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <section class="activity-detail__primary min-w-0 space-y-6">
+          <section class="activity-detail__hero overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="activity-detail__hero-media relative aspect-[16/10] overflow-hidden bg-slate-100 md:aspect-[21/9]">
               <img
                 [src]="
                   act.coverImage ||
@@ -47,7 +47,7 @@
                 class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/25 to-transparent"
               ></div>
 
-              <div class="absolute inset-x-0 bottom-0 p-5 md:p-7">
+              <div class="activity-detail__hero-content absolute inset-x-0 bottom-0 p-5 md:p-7">
                 <div class="flex flex-wrap items-center gap-2">
                   <span
                     class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-black uppercase tracking-wide text-white shadow-sm"
@@ -95,7 +95,7 @@
             </div>
           </section>
 
-          <section class="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <section class="activity-detail__stats grid grid-cols-2 gap-3 md:grid-cols-4">
             <div class="detail-stat-card">
               <i class="bi bi-trophy-fill text-amber-500"></i>
               <span>Điểm rèn luyện</span>
@@ -109,7 +109,7 @@
             <div class="detail-stat-card">
               <i class="bi bi-people-fill text-emerald-500"></i>
               <span>Đã đăng ký</span>
-              <strong>{{ act.registeredCount || 0 }}/{{ act.maxParticipants }} SV</strong>
+              <strong>{{ act.registeredCount || 0 }}/{{ act.maxParticipants || 0 }} SV</strong>
             </div>
             <div class="detail-stat-card">
               <i class="bi bi-mortarboard-fill text-slate-500"></i>
@@ -118,9 +118,11 @@
             </div>
           </section>
 
-          <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <section class="activity-detail__tabs-panel overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div
-              class="flex gap-2 overflow-x-auto border-b border-slate-200 bg-slate-50 p-2 hide-scrollbar"
+              class="activity-detail-tabs flex gap-2 overflow-x-auto border-b border-slate-200 bg-slate-50 p-2 hide-scrollbar"
+              role="tablist"
+              aria-label="Nội dung hoạt động"
             >
               <button
                 type="button"
@@ -130,8 +132,11 @@
                     ? 'bg-white text-blue-700 shadow-sm'
                     : 'text-slate-500 hover:bg-white hover:text-slate-800'
                 "
-                class="min-w-[120px] flex-1 rounded-lg px-4 py-3 text-sm font-bold transition"
+                class="activity-detail-tab min-w-[120px] flex-1 rounded-lg px-4 py-3 text-sm font-bold transition"
+                role="tab"
+                [attr.aria-selected]="activeTab() === 'overview'"
               >
+                <i class="bi bi-info-circle" aria-hidden="true"></i>
                 Tổng quan
               </button>
               <button
@@ -142,8 +147,11 @@
                     ? 'bg-white text-blue-700 shadow-sm'
                     : 'text-slate-500 hover:bg-white hover:text-slate-800'
                 "
-                class="min-w-[150px] flex-1 rounded-lg px-4 py-3 text-sm font-bold transition"
+                class="activity-detail-tab min-w-[150px] flex-1 rounded-lg px-4 py-3 text-sm font-bold transition"
+                role="tab"
+                [attr.aria-selected]="activeTab() === 'content'"
               >
+                <i class="bi bi-file-text" aria-hidden="true"></i>
                 Nội dung chi tiết
               </button>
               @if (act.benefits?.length) {
@@ -155,14 +163,17 @@
                       ? 'bg-white text-blue-700 shadow-sm'
                       : 'text-slate-500 hover:bg-white hover:text-slate-800'
                   "
-                  class="min-w-[150px] flex-1 rounded-lg px-4 py-3 text-sm font-bold transition"
+                  class="activity-detail-tab min-w-[150px] flex-1 rounded-lg px-4 py-3 text-sm font-bold transition"
+                  role="tab"
+                  [attr.aria-selected]="activeTab() === 'benefits'"
                 >
+                  <i class="bi bi-trophy" aria-hidden="true"></i>
                   Điểm rèn luyện
                 </button>
               }
             </div>
 
-            <div class="min-h-[360px] p-5 md:p-7">
+            <div class="activity-detail__tab-content min-h-[360px] p-5 md:p-7">
               @if (activeTab() === 'overview') {
                 <div class="animate-fade-in-up space-y-5">
                   <div class="section-title">
@@ -314,10 +325,10 @@
           </section>
         </section>
 
-        <aside class="space-y-5 lg:sticky lg:top-20 lg:self-start">
-          <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <aside class="activity-detail__sidebar space-y-5 lg:sticky lg:top-20 lg:self-start">
+          <section class="registration-panel overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div
-              class="border-b border-slate-200 bg-gradient-to-r from-blue-600 to-sky-500 p-5 text-white"
+              class="registration-panel__header border-b border-slate-200 p-5 text-white"
             >
               <p class="text-xs font-bold uppercase tracking-wide text-blue-50">
                 Trạng thái đăng ký
@@ -330,7 +341,7 @@
               </p>
             </div>
 
-            <div class="space-y-5 p-5">
+            <div class="registration-panel__body space-y-5 p-5">
               <div class="space-y-4">
                 <div class="detail-info-row">
                   <i class="bi bi-pencil-square text-blue-600"></i>
@@ -426,12 +437,12 @@
                     Tiến độ ghi danh
                   </span>
                   <span class="font-black text-blue-700">
-                    {{ act.registeredCount || 0 }}/{{ act.maxParticipants }} SV
+                    {{ act.registeredCount || 0 }}/{{ act.maxParticipants || 0 }} SV
                   </span>
                 </div>
                 <div class="h-2.5 overflow-hidden rounded-full bg-slate-200">
                   <div
-                    class="h-full rounded-full bg-gradient-to-r from-blue-600 to-sky-500 transition-all duration-700"
+                    class="capacity-progress h-full rounded-full bg-blue-600 transition-all duration-700"
                     [style.width.%]="capacityPercentage()"
                   ></div>
                 </div>
@@ -470,7 +481,7 @@
                   (isRegistered() && !canCancelRegistration()) ||
                   (!statusConfig().canRegister && !isRegistered())
                 "
-                class="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl px-5 py-4 text-base font-black shadow-sm transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+                class="activity-register-action group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl px-5 py-4 text-base font-black shadow-sm transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 [ngClass]="{
                   'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20':
                     !isRegistered() &&
@@ -517,7 +528,7 @@
             </div>
           </section>
 
-          <section class="rounded-xl border border-blue-100 bg-blue-50 p-5">
+          <section class="support-panel rounded-xl border border-blue-100 bg-blue-50 p-5">
             <div class="mb-3 flex items-center gap-3 text-blue-700">
               <i class="bi bi-headset text-xl"></i>
               <h3 class="text-sm font-black uppercase tracking-wide">Cần hỗ trợ?</h3>

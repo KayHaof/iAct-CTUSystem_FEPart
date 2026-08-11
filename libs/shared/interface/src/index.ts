@@ -3,3 +3,4 @@ export * from './lib/registration.model';
 export * from './lib/users.model';
 export * from './lib/profile.model';
 export * from './lib/notification.model';
+export * from './lib/date-time.util';

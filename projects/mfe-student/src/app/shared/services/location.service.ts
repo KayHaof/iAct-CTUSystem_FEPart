@@ -21,6 +21,7 @@ export interface AvailableLocationFilters {
   minCapacity?: number | null;
   type?: string | null;
   keyword?: string | null;
+  activityId?: number | null;
 }
 
 @Injectable({ providedIn: 'root' })

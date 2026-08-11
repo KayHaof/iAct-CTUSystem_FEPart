@@ -26,6 +26,7 @@
 .location-search-box {
   display: grid;
   gap: 0.875rem;
+  overflow: visible;
   border: 1px solid rgb(191 219 254);
   border-radius: 1rem;
   background: linear-gradient(180deg, rgb(239 246 255), rgb(248 250 252));
@@ -56,7 +57,13 @@
   line-height: 1.45;
 }
 
-.location-search-box__select {
+.location-search-box__select,
+.activity-custom-select {
+  display: block;
+  width: 100%;
+}
+
+:host ::ng-deep .location-search-box__select .select-trigger {
   min-height: 2.875rem;
   width: 100%;
   border: 1px solid rgb(147 197 253);
@@ -73,14 +80,46 @@
     box-shadow 160ms ease;
 }
 
-.location-search-box__select:focus {
+:host ::ng-deep .location-search-box__select .select-trigger:focus-visible {
   border-color: rgb(37 99 235);
   box-shadow: 0 0 0 3px rgb(219 234 254);
 }
 
-.location-search-box__select--invalid {
+:host ::ng-deep .location-search-box__select--invalid .select-trigger {
   border-color: rgb(248 113 113);
   box-shadow: 0 0 0 3px rgb(254 226 226);
+}
+
+:host ::ng-deep .activity-custom-select .select-label {
+  margin-bottom: 0.5rem;
+  color: rgb(51 65 85);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+:host ::ng-deep .activity-custom-select .select-trigger {
+  min-height: 3rem;
+  border-color: rgb(203 213 225);
+  border-radius: 0.75rem;
+  background: white;
+  padding-inline: 0.75rem;
+  font-size: 0.875rem;
+}
+
+:host ::ng-deep .activity-custom-select .select-trigger:focus-visible,
+:host ::ng-deep .activity-custom-select .select-control-open .select-trigger {
+  border-color: rgb(37 99 235);
+  box-shadow: 0 0 0 3px rgb(219 234 254);
+}
+
+:host ::ng-deep .activity-custom-select .select-menu,
+:host ::ng-deep .location-search-box__select .select-menu {
+  z-index: 130;
+}
+
+.activity-benefits-list {
+  overflow: visible;
 }
 
 .location-search-box__button {

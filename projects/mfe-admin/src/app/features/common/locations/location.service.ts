@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { ApiResponse } from '@my-mfe/interface';
+import { ApiResponse, normalizeApiUtcDateTime } from '@my-mfe/interface';
 import { IACT_API_ORIGIN } from '@my-mfe/ui';
 import { Observable, map } from 'rxjs';
 
@@ -74,6 +74,7 @@ export interface AvailableLocationFilters {
   minCapacity?: number | null;
   type?: string | null;
   keyword?: string | null;
+  activityId?: number | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -85,7 +86,7 @@ export class LocationService {
   getLocations(filters: LocationFilters = {}): Observable<LocationResponse[]> {
     return this.http
       .get<ApiResponse<LocationResponse[]>>(this.apiUrl, { params: this.toParams(filters) })
-      .pipe(map((response) => response.data || []));
+      .pipe(map((response) => (response.data || []).map((location) => this.normalizeLocation(location))));
   }
 
   getAvailableLocations(filters: AvailableLocationFilters): Observable<LocationResponse[]> {
@@ -93,7 +94,7 @@ export class LocationService {
       .get<ApiResponse<LocationResponse[]>>(`${this.apiUrl}/available`, {
         params: this.toParams(filters),
       })
-      .pipe(map((response) => response.data || []));
+      .pipe(map((response) => (response.data || []).map((location) => this.normalizeLocation(location))));
   }
 
   getLocationBookings(
@@ -109,19 +110,19 @@ export class LocationService {
     }
     return this.http
       .get<ApiResponse<LocationBookingResponse[]>>(`${this.apiUrl}/${id}/bookings`, { params })
-      .pipe(map((response) => response.data || []));
+      .pipe(map((response) => (response.data || []).map((booking) => this.normalizeBooking(booking))));
   }
 
   createLocation(payload: LocationRequest): Observable<LocationResponse> {
     return this.http
       .post<ApiResponse<LocationResponse>>(this.apiUrl, payload)
-      .pipe(map((response) => response.data as LocationResponse));
+      .pipe(map((response) => this.normalizeLocation(response.data as LocationResponse)));
   }
 
   updateLocation(id: number, payload: LocationRequest): Observable<LocationResponse> {
     return this.http
       .put<ApiResponse<LocationResponse>>(`${this.apiUrl}/${id}`, payload)
-      .pipe(map((response) => response.data as LocationResponse));
+      .pipe(map((response) => this.normalizeLocation(response.data as LocationResponse)));
   }
 
   updateAvailability(
@@ -130,19 +131,38 @@ export class LocationService {
   ): Observable<LocationResponse> {
     return this.http
       .patch<ApiResponse<LocationResponse>>(`${this.apiUrl}/${id}/availability`, payload)
-      .pipe(map((response) => response.data as LocationResponse));
+      .pipe(map((response) => this.normalizeLocation(response.data as LocationResponse)));
   }
 
   activateLocation(id: number): Observable<LocationResponse> {
     return this.http
       .patch<ApiResponse<LocationResponse>>(`${this.apiUrl}/${id}/activate`, {})
-      .pipe(map((response) => response.data as LocationResponse));
+      .pipe(map((response) => this.normalizeLocation(response.data as LocationResponse)));
   }
 
   deactivateLocation(id: number): Observable<LocationResponse> {
     return this.http
       .patch<ApiResponse<LocationResponse>>(`${this.apiUrl}/${id}/deactivate`, {})
-      .pipe(map((response) => response.data as LocationResponse));
+      .pipe(map((response) => this.normalizeLocation(response.data as LocationResponse)));
+  }
+
+  private normalizeLocation(location: LocationResponse): LocationResponse {
+    return {
+      ...location,
+      createdAt: normalizeApiUtcDateTime(location.createdAt),
+      updatedAt: normalizeApiUtcDateTime(location.updatedAt),
+    };
+  }
+
+  private normalizeBooking(booking: LocationBookingResponse): LocationBookingResponse {
+    return {
+      ...booking,
+      startTime: normalizeApiUtcDateTime(booking.startTime) || booking.startTime,
+      endTime: normalizeApiUtcDateTime(booking.endTime) || booking.endTime,
+      approvedAt: normalizeApiUtcDateTime(booking.approvedAt),
+      createdAt: normalizeApiUtcDateTime(booking.createdAt),
+      updatedAt: normalizeApiUtcDateTime(booking.updatedAt),
+    };
   }
 
   private toParams(filters: object): HttpParams {

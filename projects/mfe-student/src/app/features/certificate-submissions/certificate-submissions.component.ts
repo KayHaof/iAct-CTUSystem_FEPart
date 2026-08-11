@@ -15,7 +15,13 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
 import { CloudinaryService } from '@my-mfe/data-access-media';
 import { PageDTO, Semester } from '@my-mfe/interface';
-import { AlertService, PaginationComponent } from '@my-mfe/ui';
+import {
+  AlertService,
+  CustomSelectComponent,
+  CustomSelectOption,
+  CustomSelectValue,
+  PaginationComponent,
+} from '@my-mfe/ui';
 import { CertificateSubmissionComplaint } from '../../shared/models/certificate-submission-complaint.model';
 import {
   CertificateSubmission,
@@ -27,13 +33,14 @@ import { SemesterService } from '../../shared/services/semester.service';
 
 interface StatusOption {
   label: string;
-  value: CertificateSubmissionStatus | null;
+  value: CertificateSubmissionStatus | 'COMPLAINTS' | null;
+  icon: string;
 }
 
 @Component({
   selector: 'app-certificate-submissions',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, CustomSelectComponent, PaginationComponent],
   templateUrl: './certificate-submissions.component.html',
   styleUrl: './certificate-submissions.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,25 +54,27 @@ export class CertificateSubmissionsComponent implements OnInit, AfterViewInit, O
   private readonly route = inject(ActivatedRoute);
 
   readonly statusOptions: StatusOption[] = [
-    { label: 'Tất cả', value: null },
-    { label: 'Chờ duyệt', value: 0 },
-    { label: 'Đã duyệt', value: 1 },
-    { label: 'Bị từ chối', value: 2 },
+    { label: 'Tất cả', value: null, icon: 'bi-collection' },
+    { label: 'Chờ duyệt', value: 0, icon: 'bi-hourglass-split' },
+    { label: 'Đã duyệt', value: 1, icon: 'bi-check2-circle' },
+    { label: 'Bị từ chối', value: 2, icon: 'bi-x-circle' },
+    { label: 'Đang khiếu nại', value: 'COMPLAINTS', icon: 'bi-chat-left-text' },
   ];
 
   private readonly complaintFetchSize = 100;
 
   semesters = signal<Semester[]>([]);
   selectedSemesterId = signal<number | null>(null);
-  selectedStatus = signal<CertificateSubmissionStatus | null>(null);
+  selectedStatus = signal<CertificateSubmissionStatus | 'COMPLAINTS' | null>(null);
   submissions = signal<CertificateSubmission[]>([]);
-  statusTotals = signal({ pending: 0, approved: 0, rejected: 0 });
+  statusTotals = signal({ all: 0, pending: 0, approved: 0, rejected: 0, cancelled: 0 });
   totalRows = signal(0);
   totalPage = signal(0);
   currentPage = signal(1);
   pageSize = signal(8);
 
   complaints = signal<CertificateSubmissionComplaint[]>([]);
+  isComplaintLoading = signal(false);
 
   selectedFile = signal<File | null>(null);
   selectedFileName = signal('');
@@ -84,15 +93,59 @@ export class CertificateSubmissionsComponent implements OnInit, AfterViewInit, O
   showScrollTop = signal(false);
   private scrollObserver?: IntersectionObserver;
 
-  pendingCount = computed(() => this.statusTotals().pending);
-  approvedCount = computed(() => this.statusTotals().approved);
-  rejectedCount = computed(() => this.statusTotals().rejected);
+  semesterOptions = computed<CustomSelectOption[]>(() => [
+    { label: 'Tất cả học kỳ', value: null, icon: 'bi-layers' },
+    ...this.semesters().map((semester) => ({
+      label: this.formatSemesterLabel(semester),
+      value: semester.id,
+      icon: semester.isActive ? 'bi-check2-circle' : 'bi-calendar3',
+    })),
+  ]);
+  submissionSemesterOptions = computed<CustomSelectOption[]>(() => [
+    { label: 'Học kỳ hiện tại', value: null, icon: 'bi-calendar-check' },
+    ...this.semesters().map((semester) => ({
+      label: this.formatSemesterLabel(semester),
+      value: semester.id,
+      icon: semester.isActive ? 'bi-check2-circle' : 'bi-calendar3',
+    })),
+  ]);
   complaintIndex = computed(
     () => new Map(this.complaints().map((item) => [item.submissionId, item] as const)),
   );
+  complaintSubmissions = computed<CertificateSubmission[]>(() =>
+    this.complaints()
+      .filter((complaint) => complaint.status === 0)
+      .map((complaint) => ({
+        id: complaint.submissionId,
+        studentId: complaint.studentId ?? undefined,
+        studentCode: complaint.studentCode ?? undefined,
+        studentName: complaint.studentName ?? undefined,
+        semesterId: complaint.semesterId ?? undefined,
+        semesterName: complaint.semesterName ?? undefined,
+        imageUrl: complaint.imageUrl || '',
+        certificateTitle: complaint.certificateTitle,
+        status: 2,
+        statusLabel: 'Đang khiếu nại',
+        createdAt: complaint.createdAt ?? undefined,
+        updatedAt: complaint.updatedAt ?? undefined,
+      })),
+  );
+  isComplaintTab = computed(() => this.selectedStatus() === 'COMPLAINTS');
+  visibleSubmissions = computed(() => {
+    if (!this.isComplaintTab()) {
+      return this.submissions();
+    }
+
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.complaintSubmissions().slice(start, start + this.pageSize());
+  });
+  displayTotalRows = computed(() =>
+    this.isComplaintTab() ? this.complaintSubmissions().length : this.totalRows(),
+  );
+  displayTotalPage = computed(() => Math.ceil(this.displayTotalRows() / this.pageSize()));
   canSubmit = computed(() => !this.isSubmitting() && !!this.selectedFile());
   canSendComplaint = computed(
-    () => !this.isComplaintSubmitting() && this.complaintReason().trim().length >= 10,
+    () => !this.isComplaintSubmitting() && !!this.selectedComplaintSubmission(),
   );
 
   ngOnInit(): void {
@@ -144,6 +197,9 @@ export class CertificateSubmissionsComponent implements OnInit, AfterViewInit, O
   loadStatusTotals(): void {
     const semesterId = this.selectedSemesterId();
     forkJoin({
+      all: this.certificateService
+        .getMine({ semesterId, status: null, page: 1, size: 1 })
+        .pipe(catchError(() => of(null))),
       pending: this.certificateService
         .getMine({ semesterId, status: 0, page: 1, size: 1 })
         .pipe(catchError(() => of(null))),
@@ -153,21 +209,31 @@ export class CertificateSubmissionsComponent implements OnInit, AfterViewInit, O
       rejected: this.certificateService
         .getMine({ semesterId, status: 2, page: 1, size: 1 })
         .pipe(catchError(() => of(null))),
-    }).subscribe(({ pending, approved, rejected }) => {
+      cancelled: this.certificateService
+        .getMine({ semesterId, status: 3, page: 1, size: 1 })
+        .pipe(catchError(() => of(null))),
+    }).subscribe(({ all, pending, approved, rejected, cancelled }) => {
       this.statusTotals.set({
+        all: all?.data?.totalRows || 0,
         pending: pending?.data?.totalRows || 0,
         approved: approved?.data?.totalRows || 0,
         rejected: rejected?.data?.totalRows || 0,
+        cancelled: cancelled?.data?.totalRows || 0,
       });
     });
   }
 
   loadSubmissions(): void {
+    if (this.isComplaintTab()) {
+      return;
+    }
+
     this.isLoading.set(true);
+    const selectedStatus = this.selectedStatus();
     this.certificateService
       .getMine({
         semesterId: this.selectedSemesterId(),
-        status: this.selectedStatus(),
+        status: selectedStatus === 'COMPLAINTS' ? null : selectedStatus,
         page: this.currentPage(),
         size: this.pageSize(),
       })
@@ -191,12 +257,14 @@ export class CertificateSubmissionsComponent implements OnInit, AfterViewInit, O
   }
 
   loadComplaintHistory(): void {
+    this.isComplaintLoading.set(true);
     this.complaintService
       .getMine({
         semesterId: this.selectedSemesterId(),
         page: 1,
         size: this.complaintFetchSize,
       })
+      .pipe(finalize(() => this.isComplaintLoading.set(false)))
       .subscribe({
         next: (res) => {
           const page = res.data as PageDTO<CertificateSubmissionComplaint> | undefined;
@@ -212,14 +280,47 @@ export class CertificateSubmissionsComponent implements OnInit, AfterViewInit, O
     this.selectedSemesterId.set(semesterId);
     this.currentPage.set(1);
     this.loadStatusTotals();
-    this.loadSubmissions();
-    this.loadComplaintHistory();
+    if (this.isComplaintTab()) {
+      this.loadComplaintHistory();
+    } else {
+      this.loadSubmissions();
+      this.loadComplaintHistory();
+    }
   }
 
-  changeStatus(status: CertificateSubmissionStatus | null): void {
+  onSemesterChange(value: CustomSelectValue): void {
+    this.selectSemester(typeof value === 'number' ? value : null);
+  }
+
+  changeStatus(status: CertificateSubmissionStatus | 'COMPLAINTS' | null): void {
     this.selectedStatus.set(status);
     this.currentPage.set(1);
-    this.loadSubmissions();
+    if (status === 'COMPLAINTS') {
+      this.loadComplaintHistory();
+    } else {
+      this.loadSubmissions();
+    }
+  }
+
+  statusCount(status: CertificateSubmissionStatus | 'COMPLAINTS' | null): number {
+    if (status === 'COMPLAINTS') {
+      return this.complaintSubmissions().length;
+    }
+
+    const totals = this.statusTotals();
+
+    switch (status) {
+      case 0:
+        return totals.pending;
+      case 1:
+        return totals.approved;
+      case 2:
+        return totals.rejected;
+      case 3:
+        return totals.cancelled;
+      default:
+        return totals.all;
+    }
   }
 
   openSubmitModal(): void {
@@ -312,6 +413,7 @@ export class CertificateSubmissionsComponent implements OnInit, AfterViewInit, O
       .pipe(finalize(() => this.isComplaintSubmitting.set(false)))
       .subscribe({
         next: () => {
+          this.isComplaintSubmitting.set(false);
           this.closeComplaintModal();
           this.alertService.success(
             'Đã gửi khiếu nại giấy khen. Vui lòng chờ Trường xử lý thủ công.',
@@ -323,6 +425,11 @@ export class CertificateSubmissionsComponent implements OnInit, AfterViewInit, O
           this.alertService.error(err.error?.message || 'Không thể gửi khiếu nại giấy khen.');
         },
       });
+  }
+
+  onComplaintReasonInput(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement | null;
+    this.complaintReason.set(textarea?.value || '');
   }
 
   onDragOver(event: DragEvent): void {
@@ -366,16 +473,19 @@ export class CertificateSubmissionsComponent implements OnInit, AfterViewInit, O
   }
 
   goToPage(page: number): void {
+    const maxPage = this.isComplaintTab() ? this.displayTotalPage() : this.totalPage();
     if (
       page < 1 ||
-      (this.totalPage() > 0 && page > this.totalPage()) ||
+      (maxPage > 0 && page > maxPage) ||
       page === this.currentPage()
     ) {
       return;
     }
 
     this.currentPage.set(page);
-    this.loadSubmissions();
+    if (!this.isComplaintTab()) {
+      this.loadSubmissions();
+    }
   }
 
   changePageSize(size: number): void {
@@ -385,7 +495,9 @@ export class CertificateSubmissionsComponent implements OnInit, AfterViewInit, O
 
     this.pageSize.set(size);
     this.currentPage.set(1);
-    this.loadSubmissions();
+    if (!this.isComplaintTab()) {
+      this.loadSubmissions();
+    }
   }
 
   scrollToTop(): void {
@@ -540,6 +652,11 @@ export class CertificateSubmissionsComponent implements OnInit, AfterViewInit, O
   private applyDeepLinkStatus(statusParam: string | null): void {
     if (statusParam === null || statusParam === 'all') {
       this.selectedStatus.set(null);
+      return;
+    }
+
+    if (statusParam === 'complaints') {
+      this.selectedStatus.set('COMPLAINTS');
       return;
     }
 

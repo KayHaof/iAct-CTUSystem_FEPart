@@ -12,14 +12,21 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, switchMap, catchError, map } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 
-import { AlertService } from '@my-mfe/ui';
+import {
+  AlertService,
+  CustomSelectComponent,
+  CustomSelectOption,
+  CustomSelectValue,
+  PaginationComponent,
+} from '@my-mfe/ui';
 import { CloudinaryService } from '@my-mfe/data-access-media';
 import {
   ActivityRecord,
+  AttendanceSessionRecord,
   RawRegistrationDto,
   ActivityTimeResponse,
 } from '../../shared/models/activity.model';
-import { Semester } from '@my-mfe/interface';
+import { normalizeRegistrationDateFields, Semester } from '@my-mfe/interface';
 
 import { RegistrationService } from '../../shared/services/registration.service';
 import { ProofService, ProofSubmissionRequest } from '../../shared/services/proof.service';
@@ -28,20 +35,57 @@ import { ActivityService } from '../../shared/services/activity.service';
 import { FaceCheckInResponse } from '../../shared/services/attendance.service';
 import { FaceCheckinCaptureComponent } from './face-checkin-capture.component';
 
-type TabMode = 'REGISTERED' | 'ONGOING' | 'PROOF_SUBMITTED' | 'OVERDUE' | 'COMPLETED';
+type TabMode =
+  | 'REGISTERED'
+  | 'ONGOING'
+  | 'PROOF_SUBMITTED'
+  | 'OVERDUE'
+  | 'NEEDS_PROCESSING'
+  | 'CANCELLED'
+  | 'COMPLETED';
 type ProofOpenContext = 'COMPLAINT_APPROVED';
+
+interface StudentRegistrationDto extends RawRegistrationDto {
+  absenceReason?: string | null;
+  absenceReviewNote?: string | null;
+  absenceReviewed?: boolean;
+  absenceReviewedAt?: string | null;
+  isAttended?: boolean;
+  scheduleIds?: number[];
+  attendanceSessions?: AttendanceSessionRecord[];
+  registeredSessionCount?: number;
+  faceVerifiedSessionCount?: number;
+  absentSessionCount?: number;
+}
 
 export interface UiActivityRecord extends ActivityRecord {
   realStartDate?: Date;
   realEndDate?: Date;
   isStartingSoon?: boolean;
   isMissed?: boolean;
+  isAttended?: boolean;
+  absenceReason?: string | null;
+  absenceReviewNote?: string | null;
+  absenceReviewed?: boolean;
+  absenceReviewedAt?: string | null;
+  scheduleIds?: number[];
+  attendanceSessions?: AttendanceSessionRecord[];
+  registeredSessionCount?: number;
+  faceVerifiedSessionCount?: number;
+  absentSessionCount?: number;
 }
 
 @Component({
   selector: 'app-my-records',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, FaceCheckinCaptureComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    CustomSelectComponent,
+    PaginationComponent,
+    FaceCheckinCaptureComponent,
+  ],
   templateUrl: './my-records.component.html',
   styleUrls: ['./my-records.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -60,6 +104,8 @@ export class MyRecordsComponent implements OnInit {
   semesters = signal<Semester[]>([]);
   selectedSemesterId = signal<number | null>(null);
   currentTab = signal<TabMode>('ONGOING');
+  currentPage = signal(1);
+  pageSize = signal(8);
 
   isModalOpen = signal(false);
   selectedActivity = signal<UiActivityRecord | null>(null);
@@ -81,8 +127,21 @@ export class MyRecordsComponent implements OnInit {
   selectedFileName = signal<string>('');
 
   activities = signal<UiActivityRecord[]>([]);
+  semesterOptions = computed<CustomSelectOption[]>(() => [
+    {
+      label: 'Tất cả học kỳ',
+      value: null,
+      icon: 'bi-layers',
+    },
+    ...this.semesters().map((sem) => ({
+      label: `${sem.semesterName} (${sem.academicYear})`,
+      value: sem.id,
+      icon: sem.isActive ? 'bi-check2-circle' : 'bi-calendar3',
+    })),
+  ]);
   private pendingProofActivityId: number | null = null;
   private pendingFaceActivityId: number | null = null;
+  private pendingFaceScheduleId: number | null = null;
   private pendingRecordActivityId: number | null = null;
   private pendingSemesterId: number | null = null;
   private pendingProofOpenContext: ProofOpenContext | null = null;
@@ -95,11 +154,13 @@ export class MyRecordsComponent implements OnInit {
       this.route.snapshot.queryParamMap.get('proofActivityId') ||
       this.route.snapshot.queryParamMap.get('activityId');
     const faceActivityId = this.route.snapshot.queryParamMap.get('faceActivityId');
+    const faceScheduleId = this.route.snapshot.queryParamMap.get('faceScheduleId');
     const recordActivityId = this.route.snapshot.queryParamMap.get('recordActivityId');
     const semesterId = this.route.snapshot.queryParamMap.get('semesterId');
     const proofSource = this.route.snapshot.queryParamMap.get('proofSource');
     this.pendingProofActivityId = proofActivityId ? Number(proofActivityId) : null;
     this.pendingFaceActivityId = faceActivityId ? Number(faceActivityId) : null;
+    this.pendingFaceScheduleId = faceScheduleId ? Number(faceScheduleId) : null;
     this.pendingRecordActivityId = recordActivityId ? Number(recordActivityId) : null;
     this.pendingSemesterId = semesterId ? Number(semesterId) : null;
     this.pendingProofOpenContext =
@@ -148,7 +209,9 @@ export class MyRecordsComponent implements OnInit {
       .getMyRecords(semId)
       .pipe(
         switchMap((res) => {
-          const rawData = (res.data as unknown as RawRegistrationDto[]) || [];
+          const rawData = ((res.data as unknown as StudentRegistrationDto[]) || []).map((item) =>
+            normalizeRegistrationDateFields(item),
+          );
           if (rawData.length === 0) return of([]);
 
           const timeRequests = rawData.map((item) =>
@@ -214,6 +277,17 @@ export class MyRecordsComponent implements OnInit {
                   faceVerificationExhausted: item.faceVerificationExhausted,
                   canSubmitComplaint: item.canSubmitComplaint,
                   cancelReason: item.cancelReason || '',
+                  absenceReason: item.absenceReason,
+                  absenceReviewNote: item.absenceReviewNote,
+                  absenceReviewed: item.absenceReviewed,
+                  absenceReviewedAt: item.absenceReviewedAt,
+                  isAttended: item.isAttended,
+                  scheduleId: this.resolveCurrentScheduleId(item),
+                  scheduleIds: item.scheduleIds || [],
+                  attendanceSessions: item.attendanceSessions || [],
+                  registeredSessionCount: item.registeredSessionCount ?? item.scheduleIds?.length ?? 0,
+                  faceVerifiedSessionCount: item.faceVerifiedSessionCount ?? 0,
+                  absentSessionCount: item.absentSessionCount ?? 0,
                   point: item.point ?? null,
                 } as UiActivityRecord;
               });
@@ -245,7 +319,7 @@ export class MyRecordsComponent implements OnInit {
     const target = records.find((act) => act.activityId === this.pendingFaceActivityId);
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { faceActivityId: null },
+      queryParams: { faceActivityId: null, faceScheduleId: null },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
@@ -265,7 +339,13 @@ export class MyRecordsComponent implements OnInit {
       return;
     }
 
-    this.openModal(target, 'FACE');
+    this.openModal(
+      {
+        ...target,
+        scheduleId: this.pendingFaceScheduleId ?? target.scheduleId,
+      },
+      'FACE',
+    );
   }
 
   private openProofFromRoute(records: UiActivityRecord[]): void {
@@ -328,27 +408,41 @@ export class MyRecordsComponent implements OnInit {
   }
 
   onFilterChange() {
+    this.currentPage.set(1);
     this.fetchMyRecords();
+  }
+
+  onSemesterChange(value: CustomSelectValue): void {
+    this.selectedSemesterId.set(typeof value === 'number' ? value : null);
+    this.onFilterChange();
   }
 
   getUiTabStatus(act: UiActivityRecord): TabMode | null {
     const now = new Date();
     const isPastDeadline = !!act.realEndDate && now > act.realEndDate;
 
-    if (
-      act.participationStatus === 'CANCELLED' ||
-      act.participationStatus === 'COMPLETED' ||
-      act.status === 2 ||
-      (act.status === 1 && act.proofStatus === 2)
-    ) {
+    if (this.isViolationRecord(act)) {
+      return 'NEEDS_PROCESSING';
+    }
+
+    if (this.isCancelledRecord(act)) {
+      return 'CANCELLED';
+    }
+
+    if (this.isMissedRecord(act)) {
+      return 'NEEDS_PROCESSING';
+    }
+
+    if (this.isCompletedRecord(act)) {
       return 'COMPLETED';
     }
 
-    if (
-      act.participationStatus === 'PROOF_PENDING' ||
-      (act.status === 1 && act.proofStatus === 1)
-    ) {
+    if (this.isProofPendingRecord(act)) {
       return 'PROOF_SUBMITTED';
+    }
+
+    if (this.isRegisteredBeforeStart(act, now)) {
+      return 'REGISTERED';
     }
 
     if (this.isRecordOverdue(act, isPastDeadline)) {
@@ -368,13 +462,11 @@ export class MyRecordsComponent implements OnInit {
       act.canSubmitProof === true ||
       act.participationStatus === 'FACE_VERIFIED' ||
       act.participationStatus === 'PROOF_REJECTED' ||
-      (act.status === 1 && (act.proofStatus === 0 || act.proofStatus === 3));
+      (act.status === 1 &&
+        (act.proofStatus === 0 || act.proofStatus === 3) &&
+        !this.isMissedRecord(act));
     if (needsParticipationAction || needsProofAction || (act.status === 0 && isHappeningNow)) {
       return 'ONGOING';
-    }
-
-    if (act.status === 0 && act.realStartDate && now < act.realStartDate) {
-      return 'REGISTERED';
     }
 
     return null;
@@ -384,8 +476,24 @@ export class MyRecordsComponent implements OnInit {
     return this.activities().filter((act) => this.getUiTabStatus(act) === this.currentTab());
   });
 
+  pagedActivities = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.filteredActivities().slice(start, start + this.pageSize());
+  });
+
   changeTab(tab: TabMode) {
     this.currentTab.set(tab);
+    this.currentPage.set(1);
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
   }
 
   tabCount(tab: TabMode): number {
@@ -396,8 +504,87 @@ export class MyRecordsComponent implements OnInit {
     return !!activity && this.isRecordOverdue(activity);
   }
 
+  isCancelledRecord(activity: UiActivityRecord | null | undefined): boolean {
+    return !!activity && (activity.status === 2 || activity.participationStatus === 'CANCELLED');
+  }
+
+  isMissedRecord(activity: UiActivityRecord | null | undefined): boolean {
+    if (!activity || this.isCancelledRecord(activity)) {
+      return false;
+    }
+
+    return (
+      activity.isMissed === true ||
+      activity.status === 3 ||
+      activity.participationStatus === 'MISSED' ||
+      activity.participationStatus === 'ABSENT' ||
+      (activity.absentSessionCount ?? 0) > 0
+    );
+  }
+
+  isNeedsProcessing(activity: UiActivityRecord | null | undefined): boolean {
+    return this.isViolationRecord(activity) || this.isMissedRecord(activity);
+  }
+
+  isCompletedRecord(activity: UiActivityRecord | null | undefined): boolean {
+    if (!activity || this.isCancelledRecord(activity) || this.isMissedRecord(activity)) {
+      return false;
+    }
+
+    return (
+      activity.participationStatus === 'COMPLETED' ||
+      (activity.isAttended === true && activity.proofStatus === 2) ||
+      (activity.status === 1 &&
+        activity.attendanceStatus === 'FACE_VERIFIED' &&
+        activity.proofStatus === 2)
+    );
+  }
+
+  isProofPendingRecord(activity: UiActivityRecord | null | undefined): boolean {
+    if (!activity || this.isMissedRecord(activity)) {
+      return false;
+    }
+
+    return (
+      activity.participationStatus === 'PROOF_PENDING' ||
+      (activity.status === 1 && activity.proofStatus === 1)
+    );
+  }
+
+  isRegisteredBeforeStart(activity: UiActivityRecord | null | undefined, now = new Date()): boolean {
+    if (!activity || activity.status !== 0 || this.isCancelledRecord(activity)) {
+      return false;
+    }
+
+    return (
+      activity.participationStatus === 'REGISTERED' ||
+      !activity.participationStatus
+    ) && (!activity.realStartDate || now < activity.realStartDate);
+  }
+
+  isViolationRecord(activity: UiActivityRecord | null | undefined): boolean {
+    if (!activity) {
+      return false;
+    }
+
+    const normalizedReason = this.normalizeStatusText(activity.cancelReason);
+    const normalizedParticipationStatus = this.normalizeStatusText(activity.participationStatus);
+    const normalizedNextAction = this.normalizeStatusText(activity.nextAction);
+    const isMarkedViolation =
+      normalizedReason.includes('vi pham') ||
+      normalizedParticipationStatus.includes('violation') ||
+      normalizedParticipationStatus.includes('needs_processing') ||
+      normalizedNextAction.includes('resolve_violation');
+
+    return activity.status === 2 && isMarkedViolation && !activity.attendedAt;
+  }
+
   private isRecordOverdue(activity: UiActivityRecord, isPastDeadline?: boolean): boolean {
-    if (!activity || activity.status === 2 || activity.participationStatus === 'CANCELLED') {
+    if (
+      !activity ||
+      this.isViolationRecord(activity) ||
+      this.isCancelledRecord(activity)
+    ) {
       return false;
     }
 
@@ -415,19 +602,27 @@ export class MyRecordsComponent implements OnInit {
   }
 
   getAttendanceLabel(activity: UiActivityRecord): string {
-    if (activity.status === 2 || activity.participationStatus === 'CANCELLED') {
+    if (this.isViolationRecord(activity)) {
+      return 'Cần xử lý vi phạm';
+    }
+
+    if (this.isCancelledRecord(activity)) {
       return 'Đã hủy';
+    }
+
+    if (this.isMissedRecord(activity)) {
+      return 'Cần xử lý vắng mặt';
+    }
+
+    if (this.isRegisteredBeforeStart(activity)) {
+      return 'Đã đăng ký';
     }
 
     if (this.isActivityOverdue(activity)) {
       return activity.status === 0 ? 'Quá hạn điểm danh' : 'Quá hạn minh chứng';
     }
 
-    if (activity.isMissed || activity.participationStatus === 'MISSED') {
-      return 'Đã bỏ lỡ';
-    }
-
-    if (activity.status === 1) {
+    if (this.isCompletedRecord(activity) || activity.participationStatus === 'FACE_VERIFIED') {
       return 'Đã xác thực';
     }
 
@@ -451,7 +646,11 @@ export class MyRecordsComponent implements OnInit {
   }
 
   getProofLabel(activity: UiActivityRecord): string {
-    if (activity.status === 2 || activity.isMissed) {
+    if (this.isViolationRecord(activity)) {
+      return 'Không áp dụng';
+    }
+
+    if (this.isCancelledRecord(activity) || this.isMissedRecord(activity)) {
       return 'Không áp dụng';
     }
 
@@ -479,8 +678,29 @@ export class MyRecordsComponent implements OnInit {
   }
 
   getRecordNote(activity: UiActivityRecord): string {
+    if (this.isViolationRecord(activity)) {
+      return activity.cancelReason || 'BTC đánh dấu vi phạm vắng điểm danh';
+    }
+
     if (activity.cancelReason) {
       return activity.cancelReason;
+    }
+
+    if (this.isMissedRecord(activity)) {
+      if (activity.absenceReviewed) {
+        return activity.absenceReviewNote || activity.absenceReason || 'Vắng mặt đã được BTC ghi nhận xử lý';
+      }
+
+      if (activity.absenceReason) {
+        return `Lý do vắng: ${activity.absenceReason}; chờ BTC xử lý`;
+      }
+
+      const absentCount = activity.absentSessionCount ?? 0;
+      const registeredCount = activity.registeredSessionCount ?? 0;
+      if (absentCount > 0 && registeredCount > 0) {
+        return `Đã ghi nhận vắng ${absentCount}/${registeredCount} buổi; cần BTC xử lý`;
+      }
+      return 'Đã ghi nhận vắng mặt; cần BTC xử lý';
     }
 
     if (this.isActivityOverdue(activity)) {
@@ -497,8 +717,8 @@ export class MyRecordsComponent implements OnInit {
       }
     }
 
-    if (activity.isStartingSoon && this.currentTab() === 'REGISTERED') {
-      return 'Sắp diễn ra';
+    if (this.isRegisteredBeforeStart(activity)) {
+      return activity.isStartingSoon ? 'Sắp diễn ra' : 'Chưa đến thời gian điểm danh';
     }
 
     if (activity.nextAction === 'QR_CHECK_IN') {
@@ -527,6 +747,7 @@ export class MyRecordsComponent implements OnInit {
   canOpenProof(activity: UiActivityRecord | null | undefined): boolean {
     return (
       !!activity &&
+      !this.isMissedRecord(activity) &&
       (activity.canSubmitProof === true ||
         (activity.status === 1 && (activity.proofStatus === 0 || activity.proofStatus === 3)))
     );
@@ -552,6 +773,50 @@ export class MyRecordsComponent implements OnInit {
 
   canSubmitComplaint(activity: UiActivityRecord | null | undefined): boolean {
     return !!activity && (activity.canSubmitComplaint === true || this.isFaceVerificationExhausted(activity));
+  }
+
+  private normalizeStatusText(value: string | null | undefined): string {
+    return (value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  private resolveCurrentScheduleId(activity: StudentRegistrationDto): number | undefined {
+    const sessions = activity.attendanceSessions || [];
+    const checkedInSession = sessions.find((session) => this.isAttendanceSessionCheckedInOnly(session));
+    const checkedOutSession = sessions.find((session) => this.isAttendanceSessionCheckedOut(session));
+
+    if (activity.nextAction === 'FACE_VERIFY') {
+      return checkedOutSession?.scheduleId ?? activity.scheduleId;
+    }
+
+    if (activity.nextAction === 'QR_CHECK_OUT') {
+      return checkedInSession?.scheduleId ?? activity.scheduleId;
+    }
+
+    if (activity.scheduleIds?.length === 1) {
+      return activity.scheduleIds[0];
+    }
+
+    return activity.scheduleId;
+  }
+
+  private isAttendanceSessionCheckedInOnly(session: AttendanceSessionRecord): boolean {
+    return (
+      session.attendanceStatus === 'CHECKED_IN' ||
+      session.status === 1 ||
+      (!!session.checkinTime && !session.checkoutTime)
+    );
+  }
+
+  private isAttendanceSessionCheckedOut(session: AttendanceSessionRecord): boolean {
+    return (
+      session.attendanceStatus === 'CHECKED_OUT' ||
+      session.status === 2 ||
+      (!!session.checkinTime && !!session.checkoutTime)
+    );
   }
 
   canOpenFace(activity: UiActivityRecord | null | undefined): boolean {

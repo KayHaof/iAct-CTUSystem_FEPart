@@ -309,3 +309,27 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+.user-modal-content .select-field {
+  display: none;
+}
+
+.user-modal-content lib-custom-select {
+  display: block;
+
+  .select-shell {
+    gap: 0;
+  }
+
+  .select-trigger {
+    min-height: 2.75rem;
+    border-radius: 0.75rem;
+    background: #ffffff;
+    font-size: 0.875rem;
+  }
+
+  .select-menu {
+    z-index: 140;
+    max-height: 15rem;
+  }
+}

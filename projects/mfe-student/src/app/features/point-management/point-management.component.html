@@ -9,36 +9,16 @@
       </p>
     </div>
 
-    <div class="semester-select" [class.is-open]="isSemesterMenuOpen()">
-      <span>Học kỳ</span>
-      <button
-        type="button"
-        class="semester-select__trigger"
-        aria-haspopup="listbox"
-        [attr.aria-expanded]="isSemesterMenuOpen()"
-        (click)="toggleSemesterMenu()"
-      >
-        <strong>{{ selectedSemesterLabel() }}</strong>
-        <i class="bi bi-chevron-down"></i>
-      </button>
-
-      @if (isSemesterMenuOpen()) {
-        <div class="semester-select__menu" role="listbox">
-          @for (sem of semesters(); track sem.id) {
-            <button
-              type="button"
-              class="semester-select__option"
-              role="option"
-              [class.is-selected]="sem.id === selectedSemesterId()"
-              [attr.aria-selected]="sem.id === selectedSemesterId()"
-              (click)="selectSemester(sem)"
-            >
-              {{ formatSemesterLabel(sem) }}
-            </button>
-          }
-        </div>
-      }
-    </div>
+    <lib-custom-select
+      class="semester-select"
+      id="pointSemesterSelect"
+      label="Học kỳ"
+      icon="bi-calendar3"
+      placeholder="Chọn học kỳ"
+      [options]="semesterOptions()"
+      [value]="selectedSemesterId()"
+      (valueChange)="onSemesterChange($event)"
+    ></lib-custom-select>
   </header>
 
   @if (isLoading()) {
@@ -108,6 +88,7 @@
         [attr.aria-selected]="selectedTab() === 'tree'"
         (click)="selectTab('tree')"
       >
+        <i class="bi bi-diagram-3"></i>
         Cây tiến độ
       </button>
       <button
@@ -118,6 +99,7 @@
         [attr.aria-selected]="selectedTab() === 'activities'"
         (click)="selectTab('activities')"
       >
+        <i class="bi bi-list-check"></i>
         Hoạt động
       </button>
     </div>

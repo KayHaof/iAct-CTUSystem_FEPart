@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PaginationComponent } from '@my-mfe/ui';
 import { Activity } from '../../shared/models/activity.model';
 import { ActivityProposalService } from '../../shared/services/activity-proposal.service';
 
 @Component({
   selector: 'app-activity-proposals',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, PaginationComponent],
   templateUrl: './activity-proposals.component.html',
   styleUrls: ['./activity-proposals.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,12 +49,19 @@ export class ActivityProposalsComponent implements OnInit {
   readonly isLoading = signal(true);
   readonly proposals = signal<Activity[]>([]);
   readonly currentStatus = signal<'ALL' | '0' | '1' | '2' | '3'>('ALL');
+  readonly currentPage = signal(1);
+  readonly pageSize = signal(8);
   readonly totalRows = signal(0);
 
   readonly filteredProposals = computed(() => {
     const status = this.currentStatus();
     if (status === 'ALL') return this.proposals();
     return this.proposals().filter((activity) => String(activity.status) === status);
+  });
+
+  readonly pagedProposals = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.filteredProposals().slice(start, start + this.pageSize());
   });
 
   readonly pendingCount = computed(() => this.countByStatus(0));
@@ -84,6 +92,17 @@ export class ActivityProposalsComponent implements OnInit {
 
   setStatus(status: 'ALL' | '0' | '1' | '2' | '3'): void {
     this.currentStatus.set(status);
+    this.currentPage.set(1);
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
   }
 
   statusLabel(status: number | null | undefined): string {

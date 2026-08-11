@@ -482,23 +482,19 @@
                           {{ isSearchingMainLocation() ? 'Đang tìm...' : 'Tìm phòng trống' }}
                         </button>
                       </div>
-                      <select
+                      <lib-custom-select
                         id="location_id"
-                        formControlName="location_id"
-                        (change)="selectLocation()"
                         class="location-search-box__select"
+                        placeholder="Chọn địa điểm từ danh sách"
+                        icon="bi-geo-alt"
+                        [options]="availableLocationOptions()"
+                        formControlName="location_id"
+                        (valueChange)="selectLocation()"
                         [class.location-search-box__select--invalid]="
                           activityForm.get('location_id')?.touched &&
                           !activityForm.get('location_id')?.value
                         "
-                      >
-                        <option [ngValue]="null">Chọn địa điểm từ danh sách</option>
-                        @for (option of availableLocations(); track option.id) {
-                          <option [ngValue]="option.id">
-                            {{ option.name }} - sức chứa {{ option.capacity || 'chưa đặt' }}
-                          </option>
-                        }
-                      </select>
+                      ></lib-custom-select>
                       @if (
                         activityForm.get('location_id')?.touched &&
                         !activityForm.get('location_id')?.value
@@ -711,22 +707,15 @@
                               >
                                 Địa điểm còn trống
                               </label>
-                              <select
+                              <lib-custom-select
                                 [id]="'schedule_location_id_' + i"
-                                formControlName="location_id"
-                                (change)="onScheduleLocationSelected(i)"
                                 class="location-search-box__select"
-                              >
-                                <option [ngValue]="null">Chọn địa điểm từ danh sách</option>
-                                @for (
-                                  option of availableLocationsBySchedule()[i] || [];
-                                  track option.id
-                                ) {
-                                  <option [ngValue]="option.id">
-                                    {{ option.name }} - sức chứa {{ option.capacity || 'chưa đặt' }}
-                                  </option>
-                                }
-                              </select>
+                                placeholder="Chọn địa điểm từ danh sách"
+                                icon="bi-geo-alt"
+                                [options]="getScheduleLocationOptions(i)"
+                                formControlName="location_id"
+                                (valueChange)="onScheduleLocationSelected(i)"
+                              ></lib-custom-select>
                               <button
                                 type="button"
                                 (click)="searchAvailableLocations(i)"
@@ -780,7 +769,7 @@
               </div>
             }
 
-            <div formArrayName="benefits" class="max-h-[32rem] space-y-3 overflow-y-auto pr-1">
+            <div formArrayName="benefits" class="activity-benefits-list space-y-3 pr-1">
               @if (benefits.length === 0) {
                 <div
                   class="rounded-2xl border-2 border-dashed border-slate-200 px-4 py-12 text-center"
@@ -809,25 +798,16 @@
                   <p class="mb-4 pr-12 font-bold text-slate-800">Quyền lợi {{ i + 1 }}</p>
                   <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <div>
-                      <label
-                        [for]="'root_category_id_' + i"
-                        class="mb-2 block text-sm font-bold text-slate-700"
-                      >
-                        Nhóm tiêu chí lớn <span class="text-red-500">*</span>
-                      </label>
-                      <select
+                      <lib-custom-select
                         [id]="'root_category_id_' + i"
+                        class="activity-custom-select"
+                        label="Nhóm tiêu chí lớn"
+                        placeholder="Chọn nhóm I - V"
+                        icon="bi-diagram-3"
+                        [options]="rootCategoryOptions()"
                         formControlName="root_category_id"
-                        (change)="onRootCategoryChange(i)"
-                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 outline-none focus:ring-2 focus:ring-blue-100"
-                      >
-                        <option [ngValue]="null" disabled>-- Chọn nhóm I - V --</option>
-                        @for (rootCategory of rootCategories(); track rootCategory.id) {
-                          <option [ngValue]="rootCategory.id">
-                            {{ getRootCategoryLabel(rootCategory) }}
-                          </option>
-                        }
-                      </select>
+                        (valueChange)="onRootCategoryChange(i)"
+                      ></lib-custom-select>
                       @if (
                         benefit.get('root_category_id')?.touched &&
                         benefit.get('root_category_id')?.invalid
@@ -837,28 +817,16 @@
                     </div>
 
                     <div>
-                      <label
-                        [for]="'category_id_' + i"
-                        class="mb-2 block text-sm font-bold text-slate-700"
-                      >
-                        Tiêu chí đánh giá <span class="text-red-500">*</span>
-                      </label>
-                      <select
+                      <lib-custom-select
                         [id]="'category_id_' + i"
+                        class="activity-custom-select"
+                        label="Tiêu chí đánh giá"
+                        placeholder="Chọn tiêu chí"
+                        icon="bi-check2-square"
+                        [options]="getCategorySelectOptions(benefit.get('root_category_id')?.value)"
                         formControlName="category_id"
-                        (change)="onBenefitCategoryChange(i)"
-                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 outline-none focus:ring-2 focus:ring-blue-100"
-                      >
-                        <option [ngValue]="null" disabled>-- Chọn tiêu chí --</option>
-                        @for (
-                          option of getCategoryOptions(benefit.get('root_category_id')?.value);
-                          track option.category.id
-                        ) {
-                          <option [ngValue]="option.category.id" [disabled]="!option.selectable">
-                            {{ getCategoryOptionLabel(option) }}
-                          </option>
-                        }
-                      </select>
+                        (valueChange)="onBenefitCategoryChange(i)"
+                      ></lib-custom-select>
                       @if (
                         benefit.get('category_id')?.touched && benefit.get('category_id')?.invalid
                       ) {
@@ -897,20 +865,15 @@
                     </div>
 
                     <div>
-                      <label
-                        [for]="'type_' + i"
-                        class="mb-2 block text-sm font-bold text-slate-700"
-                      >
-                        Loại quyền lợi
-                      </label>
-                      <select
+                      <lib-custom-select
                         [id]="'type_' + i"
+                        class="activity-custom-select"
+                        label="Loại quyền lợi"
+                        placeholder="Chọn loại quyền lợi"
+                        icon="bi-award"
+                        [options]="benefitTypeOptions"
                         formControlName="type"
-                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 outline-none focus:ring-2 focus:ring-blue-100"
-                      >
-                        <option [ngValue]="1">Cộng điểm rèn luyện</option>
-                        <option [ngValue]="2">Cấp giấy chứng nhận</option>
-                      </select>
+                      ></lib-custom-select>
                     </div>
                   </div>
                 </div>
@@ -1182,7 +1145,7 @@
             } @else {
               <button
                 type="button"
-                (click)="onSubmit(currentStatus() === 3 ? 0 : currentStatus())"
+                (click)="onSubmit(getSubmitStatus())"
                 [disabled]="isSaving()"
                 class="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 px-5 font-bold text-white shadow-lg transition hover:from-blue-700 hover:to-sky-600 disabled:opacity-50"
               >

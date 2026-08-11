@@ -305,6 +305,28 @@
           <p class="admin-modal__desc">
             Đưa mã này cho sinh viên quét bằng app iAct để tự động ghi nhận tham gia.
           </p>
+          @if (qrSchedules().length > 1) {
+            <div class="admin-qr-schedules" aria-label="Chọn buổi điểm danh">
+              @for (schedule of qrSchedules(); track schedule.id) {
+                <button
+                  type="button"
+                  class="admin-qr-schedule"
+                  [class.is-active]="selectedQrScheduleId() === schedule.id"
+                  (click)="selectQrSchedule(schedule.id)"
+                >
+                  <span>{{ schedule.title || 'Buổi #' + schedule.id }}</span>
+                  <small>
+                    {{ schedule.startTime | date: 'dd/MM HH:mm' }} - {{ schedule.endTime | date: 'HH:mm' }}
+                  </small>
+                </button>
+              }
+            </div>
+          } @else if (selectedQrSchedule(); as schedule) {
+            <div class="admin-qr-selected">
+              <i class="bi bi-calendar-check" aria-hidden="true"></i>
+              <span>{{ schedule.title || 'Buổi #' + schedule.id }}</span>
+            </div>
+          }
           <div class="admin-qr-wrapper">
             @if (isGeneratingQr()) {
               <div class="admin-qr-loading">

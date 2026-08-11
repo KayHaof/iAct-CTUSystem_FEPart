@@ -3,7 +3,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Activity, ActivityTimeResponse } from '../models/activity.model';
-import { PageDTO, ApiResponse } from '@my-mfe/interface';
+import {
+  ApiResponse,
+  PageDTO,
+  normalizeActivityDateFields,
+  normalizeApiUtcDateTime,
+} from '@my-mfe/interface';
 import { IACT_API_ORIGIN } from '@my-mfe/ui';
 
 @Injectable({
@@ -30,18 +35,38 @@ export class ActivityService {
 
     return this.http
       .get<ApiResponse<PageDTO<Activity>>>(this.apiUrl, { params })
-      .pipe(map((response) => response.data as PageDTO<Activity>));
+      .pipe(
+        map((response) => this.normalizePage(response.data as PageDTO<Activity>)),
+      );
   }
 
   getActivityById(id: number | string): Observable<Activity> {
     return this.http
       .get<ApiResponse<Activity>>(`${this.apiUrl}/${id}`)
-      .pipe(map((response) => response.data as Activity));
+      .pipe(map((response) => normalizeActivityDateFields(response.data as Activity)));
   }
 
   getActivityTimes(id: number | string): Observable<ActivityTimeResponse> {
     return this.http
       .get<ApiResponse<ActivityTimeResponse>>(`${this.apiUrl}/${id}/times-location`)
-      .pipe(map((response) => response.data as ActivityTimeResponse));
+      .pipe(
+        map((response) => {
+          const data = response.data as ActivityTimeResponse;
+          return {
+            ...data,
+            registrationStart: normalizeApiUtcDateTime(data.registrationStart) || '',
+            registrationEnd: normalizeApiUtcDateTime(data.registrationEnd) || '',
+            startDate: normalizeApiUtcDateTime(data.startDate) || '',
+            endDate: normalizeApiUtcDateTime(data.endDate) || '',
+          };
+        }),
+      );
+  }
+
+  private normalizePage(page: PageDTO<Activity>): PageDTO<Activity> {
+    return {
+      ...page,
+      data: (page.data || []).map((activity) => normalizeActivityDateFields(activity)),
+    };
   }
 }

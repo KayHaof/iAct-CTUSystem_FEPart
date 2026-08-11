@@ -1,20 +1,54 @@
-<div class="alert-toast" [ngClass]="'alert-toast-' + data.variant">
+<div
+  class="alert-toast"
+  [ngClass]="'alert-toast-' + data.variant"
+  [attr.role]="isUrgent ? 'alert' : 'status'"
+  [attr.aria-live]="isUrgent ? 'assertive' : 'polite'"
+  aria-atomic="true"
+>
   <div class="alert-accent" aria-hidden="true"></div>
 
-  <div class="alert-state" aria-hidden="true">
-    @if (data.variant === 'loading') {
-      <span class="loading-ring"></span>
-    } @else {
-      <span class="state-dot"></span>
-    }
-  </div>
+  @if (data.variant !== 'error') {
+    <div class="alert-state" aria-hidden="true">
+      @switch (data.variant) {
+        @case ('success') {
+          <i class="bi bi-check-lg"></i>
+        }
+        @case ('warning') {
+          <i class="bi bi-exclamation-lg"></i>
+        }
+        @case ('info') {
+          <i class="bi bi-info-lg"></i>
+        }
+        @default {
+          <span class="loading-ring"></span>
+        }
+      }
+    </div>
+  }
 
-  <div class="min-w-0 flex-1">
+  <div class="alert-content">
     <p class="alert-title">{{ data.title }}</p>
     <p class="alert-message">{{ data.message }}</p>
   </div>
 
   @if (data.dismissible) {
-    <button type="button" class="alert-close" (click)="dismiss()">Đóng</button>
+    <button
+      type="button"
+      class="alert-close"
+      (click)="dismiss()"
+      aria-label="Đóng thông báo"
+      title="Đóng thông báo"
+    >
+      <i class="bi bi-x-lg" aria-hidden="true"></i>
+      <span class="sr-only">Đóng thông báo</span>
+    </button>
+  }
+
+  @if (data.durationMs) {
+    <span
+      class="alert-progress"
+      aria-hidden="true"
+      [style.--alert-duration]="data.durationMs + 'ms'"
+    ></span>
   }
 </div>

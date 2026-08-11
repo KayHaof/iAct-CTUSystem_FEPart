@@ -3,7 +3,7 @@ import { RxStomp } from '@stomp/rx-stomp';
 import { IMessage } from '@stomp/stompjs';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { NotificationItem } from '@my-mfe/interface';
+import { NotificationItem, normalizeApiUtcDateTime } from '@my-mfe/interface';
 
 @Injectable({
   providedIn: 'root',
@@ -64,8 +64,8 @@ export class WebSocketService extends RxStomp {
       type: data.type ?? 2,
       activityId: data.activityId,
       isRead: data.isRead ?? false,
-      readAt: data.readAt,
-      createdAt: data.createdAt,
+      readAt: normalizeApiUtcDateTime(data.readAt) || undefined,
+      createdAt: normalizeApiUtcDateTime(data.createdAt) || data.createdAt,
       sourceEventId: data.sourceEventId,
       sourceTopic: data.sourceTopic,
     };

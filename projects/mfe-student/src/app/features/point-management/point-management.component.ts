@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
-  HostListener,
   OnInit,
   computed,
   inject,
@@ -13,8 +12,13 @@ import { RouterModule } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, finalize, map } from 'rxjs/operators';
 import { SemesterService } from '../../shared/services/semester.service';
-import { ApiResponse, Semester } from '@my-mfe/interface';
-import { IACT_API_ORIGIN } from '@my-mfe/ui';
+import { ApiResponse, Semester, normalizeApiUtcDateTime } from '@my-mfe/interface';
+import {
+  CustomSelectComponent,
+  CustomSelectOption,
+  CustomSelectValue,
+  IACT_API_ORIGIN,
+} from '@my-mfe/ui';
 
 interface RuleCategoryResponse {
   id?: number;
@@ -101,7 +105,7 @@ type PointTab = 'tree' | 'activities';
 @Component({
   selector: 'app-point-management',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CustomSelectComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './point-management.component.html',
   styleUrl: './point-management.component.scss',
@@ -119,7 +123,6 @@ export class PointManagementComponent implements OnInit {
   semesterStats = signal<SemesterPointStat[]>([]);
   selectedSemesterId = signal<number>(0);
   selectedTab = signal<PointTab>('tree');
-  isSemesterMenuOpen = signal(false);
   selectedRootCategoryId = signal<number | null>(null);
   isLoading = signal(true);
   isHistoryLoading = signal(false);
@@ -203,23 +206,16 @@ export class PointManagementComponent implements OnInit {
     const semester = this.semesters().find((item) => item.id === selectedId);
     return semester ? this.formatSemesterLabel(semester) : 'Chưa chọn học kỳ';
   });
+  readonly semesterOptions = computed<CustomSelectOption[]>(() =>
+    this.semesters().map((semester) => ({
+      label: this.formatSemesterLabel(semester),
+      value: semester.id,
+      icon: semester.isActive ? 'bi-check2-circle' : 'bi-calendar3',
+    })),
+  );
 
   ngOnInit(): void {
     this.loadSemesters();
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    if (!this.isSemesterMenuOpen()) {
-      return;
-    }
-
-    const target = event.target as Element | null;
-    if (target?.closest('.semester-select')) {
-      return;
-    }
-
-    this.closeSemesterMenu();
   }
 
   loadSemesters(): void {
@@ -242,28 +238,21 @@ export class PointManagementComponent implements OnInit {
     });
   }
 
-  onSemesterChange(event: Event): void {
-    const id = Number((event.target as HTMLSelectElement).value);
-    this.selectedSemesterId.set(id);
-    this.loadPointData(id);
-  }
+  onSemesterChange(value: CustomSelectValue): void {
+    if (typeof value !== 'number' || value === this.selectedSemesterId()) {
+      return;
+    }
 
-  toggleSemesterMenu(): void {
-    this.isSemesterMenuOpen.update((isOpen) => !isOpen);
-  }
-
-  closeSemesterMenu(): void {
-    this.isSemesterMenuOpen.set(false);
+    this.selectedSemesterId.set(value);
+    this.loadPointData(value);
   }
 
   selectSemester(semester: Semester): void {
     if (semester.id === this.selectedSemesterId()) {
-      this.closeSemesterMenu();
       return;
     }
 
     this.selectedSemesterId.set(semester.id);
-    this.closeSemesterMenu();
     this.loadPointData(semester.id);
   }
 
@@ -425,7 +414,11 @@ export class PointManagementComponent implements OnInit {
   }
 
   getContributionDate(detail: PointContribution): string | null {
-    return detail.awardedAt || detail.attendedAt || null;
+    return (
+      normalizeApiUtcDateTime(detail.awardedAt) ||
+      normalizeApiUtcDateTime(detail.attendedAt) ||
+      null
+    );
   }
 
   trackCategory(_: number, category: UiCategory): number {

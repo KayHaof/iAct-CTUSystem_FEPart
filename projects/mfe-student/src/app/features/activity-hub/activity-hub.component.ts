@@ -12,7 +12,12 @@ import { FormsModule } from '@angular/forms';
 import { finalize, Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { PaginationComponent } from '@my-mfe/ui';
+import {
+  CustomSelectComponent,
+  CustomSelectOption,
+  CustomSelectValue,
+  PaginationComponent,
+} from '@my-mfe/ui';
 import { ActivityService } from '../../shared/services/activity.service';
 import { Activity } from '../../shared/models/activity.model';
 import { PageDTO } from '@my-mfe/interface';
@@ -20,7 +25,7 @@ import { PageDTO } from '@my-mfe/interface';
 @Component({
   selector: 'app-activity-hub',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, CustomSelectComponent, PaginationComponent],
   templateUrl: './activity-hub.component.html',
   styleUrls: ['./activity-hub.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +37,7 @@ export class ActivityHubComponent implements OnInit {
 
   activities = signal<Activity[]>([]);
   isLoading = signal<boolean>(false);
+  hasError = signal<boolean>(false);
 
   searchQuery = signal<string>('');
   selectedStatus = signal<string>('ALL');
@@ -44,11 +50,17 @@ export class ActivityHubComponent implements OnInit {
 
   private searchSubject = new Subject<string>();
 
+  readonly statusOptions: CustomSelectOption[] = [
+    { label: 'Tất cả trạng thái', value: 'ALL', icon: 'bi-collection' },
+    { label: 'Đang mở đăng ký', value: 'OPEN', icon: 'bi-unlock' },
+    { label: 'Sắp mở đăng ký', value: 'UPCOMING', icon: 'bi-clock' },
+  ];
+
   ngOnInit(): void {
     this.fetchActivities();
 
     this.searchSubject
-      .pipe(debounceTime(3000), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .pipe(debounceTime(450), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe((searchValue) => {
         this.executeSearch(searchValue);
       });
@@ -56,6 +68,7 @@ export class ActivityHubComponent implements OnInit {
 
   fetchActivities(): void {
     this.isLoading.set(true);
+    this.hasError.set(false);
 
     this.activityService
       .getAllActivities(
@@ -71,12 +84,19 @@ export class ActivityHubComponent implements OnInit {
           this.activities.set(response.data || []);
           this.totalRows.set(response.totalRows || 0);
           this.totalPage.set(response.totalPage || 0);
+          this.hasError.set(false);
         },
-        error: (err) => console.error('Lỗi khi tải hoạt động:', err),
+        error: () => {
+          this.activities.set([]);
+          this.totalRows.set(0);
+          this.totalPage.set(0);
+          this.hasError.set(true);
+        },
       });
   }
 
   resetFilters() {
+    this.searchSubject.next('');
     this.searchQuery.set('');
     this.selectedLevel.set('ALL');
     this.selectedStatus.set('ALL');
@@ -92,6 +112,11 @@ export class ActivityHubComponent implements OnInit {
     this.executeSearch(value.trim());
   }
 
+  clearSearch(): void {
+    this.searchSubject.next('');
+    this.executeSearch('');
+  }
+
   private executeSearch(value: string) {
     if (this.searchQuery() !== value) {
       this.searchQuery.set(value);
@@ -100,8 +125,12 @@ export class ActivityHubComponent implements OnInit {
     }
   }
 
-  setFilterStatus(status: string) {
-    this.selectedStatus.set(status);
+  setFilterStatus(value: CustomSelectValue): void {
+    if (typeof value !== 'string') {
+      return;
+    }
+
+    this.selectedStatus.set(value);
     this.currentPage.set(1);
     this.fetchActivities();
   }
@@ -121,6 +150,9 @@ export class ActivityHubComponent implements OnInit {
   onSizeChange(size: number): void {
     this.pageSize.set(size);
     this.currentPage.set(1);
+  }
+
+  retryLoad(): void {
     this.fetchActivities();
   }
 

@@ -88,17 +88,20 @@ export class NotificationFacade {
   init(): void {
     if (this.initialized) return;
 
-    effect(() => {
-      const userId = this.userService.currentUser()?.id ?? null;
-      if (!userId) {
-        this.disconnectWebSocket();
-        this.unreadCount.set(0);
-        return;
-      }
+    effect(
+      () => {
+        const userId = this.userService.currentUser()?.id ?? null;
+        if (!userId) {
+          this.disconnectWebSocket();
+          this.unreadCount.set(0);
+          return;
+        }
 
-      this.fetchUnreadCount();
-      this.connectWebSocket(userId);
-    }, { injector: this.injector });
+        this.fetchUnreadCount();
+        this.connectWebSocket(userId);
+      },
+      { injector: this.injector },
+    );
 
     this.initialized = true;
 
@@ -212,10 +215,14 @@ export class NotificationFacade {
         this.commitState(() => {
           // Update local state
           this.notifications.update((list) =>
-            list.map((n) => (n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n)),
+            list.map((n) =>
+              n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n,
+            ),
           );
           this.dropdownNotifications.update((list) =>
-            list.map((n) => (n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n)),
+            list.map((n) =>
+              n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n,
+            ),
           );
           if (this.selectedNotification()?.id === id) {
             this.selectedNotification.update((n) =>
@@ -529,7 +536,10 @@ export class NotificationFacade {
       };
     }
 
-    if (activityId && (this.topicIncludes(topic, 'registration') || this.topicIncludes(topic, 'attendance'))) {
+    if (
+      activityId &&
+      (this.topicIncludes(topic, 'registration') || this.topicIncludes(topic, 'attendance'))
+    ) {
       return {
         commands: ['/admin/org/activities/participants', activityId],
         queryParams: { view: 'participants' },
@@ -583,7 +593,10 @@ export class NotificationFacade {
       };
     }
 
-    if (activityId && (this.topicIncludes(topic, 'registration') || this.topicIncludes(topic, 'attendance'))) {
+    if (
+      activityId &&
+      (this.topicIncludes(topic, 'registration') || this.topicIncludes(topic, 'attendance'))
+    ) {
       return {
         commands: ['/admin/org/activities/participants', activityId],
         queryParams: { view: 'participants' },
@@ -627,7 +640,9 @@ export class NotificationFacade {
   ): NotificationNavigationTarget {
     const isStudent = roleType === 1;
     return {
-      commands: isStudent ? ['/notifications', notification.id] : ['/admin/notifications', notification.id],
+      commands: isStudent
+        ? ['/notifications', notification.id]
+        : ['/admin/notifications', notification.id],
       label: 'Mở chi tiết thông báo',
       contextLabel: 'Chi tiết thông báo',
       isFallback: true,

@@ -30,6 +30,7 @@ import {
 
 export interface FaceCheckInActivity {
   activityId: number;
+  scheduleId?: number;
   title: string;
   startDate: string;
   realStartDate?: Date;
@@ -286,6 +287,7 @@ export class FaceCheckinCaptureComponent implements AfterViewInit, OnDestroy {
       this.attendanceService
         .faceCheckIn({
           activityId: activity.activityId,
+          scheduleId: activity.scheduleId,
           liveImage,
           latitude: coords?.latitude,
           longitude: coords?.longitude,

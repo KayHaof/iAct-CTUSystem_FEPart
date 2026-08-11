@@ -35,12 +35,14 @@ interface QrRegistrationRecord extends ActivityRecord {
 interface ParsedQrPayload {
   verifyCode: string;
   activityId?: number;
+  scheduleId?: number;
   registrationId?: number;
   action?: QrAction;
 }
 
 interface QrCandidate {
   activityId: number;
+  scheduleId?: number;
   action: QrAction;
   record?: QrRegistrationRecord;
 }
@@ -51,6 +53,7 @@ interface QrResultState {
   message: string;
   action?: QrAction;
   activityId?: number;
+  scheduleId?: number;
   activityTitle?: string;
   attendance?: AttendanceResponse;
 }
@@ -93,12 +96,15 @@ export class QrCheckinComponent implements OnInit {
   });
 
   private preferredActivityId: number | null = null;
+  private preferredScheduleId: number | null = null;
   private preferredAction: QrAction | null = null;
 
   ngOnInit(): void {
     const params = this.route.snapshot.queryParamMap;
     const activityId = params.get('activityId');
+    const scheduleId = params.get('scheduleId') || params.get('sessionId');
     this.preferredActivityId = this.numberFromValue(activityId) ?? null;
+    this.preferredScheduleId = this.numberFromValue(scheduleId) ?? null;
     this.preferredAction = this.parseAction(params.get('action'));
     this.loadRecords();
   }
@@ -192,6 +198,7 @@ export class QrCheckinComponent implements OnInit {
         message: this.successMessage(candidate.action, attendance?.message || response.message),
         action: candidate.action,
         activityId: candidate.activityId,
+        scheduleId: candidate.scheduleId ?? attendance?.scheduleId,
         activityTitle: record?.activityTitle || record?.title,
         attendance,
       });
@@ -223,8 +230,12 @@ export class QrCheckinComponent implements OnInit {
       return;
     }
 
+    const scheduleId = this.result()?.scheduleId;
     this.router.navigate(['/my-records'], {
-      queryParams: { faceActivityId: activityId },
+      queryParams: {
+        faceActivityId: activityId,
+        ...(scheduleId ? { faceScheduleId: scheduleId } : {}),
+      },
     });
   }
 
@@ -237,6 +248,7 @@ export class QrCheckinComponent implements OnInit {
     for (const candidate of candidates) {
       const request: CheckInRequest = {
         activityId: candidate.activityId,
+        scheduleId: candidate.scheduleId,
         method: 1,
         verifyCode,
       };
@@ -268,7 +280,11 @@ export class QrCheckinComponent implements OnInit {
 
     const candidates = matchingRecords.map((record) => ({
       activityId: record.activityId,
-      action: parsed.action || this.preferredActionFor(record) || this.actionForRecord(record),
+      scheduleId: this.resolveCandidateScheduleId(record, parsed),
+      action:
+        parsed.action ||
+        this.preferredActionFor(record) ||
+        this.actionForRecord(record, parsed.scheduleId),
       record,
     }));
 
@@ -280,6 +296,11 @@ export class QrCheckinComponent implements OnInit {
       return [
         {
           activityId: parsed.activityId,
+          scheduleId:
+            parsed.scheduleId ||
+            (this.preferredActivityId === parsed.activityId
+              ? this.preferredScheduleId || undefined
+              : undefined),
           action: parsed.action || this.preferredAction || 'CHECK_IN',
         },
       ];
@@ -304,10 +325,79 @@ export class QrCheckinComponent implements OnInit {
     });
   }
 
-  private actionForRecord(record: QrRegistrationRecord): QrAction {
+  private resolveCandidateScheduleId(
+    record: QrRegistrationRecord,
+    parsed: ParsedQrPayload,
+  ): number | undefined {
+    if (parsed.scheduleId) {
+      return parsed.scheduleId;
+    }
+    if (this.preferredActivityId === record.activityId && this.preferredScheduleId) {
+      return this.preferredScheduleId;
+    }
+
+    const scheduleIds = record.scheduleIds || [];
+    if (scheduleIds.length === 1) {
+      return scheduleIds[0];
+    }
+
+    return this.findActionableSession(record)?.scheduleId;
+  }
+
+  private actionForRecord(record: QrRegistrationRecord, scheduleId?: number): QrAction {
+    const session = this.findActionableSession(record, scheduleId);
+    if (session && this.isSessionCheckedInOnly(session)) {
+      return 'CHECK_OUT';
+    }
+
     return record.nextAction === 'QR_CHECK_OUT' || record.attendanceStatus === 'CHECKED_IN'
       ? 'CHECK_OUT'
       : 'CHECK_IN';
+  }
+
+  private findActionableSession(
+    record: QrRegistrationRecord,
+    scheduleId?: number,
+  ): NonNullable<QrRegistrationRecord['attendanceSessions']>[number] | undefined {
+    const sessions = record.attendanceSessions || [];
+    if (scheduleId) {
+      return sessions.find((session) => session.scheduleId === scheduleId);
+    }
+
+    return (
+      sessions.find((session) => this.isSessionCheckedInOnly(session)) ||
+      sessions.find((session) => this.isSessionCheckedOut(session))
+    );
+  }
+
+  private isSessionCheckedInOnly(
+    session: NonNullable<QrRegistrationRecord['attendanceSessions']>[number],
+  ): boolean {
+    return (
+      session.attendanceStatus === 'CHECKED_IN' ||
+      session.status === 1 ||
+      (!!session.checkinTime && !session.checkoutTime)
+    );
+  }
+
+  private isSessionWaitingForCheckIn(
+    session: NonNullable<QrRegistrationRecord['attendanceSessions']>[number],
+  ): boolean {
+    return (
+      session.attendanceStatus === 'NOT_CHECKED_IN' ||
+      session.status === 0 ||
+      (!session.checkinTime && session.status !== 4)
+    );
+  }
+
+  private isSessionCheckedOut(
+    session: NonNullable<QrRegistrationRecord['attendanceSessions']>[number],
+  ): boolean {
+    return (
+      session.attendanceStatus === 'CHECKED_OUT' ||
+      session.status === 2 ||
+      (!!session.checkinTime && !!session.checkoutTime)
+    );
   }
 
   private canUseQr(record: QrRegistrationRecord): boolean {
@@ -315,7 +405,12 @@ export class QrCheckinComponent implements OnInit {
       return false;
     }
 
+    const hasQrEligibleSession = (record.attendanceSessions || []).some(
+      (session) => this.isSessionWaitingForCheckIn(session) || this.isSessionCheckedInOnly(session),
+    );
+
     return (
+      hasQrEligibleSession ||
       record.nextAction === 'QR_CHECK_IN' ||
       record.nextAction === 'QR_CHECK_OUT' ||
       record.attendanceStatus === 'NOT_CHECKED_IN' ||
@@ -341,12 +436,19 @@ export class QrCheckinComponent implements OnInit {
       return {
         verifyCode: verifyCode || raw,
         activityId: this.readNumber(jsonPayload, ['activityId', 'activity_id', 'actId']),
+        scheduleId: this.readNumber(jsonPayload, [
+          'scheduleId',
+          'schedule_id',
+          'sessionId',
+          'session_id',
+        ]),
         registrationId: this.readNumber(jsonPayload, [
           'registrationId',
           'registration_id',
           'regId',
         ]),
-        action: this.parseAction(this.readString(jsonPayload, ['action', 'mode', 'type'])) ?? undefined,
+        action:
+          this.parseAction(this.readString(jsonPayload, ['action', 'mode', 'type'])) ?? undefined,
       };
     }
 
@@ -387,6 +489,9 @@ export class QrCheckinComponent implements OnInit {
         activityId: this.numberFromValue(
           this.firstParam(params, ['activityId', 'activity_id', 'actId']),
         ),
+        scheduleId: this.numberFromValue(
+          this.firstParam(params, ['scheduleId', 'schedule_id', 'sessionId', 'session_id']),
+        ),
         registrationId: this.numberFromValue(
           this.firstParam(params, ['registrationId', 'registration_id', 'regId']),
         ),
@@ -411,11 +516,14 @@ export class QrCheckinComponent implements OnInit {
       'code',
     ]);
     const hasActivityId = ['activityId', 'activity_id', 'actId'].some((key) => params.has(key));
+    const hasScheduleId = ['scheduleId', 'schedule_id', 'sessionId', 'session_id'].some((key) =>
+      params.has(key),
+    );
     const hasRegistrationId = ['registrationId', 'registration_id', 'regId'].some((key) =>
       params.has(key),
     );
 
-    if (!verifyCode && !hasActivityId && !hasRegistrationId) {
+    if (!verifyCode && !hasActivityId && !hasScheduleId && !hasRegistrationId) {
       return null;
     }
 
@@ -423,6 +531,9 @@ export class QrCheckinComponent implements OnInit {
       verifyCode: verifyCode || value,
       activityId: this.numberFromValue(
         this.firstParam(params, ['activityId', 'activity_id', 'actId']),
+      ),
+      scheduleId: this.numberFromValue(
+        this.firstParam(params, ['scheduleId', 'schedule_id', 'sessionId', 'session_id']),
       ),
       registrationId: this.numberFromValue(
         this.firstParam(params, ['registrationId', 'registration_id', 'regId']),
@@ -522,6 +633,9 @@ export class QrCheckinComponent implements OnInit {
     const errorMessage = this.extractErrorMessage(error);
     const normalized = this.normalizeText(errorMessage);
 
+    if (normalized.includes('chua dang ky buoi')) {
+      return 'Bạn chưa đăng ký buổi trong mã QR này nên không thể điểm danh.';
+    }
     if (normalized.includes('chua dang ky')) {
       return 'Bạn chưa đăng ký hoạt động trong mã QR này nên không thể điểm danh.';
     }

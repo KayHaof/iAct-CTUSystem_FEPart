@@ -1,89 +1,115 @@
-<div class="pagination-wrapper" [class.dark]="theme() === 'dark'">
-  <div class="pagination-info">
-    <div class="info-row">
-      <p class="info-text">
-        <span class="hidden sm:inline">Đang xem </span>
-        <span class="info-highlight">{{ startItem() }}</span>
-        <span class="info-separator">-</span>
-        <span class="info-highlight">{{ endItem() }}</span>
-        <span class="info-separator"> / </span>
-        <span class="info-highlight">{{ totalItems() }}</span>
-        <span class="hidden sm:inline"> mục</span>
-      </p>
+<div class="pagination-wrapper" [class.has-open-menu]="isDropdownOpen()">
+  <div class="pagination-summary">
+    <p class="info-text" aria-live="polite">
+      <span class="info-label">Đang xem</span>
+      <strong class="info-highlight">{{ startItem() }}–{{ endItem() }}</strong>
+      <span class="info-label">trên</span>
+      <strong class="info-highlight">{{ totalItems() }}</strong>
+      <span class="info-label">mục</span>
+    </p>
+  </div>
 
+  <div class="pagination-controls">
+    @if (availablePageSizes().length > 1) {
       <div class="page-size-dropdown">
+        <span class="page-size-label">Số mục/trang</span>
         <button
           type="button"
           class="page-size-trigger"
+          cdkOverlayOrigin
+          #pageSizeTrigger="cdkOverlayOrigin"
           aria-haspopup="listbox"
+          aria-label="Chọn số mục mỗi trang"
           [attr.aria-expanded]="isDropdownOpen()"
-          (click)="isDropdownOpen.set(!isDropdownOpen())"
+          [attr.aria-controls]="pageSizeMenuId"
+          (click)="togglePageSizeDropdown()"
           (blur)="onBlur()"
+          (keydown.escape)="closePageSizeDropdown()"
         >
-          {{ pageSize() }}
-          <i class="bi bi-chevron-down dropdown-icon"></i>
+          <span>{{ pageSize() }}</span>
+          <span class="page-size-unit">mục</span>
+          <i class="bi bi-chevron-down dropdown-icon" aria-hidden="true"></i>
         </button>
 
-        @if (isDropdownOpen()) {
+        <ng-template
+          cdkConnectedOverlay
+          [cdkConnectedOverlayOrigin]="pageSizeTrigger"
+          [cdkConnectedOverlayOpen]="isDropdownOpen()"
+          [cdkConnectedOverlayPositions]="pageSizePositions"
+          [cdkConnectedOverlayPush]="true"
+          (detach)="closePageSizeDropdown()"
+        >
           <div
             class="page-size-menu"
+            [id]="pageSizeMenuId"
             role="listbox"
+            aria-label="Số mục mỗi trang"
           >
-            @for (size of pageSizeOptions(); track size) {
+            @for (size of availablePageSizes(); track size) {
               <button
                 type="button"
                 class="page-size-option"
+                role="option"
                 [class.active]="size === pageSize()"
+                [attr.aria-selected]="size === pageSize()"
                 (click)="selectPageSize(size)"
               >
-                {{ size }} mục
+                <span>{{ size }} mục</span>
+                @if (size === pageSize()) {
+                  <i class="bi bi-check-lg" aria-hidden="true"></i>
+                }
               </button>
             }
           </div>
-        }
+        </ng-template>
       </div>
-    </div>
-  </div>
+    }
 
-  <div class="pagination-nav">
-    <nav class="nav-container" aria-label="Phân trang">
-      <button
-        type="button"
-        class="nav-button nav-prev"
-        title="Trang trước"
-        [disabled]="currentPage() === 1"
-        (click)="prevPage()"
-      >
-        <span class="sr-only">Trang trước</span>
-        <i class="bi bi-chevron-left"></i>
-      </button>
-
-      @for (page of pages(); track $index) {
-        @if (page === '...') {
-          <span class="nav-ellipsis">...</span>
-        } @else {
+    @if (totalPages() > 1) {
+      <div class="pagination-nav">
+        <nav class="nav-container" aria-label="Phân trang">
           <button
             type="button"
-            class="nav-page"
-            [class.active]="page === currentPage()"
-            [attr.aria-current]="page === currentPage() ? 'page' : null"
-            (click)="onPageClick(page)"
+            class="nav-button nav-prev"
+            aria-label="Trang trước"
+            title="Trang trước"
+            [disabled]="displayCurrentPage() === 1"
+            (click)="prevPage()"
           >
-            {{ page }}
+            <i class="bi bi-chevron-left" aria-hidden="true"></i>
+            <span class="nav-label">Trước</span>
           </button>
-        }
-      }
 
-      <button
-        type="button"
-        class="nav-button nav-next"
-        title="Trang sau"
-        [disabled]="currentPage() === totalPages() || totalPages() === 0"
-        (click)="nextPage()"
-      >
-        <span class="sr-only">Trang sau</span>
-        <i class="bi bi-chevron-right"></i>
-      </button>
-    </nav>
+          @for (page of pages(); track $index) {
+            @if (page === '...') {
+              <span class="nav-ellipsis" aria-hidden="true">…</span>
+            } @else {
+              <button
+                type="button"
+                class="nav-page"
+                [class.active]="page === displayCurrentPage()"
+                [attr.aria-current]="page === displayCurrentPage() ? 'page' : null"
+                [attr.aria-label]="'Trang ' + page"
+                (click)="onPageClick(page)"
+              >
+                {{ page }}
+              </button>
+            }
+          }
+
+          <button
+            type="button"
+            class="nav-button nav-next"
+            aria-label="Trang sau"
+            title="Trang sau"
+            [disabled]="displayCurrentPage() === totalPages()"
+            (click)="nextPage()"
+          >
+            <span class="nav-label">Sau</span>
+            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+          </button>
+        </nav>
+      </div>
+    }
   </div>
 </div>

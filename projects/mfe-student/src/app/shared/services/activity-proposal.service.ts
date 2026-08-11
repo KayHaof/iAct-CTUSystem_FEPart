@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { ApiResponse, PageDTO } from '@my-mfe/interface';
+import { ApiResponse, PageDTO, normalizeActivityDateFields } from '@my-mfe/interface';
 import { IACT_API_ORIGIN } from '@my-mfe/ui';
 import { Activity } from '../models/activity.model';
 
@@ -90,13 +90,13 @@ export class ActivityProposalService {
   updateProposal(id: number, payload: ActivityProposalPayload): Observable<Activity> {
     return this.http
       .put<ApiResponse<Activity>>(`${this.activityUrl}/${id}`, payload)
-      .pipe(map((response) => response.data as Activity));
+      .pipe(map((response) => normalizeActivityDateFields(response.data as Activity)));
   }
 
   getMyProposal(id: number): Observable<Activity> {
     return this.http
       .get<ApiResponse<Activity>>(`${this.activityUrl}/my-created/${id}`)
-      .pipe(map((response) => response.data as Activity));
+      .pipe(map((response) => normalizeActivityDateFields(response.data as Activity)));
   }
 
   getTrainingCategories(active = true): Observable<TrainingCategory[]> {
@@ -115,6 +115,14 @@ export class ActivityProposalService {
           size,
         },
       })
-      .pipe(map((response) => response.data as PageDTO<Activity>));
+      .pipe(
+        map((response) => {
+          const page = response.data as PageDTO<Activity>;
+          return {
+            ...page,
+            data: (page.data || []).map((activity) => normalizeActivityDateFields(activity)),
+          };
+        }),
+      );
   }
 }

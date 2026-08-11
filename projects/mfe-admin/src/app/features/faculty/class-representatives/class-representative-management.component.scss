@@ -90,9 +90,13 @@
   }
 }
 
-.rep-create-panel,
 .rep-table-panel {
   overflow: hidden;
+}
+
+.rep-create-panel,
+.rep-filter-panel {
+  overflow: visible;
 }
 
 .rep-section-title {
@@ -213,6 +217,37 @@
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
     }
   }
+
+  lib-custom-select {
+    display: block;
+    width: 100%;
+  }
+}
+
+:host ::ng-deep .rep-field lib-custom-select .select-shell {
+  gap: 0;
+}
+
+:host ::ng-deep .rep-field lib-custom-select .select-trigger {
+  min-height: 2.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.625rem 0.875rem;
+}
+
+:host ::ng-deep .rep-field lib-custom-select .select-control-open .select-trigger,
+:host ::ng-deep .rep-field lib-custom-select .select-trigger:focus-visible {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+:host ::ng-deep .rep-field lib-custom-select .select-menu {
+  z-index: 120;
 }
 
 .rep-field--wide {

@@ -20,13 +20,14 @@ import { AlertService } from '../../services/alert.service';
 import { ConfirmService } from '../../services/confirm.service';
 import { NotificationFacade } from '../../services/notification-facade.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 type TabFilter = 'all' | 'unread' | 'read';
 
 @Component({
   selector: 'lib-notification-center',
   standalone: true,
-  imports: [CommonModule, FormsModule, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, ConfirmDialogComponent, PaginationComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './notification-center.component.html',
   styleUrls: ['./notification-center.component.scss'],
@@ -113,6 +114,7 @@ export class NotificationCenterComponent implements OnInit, AfterViewInit {
     const tab = this.activeTab();
     const isRead = tab === 'unread' ? false : tab === 'read' ? true : undefined;
     this.facade.refresh({ page, size: this.pageSize, isRead });
+    this.scrollNotificationPageToTop();
   }
 
   onSearchInput(event: Event): void {
@@ -196,19 +198,6 @@ export class NotificationCenterComponent implements OnInit, AfterViewInit {
     });
   }
 
-  /** Pagination helpers */
-  get pages(): number[] {
-    const total = this.facade.totalPages();
-    const current = this.facade.currentPage();
-    const pages: number[] = [];
-    const start = Math.max(1, current - 2);
-    const end = Math.min(total, current + 2);
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }
-
   /** Check if admin for technical metadata display */
   get isAdmin(): boolean {
     return this.roleContext() === 'admin';
@@ -235,6 +224,30 @@ export class NotificationCenterComponent implements OnInit, AfterViewInit {
           });
         });
       });
+    });
+  }
+
+  private scrollNotificationPageToTop(): void {
+    const hostElement = this.host.nativeElement;
+    const view = hostElement.ownerDocument.defaultView;
+    if (!view) return;
+
+    const scroll = (): void => {
+      const scrollContainer = hostElement.closest('.main-scrollable') as HTMLElement | null;
+      const prefersReducedMotion = view.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const behavior = prefersReducedMotion ? 'auto' : 'smooth';
+
+      if (scrollContainer) {
+        scrollContainer.scrollTop = 0;
+        scrollContainer.scrollTo({ top: 0, behavior });
+      } else {
+        hostElement.scrollIntoView({ behavior, block: 'start', inline: 'nearest' });
+      }
+    };
+
+    view.requestAnimationFrame(() => {
+      scroll();
+      view.requestAnimationFrame(scroll);
     });
   }
 }

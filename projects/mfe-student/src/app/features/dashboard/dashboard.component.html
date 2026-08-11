@@ -2,13 +2,29 @@
   <header class="dashboard-header">
     <div class="dashboard-header__content">
       <div class="dashboard-header__main">
-        <p class="dashboard-header__eyebrow iact-student-eyebrow">Tổng quan sinh viên</p>
-        <h1 class="dashboard-header__title iact-student-title">Xin chào, {{ studentName() }}</h1>
-        <p class="dashboard-header__subtitle iact-student-subtitle">{{ studentMeta() }}</p>
+        <p class="dashboard-header__eyebrow iact-student-eyebrow">Không gian hoạt động</p>
+        <h1 class="dashboard-header__title iact-student-title">Tổng quan của bạn</h1>
+        <p class="dashboard-header__subtitle iact-student-subtitle">
+          Theo dõi điểm rèn luyện, lịch tham gia và những việc cần hoàn tất trong một màn hình.
+        </p>
+        <div class="dashboard-header__context" aria-live="polite">
+          <span><i class="bi bi-star-fill" aria-hidden="true"></i>{{ totalScore }}/{{ maxScore }} ĐRL</span>
+          <span><i class="bi bi-calendar-check" aria-hidden="true"></i>{{ upcomingActivities }} hoạt động sắp tới</span>
+          @if (isLoading) {
+            <span><i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>Đang đồng bộ</span>
+          } @else {
+            <span><i class="bi bi-check2-circle" aria-hidden="true"></i>Dữ liệu đã cập nhật</span>
+          }
+        </div>
       </div>
 
       <div class="dashboard-header__actions">
-        <button type="button" class="action-btn action-btn--secondary" (click)="refresh()">
+        <button
+          type="button"
+          class="action-btn action-btn--secondary"
+          (click)="refresh()"
+          [disabled]="isLoading"
+        >
           <i class="bi bi-arrow-clockwise"></i>
           <span>Tải lại</span>
         </button>
@@ -20,7 +36,7 @@
     </div>
   </header>
 
-  <section class="stats-grid" aria-label="Chỉ số cá nhân">
+  <section class="stats-grid" aria-label="Chỉ số cá nhân" [class.is-loading]="isLoading">
     @for (stat of stats; track stat.label) {
       <article class="stat-card" [ngClass]="'stat-card--' + stat.tone">
         <span class="stat-card__icon" [ngClass]="'stat-card__icon--' + stat.tone">
@@ -37,6 +53,33 @@
 
   <section class="dashboard-body">
     <div class="main-column">
+      <article class="panel panel--score">
+        <div class="panel__header">
+          <div>
+            <p class="panel__eyebrow">Điểm rèn luyện</p>
+            <h2 class="panel__title iact-student-section-title">Tổng quan hiện tại</h2>
+          </div>
+          <a routerLink="/point-management" class="panel__link">
+            Chi tiết
+            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+          </a>
+        </div>
+
+        <div class="score-summary" aria-label="Tổng điểm rèn luyện">
+          <div class="score-ring" [style.--progress]="scorePercentage">
+            <div class="score-ring__inner">
+              <strong>{{ totalScore }}</strong>
+              <span>/ {{ maxScore }}</span>
+            </div>
+          </div>
+          <div class="score-summary__text">
+            <span>{{ scorePercentage }}%</span>
+            <strong>Xếp loại {{ rank }}</strong>
+            <small>Truy cập trang điểm để xem chi tiết từng mục.</small>
+          </div>
+        </div>
+      </article>
+
       <article class="panel panel--activities">
         <div class="panel__header">
           <div>
@@ -80,7 +123,7 @@
         </div>
       </article>
 
-      <article class="panel">
+      <article class="panel panel--proof">
         <div class="panel__header">
           <div>
             <p class="panel__eyebrow">Minh chứng</p>
@@ -119,50 +162,7 @@
     </div>
 
     <aside class="side-column">
-      <article class="panel">
-        <div class="panel__header">
-          <div>
-            <p class="panel__eyebrow">Điểm rèn luyện</p>
-            <h2 class="panel__title iact-student-section-title">Tiến độ hiện tại</h2>
-          </div>
-          <a routerLink="/point-management" class="panel__link">
-            Chi tiết
-            <i class="bi bi-chevron-right"></i>
-          </a>
-        </div>
-
-        <div class="score-summary">
-          <div class="score-ring" [style.--progress]="scorePercentage">
-            <div class="score-ring__inner">
-              <strong>{{ totalScore }}</strong>
-              <span>/ {{ maxScore }}</span>
-            </div>
-          </div>
-          <div class="score-summary__text">
-            <span>{{ scorePercentage }}%</span>
-            <strong>Xếp loại {{ rank }}</strong>
-          </div>
-        </div>
-
-        <div class="criteria-list">
-          @for (criteria of criteriaScores; track criteria.name) {
-            <div class="criteria-item">
-              <div class="criteria-item__header">
-                <span>{{ criteria.name }}</span>
-                <strong>{{ criteria.current }}/{{ criteria.max }}</strong>
-              </div>
-              <div class="criteria-item__bar">
-                <span
-                  [style.width.%]="(criteria.current / criteria.max) * 100"
-                  [style.background]="criteria.color"
-                ></span>
-              </div>
-            </div>
-          }
-        </div>
-      </article>
-
-      <article class="panel">
+      <article class="panel panel--quick">
         <div class="panel__header">
           <div>
             <p class="panel__eyebrow">Lối tắt</p>
@@ -175,6 +175,7 @@
             <a
               class="quick-action"
               [ngClass]="'quick-action--' + action.tone"
+              [class.quick-action--featured]="action.featured"
               [routerLink]="action.link"
             >
               <span class="quick-action__icon">

@@ -1,12 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import {
   ApiResponse,
   NotificationItem,
   NotificationPage,
   NotificationQuery,
   UrgentNotificationRequest,
+  normalizeApiUtcDateTime,
 } from '@my-mfe/interface';
 
 @Injectable({
@@ -32,10 +33,25 @@ export class NotificationService {
       params = params.set('isRead', query.isRead.toString());
     }
 
-    return this.http.get<ApiResponse<NotificationPage>>(
-      `${this.apiUrl}/notifications`,
-      { params },
-    );
+    return this.http
+      .get<ApiResponse<NotificationPage>>(`${this.apiUrl}/notifications`, { params })
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: response.data
+            ? {
+                ...response.data,
+                data: (response.data.data || []).map((item) => this.normalizeNotification(item)),
+              }
+            : response.data,
+          result: response.result
+            ? {
+                ...response.result,
+                data: (response.result.data || []).map((item) => this.normalizeNotification(item)),
+              }
+            : response.result,
+        })),
+      );
   }
 
   /** GET /notifications/count-unread */
@@ -47,9 +63,15 @@ export class NotificationService {
 
   /** GET /notifications/{id} */
   getNotificationById(id: number): Observable<ApiResponse<NotificationItem>> {
-    return this.http.get<ApiResponse<NotificationItem>>(
-      `${this.apiUrl}/notifications/${id}`,
-    );
+    return this.http
+      .get<ApiResponse<NotificationItem>>(`${this.apiUrl}/notifications/${id}`)
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: response.data ? this.normalizeNotification(response.data) : response.data,
+          result: response.result ? this.normalizeNotification(response.result) : response.result,
+        })),
+      );
   }
 
   /** PUT /notifications/{id}/read */
@@ -83,5 +105,13 @@ export class NotificationService {
       `${this.apiUrl}/notifications/urgent`,
       request,
     );
+  }
+
+  private normalizeNotification(notification: NotificationItem): NotificationItem {
+    return {
+      ...notification,
+      createdAt: normalizeApiUtcDateTime(notification.createdAt) || notification.createdAt,
+      readAt: normalizeApiUtcDateTime(notification.readAt) || undefined,
+    };
   }
 }

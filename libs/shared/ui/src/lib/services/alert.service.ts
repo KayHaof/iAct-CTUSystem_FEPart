@@ -8,6 +8,14 @@ import {
   AlertSnackbarVariant,
 } from '../components/alert-snackbar/alert-snackbar.component';
 
+const ALERT_SNACKBAR_DURATION_MS: Readonly<Record<AlertSnackbarVariant, number | undefined>> = {
+  success: 3200,
+  info: 4200,
+  warning: 5200,
+  error: 6500,
+  loading: undefined,
+};
+
 @Injectable({
   providedIn: 'root',
 })
@@ -15,19 +23,19 @@ export class AlertService {
   private snackBar = inject(MatSnackBar);
 
   success(message: string): void {
-    this.open('success', 'Thành công', message, 3000);
+    this.open('success', 'Thành công', message);
   }
 
   error(message: string): void {
-    this.open('error', 'Lỗi', message, 4500);
+    this.open('error', 'Lỗi', message);
   }
 
   warning(message: string): void {
-    this.open('warning', 'Cảnh báo', message, 4000);
+    this.open('warning', 'Cảnh báo', message);
   }
 
   info(message: string): void {
-    this.open('info', 'Thông tin', message, 3000);
+    this.open('info', 'Thông tin', message);
   }
 
   observe<T>(messageSuccess: string, messageError: string) {
@@ -61,16 +69,18 @@ export class AlertService {
     duration?: number,
     dismissible = true,
   ) {
+    const durationMs = duration ?? ALERT_SNACKBAR_DURATION_MS[variant];
     const data: AlertSnackbarData = {
       title,
       message,
       variant,
       dismissible,
+      durationMs,
     };
 
     const config: MatSnackBarConfig<AlertSnackbarData> = {
       data,
-      duration,
+      duration: durationMs,
       horizontalPosition: 'right',
       verticalPosition: 'top',
       panelClass: ['iact-alert-snackbar', `iact-alert-${variant}`],

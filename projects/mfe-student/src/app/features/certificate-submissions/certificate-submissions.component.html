@@ -10,32 +10,11 @@
       </p>
     </div>
 
-    <div class="cert-header__aside">
-      <section class="cert-summary" aria-label="Tổng quan hồ sơ giấy khen">
-        <article>
-          <span>Chờ duyệt</span>
-          <strong>{{ pendingCount() }}</strong>
-        </article>
-        <article>
-          <span>Đã duyệt</span>
-          <strong>{{ approvedCount() }}</strong>
-        </article>
-        <article>
-          <span>Bị từ chối</span>
-          <strong>{{ rejectedCount() }}</strong>
-        </article>
-      </section>
-
-      <div class="cert-header__actions">
-        <button
-          type="button"
-          class="primary-button primary-button--fit"
-          (click)="openSubmitModal()"
-        >
-          <i class="bi bi-plus-lg" aria-hidden="true"></i>
-          Nộp mới
-        </button>
-      </div>
+    <div class="cert-header__actions">
+      <button type="button" class="primary-button primary-button--fit" (click)="openSubmitModal()">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        Nộp giấy khen
+      </button>
     </div>
   </header>
 
@@ -46,17 +25,31 @@
           <p class="iact-student-eyebrow">Theo dõi</p>
           <h2 class="iact-student-section-title">Hồ sơ đã nộp</h2>
         </div>
+      </div>
+
+      <div class="cert-list__filters">
+        <lib-custom-select
+          class="semester-filter"
+          label="Học kỳ"
+          icon="bi-calendar3"
+          [options]="semesterOptions()"
+          [value]="selectedSemesterId()"
+          (valueChange)="onSemesterChange($event)"
+        ></lib-custom-select>
 
         <div class="status-filter" role="tablist" aria-label="Lọc trạng thái hồ sơ">
-          @for (option of statusOptions; track option.label) {
+          @for (option of statusOptions; track option.value) {
             <button
               type="button"
               role="tab"
               [class.is-active]="selectedStatus() === option.value"
+              [class.is-complaint]="option.value === 'COMPLAINTS'"
               [attr.aria-selected]="selectedStatus() === option.value"
               (click)="changeStatus(option.value)"
             >
+              <i [class]="'bi ' + option.icon" aria-hidden="true"></i>
               {{ option.label }}
+              <span class="status-filter__count">{{ statusCount(option.value) }}</span>
             </button>
           }
         </div>
@@ -67,14 +60,14 @@
         <strong>Khiếu nại</strong> ngay trên thẻ hồ sơ đó.
       </div>
 
-      @if (isLoading()) {
+      @if (isLoading() || (isComplaintTab() && isComplaintLoading())) {
         <div class="cert-state" aria-live="polite">
           <span class="cert-spinner cert-spinner--large"></span>
-          <p>Đang tải hồ sơ giấy khen...</p>
+          <p>{{ isComplaintTab() ? 'Đang tải danh sách khiếu nại...' : 'Đang tải hồ sơ giấy khen...' }}</p>
         </div>
-      } @else if (submissions().length > 0) {
+      } @else if (visibleSubmissions().length > 0) {
         <div class="submission-list">
-          @for (item of submissions(); track trackSubmission($index, item)) {
+          @for (item of visibleSubmissions(); track trackSubmission($index, item)) {
             <article class="submission-card">
               @if ((item.aiWarnings || []).length > 0) {
                 <div class="warning-strip">
@@ -124,50 +117,65 @@
                     <div class="submission-card__status">
                       <span
                         class="status-pill"
-                        [ngClass]="'status-pill--' + statusTone(item.status)"
+                        [ngClass]="
+                          'status-pill--' + (isComplaintTab() ? 'warning' : statusTone(item.status))
+                        "
                       >
                         {{ item.statusLabel || statusLabel(item.status) }}
                       </span>
                       @if (item.createdAt) {
-                        <time [attr.datetime]="item.createdAt">{{
-                          item.createdAt | date: 'dd/MM/yyyy'
-                        }}</time>
+                        <time [attr.datetime]="item.createdAt">
+                          {{ isComplaintTab() ? 'Gửi ' : '' }}{{ item.createdAt | date: 'dd/MM/yyyy' }}
+                        </time>
                       }
                     </div>
                   </div>
 
-                  <div class="submission-summary">
-                    <dl class="submission-meta">
-                      <div>
-                        <dt>Đơn vị cấp</dt>
-                        <dd>{{ item.issuer || 'Chưa nhận diện' }}</dd>
-                      </div>
-                      <div>
-                        <dt>Ngày cấp</dt>
-                        <dd>
-                          @if (item.issuedDate) {
-                            {{ item.issuedDate | date: 'dd/MM/yyyy' }}
-                          } @else {
-                            Chưa nhận diện
-                          }
-                        </dd>
-                      </div>
-                    </dl>
-
-                    <div class="ai-suggestion">
+                  @if (isComplaintTab()) {
+                    <div class="complaint-card__meta">
                       <span>
-                        <i class="bi bi-stars" aria-hidden="true"></i>
-                        AI đề xuất
+                        <i class="bi bi-calendar3" aria-hidden="true"></i>
+                        {{ item.semesterName || 'Chưa xác định học kỳ' }}
                       </span>
-                      <strong>{{ item.suggestedCategoryName || 'Chờ Trường phân loại' }}</strong>
-                      @if (item.suggestedPoint !== null) {
-                        <small>{{ item.suggestedPoint }} điểm đề xuất</small>
-                      }
-                      @if (item.suggestionReason) {
-                        <p>{{ item.suggestionReason }}</p>
-                      }
+                      <span>
+                        <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                        Đang chờ Trường xử lý
+                      </span>
                     </div>
-                  </div>
+                  } @else {
+                    <div class="submission-summary">
+                      <dl class="submission-meta">
+                        <div>
+                          <dt>Đơn vị cấp</dt>
+                          <dd>{{ item.issuer || 'Chưa nhận diện' }}</dd>
+                        </div>
+                        <div>
+                          <dt>Ngày cấp</dt>
+                          <dd>
+                            @if (item.issuedDate) {
+                              {{ item.issuedDate | date: 'dd/MM/yyyy' }}
+                            } @else {
+                              Chưa nhận diện
+                            }
+                          </dd>
+                        </div>
+                      </dl>
+
+                      <div class="ai-suggestion">
+                        <span>
+                          <i class="bi bi-stars" aria-hidden="true"></i>
+                          AI đề xuất
+                        </span>
+                        <strong>{{ item.suggestedCategoryName || 'Chờ Trường phân loại' }}</strong>
+                        @if (item.suggestedPoint !== null) {
+                          <small>{{ item.suggestedPoint }} điểm đề xuất</small>
+                        }
+                        @if (item.suggestionReason) {
+                          <p>{{ item.suggestionReason }}</p>
+                        }
+                      </div>
+                    </div>
+                  }
 
                   @if (item.status === 1) {
                     <div class="review-note review-note--success">
@@ -185,7 +193,11 @@
                 <div class="submission-card__footer">
                   <div class="review-note review-note--danger">
                     <i class="bi bi-x-circle-fill" aria-hidden="true"></i>
-                    <span>{{ item.rejectionReason || 'Hồ sơ chưa đủ điều kiện duyệt.' }}</span>
+                    <span>{{
+                      isComplaintTab()
+                        ? 'Đã gửi khiếu nại, đang chờ Trường xử lý.'
+                        : item.rejectionReason || 'Hồ sơ chưa đủ điều kiện duyệt.'
+                    }}</span>
                   </div>
 
                   @if (complaintForSubmission(item.id); as complaint) {
@@ -234,11 +246,11 @@
           }
         </div>
 
-        @if (totalRows() > 0) {
+        @if (displayTotalRows() > 0) {
           <div class="cert-pagination-container">
             <lib-pagination
               [currentPage]="currentPage()"
-              [totalItems]="totalRows()"
+              [totalItems]="displayTotalRows()"
               [pageSize]="pageSize()"
               [pageSizeOptions]="[5, 8, 12, 20]"
               (pageChange)="goToPage($event)"
@@ -249,18 +261,23 @@
       } @else {
         <div class="cert-state">
           <span class="cert-state__icon">
-            <i class="bi bi-award" aria-hidden="true"></i>
+            <i [class]="isComplaintTab() ? 'bi bi-chat-left-text' : 'bi bi-award'" aria-hidden="true"></i>
           </span>
-          <h3>Chưa có hồ sơ giấy khen</h3>
-          <p>Hồ sơ đã nộp trong học kỳ đang chọn sẽ hiển thị tại đây.</p>
-          <button
-            type="button"
-            class="primary-button primary-button--fit"
-            (click)="openSubmitModal()"
-          >
-            <i class="bi bi-plus-lg" aria-hidden="true"></i>
-            Nộp giấy khen mới
-          </button>
+          @if (isComplaintTab()) {
+            <h3>Chưa có khiếu nại đang xử lý</h3>
+            <p>Các giấy khen đã gửi khiếu nại và đang chờ Trường xử lý sẽ hiển thị tại đây.</p>
+          } @else {
+            <h3>Chưa có hồ sơ giấy khen</h3>
+            <p>Hồ sơ đã nộp trong học kỳ đang chọn sẽ hiển thị tại đây.</p>
+            <button
+              type="button"
+              class="primary-button primary-button--fit"
+              (click)="openSubmitModal()"
+            >
+              <i class="bi bi-plus-lg" aria-hidden="true"></i>
+              Nộp giấy khen mới
+            </button>
+          }
         </div>
       }
     </section>
@@ -344,20 +361,16 @@
           }
 
           <div class="form-grid">
-            <label class="form-field">
-              <span>Học kỳ</span>
-              <select
-                [ngModel]="selectedSemesterId()"
-                (ngModelChange)="selectSemester($event)"
-                name="semesterId"
+            <div class="form-field">
+              <lib-custom-select
+                label="Học kỳ"
+                icon="bi-calendar3"
+                [options]="submissionSemesterOptions()"
+                [value]="selectedSemesterId()"
                 [disabled]="isSubmitting()"
-              >
-                <option [ngValue]="null">Học kỳ hiện tại</option>
-                @for (semester of semesters(); track semester.id) {
-                  <option [ngValue]="semester.id">{{ formatSemesterLabel(semester) }}</option>
-                }
-              </select>
-            </label>
+                (valueChange)="onSemesterChange($event)"
+              ></lib-custom-select>
+            </div>
 
             <label class="form-field">
               <span>Ghi chú</span>
@@ -490,11 +503,19 @@
                   rows="6"
                   maxlength="2000"
                   name="complaintReason"
-                  [ngModel]="complaintReason()"
-                  (ngModelChange)="complaintReason.set($event)"
+                  [value]="complaintReason()"
+                  (input)="onComplaintReasonInput($event)"
+                  aria-describedby="complaint-reason-hint"
                   placeholder="Mô tả ngắn gọn vì sao giấy khen này hợp lệ..."
                   [disabled]="isComplaintSubmitting()"
                 ></textarea>
+                <small
+                  id="complaint-reason-hint"
+                  class="complaint-reason-hint"
+                  [class.is-valid]="complaintReason().trim().length >= 10"
+                >
+                  {{ complaintReason().trim().length }}/2000 ký tự · Tối thiểu 10 ký tự
+                </small>
               </label>
 
               <div class="complaint-modal__note">

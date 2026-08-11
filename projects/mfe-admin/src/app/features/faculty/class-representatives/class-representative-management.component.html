@@ -29,34 +29,32 @@
         <div class="rep-create-grid">
           <label class="rep-field">
             <span>Lớp</span>
-            <select [ngModel]="form.classId" (ngModelChange)="onClassSelected($event)">
-              <option [ngValue]="null">Chọn lớp</option>
-              @for (cls of manageableClasses(); track cls.id) {
-                <option [ngValue]="cls.id">{{ cls.classCode }} - {{ cls.name }}</option>
-              }
-            </select>
+            <lib-custom-select
+              placeholder="Chọn lớp"
+              icon="bi-mortarboard"
+              [options]="createClassOptions()"
+              [ngModel]="form.classId"
+              (ngModelChange)="onClassSelected($event)"
+            ></lib-custom-select>
           </label>
           <label class="rep-field rep-field--wide">
             <span>Sinh viên trong lớp</span>
-            <select [(ngModel)]="form.studentId" (focus)="loadStudentsForSelectedClass()">
-              <option [ngValue]="null">Chọn sinh viên</option>
-              @for (student of students(); track student.id) {
-                <option [ngValue]="student.id">
-                  {{ student.studentCode || student.username }} -
-                  {{ student.fullName || student.username }}
-                </option>
-              }
-            </select>
+            <lib-custom-select
+              placeholder="Chọn sinh viên"
+              icon="bi-person"
+              [options]="studentOptions()"
+              [(ngModel)]="form.studentId"
+              (click)="loadStudentsForSelectedClass()"
+            ></lib-custom-select>
           </label>
           <label class="rep-field">
             <span>Vai trò</span>
-            <select [(ngModel)]="form.representativeType">
-              <option value="CLASS_MONITOR">Lớp trưởng</option>
-              <option value="SECRETARY">Bí thư chi đoàn</option>
-              <option value="DEPUTY_SECRETARY">Phó Bí thư chi đoàn</option>
-              <option value="ASSISTANT">Ban cán sự</option>
-              <option value="CLASS_REPRESENTATIVE">Đại diện lớp</option>
-            </select>
+            <lib-custom-select
+              placeholder="Chọn vai trò"
+              icon="bi-person-badge"
+              [options]="representativeTypeOptions"
+              [(ngModel)]="form.representativeType"
+            ></lib-custom-select>
           </label>
           <label class="rep-field">
             <span>Từ ngày</span>
@@ -89,20 +87,23 @@
         </label>
         <label class="rep-field">
           <span>Lớp</span>
-          <select [ngModel]="selectedClassId()" (ngModelChange)="selectedClassId.set($event)">
-            <option value="">Tất cả lớp</option>
-            @for (cls of manageableClasses(); track cls.id) {
-              <option [value]="cls.id">{{ cls.classCode }} - {{ cls.name }}</option>
-            }
-          </select>
+          <lib-custom-select
+            placeholder="Tất cả lớp"
+            icon="bi-mortarboard"
+            [options]="filterClassOptions()"
+            [ngModel]="selectedClassId()"
+            (ngModelChange)="onFilterClassSelected($event)"
+          ></lib-custom-select>
         </label>
         <label class="rep-field">
           <span>Trạng thái</span>
-          <select [ngModel]="activeFilter()" (ngModelChange)="activeFilter.set($event)">
-            <option value="true">Đang hiệu lực</option>
-            <option value="">Tất cả trạng thái</option>
-            <option value="false">Đã ngưng</option>
-          </select>
+          <lib-custom-select
+            placeholder="Chọn trạng thái"
+            icon="bi-ui-checks-grid"
+            [options]="activeFilterOptions"
+            [ngModel]="activeFilter()"
+            (ngModelChange)="onActiveFilterSelected($event)"
+          ></lib-custom-select>
         </label>
         <button
           type="button"

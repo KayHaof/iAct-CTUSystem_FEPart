@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -9,6 +16,7 @@ import {
   PaginationComponent,
   AlertService,
   ConfirmService,
+  ConfirmDialogComponent,
   TableContainerComponent,
 } from '@my-mfe/ui';
 import { CloudinaryPathPipe } from '@my-mfe/data-access-media';
@@ -33,6 +41,7 @@ interface ActivityNotificationForm {
     RouterModule,
     FormsModule,
     PaginationComponent,
+    ConfirmDialogComponent,
     TableContainerComponent,
     NgOptimizedImage,
     CloudinaryPathPipe,
@@ -64,7 +73,12 @@ export class ActivityListComponent implements OnInit {
   selectedNotificationActivity = signal<Activity | null>(null);
   isSendingNotification = signal(false);
   recipientCountPreview = signal<number | null>(null);
-  readonly isDepartmentRole = computed(() => Number(this.userService.currentUser()?.roleType) === 2);
+  selectedCancelActivity = signal<Activity | null>(null);
+  isCancelling = signal(false);
+  cancelReason = '';
+  readonly isDepartmentRole = computed(
+    () => Number(this.userService.currentUser()?.roleType) === 2,
+  );
 
   notificationForm: ActivityNotificationForm = {
     title: '',
@@ -171,11 +185,106 @@ export class ActivityListComponent implements OnInit {
     this.router.navigate(['/admin/org/activities/edit', id]);
   }
 
-  canEditOrDelete(activity: Activity): boolean {
+  canEditActivity(activity: Activity): boolean {
+    if (this.isDepartmentRole()) {
+      if (this.isPendingAdminApproval(activity)) {
+        return false;
+      }
+
+      if (activity.status === 3) {
+        return true;
+      }
+
+      return (
+        activity.status === 1 &&
+        !activity.requiresAdminApproval &&
+        this.isBeforeActivityStart(activity)
+      );
+    }
+
     if (activity.status !== 0 && activity.status !== 3) {
       return false;
     }
+
+    return true;
+  }
+
+  canDeleteActivity(activity: Activity): boolean {
+    if (activity.status !== 0 && activity.status !== 3) {
+      return false;
+    }
+
     return !(this.isDepartmentRole() && this.isPendingAdminApproval(activity));
+  }
+
+  editActionTitle(activity: Activity): string {
+    return activity.status === 1
+      ? 'Chỉnh sửa trước khi hoạt động bắt đầu'
+      : 'Chỉnh sửa hoạt động';
+  }
+
+  canCancelActivity(activity: Activity): boolean {
+    return (
+      this.isDepartmentRole() &&
+      activity.status === 1 &&
+      !activity.requiresAdminApproval &&
+      this.isBeforeActivityStart(activity)
+    );
+  }
+
+  openCancelModal(activity: Activity): void {
+    if (!this.canCancelActivity(activity)) {
+      return;
+    }
+
+    this.cancelReason = '';
+    this.selectedCancelActivity.set(activity);
+  }
+
+  closeCancelModal(): void {
+    if (this.isCancelling()) {
+      return;
+    }
+
+    this.selectedCancelActivity.set(null);
+    this.cancelReason = '';
+  }
+
+  canConfirmCancellation(): boolean {
+    return !!this.selectedCancelActivity() && this.cancelReason.trim().length > 0 && !this.isCancelling();
+  }
+
+  submitCancelActivity(): void {
+    const activity = this.selectedCancelActivity();
+    const reason = this.cancelReason.trim();
+    if (!activity || !this.canConfirmCancellation() || !reason) {
+      return;
+    }
+
+    this.isCancelling.set(true);
+    this.activityService
+      .cancelActivity(activity.id, reason)
+      .pipe(finalize(() => this.isCancelling.set(false)))
+      .subscribe({
+        next: () => {
+          this.alertService.success('Đã hủy hoạt động và cập nhật các lịch địa điểm liên quan.');
+          this.isCancelling.set(false);
+          this.closeCancelModal();
+          this.fetchActivities();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.alertService.error(err.error?.message || 'Không thể hủy hoạt động. Vui lòng thử lại.');
+        },
+      });
+  }
+
+  private isBeforeActivityStart(activity: Activity): boolean {
+    if (!activity.startDate) {
+      return false;
+    }
+
+    const startTime = new Date(activity.startDate).getTime();
+    return Number.isFinite(startTime) && startTime > Date.now();
   }
 
   canRequestAdminSupport(activity: Activity): boolean {
@@ -186,8 +295,8 @@ export class ActivityListComponent implements OnInit {
     return activity.status === 0 && !!activity.requiresAdminApproval;
   }
 
-  async requestAdminSupport(activity: Activity): Promise<void> {
-    await this.confirmService.confirm({
+  requestAdminSupport(activity: Activity): void {
+    void this.confirmService.confirm({
       title: 'Gửi yêu cầu hỗ trợ?',
       message: 'Admin sẽ nhận thông báo về hoạt động đang chờ duyệt này.',
       confirmText: 'Gửi yêu cầu',
@@ -207,7 +316,7 @@ export class ActivityListComponent implements OnInit {
               this.alertService.error(err.error?.message || 'Không thể gửi yêu cầu hỗ trợ.'),
           });
       },
-    });
+    }).catch(() => undefined);
   }
 
   openNotificationModal(activity: Activity): void {
@@ -258,7 +367,7 @@ export class ActivityListComponent implements OnInit {
     this.isSendingNotification.set(true);
 
     this.participantService
-      .getParticipantsByActivity(activity.id, '', 'ALL', 1, pageSize)
+      .getParticipantsByActivity(activity.id, '', 'ALL', '', 1, pageSize)
       .subscribe({
         next: (response) => {
           const participants = response.data?.data || [];

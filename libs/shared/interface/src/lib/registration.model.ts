@@ -3,6 +3,10 @@ export interface RegistrationResponse {
   studentId: number;
   studentName: string;
   studentCode: string;
+  classId?: number;
+  classCode?: string;
+  className?: string;
+  academicYear?: string;
   avatarUrl: string;
   activityId: number;
   activityTitle: string;
@@ -22,5 +26,24 @@ export interface RegistrationResponse {
   faceVerificationExhausted?: boolean;
   canSubmitComplaint?: boolean;
   scheduleIds?: number[];
+  attendanceSessions?: AttendanceSessionResponse[];
+  registeredSessionCount?: number;
+  faceVerifiedSessionCount?: number;
+  absentSessionCount?: number;
   proofStatus?: number;
+}
+
+export interface AttendanceSessionResponse {
+  id: number;
+  registrationId: number;
+  scheduleId?: number;
+  scheduleTitle?: string;
+  scheduleStartTime?: string;
+  scheduleEndTime?: string;
+  checkinTime?: string;
+  checkoutTime?: string;
+  attendanceStatus?: string;
+  status?: number;
+  method?: number;
+  message?: string;
 }

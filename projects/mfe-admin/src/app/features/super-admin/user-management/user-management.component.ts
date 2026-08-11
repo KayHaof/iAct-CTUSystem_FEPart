@@ -1,15 +1,24 @@
 import {
   ChangeDetectionStrategy,
+  CUSTOM_ELEMENTS_SCHEMA,
   Component,
   computed,
   inject,
   OnInit,
   signal,
+  ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AlertService, PaginationComponent, TableContainerComponent } from '@my-mfe/ui';
+import {
+  AlertService,
+  CustomSelectComponent,
+  CustomSelectOption,
+  CustomSelectValue,
+  PaginationComponent,
+  TableContainerComponent,
+} from '@my-mfe/ui';
 import {
   ApiResponse,
   ClassInfo,
@@ -33,6 +42,7 @@ type UserTab = 'STUDENT' | 'FACULTY' | 'ADMIN';
   imports: [
     CommonModule,
     FormsModule,
+    CustomSelectComponent,
     TableContainerComponent,
     PaginationComponent,
     AddUserModalComponent,
@@ -42,6 +52,8 @@ type UserTab = 'STUDENT' | 'FACULTY' | 'ADMIN';
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class UserManagementComponent implements OnInit {
   private adminUserService = inject(AdminUserService);
@@ -90,10 +102,21 @@ export class UserManagementComponent implements OnInit {
   selectedFilterCohort = signal('');
   selectedFilterDept = signal<number | ''>('');
   selectedFilterMajor = signal<number | ''>('');
-  selectedFilterClass = signal<number | ''>('');
+  selectedFilterClass = signal<number | string>('');
 
   filterMajors = signal<MajorInfo[]>([]);
   filterClasses = signal<ClassInfo[]>([]);
+
+  readonly statusFilterOptions: CustomSelectOption[] = [
+    { label: 'Tất cả trạng thái', value: '', icon: 'bi-ui-checks-grid' },
+    { label: 'Đang hoạt động', value: 1, icon: 'bi-check-circle' },
+    { label: 'Bị vô hiệu hóa', value: 0, icon: 'bi-pause-circle' },
+  ];
+
+  readonly cohortOptions: CustomSelectOption[] = [
+    { label: 'Chọn khóa học', value: '', icon: 'bi-calendar3' },
+    ...this.cohorts.map((cohort) => ({ ...cohort, icon: 'bi-calendar3' })),
+  ];
 
   sortedUsers = computed(() => {
     const data = [...this.users()];
@@ -212,6 +235,111 @@ export class UserManagementComponent implements OnInit {
         this.filterClasses.set(AdminUserService.extractArray<ClassInfo>(res.data));
       },
     });
+  }
+
+  getFacultyOptions(): CustomSelectOption[] {
+    return [
+      {
+        label: 'Tất cả đơn vị',
+        value: '',
+        description: `${this.facultyCount()} tài khoản`,
+        icon: 'bi-building',
+      },
+      ...this.departments().map((department) => ({
+        label: department.name,
+        value: department.id,
+        icon: 'bi-building',
+      })),
+    ];
+  }
+
+  getStudentDepartmentOptions(): CustomSelectOption[] {
+    return [
+      {
+        label: 'Chọn trường / khoa',
+        value: '',
+        icon: 'bi-building',
+        disabled: !this.selectedFilterCohort(),
+      },
+      ...this.departments().map((department) => ({
+        label: department.name,
+        value: department.id,
+        icon: 'bi-building',
+        disabled: !this.selectedFilterCohort(),
+      })),
+    ];
+  }
+
+  getMajorOptions(): CustomSelectOption[] {
+    return [
+      {
+        label: 'Chọn chuyên ngành',
+        value: '',
+        icon: 'bi-mortarboard',
+        disabled: !this.selectedFilterDept(),
+      },
+      ...this.filterMajors().map((major) => ({
+        label: major.name,
+        value: major.id,
+        icon: 'bi-mortarboard',
+        disabled: !this.selectedFilterDept(),
+      })),
+    ];
+  }
+
+  getClassOptions(): CustomSelectOption[] {
+    return [
+      {
+        label: 'Chọn lớp để tải danh sách',
+        value: '',
+        icon: 'bi-people',
+        disabled: !this.selectedFilterMajor(),
+      },
+      {
+        label: 'Sinh viên chưa phân lớp',
+        value: '0',
+        icon: 'bi-person-dash',
+        disabled: !this.selectedFilterMajor(),
+      },
+      ...this.filterClasses().map((cls) => ({
+        label: cls.classCode || cls.name,
+        value: cls.id,
+        icon: 'bi-people',
+        disabled: !this.selectedFilterMajor(),
+      })),
+    ];
+  }
+
+  onFacultyChange(value: CustomSelectValue): void {
+    this.selectedFaculty.set(typeof value === 'number' ? value : '');
+    this.onSearch();
+  }
+
+  onStatusChange(value: CustomSelectValue): void {
+    this.selectedStatus.set(typeof value === 'number' ? value : '');
+    this.onSearch();
+  }
+
+  onCohortChange(value: CustomSelectValue): void {
+    this.selectedFilterCohort.set(typeof value === 'string' ? value : '');
+    this.onFilterCohortChange();
+  }
+
+  onStudentDepartmentChange(value: CustomSelectValue): void {
+    this.selectedFilterDept.set(typeof value === 'number' ? value : '');
+    this.onFilterDeptChange();
+  }
+
+  onFilterMajorSelected(value: CustomSelectValue): void {
+    this.selectedFilterMajor.set(typeof value === 'number' ? value : '');
+    this.onFilterMajorChange();
+  }
+
+  onFilterClassChange(value: CustomSelectValue): void {
+    this.selectedFilterClass.set(
+      typeof value === 'number' || typeof value === 'string' ? value : '',
+    );
+    this.onSearch();
   }
 
   loadUsers() {

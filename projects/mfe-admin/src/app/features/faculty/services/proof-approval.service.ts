@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApiResponse, PageDTO } from '@my-mfe/interface';
+import { Observable, map } from 'rxjs';
+import { ApiResponse, PageDTO, normalizeApiUtcDateTime } from '@my-mfe/interface';
 
 export interface ProofApproval {
   id: number;
@@ -42,15 +42,50 @@ export class ProofApprovalService {
       params = params.set('activityId', activityId.toString());
     }
 
-    return this.http.get<ApiResponse<PageDTO<ProofApproval>>>(this.apiUrl, { params });
+    return this.http
+      .get<ApiResponse<PageDTO<ProofApproval>>>(this.apiUrl, { params })
+      .pipe(map((response) => this.normalizePageResponse(response)));
   }
 
   approveProof(id: number): Observable<ApiResponse<ProofApproval>> {
-    return this.http.put<ApiResponse<ProofApproval>>(`${this.apiUrl}/${id}/approve`, {});
+    return this.http
+      .put<ApiResponse<ProofApproval>>(`${this.apiUrl}/${id}/approve`, {})
+      .pipe(map((response) => this.normalizeProofResponse(response)));
   }
 
   rejectProof(id: number, reason: string): Observable<ApiResponse<ProofApproval>> {
     const params = new HttpParams().set('reason', reason);
-    return this.http.put<ApiResponse<ProofApproval>>(`${this.apiUrl}/${id}/reject`, {}, { params });
+    return this.http
+      .put<ApiResponse<ProofApproval>>(`${this.apiUrl}/${id}/reject`, {}, { params })
+      .pipe(map((response) => this.normalizeProofResponse(response)));
+  }
+
+  private normalizePageResponse(
+    response: ApiResponse<PageDTO<ProofApproval>>,
+  ): ApiResponse<PageDTO<ProofApproval>> {
+    return {
+      ...response,
+      data: response.data
+        ? {
+            ...response.data,
+            data: (response.data.data || []).map((proof) => this.normalizeProof(proof)),
+          }
+        : response.data,
+    };
+  }
+
+  private normalizeProofResponse(response: ApiResponse<ProofApproval>): ApiResponse<ProofApproval> {
+    return {
+      ...response,
+      data: response.data ? this.normalizeProof(response.data) : response.data,
+    };
+  }
+
+  private normalizeProof(proof: ProofApproval): ProofApproval {
+    return {
+      ...proof,
+      verifiedTime: normalizeApiUtcDateTime(proof.verifiedTime) || undefined,
+      submittedAt: normalizeApiUtcDateTime(proof.submittedAt) || undefined,
+    };
   }
 }

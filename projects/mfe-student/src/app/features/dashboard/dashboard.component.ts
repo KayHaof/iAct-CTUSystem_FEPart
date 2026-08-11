@@ -3,18 +3,16 @@ import {
   ChangeDetectorRef,
   Component,
   OnInit,
-  computed,
   inject,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { UserService } from '@my-mfe/auth';
 import { ApiResponse } from '@my-mfe/interface';
 import { IACT_API_ORIGIN } from '@my-mfe/ui';
-import { catchError, forkJoin, map, of } from 'rxjs';
+import { catchError, finalize, forkJoin, map, of } from 'rxjs';
 
-import { ActivityItem, CriteriaScore, ProofItem } from './models/dashboard.model';
+import { ActivityItem, ProofItem } from './models/dashboard.model';
 import { ActivityService } from '../../shared/services/activity.service';
 import { ActivityRecord, RegistrationService } from '../../shared/services/registration.service';
 import { Activity } from '../../shared/models/activity.model';
@@ -33,6 +31,7 @@ interface QuickAction {
   icon: string;
   link: string;
   tone: 'primary' | 'success' | 'info' | 'warning';
+  featured?: boolean;
 }
 
 interface PointSummary {
@@ -40,16 +39,6 @@ interface PointSummary {
   maxPoint: number;
   percentage: number;
   status: 'excellent' | 'good' | 'warning' | 'danger';
-}
-
-interface CategoryPoint {
-  categoryName: string;
-  maxPoint: number;
-  earnedPoint: number;
-}
-
-interface PointDetailsResponse {
-  categories: CategoryPoint[];
 }
 
 type DashboardActivity = ActivityItem & {
@@ -67,7 +56,6 @@ type DashboardActivity = ActivityItem & {
 })
 export class DashboardComponent implements OnInit {
   private readonly router = inject(Router);
-  private readonly userService = inject(UserService);
   private readonly activityService = inject(ActivityService);
   private readonly registrationService = inject(RegistrationService);
   private readonly http = inject(HttpClient);
@@ -75,13 +63,6 @@ export class DashboardComponent implements OnInit {
   private readonly apiOrigin = inject(IACT_API_ORIGIN);
 
   private readonly apiUrl = `${this.apiOrigin}/activity/api/v1`;
-
-  readonly studentName = computed(() => this.userService.currentUser()?.fullName || 'Sinh viên');
-  readonly studentMeta = computed(() => {
-    const user = this.userService.currentUser();
-    const parts = [user?.studentCode, user?.classCode, user?.departmentName].filter(Boolean);
-    return parts.length ? parts.join(' • ') : 'Theo dõi hoạt động và điểm rèn luyện cá nhân';
-  });
 
   totalScore = 0;
   maxScore = 100;
@@ -94,6 +75,14 @@ export class DashboardComponent implements OnInit {
   pendingProofs: ProofItem[] = [];
 
   readonly quickActions: QuickAction[] = [
+    {
+      label: 'Điểm rèn luyện',
+      description: 'Xem điểm và các mục rèn luyện của bạn',
+      icon: 'bi bi-bar-chart-line',
+      link: '/point-management',
+      tone: 'primary',
+      featured: true,
+    },
     {
       label: 'Tìm hoạt động',
       description: 'Khám phá hoạt động đang mở đăng ký',
@@ -117,7 +106,7 @@ export class DashboardComponent implements OnInit {
     },
   ];
 
-  criteriaScores: CriteriaScore[] = [];
+  isLoading = true;
 
   get scorePercentage(): number {
     if (!this.maxScore) return 0;
@@ -166,15 +155,10 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadDashboardData(): void {
+    this.isLoading = true;
     forkJoin({
       pointSummary: this.http
         .get<ApiResponse<PointSummary>>(`${this.apiUrl}/student-points/summary`)
-        .pipe(
-          map((response) => response.data ?? null),
-          catchError(() => of(null)),
-        ),
-      pointDetails: this.http
-        .get<ApiResponse<PointDetailsResponse>>(`${this.apiUrl}/student-points/details`)
         .pipe(
           map((response) => response.data ?? null),
           catchError(() => of(null)),
@@ -187,31 +171,27 @@ export class DashboardComponent implements OnInit {
         map((page) => page.data ?? []),
         catchError(() => of([] as Activity[])),
       ),
-    }).subscribe(({ pointSummary, pointDetails, records, activities }) => {
-      this.applyPointSummary(pointSummary);
-      this.criteriaScores = this.toCriteriaScores(pointDetails?.categories ?? []);
-      this.completedActivities = records.filter((item) => item.status === 1).length;
-      this.socialDays = this.completedActivities;
-      this.pendingProofs = this.toPendingProofs(records);
-      this.upcomingActivitiesList = this.toDashboardActivities(activities);
-      this.upcomingActivities = this.upcomingActivitiesList.length;
-      this.cdr.markForCheck();
-    });
+    })
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe(({ pointSummary, records, activities }) => {
+        this.applyPointSummary(pointSummary);
+        this.completedActivities = records.filter((item) => item.status === 1).length;
+        this.socialDays = this.completedActivities;
+        this.pendingProofs = this.toPendingProofs(records);
+        this.upcomingActivitiesList = this.toDashboardActivities(activities);
+        this.upcomingActivities = this.upcomingActivitiesList.length;
+      });
   }
 
   private applyPointSummary(summary: PointSummary | null): void {
     this.totalScore = summary?.totalPoint ?? 0;
     this.maxScore = summary?.maxPoint || 100;
     this.rank = summary ? this.getRankLabel(summary.status) : 'Chưa xếp loại';
-  }
-
-  private toCriteriaScores(categories: CategoryPoint[]): CriteriaScore[] {
-    return categories.map((category, index) => ({
-      name: category.categoryName,
-      current: category.earnedPoint,
-      max: category.maxPoint,
-      color: this.getCriteriaColor(index),
-    }));
   }
 
   private toPendingProofs(records: ActivityRecord[]): ProofItem[] {
@@ -257,10 +237,6 @@ export class DashboardComponent implements OnInit {
       default:
         return 'Chưa xếp loại';
     }
-  }
-
-  private getCriteriaColor(index: number): string {
-    return ['#2563eb', '#059669', '#7c3aed', '#d97706', '#dc2626'][index] ?? '#475569';
   }
 
   private formatDate(value?: string): string {

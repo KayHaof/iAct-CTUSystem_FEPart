@@ -10,6 +10,8 @@ interface PreferenceResponse {
   notificationSettings?: NotificationPreferenceSettings;
 }
 
+type PreferenceSaveState = 'idle' | 'success' | 'error';
+
 @Component({
   selector: 'app-preferences',
   standalone: true,
@@ -32,6 +34,8 @@ export class PreferencesComponent implements OnInit {
   notifSettings = signal<NotificationPreferenceSettings>({ ...this.defaultNotificationSettings });
   isSaving = signal(false);
   isLoading = signal(true);
+  hasLoadError = signal(false);
+  saveState = signal<PreferenceSaveState>('idle');
 
   ngOnInit(): void {
     this.loadPreferences();
@@ -44,9 +48,13 @@ export class PreferencesComponent implements OnInit {
           ...this.defaultNotificationSettings,
           ...(res.data?.notificationSettings || {}),
         });
+        this.hasLoadError.set(false);
         this.isLoading.set(false);
       },
-      error: () => this.isLoading.set(false),
+      error: () => {
+        this.hasLoadError.set(true);
+        this.isLoading.set(false);
+      },
     });
   }
 
@@ -58,6 +66,7 @@ export class PreferencesComponent implements OnInit {
   }
 
   updateNotif(key: 'newActivityAlert' | 'reminderAlert', event: Event): void {
+    this.saveState.set('idle');
     this.notifSettings.set({
       ...this.notificationSettings(),
       [key]: (event.target as HTMLInputElement).checked,
@@ -65,6 +74,7 @@ export class PreferencesComponent implements OnInit {
   }
 
   updateReminderDays(event: Event): void {
+    this.saveState.set('idle');
     const value = Number((event.target as HTMLInputElement).value);
     const reminderDaysBefore = Number.isFinite(value)
       ? Math.min(Math.max(Math.trunc(value), 1), 14)
@@ -77,7 +87,12 @@ export class PreferencesComponent implements OnInit {
   }
 
   savePreferences(): void {
+    if (this.isLoading() || this.isSaving()) {
+      return;
+    }
+
     this.isSaving.set(true);
+    this.saveState.set('idle');
     const payload = {
       notificationSettings: this.notificationSettings(),
     };
@@ -89,13 +104,19 @@ export class PreferencesComponent implements OnInit {
             ...this.defaultNotificationSettings,
             ...(res.data?.notificationSettings || payload.notificationSettings),
           });
+          this.hasLoadError.set(false);
+          this.saveState.set('success');
           this.isSaving.set(false);
         },
-        error: () => this.isSaving.set(false),
+        error: () => {
+          this.saveState.set('error');
+          this.isSaving.set(false);
+        },
       });
   }
 
   resetNotificationDefaults(): void {
+    this.saveState.set('idle');
     this.notifSettings.set({ ...this.defaultNotificationSettings });
     this.savePreferences();
   }

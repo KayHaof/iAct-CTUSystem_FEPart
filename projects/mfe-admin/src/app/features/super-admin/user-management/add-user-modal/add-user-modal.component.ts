@@ -1,17 +1,20 @@
 import {
   ChangeDetectionStrategy,
+  CUSTOM_ELEMENTS_SCHEMA,
   Component,
   EventEmitter,
   Input,
   Output,
   inject,
   signal,
+  ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { AdminUserService } from '../../services/admin-user.service';
 import { ApiResponse, ClassInfo, Department, MajorInfo } from '@my-mfe/interface';
+import { CustomSelectComponent, CustomSelectOption, CustomSelectValue } from '@my-mfe/ui';
 
 export interface NewStudentForm {
   username: string;
@@ -29,10 +32,12 @@ export interface NewStudentForm {
 @Component({
   selector: 'app-add-user-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CustomSelectComponent],
   templateUrl: './add-user-modal.component.html',
   styleUrls: ['./add-user-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AddUserModalComponent {
   private adminUserService = inject(AdminUserService);
@@ -50,6 +55,13 @@ export class AddUserModalComponent {
   showPassword = signal(false);
   showConfirmPassword = signal(false);
   confirmPassword = '';
+
+  readonly roleOptions: CustomSelectOption[] = [
+    { label: 'Chọn vai trò', value: 0, icon: 'bi-person-badge' },
+    { label: 'Sinh viên', value: 1, icon: 'bi-mortarboard' },
+    { label: 'Khoa / đơn vị', value: 2, icon: 'bi-building' },
+    { label: 'Quản trị viên', value: 3, icon: 'bi-shield-lock' },
+  ];
 
   newUser: NewStudentForm = this.createEmptyUser();
 
@@ -113,6 +125,69 @@ export class AddUserModalComponent {
       },
       error: () => this.addClasses.set([]),
     });
+  }
+
+  getDepartmentOptions(): CustomSelectOption[] {
+    return [
+      { label: 'Chọn trường / khoa', value: null, icon: 'bi-building' },
+      ...this.departments.map((department) => ({
+        label: department.name,
+        value: department.id,
+        icon: 'bi-building',
+      })),
+    ];
+  }
+
+  getMajorOptions(): CustomSelectOption[] {
+    return [
+      {
+        label: 'Chọn chuyên ngành',
+        value: null,
+        icon: 'bi-mortarboard',
+        disabled: !this.newUser.departmentId,
+      },
+      ...this.addMajors().map((major) => ({
+        label: major.name,
+        value: major.id,
+        icon: 'bi-mortarboard',
+        disabled: !this.newUser.departmentId,
+      })),
+    ];
+  }
+
+  getClassOptions(): CustomSelectOption[] {
+    return [
+      {
+        label: 'Chọn lớp sinh hoạt',
+        value: null,
+        icon: 'bi-people',
+        disabled: !this.newUser.majorId,
+      },
+      ...this.addClasses().map((cls) => ({
+        label: cls.classCode || cls.name,
+        value: cls.id,
+        icon: 'bi-people',
+        disabled: !this.newUser.majorId,
+      })),
+    ];
+  }
+
+  onRoleChange(value: CustomSelectValue): void {
+    this.newUser.roleType = typeof value === 'number' ? value : 0;
+  }
+
+  onDepartmentSelected(value: CustomSelectValue): void {
+    this.newUser.departmentId = typeof value === 'number' ? value : null;
+    this.onAddDeptChange();
+  }
+
+  onMajorSelected(value: CustomSelectValue): void {
+    this.newUser.majorId = typeof value === 'number' ? value : null;
+    this.onAddMajorChange();
+  }
+
+  onClassSelected(value: CustomSelectValue): void {
+    this.newUser.classId = typeof value === 'number' ? value : null;
   }
 
   togglePassword() {

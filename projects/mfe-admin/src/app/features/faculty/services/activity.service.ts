@@ -3,8 +3,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { Activity, ActivityRequest } from '../../../shared/models/activity.model';
-import { ApiResponse, PageDTO } from '@my-mfe/interface';
+import {
+  Activity,
+  ActivityRequest,
+  ActivityScheduleQrCodeResponse,
+} from '../../../shared/models/activity.model';
+import { ApiResponse, PageDTO, normalizeActivityDateFields } from '@my-mfe/interface';
 
 @Injectable({
   providedIn: 'root',
@@ -31,26 +35,34 @@ export class ActivityService {
 
     return this.http
       .get<ApiResponse<PageDTO<Activity>>>(this.apiUrl, { params })
-      .pipe(map((response) => response.data as PageDTO<Activity>));
+      .pipe(
+        map((response) => {
+          const page = response.data as PageDTO<Activity>;
+          return {
+            ...page,
+            data: (page.data || []).map((activity) => normalizeActivityDateFields(activity)),
+          };
+        }),
+      );
   }
 
   // --- CÁC HÀM KHÁC (Đã bọc ApiResponse chuẩn) ---
   getActivityById(id: string | number): Observable<Activity> {
     return this.http
       .get<ApiResponse<Activity>>(`${this.apiUrl}/${id}`)
-      .pipe(map((response) => response.data as Activity));
+      .pipe(map((response) => normalizeActivityDateFields(response.data as Activity)));
   }
 
   createActivity(payload: ActivityRequest): Observable<Activity> {
     return this.http
       .post<ApiResponse<Activity>>(this.apiUrl, payload)
-      .pipe(map((response) => response.data as Activity));
+      .pipe(map((response) => normalizeActivityDateFields(response.data as Activity)));
   }
 
   updateActivity(id: string | number, payload: ActivityRequest): Observable<Activity> {
     return this.http
       .put<ApiResponse<Activity>>(`${this.apiUrl}/${id}`, payload)
-      .pipe(map((response) => response.data as Activity));
+      .pipe(map((response) => normalizeActivityDateFields(response.data as Activity)));
   }
 
   deleteActivity(id: string | number): Observable<void> {
@@ -59,6 +71,16 @@ export class ActivityService {
         return;
       }),
     );
+  }
+
+  cancelActivity(id: string | number, reason: string): Observable<void> {
+    return this.http
+      .put<ApiResponse<unknown>>(`${this.apiUrl}/${id}/cancel`, { reason })
+      .pipe(
+        map(() => {
+          return;
+        }),
+      );
   }
 
   requestAdminSupport(id: string | number, reason: string): Observable<void> {
@@ -73,5 +95,14 @@ export class ActivityService {
 
   getQrCode(id: number | string): Observable<ApiResponse<string>> {
     return this.http.get<ApiResponse<string>>(`${this.apiUrl}/${id}/qr-code`);
+  }
+
+  getScheduleQrCode(
+    activityId: number | string,
+    scheduleId: number | string,
+  ): Observable<ApiResponse<ActivityScheduleQrCodeResponse>> {
+    return this.http.get<ApiResponse<ActivityScheduleQrCodeResponse>>(
+      `${this.apiUrl}/${activityId}/schedules/${scheduleId}/qr-code`,
+    );
   }
 }

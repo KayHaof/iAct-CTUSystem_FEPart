@@ -18,6 +18,9 @@ import {
   AlertService,
   ConfirmDialogComponent,
   ConfirmService,
+  CustomSelectComponent,
+  CustomSelectOption,
+  CustomSelectValue,
   PaginationComponent,
 } from '@my-mfe/ui';
 import { Activity } from '../../../shared/models/activity.model';
@@ -48,6 +51,7 @@ interface SortOption {
     FormsModule,
     PaginationComponent,
     ConfirmDialogComponent,
+    CustomSelectComponent,
   ],
   templateUrl: './activity-approval.component.html',
   styleUrl: './activity-approval.component.scss',
@@ -100,6 +104,28 @@ export class ActivityApprovalComponent implements OnInit, OnDestroy {
 
   readonly classOptions = computed(() =>
     this.approvalService.toClassOptions(this.representatives()),
+  );
+  readonly classSelectOptions = computed<CustomSelectOption[]>(() => [
+    {
+      label: 'Tất cả chi đoàn',
+      value: null,
+      description: 'Không giới hạn lớp gửi đề xuất',
+      icon: 'bi-people',
+    },
+    ...this.classOptions().map((clazz) => ({
+      label: clazz.label,
+      value: clazz.classId,
+      description: `${clazz.activeRepresentativeCount}/${clazz.representativeCount} đại diện hoạt động`,
+      icon: 'bi-mortarboard',
+    })),
+  ]);
+  readonly sortSelectOptions = computed<CustomSelectOption[]>(() =>
+    this.sortOptions.map((option) => ({
+      label: option.label,
+      value: option.value,
+      description: option.value === 'updatedAt' ? 'Ưu tiên đề xuất vừa cập nhật' : null,
+      icon: this.sortOptionIcon(option.value),
+    })),
   );
 
   readonly totalReviewable = computed(
@@ -259,10 +285,24 @@ export class ActivityApprovalComponent implements OnInit, OnDestroy {
     this.loadActivities();
   }
 
-  changeSort(sortBy: ActivityApprovalSortBy): void {
+  changeSort(sortBy: CustomSelectValue): void {
+    if (typeof sortBy !== 'string' || !this.isSortBy(sortBy)) {
+      return;
+    }
     this.sortBy.set(sortBy);
     this.currentPage.set(1);
     this.loadActivities();
+  }
+
+  private isSortBy(value: string): value is ActivityApprovalSortBy {
+    return this.sortOptions.some((option) => option.value === value);
+  }
+
+  private sortOptionIcon(value: ActivityApprovalSortBy): string {
+    if (value === 'createdAt') return 'bi-send';
+    if (value === 'startDate') return 'bi-calendar-event';
+    if (value === 'title') return 'bi-sort-alpha-down';
+    return 'bi-clock-history';
   }
 
   toggleSortDirection(): void {

@@ -116,6 +116,15 @@
               <option [value]="dept.id">{{ dept.name }}</option>
             }
           </select>
+          <lib-custom-select
+            id="facultyCustomSelect"
+            label="Đơn vị trực thuộc"
+            placeholder="Tất cả đơn vị"
+            icon="bi-building"
+            [options]="getFacultyOptions()"
+            [value]="selectedFaculty()"
+            (valueChange)="onFacultyChange($event)"
+          ></lib-custom-select>
         </div>
       }
 
@@ -131,6 +140,15 @@
           <option [value]="1">Đang hoạt động</option>
           <option [value]="0">Bị vô hiệu hóa</option>
         </select>
+        <lib-custom-select
+          id="statusCustomSelect"
+          label="Trạng thái"
+          placeholder="Tất cả trạng thái"
+          icon="bi-ui-checks-grid"
+          [options]="statusFilterOptions"
+          [value]="selectedStatus()"
+          (valueChange)="onStatusChange($event)"
+        ></lib-custom-select>
       </div>
 
       <div class="filter-actions">
@@ -164,6 +182,15 @@
               <option [value]="cohort.value">{{ cohort.label }}</option>
             }
           </select>
+          <lib-custom-select
+            id="cohortCustomSelect"
+            label="Khóa tuyển sinh"
+            placeholder="Chọn khóa học"
+            icon="bi-calendar3"
+            [options]="cohortOptions"
+            [value]="selectedFilterCohort()"
+            (valueChange)="onCohortChange($event)"
+          ></lib-custom-select>
         </div>
 
         <div class="student-filter-item">
@@ -186,6 +213,16 @@
               <option [value]="dept.id">{{ dept.name }}</option>
             }
           </select>
+          <lib-custom-select
+            id="departmentCustomSelect"
+            label="Trường / Khoa"
+            placeholder="Chọn Trường / Khoa"
+            icon="bi-building"
+            [options]="getStudentDepartmentOptions()"
+            [value]="selectedFilterDept()"
+            [disabled]="!selectedFilterCohort()"
+            (valueChange)="onStudentDepartmentChange($event)"
+          ></lib-custom-select>
         </div>
 
         <div class="student-filter-item">
@@ -208,6 +245,16 @@
               <option [value]="major.id">{{ major.name }}</option>
             }
           </select>
+          <lib-custom-select
+            id="majorCustomSelect"
+            label="Chuyên ngành"
+            placeholder="Chọn chuyên ngành"
+            icon="bi-mortarboard"
+            [options]="getMajorOptions()"
+            [value]="selectedFilterMajor()"
+            [disabled]="!selectedFilterDept()"
+            (valueChange)="onFilterMajorSelected($event)"
+          ></lib-custom-select>
         </div>
 
         <div class="student-filter-item">
@@ -230,6 +277,16 @@
               <option [value]="cls.id">{{ cls.classCode || cls.name }}</option>
             }
           </select>
+          <lib-custom-select
+            id="classCustomSelect"
+            label="Lớp sinh hoạt"
+            placeholder="Chọn lớp để tải danh sách"
+            icon="bi-people"
+            [options]="getClassOptions()"
+            [value]="selectedFilterClass()"
+            [disabled]="!selectedFilterMajor()"
+            (valueChange)="onFilterClassChange($event)"
+          ></lib-custom-select>
         </div>
       </div>
     }

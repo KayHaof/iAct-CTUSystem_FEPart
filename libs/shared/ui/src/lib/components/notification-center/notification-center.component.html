@@ -193,31 +193,13 @@
 
           <!-- Pagination -->
           @if (facade.totalPages() > 1) {
-            <div class="nc-pagination">
-              <button
-                class="nc-page-btn"
-                [disabled]="facade.currentPage() <= 1"
-                (click)="loadPage(facade.currentPage() - 1)"
-              >
-                <i class="bi bi-chevron-left"></i>
-              </button>
-              @for (p of pages; track p) {
-                <button
-                  class="nc-page-btn"
-                  [class.nc-page-active]="p === facade.currentPage()"
-                  (click)="loadPage(p)"
-                >
-                  {{ p }}
-                </button>
-              }
-              <button
-                class="nc-page-btn"
-                [disabled]="facade.currentPage() >= facade.totalPages()"
-                (click)="loadPage(facade.currentPage() + 1)"
-              >
-                <i class="bi bi-chevron-right"></i>
-              </button>
-            </div>
+            <lib-pagination
+              [currentPage]="facade.currentPage()"
+              [totalItems]="facade.totalRows()"
+              [pageSize]="pageSize"
+              [pageSizeOptions]="[pageSize]"
+              (pageChange)="loadPage($event)"
+            ></lib-pagination>
           }
         }
       </div>

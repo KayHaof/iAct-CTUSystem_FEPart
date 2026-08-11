@@ -10,6 +10,7 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AlertService, CustomSelectComponent, CustomSelectOption } from '@my-mfe/ui';
 import { UserService } from '@my-mfe/auth';
+import { toLocalDateInput } from '@my-mfe/interface';
 import { finalize } from 'rxjs';
 import { DepartmentResponse } from '../../../shared/models/master-data.model';
 import { MasterDataService } from '../../super-admin/services/master-data.service';
@@ -582,6 +583,6 @@ export class LocationManagementComponent implements OnInit {
   }
 
   private todayInput(): string {
-    return new Date().toISOString().substring(0, 10);
+    return toLocalDateInput(new Date());
   }
 }

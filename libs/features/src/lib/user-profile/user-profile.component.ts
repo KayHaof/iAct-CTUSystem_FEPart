@@ -99,6 +99,11 @@ export class UserProfileComponent implements OnInit {
     }
   }
 
+  @HostListener('document:keydown.escape')
+  closeGenderDropdownOnEscape(): void {
+    this.isGenderDropdownOpen.set(false);
+  }
+
   loadFullProfile(userId: number | string) {
     this.userService.getFullProfile(userId).subscribe({
       next: (res) => {

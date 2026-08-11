@@ -136,17 +136,19 @@ export class ActivityDetailComponent implements OnInit {
   fetchActivityDetails(id: number): void {
     this.isLoading.set(true);
 
-    this.activityService.getActivityById(id).subscribe({
-      next: (res: Activity | ApiResponse<Activity>) => {
-        const actData = 'data' in res ? res.data : 'result' in res ? res.result : res;
-        this.activity.set(actData as Activity);
-      },
-      error: () => {
-        this.alertService.error('Không thể tải thông tin hoạt động!');
-        this.goBack().then();
-      },
-      complete: () => this.isLoading.set(false),
-    });
+    this.activityService
+      .getActivityById(id)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (res: Activity | ApiResponse<Activity>) => {
+          const actData = 'data' in res ? res.data : 'result' in res ? res.result : res;
+          this.activity.set(actData as Activity);
+        },
+        error: () => {
+          this.alertService.error('Không thể tải thông tin hoạt động!');
+          this.goBack().then();
+        },
+      });
 
     this.registrationService.getMyStatus(id).subscribe({
       next: (res: ApiResponse<RegistrationResponse>) =>

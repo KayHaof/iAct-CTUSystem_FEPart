@@ -1,0 +1,369 @@
+<section class="proofs-panel">
+  <header class="proofs-panel__header">
+    <div class="proofs-panel__title">
+      <span class="proofs-panel__icon" aria-hidden="true">
+        <i class="bi bi-patch-check-fill"></i>
+      </span>
+      <div>
+        <p>Minh chứng hoạt động #{{ activityId }}</p>
+        <h2>Duyệt minh chứng tham gia</h2>
+        <div class="proofs-panel__chips">
+          <span>{{ totalRows() }} hồ sơ</span>
+          <span>Bộ lọc: {{ statusFilter() === null ? 'Tất cả' : statusLabel(statusFilter()) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="proofs-panel__tools">
+      <div class="proofs-filter" role="tablist" aria-label="Lọc trạng thái minh chứng">
+        <button
+          type="button"
+          role="tab"
+          class="proofs-filter__pending"
+          [class.is-active]="statusFilter() === 0"
+          (click)="onStatusChange(0)"
+        >
+          <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+          Chờ duyệt
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="proofs-filter__approved"
+          [class.is-active]="statusFilter() === 1"
+          (click)="onStatusChange(1)"
+        >
+          <i class="bi bi-check2-circle" aria-hidden="true"></i>
+          Đã duyệt
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="proofs-filter__rejected"
+          [class.is-active]="statusFilter() === 2"
+          (click)="onStatusChange(2)"
+        >
+          <i class="bi bi-x-circle" aria-hidden="true"></i>
+          Từ chối
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="proofs-filter__all"
+          [class.is-active]="statusFilter() === null"
+          (click)="onStatusChange(null)"
+        >
+          <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
+          Tất cả
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="proofs-refresh"
+        (click)="refreshData()"
+        [disabled]="isLoading() || summaryLoading() || missingProofLoading()"
+        title="Tải lại minh chứng"
+      >
+        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+        Tải lại
+      </button>
+    </div>
+  </header>
+
+  <section class="proofs-summary" aria-label="Tổng hợp minh chứng">
+    @if (summaryLoading() && !summary()) {
+      <div class="proofs-summary__loading">Đang tổng hợp số liệu...</div>
+    } @else if (summary(); as metrics) {
+      <div class="proofs-summary__cards">
+        <article class="proofs-summary__card proofs-summary__card--blue">
+          <span>Đã nộp</span>
+          <strong>{{ metrics.totalSubmittedStudents }}</strong>
+          <small>{{ metrics.totalSubmittedProofs }} hồ sơ</small>
+        </article>
+        <article class="proofs-summary__card proofs-summary__card--green">
+          <span>Đủ điều kiện</span>
+          <strong>{{ metrics.totalEligibleStudents }}</strong>
+          <small>sinh viên có thể được công nhận</small>
+        </article>
+        <article class="proofs-summary__card proofs-summary__card--amber">
+          <span>Chưa nộp</span>
+          <strong>{{ metrics.totalNotSubmittedEligibleStudents }}</strong>
+          <small>đã đủ điều kiện nộp minh chứng</small>
+        </article>
+        <article class="proofs-summary__card proofs-summary__card--rose">
+          <span>Vắng mặt chưa xử lý</span>
+          <strong>{{ metrics.unreviewedAbsentStudents }}</strong>
+          <small>{{ metrics.absentStudents }} sinh viên vắng mặt</small>
+        </article>
+      </div>
+      <button
+        type="button"
+        class="proofs-missing-toggle"
+        [class.is-active]="showMissingProofs()"
+        (click)="toggleMissingProofs()"
+      >
+        <i class="bi" [ngClass]="showMissingProofs() ? 'bi-chevron-up' : 'bi-person-lines-fill'" aria-hidden="true"></i>
+        {{ showMissingProofs() ? 'Ẩn danh sách chưa nộp' : 'Xem sinh viên chưa nộp minh chứng' }}
+      </button>
+    } @else {
+      <div class="proofs-summary__empty">Chưa tải được thống kê minh chứng của hoạt động.</div>
+    }
+  </section>
+
+  @if (showMissingProofs()) {
+    <section class="proofs-missing" aria-label="Sinh viên chưa nộp minh chứng">
+      <header class="proofs-missing__header">
+        <div>
+          <p>THEO DÕI HỒ SƠ</p>
+          <h3>Sinh viên đã điểm danh nhưng chưa nộp minh chứng</h3>
+        </div>
+        <span>{{ missingProofTotalRows() }} sinh viên</span>
+      </header>
+
+      @if (missingProofLoading()) {
+        <div class="proofs-missing__state">
+          <span class="proofs-spinner proofs-spinner--small-dark"></span>
+          Đang tải danh sách...
+        </div>
+      } @else if (missingProofs().length === 0) {
+        <div class="proofs-missing__empty">
+          <i class="bi bi-check2-circle" aria-hidden="true"></i>
+          Không có sinh viên đủ điều kiện nào đang thiếu minh chứng.
+        </div>
+      } @else {
+        <div class="proofs-missing__table-wrap">
+          <table class="proofs-missing__table">
+            <thead>
+              <tr>
+                <th>Sinh viên</th>
+                <th>Lớp / khóa</th>
+                <th>Thời gian đăng ký</th>
+                <th>Trạng thái điểm danh</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (student of missingProofs(); track student.id) {
+                <tr>
+                  <td>
+                    <strong>{{ student.studentName || 'Chưa cập nhật' }}</strong>
+                    <span>{{ student.studentCode || 'Chưa có MSSV' }}</span>
+                  </td>
+                  <td>
+                    <span>{{ student.classCode || 'Chưa có lớp' }}</span>
+                    <small>{{ student.academicYear || 'Chưa có khóa' }}</small>
+                  </td>
+                  <td>{{ student.registeredAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td>
+                    <span class="proofs-missing__attendance">
+                      <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                      {{ student.attendanceStatus || student.participationStatus || 'Đã điểm danh' }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <lib-pagination
+          [currentPage]="missingProofPage()"
+          [totalItems]="missingProofTotalRows()"
+          [pageSize]="missingProofPageSize()"
+          theme="dark"
+          (pageChange)="onMissingProofPageChange($event)"
+          (pageSizeChange)="onMissingProofSizeChange($event)"
+        ></lib-pagination>
+      }
+    </section>
+  }
+
+  <div class="proofs-panel__body">
+    @if (isLoading()) {
+      <div class="proofs-state">
+        <span class="proofs-spinner"></span>
+        <strong>Đang tải minh chứng...</strong>
+      </div>
+    } @else if (proofs().length === 0) {
+      <div class="proofs-empty">
+        <span aria-hidden="true">
+          <i class="bi bi-file-earmark-check"></i>
+        </span>
+        <h3>Chưa có minh chứng phù hợp</h3>
+        <p>Danh sách chỉ hiển thị minh chứng thuộc hoạt động hiện tại.</p>
+      </div>
+    } @else {
+      <div class="proofs-table-wrap">
+        <table class="proofs-table">
+          <thead>
+            <tr>
+              <th>Minh chứng</th>
+              <th>Sinh viên</th>
+              <th>Thời gian</th>
+              <th>Nhận xét</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (proof of proofs(); track proof.id) {
+              <tr>
+                <td>
+                  <a
+                    [href]="proof.imageUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="proofs-image"
+                    title="Mở ảnh minh chứng"
+                  >
+                    <img
+                      [src]="proof.imageUrl"
+                      [alt]="'Minh chứng của ' + studentName(proof)"
+                    />
+                    <span aria-hidden="true">
+                      <i class="bi bi-search"></i>
+                    </span>
+                  </a>
+                </td>
+                <td>
+                  <div class="proofs-student">
+                    <strong>{{ studentName(proof) }}</strong>
+                    <div>
+                      <span>{{ proof.studentCode || 'Chưa có MSSV' }}</span>
+                      <span>ĐK #{{ proof.registrationId }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="proofs-time">
+                    <i class="bi bi-clock" aria-hidden="true"></i>
+                    {{ proof.submittedAt ? (proof.submittedAt | date: 'dd/MM/yyyy HH:mm') : 'Chưa ghi nhận' }}
+                  </span>
+                </td>
+                <td>
+                  <p
+                    class="proofs-note"
+                    [title]="proof.description || 'Sinh viên không nhập nhận xét.'"
+                  >
+                    {{ proof.description || 'Sinh viên không nhập nhận xét.' }}
+                  </p>
+                  @if (proof.status === 2 && proof.rejectionReason) {
+                    <small class="proofs-reason" [title]="proof.rejectionReason">
+                      Lý do: {{ proof.rejectionReason }}
+                    </small>
+                  }
+                </td>
+                <td>
+                  <span class="proofs-status" [ngClass]="statusClass(proof.status)">
+                    {{ statusLabel(proof.status) }}
+                  </span>
+                </td>
+                <td>
+                  @if (proof.status === 0) {
+                    <div class="proofs-actions">
+                      <button
+                        type="button"
+                        class="proofs-button proofs-button--approve"
+                        (click)="approveProof(proof)"
+                        [disabled]="processingId() === proof.id"
+                        title="Duyệt minh chứng"
+                      >
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                        Duyệt
+                      </button>
+                      <button
+                        type="button"
+                        class="proofs-button proofs-button--reject"
+                        (click)="rejectProof(proof)"
+                        [disabled]="processingId() === proof.id"
+                        title="Từ chối minh chứng"
+                      >
+                        <i class="bi bi-x-circle" aria-hidden="true"></i>
+                        Từ chối
+                      </button>
+                    </div>
+                  } @else {
+                    <span class="proofs-done">Đã xử lý</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <lib-pagination
+        class="proofs-pagination"
+        [currentPage]="page()"
+        [totalItems]="totalRows()"
+        [pageSize]="pageSize()"
+        theme="dark"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onSizeChange($event)"
+      ></lib-pagination>
+    }
+  </div>
+</section>
+
+@if (rejectingProof(); as proof) {
+  <div class="proofs-modal-backdrop">
+    <section class="proofs-modal" role="dialog" aria-modal="true" aria-labelledby="proofRejectTitle">
+      <header class="proofs-modal__header">
+        <div>
+          <p>Từ chối minh chứng</p>
+          <h2 id="proofRejectTitle">{{ studentName(proof) }}</h2>
+          <span>{{ proof.studentCode || 'Chưa có MSSV' }} · ĐK #{{ proof.registrationId }}</span>
+        </div>
+        <button
+          type="button"
+          (click)="closeRejectModal()"
+          [disabled]="processingId() === proof.id"
+          aria-label="Đóng"
+        >
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <label class="proofs-modal__field">
+        <span>Lý do từ chối</span>
+        <textarea
+          rows="5"
+          maxlength="500"
+          [ngModel]="rejectReason()"
+          (ngModelChange)="rejectReason.set($event)"
+          [disabled]="processingId() === proof.id"
+          placeholder="Nhập lý do để sinh viên biết cần bổ sung hoặc chỉnh sửa gì..."
+        ></textarea>
+      </label>
+
+      <div class="proofs-modal__meta">
+        <span>Lý do này sẽ hiển thị cho sinh viên.</span>
+        <span>{{ rejectReason().length }}/500</span>
+      </div>
+
+      <footer class="proofs-modal__actions">
+        <button
+          type="button"
+          class="proofs-button proofs-button--ghost"
+          (click)="closeRejectModal()"
+          [disabled]="processingId() === proof.id"
+        >
+          Hủy
+        </button>
+        <button
+          type="button"
+          class="proofs-button proofs-button--reject"
+          (click)="submitReject()"
+          [disabled]="processingId() === proof.id || !rejectReason().trim()"
+        >
+          @if (processingId() === proof.id) {
+            <span class="proofs-spinner proofs-spinner--small"></span>
+            Đang xử lý...
+          } @else {
+            <i class="bi bi-x-circle" aria-hidden="true"></i>
+            Từ chối minh chứng
+          }
+        </button>
+      </footer>
+    </section>
+  </div>
+}

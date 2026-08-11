@@ -1,5 +1,5 @@
-<div class="min-h-screen bg-slate-50 pb-16 font-sans text-slate-950">
-  <section class="border-b border-slate-200 bg-white">
+<div class="activity-hub-page min-h-screen bg-slate-50 pb-16 font-sans text-slate-950">
+  <section class="activity-hub-hero border-b border-slate-200 bg-white">
     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div class="max-w-3xl">
@@ -16,26 +16,18 @@
           </p>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 sm:min-w-[320px]">
-          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Kết quả</p>
-            <p class="mt-1 text-2xl font-black text-slate-950">{{ totalRows() }}</p>
-          </div>
-          <div class="rounded-2xl border border-blue-100 bg-blue-50 p-4">
-            <p class="text-xs font-bold uppercase tracking-wide text-blue-700">Đang xem</p>
-            <p class="mt-1 text-sm font-black text-blue-950">
-              {{ selectedLevel() === 'ALL' ? 'Tất cả cấp' : selectedLevel() }}
-            </p>
-          </div>
+        <div class="activity-hub-hero__summary" aria-live="polite">
+          <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
+          <span><strong>{{ totalRows() }}</strong> hoạt động phù hợp</span>
         </div>
       </div>
     </div>
   </section>
 
   <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-    <section class="mb-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-      <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px_auto] lg:items-center">
-        <label class="relative block">
+    <section class="activity-filters mb-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div class="activity-filters__row grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px_auto] lg:items-center">
+        <label class="activity-search relative block">
           <span class="sr-only">Tìm kiếm hoạt động</span>
           <i
             class="bi bi-search pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -49,41 +41,47 @@
             placeholder="Tìm kiếm tên hoạt động..."
             class="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
           />
+          @if (searchQuery()) {
+            <button
+              type="button"
+              class="activity-search__clear"
+              aria-label="Xóa từ khóa tìm kiếm"
+              (click)="clearSearch()"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          }
         </label>
 
-        <label class="relative block">
-          <span class="sr-only">Trạng thái đăng ký</span>
-          <select
-            [ngModel]="selectedStatus()"
-            (ngModelChange)="setFilterStatus($event)"
-            class="activity-select h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 pr-10 text-sm font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
-          >
-            <option value="ALL">Tất cả trạng thái</option>
-            <option value="OPEN">Đang mở đăng ký</option>
-            <option value="UPCOMING">Sắp mở đăng ký</option>
-          </select>
-        </label>
+        <lib-custom-select
+          class="activity-status-filter"
+          id="activityStatusFilter"
+          label="Trạng thái"
+          icon="bi-funnel"
+          [options]="statusOptions"
+          [value]="selectedStatus()"
+          (valueChange)="setFilterStatus($event)"
+        ></lib-custom-select>
 
         <button
           type="button"
           (click)="resetFilters()"
           class="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
         >
+          <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
           Xóa bộ lọc
         </button>
       </div>
     </section>
 
-    <section class="mb-6 flex flex-wrap gap-2">
+    <section class="activity-level-tabs mb-6 flex flex-wrap gap-2" role="tablist" aria-label="Lọc theo cấp hoạt động">
       <button
         type="button"
         (click)="setFilterLevel('ALL')"
-        [ngClass]="
-          selectedLevel() === 'ALL'
-            ? 'border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20'
-            : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
-        "
-        class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition"
+        [class.is-active]="selectedLevel() === 'ALL'"
+        [attr.aria-selected]="selectedLevel() === 'ALL'"
+        role="tab"
+        class="activity-level-tab inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition"
       >
         <i class="bi bi-grid"></i>
         Tất cả
@@ -92,12 +90,10 @@
       <button
         type="button"
         (click)="setFilterLevel('UNIVERSITY')"
-        [ngClass]="
-          selectedLevel() === 'UNIVERSITY'
-            ? 'border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20'
-            : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
-        "
-        class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition"
+        [class.is-active]="selectedLevel() === 'UNIVERSITY'"
+        [attr.aria-selected]="selectedLevel() === 'UNIVERSITY'"
+        role="tab"
+        class="activity-level-tab inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition"
       >
         <i class="bi bi-bank"></i>
         Cấp Trường
@@ -106,12 +102,10 @@
       <button
         type="button"
         (click)="setFilterLevel('FACULTY')"
-        [ngClass]="
-          selectedLevel() === 'FACULTY'
-            ? 'border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20'
-            : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
-        "
-        class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition"
+        [class.is-active]="selectedLevel() === 'FACULTY'"
+        [attr.aria-selected]="selectedLevel() === 'FACULTY'"
+        role="tab"
+        class="activity-level-tab inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition"
       >
         <i class="bi bi-mortarboard-fill"></i>
         Cấp Khoa
@@ -120,12 +114,10 @@
       <button
         type="button"
         (click)="setFilterLevel('EXTERNAL')"
-        [ngClass]="
-          selectedLevel() === 'EXTERNAL'
-            ? 'border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20'
-            : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
-        "
-        class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition"
+        [class.is-active]="selectedLevel() === 'EXTERNAL'"
+        [attr.aria-selected]="selectedLevel() === 'EXTERNAL'"
+        role="tab"
+        class="activity-level-tab inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition"
       >
         <i class="bi bi-globe"></i>
         Ngoài Trường
@@ -141,22 +133,35 @@
         ></div>
         <p class="text-sm font-bold text-slate-500">Đang tải danh sách hoạt động...</p>
       </div>
+    } @else if (hasError()) {
+      <div class="activity-state activity-state--error">
+        <div class="activity-state__icon">
+          <i class="bi bi-cloud-slash" aria-hidden="true"></i>
+        </div>
+        <h2>Không thể tải danh sách hoạt động</h2>
+        <p>Đã xảy ra lỗi khi kết nối với hệ thống. Vui lòng thử lại sau.</p>
+        <button type="button" class="activity-state__action" (click)="retryLoad()">
+          <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+          Thử lại
+        </button>
+      </div>
     } @else {
-      <div class="mb-10 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <div class="activity-results mb-10 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
         @for (act of activities(); track act.id) {
           <article
-            class="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-blue-100 hover:shadow-lg hover:shadow-blue-100/50 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+            class="activity-card group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-blue-100 hover:shadow-lg hover:shadow-blue-100/50 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
             tabindex="0"
             (click)="viewDetails(act.id)"
             (keydown.enter)="viewDetails(act.id)"
           >
-            <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">
+            <div class="activity-card__media relative aspect-[16/10] overflow-hidden bg-slate-100">
               <img
                 [src]="
                   act.coverImage ||
                   'https://res.cloudinary.com/dhjamvg6j/image/upload/v1772505926/default_activity_coverImage.jpg'
                 "
-                alt="Ảnh bìa hoạt động"
+                [alt]="act.title"
+                loading="lazy"
                 class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
               />
               <div
@@ -179,7 +184,7 @@
               </div>
             </div>
 
-            <div class="flex flex-1 flex-col p-5">
+            <div class="activity-card__body flex flex-1 flex-col p-5">
               <div
                 class="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-blue-700"
               >
@@ -206,7 +211,7 @@
                 </p>
               </div>
 
-              <div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div class="activity-card__enrollment mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <div class="mb-2 flex items-center justify-between gap-3 text-xs font-bold">
                   <span class="uppercase tracking-wide text-slate-500">Ghi danh</span>
                   <span
@@ -261,12 +266,8 @@
             </div>
           </article>
         } @empty {
-          <div
-            class="col-span-1 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm md:col-span-2 xl:col-span-3"
-          >
-            <div
-              class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-2xl text-slate-400"
-            >
+          <div class="activity-state col-span-1 md:col-span-2 xl:col-span-3">
+            <div class="activity-state__icon mx-auto mb-4">
               <i class="bi bi-search"></i>
             </div>
             <h3 class="text-lg font-bold text-slate-950">Không tìm thấy hoạt động</h3>
@@ -276,8 +277,9 @@
             <button
               type="button"
               (click)="resetFilters()"
-              class="mt-5 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
+              class="activity-state__action mt-5 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
             >
+              <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
               Xóa bộ lọc
             </button>
           </div>
@@ -285,14 +287,14 @@
       </div>
 
       @if (totalRows() > 0) {
-        <div class="student-pagination-container mt-4 w-full">
+        <div class="student-pagination-container activity-pagination mt-4 w-full">
           <lib-pagination
             class="block w-full"
             [currentPage]="currentPage()"
             [totalItems]="totalRows()"
             [pageSize]="pageSize()"
             (pageChange)="onPageChange($event)"
-            (pageSizeChange)="pageSize.set($event)"
+            (pageSizeChange)="onSizeChange($event)"
           ></lib-pagination>
         </div>
       }

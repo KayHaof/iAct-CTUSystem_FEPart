@@ -2,12 +2,19 @@
   <div
     class="loading-container"
     [class.is-finished]="loadingService.progress() === 100"
+    role="progressbar"
+    aria-label="Đang tải trang"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    [attr.aria-valuenow]="loadingService.progress()"
   >
     <div
       class="loading-bar"
       [style.width.%]="loadingService.progress()"
+      aria-hidden="true"
     >
-      <div class="glow-head"></div>
+      <span class="loading-shimmer"></span>
+      <span class="glow-head"></span>
     </div>
   </div>
 }

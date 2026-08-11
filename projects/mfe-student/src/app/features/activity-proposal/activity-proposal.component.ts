@@ -21,6 +21,7 @@ import {
   TrainingCategory,
 } from '../../shared/services/activity-proposal.service';
 import { LocationResponse, LocationService } from '../../shared/services/location.service';
+import { toApiUtcDateTime, toLocalDateTimeInput } from '@my-mfe/interface';
 
 @Component({
   selector: 'app-activity-proposal',
@@ -382,6 +383,7 @@ export class ActivityProposalComponent implements OnInit {
         startTime,
         endTime,
         minCapacity: value.maxParticipants ? Number(value.maxParticipants) : null,
+        activityId: this.proposalId(),
       })
       .subscribe({
         next: (locations) => {
@@ -430,6 +432,7 @@ export class ActivityProposalComponent implements OnInit {
         minCapacity: this.form.controls.maxParticipants.value
           ? Number(this.form.controls.maxParticipants.value)
           : null,
+        activityId: this.proposalId(),
       })
       .subscribe({
         next: (locations) => {
@@ -831,13 +834,11 @@ export class ActivityProposalComponent implements OnInit {
   }
 
   private toApiDate(value?: string | null): string | null {
-    if (!value) return null;
-    return value.length === 16 ? `${value}:00` : value;
+    return toApiUtcDateTime(value);
   }
 
   private toInputDate(value?: string | null): string {
-    if (!value) return '';
-    return value.length >= 16 ? value.slice(0, 16) : value;
+    return toLocalDateTimeInput(value);
   }
 
   private resetCreateForm(): void {

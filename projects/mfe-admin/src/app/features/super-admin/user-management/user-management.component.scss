@@ -70,12 +70,16 @@
 }
 
 .header-title {
-  font-size: clamp(1.5rem, 7vw, 1.75rem);
+  font-size: 1.75rem;
   font-weight: 900;
   color: var(--text);
   margin-bottom: 0.375rem;
   line-height: 1.2;
   overflow-wrap: anywhere;
+
+  @media (max-width: 639px) {
+    font-size: 1.5rem;
+  }
 }
 
 .header-subtitle {
@@ -252,7 +256,7 @@
 }
 
 /* === Filter Section === */
-.filter-section {
+.user-page .filter-section {
   background: var(--bg-surface);
   border-radius: 1rem;
   border: 1px solid var(--border);
@@ -342,7 +346,7 @@
   grid-column: auto;
 }
 
-.filter-select {
+.user-page .filter-select {
   width: 100%;
   padding: 0.625rem 0.875rem;
   background: var(--bg-input);
@@ -958,4 +962,93 @@
   .empty-state {
     padding: 1.5rem 0.5rem;
   }
+}
+
+/* Shared custom select treatment */
+.filter-section {
+  position: relative;
+  z-index: 30;
+  overflow: visible;
+}
+
+.filter-select {
+  display: none;
+}
+
+.user-page .filter-select-wrap > .filter-label,
+.user-page .student-filter-item > .filter-label {
+  display: none;
+}
+
+.user-page .filter-section lib-custom-select {
+  display: block;
+
+  .select-shell {
+    gap: 0.35rem;
+  }
+
+  .select-label {
+    margin: 0;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .select-trigger {
+    min-height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.625rem;
+    background: var(--bg-input);
+    font-size: 0.8125rem;
+  }
+
+  .select-menu {
+    top: calc(100% + 0.375rem);
+    z-index: 120;
+    max-height: 16rem;
+    border-radius: 0.625rem;
+  }
+
+  .select-option {
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.5rem;
+  }
+
+  .select-option-title {
+    font-size: 0.8125rem;
+  }
+
+  .select-option-description {
+    font-size: 0.71875rem;
+  }
+}
+
+.user-page .student-filter-strip {
+  position: relative;
+  z-index: 25;
+  overflow: visible;
+}
+
+.role-tabs-section {
+  gap: 0.75rem;
+}
+
+.role-tab-card {
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+}
+
+.role-tab-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+}
+
+.role-tab-label {
+  font-size: 0.875rem;
+}
+
+.role-tab-count {
+  font-size: 0.75rem;
 }

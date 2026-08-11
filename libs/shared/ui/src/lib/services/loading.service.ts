@@ -7,33 +7,42 @@ export class LoadingService {
   progress = signal(0);
 
   private intervalId: ReturnType<typeof setInterval> | null = null;
+  private finishTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private startTime = 0;
 
   show(): void {
-    if (this.progress() > 0) return;
+    if (this.finishTimeoutId) {
+      clearTimeout(this.finishTimeoutId);
+      this.finishTimeoutId = null;
+    }
+
+    if (this.intervalId) return;
 
     this.startTime = Date.now();
     this.progress.set(10);
 
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-    }
-
     this.intervalId = setInterval(() => {
       this.progress.update((current) => {
         if (current >= 90) return 90;
-        return current + Math.random() * 10;
+        return Math.min(90, current + Math.max(1.5, (90 - current) * 0.08));
       });
-    }, 200);
+    }, 180);
   }
 
   hide(): void {
+    if (!this.intervalId && this.progress() === 0) return;
+
     const elapsedTime = Date.now() - this.startTime;
-    const minDuration = 800;
+    const minDuration = 480;
 
     const delay = elapsedTime < minDuration ? minDuration - elapsedTime : 0;
 
-    setTimeout(() => {
+    if (this.finishTimeoutId) {
+      clearTimeout(this.finishTimeoutId);
+    }
+
+    this.finishTimeoutId = setTimeout(() => {
+      this.finishTimeoutId = null;
       this.completeLoading();
     }, delay);
   }
@@ -46,8 +55,9 @@ export class LoadingService {
 
     this.progress.set(100);
 
-    setTimeout(() => {
+    this.finishTimeoutId = setTimeout(() => {
       this.progress.set(0);
+      this.finishTimeoutId = null;
     }, 300);
   }
 }

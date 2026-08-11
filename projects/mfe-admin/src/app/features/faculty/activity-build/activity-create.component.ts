@@ -13,9 +13,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of, Observable } from 'rxjs';
 import { switchMap, finalize } from 'rxjs/operators';
 
-import { AlertService } from '@my-mfe/ui';
+import { AlertService, CustomSelectComponent, CustomSelectOption } from '@my-mfe/ui';
 import { UserService } from '@my-mfe/auth';
-import { ApiResponse, UserInfo } from '@my-mfe/interface';
+import {
+  ApiResponse,
+  UserInfo,
+  toApiUtcDateTime,
+  toLocalDateTimeInput,
+} from '@my-mfe/interface';
 import { CloudinaryService } from '@my-mfe/data-access-media';
 import { ActivityService } from '../services/activity.service';
 
@@ -52,7 +57,7 @@ interface CategoryOption {
 @Component({
   selector: 'app-activity-create',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, CustomSelectComponent],
   templateUrl: './activity-create.component.html',
   styleUrls: ['./activity-create.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -75,7 +80,8 @@ export class ActivityCreateComponent implements OnInit {
   isLoadingData = signal<boolean>(false);
   isSaving = signal<boolean>(false);
   currentStatus = signal<number>(0);
-  currentRequiresAdminApproval = signal<boolean>(true);
+  currentRequiresAdminApproval = signal<boolean>(false);
+  activityStartDate = signal<string | null>(null);
   currentStep = signal<ActivityWizardStep>(1);
   highestVisitedStep = signal<ActivityWizardStep>(1);
   readonly isDepartmentRole = computed(() => Number(this.userService.currentUser()?.roleType) === 2);
@@ -88,6 +94,13 @@ export class ActivityCreateComponent implements OnInit {
     }
     if (this.currentStatus() === 0 && this.isDepartmentRole() && this.currentRequiresAdminApproval()) {
       return false;
+    }
+    if (
+      this.currentStatus() === 1 &&
+      this.isDepartmentRole() &&
+      !this.currentRequiresAdminApproval()
+    ) {
+      return this.isBeforeStartDate(this.activityStartDate());
     }
     return this.currentStatus() === 0;
   });
@@ -132,6 +145,7 @@ export class ActivityCreateComponent implements OnInit {
   availableLocations = signal<LocationResponse[]>([]);
   isSearchingLocations = signal<Record<number, boolean>>({});
   availableLocationsBySchedule = signal<Record<number, LocationResponse[]>>({});
+  availableLocationOptions = computed(() => this.toLocationSelectOptions(this.availableLocations()));
 
   categoryTree = signal<CategoryResponse[]>([]);
   categories = signal<CategoryResponse[]>([]);
@@ -151,6 +165,28 @@ export class ActivityCreateComponent implements OnInit {
       new Set(this.rootCategories().map((category) => this.normalizeRomanCode(category.code)))
         .size === 5,
   );
+  rootCategoryOptions = computed<CustomSelectOption[]>(() =>
+    this.rootCategories().map((category) => ({
+      label: this.getRootCategoryLabel(category),
+      value: category.id,
+      description: category.maxPoint != null ? `Tối đa ${category.maxPoint} điểm` : null,
+      icon: 'bi-diagram-3',
+    })),
+  );
+  readonly benefitTypeOptions: CustomSelectOption[] = [
+    {
+      label: 'Cộng điểm rèn luyện',
+      value: 1,
+      description: 'Ghi nhận điểm cho sinh viên tham gia',
+      icon: 'bi-stars',
+    },
+    {
+      label: 'Cấp giấy chứng nhận',
+      value: 2,
+      description: 'Cấp chứng nhận sau khi hoàn thành',
+      icon: 'bi-patch-check',
+    },
+  ];
 
   activityForm: FormGroup = this.fb.group({
     title: ['', [Validators.required]],
@@ -159,7 +195,7 @@ export class ActivityCreateComponent implements OnInit {
     source_link: [''],
     is_external: [false],
     is_faculty: [false],
-    requires_admin_approval: [true],
+    requires_admin_approval: [false],
     registration_start: ['', Validators.required],
     registration_end: ['', Validators.required],
     start_date: ['', Validators.required],
@@ -210,6 +246,7 @@ export class ActivityCreateComponent implements OnInit {
         next: (act: Activity) => {
           this.currentStatus.set(act.status || 0);
           this.currentRequiresAdminApproval.set(!!act.requiresAdminApproval);
+          this.activityStartDate.set(act.startDate || null);
           const baseLocation = this.resolveScheduleLocation(act, act.schedules?.[0]);
 
           this.activityForm.patchValue({
@@ -306,8 +343,7 @@ export class ActivityCreateComponent implements OnInit {
   }
 
   formatDateForInput(dateStr: string | null | undefined): string {
-    if (!dateStr) return '';
-    return dateStr.substring(0, 16);
+    return toLocalDateTimeInput(dateStr);
   }
 
   get benefits() {
@@ -389,8 +425,33 @@ export class ActivityCreateComponent implements OnInit {
     return `${prefix}${code}${option.category.name}${maxPoint}`;
   }
 
+  getCategorySelectOptions(rootCategoryId: number | null | undefined): CustomSelectOption[] {
+    return this.getCategoryOptions(rootCategoryId).map((option) => ({
+      label: this.getCategoryOptionLabel(option),
+      value: option.category.id,
+      description: option.selectable
+        ? `Tối đa ${option.category.maxPoint ?? 0} điểm`
+        : 'Chọn tiêu chí con',
+      icon: option.selectable ? 'bi-check2-square' : 'bi-folder2-open',
+      disabled: !option.selectable,
+    }));
+  }
+
+  getScheduleLocationOptions(index: number): CustomSelectOption[] {
+    return this.toLocationSelectOptions(this.availableLocationsBySchedule()[index] || []);
+  }
+
   getRootCategoryLabel(category: CategoryResponse): string {
     return `${this.normalizeRomanCode(category.code)}. ${category.name}`;
+  }
+
+  private toLocationSelectOptions(locations: LocationResponse[]): CustomSelectOption[] {
+    return locations.map((location) => ({
+      label: location.name,
+      value: location.id,
+      description: `Sức chứa ${location.capacity || 'chưa đặt'}`,
+      icon: 'bi-geo-alt',
+    }));
   }
 
   get schedules() {
@@ -439,19 +500,21 @@ export class ActivityCreateComponent implements OnInit {
 
   findAvailableLocations(): void {
     const data = this.activityForm.getRawValue();
-    const startTime = data.start_date;
-    const endTime = data.end_date;
+    const range = this.resolveLocationSearchRange(
+      data.start_date,
+      data.end_date,
+      'Vui lòng nhập thời gian bắt đầu và kết thúc hoạt động trước.',
+      'Thời gian kết thúc tổ chức phải sau thời gian bắt đầu.',
+    );
+    if (!range) return;
 
-    if (!startTime || !endTime) {
-      this.alertService.warning('Vui lòng nhập thời gian bắt đầu và kết thúc hoạt động trước.');
-      return;
-    }
     this.isSearchingMainLocation.set(true);
     this.locationService
       .getAvailableLocations({
-        startTime: this.formatDateTime(startTime),
-        endTime: this.formatDateTime(endTime),
+        startTime: range.startTime,
+        endTime: range.endTime,
         minCapacity: data.max_participants ? Number(data.max_participants) : null,
+        activityId: this.activityId(),
       })
       .pipe(finalize(() => this.isSearchingMainLocation.set(false)))
       .subscribe({
@@ -482,20 +545,22 @@ export class ActivityCreateComponent implements OnInit {
 
   searchAvailableLocations(index: number): void {
     const schedule = this.schedules.at(index);
-    const startTime = schedule.get('start_time')?.value;
-    const endTime = schedule.get('end_time')?.value;
     const maxParticipants = this.activityForm.get('max_participants')?.value;
+    const range = this.resolveLocationSearchRange(
+      schedule.get('start_time')?.value,
+      schedule.get('end_time')?.value,
+      'Vui lòng nhập thời gian bắt đầu và kết thúc của buổi trước.',
+      'Thời gian kết thúc của buổi phải sau thời gian bắt đầu.',
+    );
+    if (!range) return;
 
-    if (!startTime || !endTime) {
-      this.alertService.warning('Vui lòng nhập thời gian bắt đầu và kết thúc của buổi trước.');
-      return;
-    }
     this.isSearchingLocations.update((current) => ({ ...current, [index]: true }));
     this.locationService
       .getAvailableLocations({
-        startTime: this.formatDateTime(startTime),
-        endTime: this.formatDateTime(endTime),
+        startTime: range.startTime,
+        endTime: range.endTime,
         minCapacity: maxParticipants ? Number(maxParticipants) : null,
+        activityId: this.activityId(),
       })
       .pipe(
         finalize(() =>
@@ -538,10 +603,35 @@ export class ActivityCreateComponent implements OnInit {
   }
 
   formatDateTime = (dtStr: string): string => {
-    if (!dtStr) return '';
-    const str = String(dtStr);
-    return str.length === 16 ? `${str}:00` : str;
+    return toApiUtcDateTime(dtStr) || '';
   };
+
+  private resolveLocationSearchRange(
+    startValue: string | null | undefined,
+    endValue: string | null | undefined,
+    missingMessage: string,
+    invalidMessage: string,
+  ): { startTime: string; endTime: string } | null {
+    const startTime = this.formatDateTime(startValue || '');
+    const endTime = this.formatDateTime(endValue || '');
+    if (!startTime || !endTime) {
+      this.alertService.warning(missingMessage);
+      return null;
+    }
+
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+    if (
+      Number.isNaN(startDate.getTime()) ||
+      Number.isNaN(endDate.getTime()) ||
+      endDate <= startDate
+    ) {
+      this.alertService.warning(invalidMessage);
+      return null;
+    }
+
+    return { startTime, endTime };
+  }
 
   triggerInput(id: string) {
     document.getElementById(id)?.click();
@@ -684,6 +774,27 @@ export class ActivityCreateComponent implements OnInit {
     }
     const requiresAdminApproval = Boolean(this.activityForm.get('requires_admin_approval')?.value);
     return requiresAdminApproval ? 'Cần duyệt' : 'Trực tiếp';
+  }
+
+  getSubmitStatus(): number {
+    if (this.currentStatus() === 3) {
+      return 0;
+    }
+
+    if (!this.isEditMode() && this.isDepartmentRole() && !this.currentRequiresAdminApproval()) {
+      return 1;
+    }
+
+    return this.currentStatus();
+  }
+
+  private isBeforeStartDate(value: unknown): boolean {
+    if (typeof value !== 'string' || !value) {
+      return false;
+    }
+
+    const startTime = new Date(value).getTime();
+    return Number.isFinite(startTime) && startTime > Date.now();
   }
 
   private normalizeRomanCode(code: string | null | undefined): string {
@@ -1072,6 +1183,7 @@ export class ActivityCreateComponent implements OnInit {
         next: (savedActivity: Activity) => {
           this.currentStatus.set(savedActivity.status ?? finalStatus);
           this.currentRequiresAdminApproval.set(!!savedActivity.requiresAdminApproval);
+          this.activityStartDate.set(savedActivity.startDate || null);
 
           if (finalStatus === 3) {
             this.activityForm.markAsPristine();

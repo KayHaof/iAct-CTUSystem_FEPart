@@ -3,7 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
-import { AlertService } from '@my-mfe/ui';
+import {
+  AlertService,
+  CustomSelectComponent,
+  CustomSelectOption,
+  CustomSelectValue,
+} from '@my-mfe/ui';
 import { CloudinaryService } from '@my-mfe/data-access-media';
 import { Semester } from '@my-mfe/interface';
 import {
@@ -19,7 +24,7 @@ type ComplaintModalMode = 'DETAIL' | 'FORM';
 @Component({
   selector: 'app-complaints',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CustomSelectComponent],
   templateUrl: './complaints.component.html',
   styleUrls: ['./complaints.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -84,6 +89,21 @@ export class ComplaintsComponent implements OnInit {
       .length,
   );
 
+  allCount = computed(() => this.activities().length);
+
+  semesterOptions = computed<CustomSelectOption[]>(() => [
+    {
+      label: 'Tất cả học kỳ',
+      value: null,
+      icon: 'bi-layers',
+    },
+    ...this.semesters().map((semester) => ({
+      label: `${semester.semesterName} (${semester.academicYear})`,
+      value: semester.id,
+      icon: semester.isActive ? 'bi-check2-circle' : 'bi-calendar3',
+    })),
+  ]);
+
   loadSemesters() {
     this.semesterService.getAllSemesters().subscribe({
       next: (res) => {
@@ -118,8 +138,22 @@ export class ComplaintsComponent implements OnInit {
       });
   }
 
-  onFilterChange() {
+  onSemesterChange(value: CustomSelectValue): void {
+    this.selectedSemesterId.set(typeof value === 'number' ? value : null);
     this.loadActivities();
+  }
+
+  filterCount(filter: ComplaintFilter): number {
+    switch (filter) {
+      case 'OPEN':
+        return this.openCount();
+      case 'PENDING':
+        return this.pendingCount();
+      case 'RESPONDED':
+        return this.respondedCount();
+      default:
+        return this.allCount();
+    }
   }
 
   changeFilter(filter: ComplaintFilter) {
@@ -261,6 +295,7 @@ export class ComplaintsComponent implements OnInit {
   }
 
   removeFile(event: Event) {
+    event.preventDefault();
     event.stopPropagation();
     this.selectedFile.set(null);
     this.selectedFileName.set('');

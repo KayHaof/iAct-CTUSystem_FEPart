@@ -1,97 +1,211 @@
 <div class="preferences-page">
   <div class="preferences-shell">
-    <header class="iact-student-header">
-      <p class="iact-student-eyebrow">Thông báo</p>
-      <h1 class="iact-student-title">Cài đặt thông báo</h1>
-      <p class="iact-student-subtitle">
-        Chọn các loại thông báo sinh viên muốn nhận từ hệ thống iAct CTU.
-      </p>
+    <header class="preferences-hero">
+      <div class="preferences-hero__copy">
+        <p class="iact-student-eyebrow">Thông báo</p>
+        <h1 class="iact-student-title">Cài đặt thông báo</h1>
+        <p class="iact-student-subtitle">
+          Chọn cách iAct CTU gửi thông tin về hoạt động và lịch tham gia của bạn.
+        </p>
+      </div>
+
+      <div class="preferences-hero__badge" aria-label="Thiết lập cá nhân">
+        <i class="bi bi-sliders2-vertical" aria-hidden="true"></i>
+        <span>Thiết lập cá nhân</span>
+      </div>
     </header>
 
-    <section class="notification-panel" aria-labelledby="notification-settings-title">
-      <div class="panel-heading">
-        <div>
-          <h2 id="notification-settings-title">Tùy chọn nhận thông báo</h2>
-          <p>Áp dụng cho thông báo trong hệ thống và các kênh đồng bộ sau này.</p>
+    <div class="preferences-layout">
+      <section class="notification-panel" aria-labelledby="notification-settings-title">
+        <header class="panel-heading">
+          <div class="panel-heading__identity">
+            <span class="panel-heading__icon" aria-hidden="true">
+              <i class="bi bi-bell"></i>
+            </span>
+            <div>
+              <p class="panel-kicker">Tùy chọn nhận</p>
+              <h2 id="notification-settings-title">Thông báo của bạn</h2>
+              <p>Thay đổi sẽ được áp dụng sau khi bạn lưu cài đặt.</p>
+            </div>
+          </div>
+
+          @if (isLoading()) {
+            <span class="status-pill status-pill--loading" aria-live="polite">
+              <span class="status-dot" aria-hidden="true"></span>
+              Đang tải
+            </span>
+          } @else if (hasLoadError()) {
+            <span class="status-pill status-pill--error" aria-live="polite">
+              <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+              Chưa đồng bộ
+            </span>
+          } @else if (saveState() === 'success') {
+            <span class="status-pill status-pill--success" aria-live="polite">
+              <i class="bi bi-check2-circle" aria-hidden="true"></i>
+              Đã lưu
+            </span>
+          }
+        </header>
+
+        <div class="panel-body">
+          @if (hasLoadError()) {
+            <div class="inline-notice inline-notice--error" role="status">
+              <i class="bi bi-cloud-slash" aria-hidden="true"></i>
+              <p>Không thể tải cài đặt hiện tại. Bạn vẫn có thể chỉnh sửa và lưu lại.</p>
+            </div>
+          }
+
+          <p class="section-kicker">Thông báo trong hệ thống</p>
+          <div class="settings-list" [class.is-loading]="isLoading()">
+            <label class="setting-row" [class.is-disabled]="isLoading() || isSaving()">
+              <span class="setting-row__icon setting-row__icon--blue" aria-hidden="true">
+                <i class="bi bi-megaphone"></i>
+              </span>
+              <span class="setting-copy">
+                <span class="setting-title">Hoạt động mới và cập nhật</span>
+                <span class="setting-description">
+                  Nhận thông tin khi có hoạt động mới hoặc thay đổi quan trọng.
+                </span>
+              </span>
+              <span class="setting-control">
+                <input
+                  type="checkbox"
+                  [checked]="notificationSettings().newActivityAlert"
+                  [disabled]="isLoading() || isSaving()"
+                  aria-label="Bật thông báo hoạt động mới và cập nhật"
+                  (change)="updateNotif('newActivityAlert', $event)"
+                />
+                <span class="setting-toggle" aria-hidden="true"><span></span></span>
+              </span>
+            </label>
+
+            <label class="setting-row" [class.is-disabled]="isLoading() || isSaving()">
+              <span class="setting-row__icon setting-row__icon--green" aria-hidden="true">
+                <i class="bi bi-calendar2-check"></i>
+              </span>
+              <span class="setting-copy">
+                <span class="setting-title">Nhắc lịch hoạt động</span>
+                <span class="setting-description">
+                  Nhận nhắc nhở trước thời gian diễn ra hoạt động đã đăng ký.
+                </span>
+              </span>
+              <span class="setting-control">
+                <input
+                  type="checkbox"
+                  [checked]="notificationSettings().reminderAlert"
+                  [disabled]="isLoading() || isSaving()"
+                  aria-label="Bật nhắc lịch hoạt động"
+                  (change)="updateNotif('reminderAlert', $event)"
+                />
+                <span class="setting-toggle" aria-hidden="true"><span></span></span>
+              </span>
+            </label>
+
+            <label
+              class="setting-row setting-row--input"
+              [class.is-disabled]="
+                isLoading() || isSaving() || !notificationSettings().reminderAlert
+              "
+            >
+              <span class="setting-row__icon setting-row__icon--amber" aria-hidden="true">
+                <i class="bi bi-clock-history"></i>
+              </span>
+              <span class="setting-copy">
+                <span class="setting-title">Thời gian nhắc trước</span>
+                <span class="setting-description"
+                  >Chọn số ngày muốn nhận nhắc nhở trước lịch hoạt động.</span
+                >
+              </span>
+              <span class="setting-control setting-control--days">
+                <input
+                  type="number"
+                  min="1"
+                  max="14"
+                  step="1"
+                  inputmode="numeric"
+                  [value]="notificationSettings().reminderDaysBefore"
+                  [disabled]="isLoading() || isSaving() || !notificationSettings().reminderAlert"
+                  aria-label="Số ngày nhắc trước"
+                  (input)="updateReminderDays($event)"
+                />
+                <span>ngày</span>
+              </span>
+            </label>
+          </div>
         </div>
-        @if (isLoading()) {
-          <span class="status-pill">Đang tải</span>
-        }
-      </div>
 
-      <div class="settings-list" [class.is-loading]="isLoading()">
-        <label class="setting-row">
-          <span class="setting-copy">
-            <span class="setting-title">Hoạt động mới và cập nhật</span>
-            <span class="setting-description"
-              >Nhận thông báo khi có hoạt động mới hoặc thay đổi quan trọng.</span
+        <footer class="preferences-footer">
+          <div
+            class="preferences-footer__message"
+            [class.is-error]="saveState() === 'error'"
+            [class.is-success]="saveState() === 'success'"
+            aria-live="polite"
+          >
+            @if (saveState() === 'error') {
+              <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+              <span>Chưa lưu được thay đổi. Vui lòng thử lại.</span>
+            } @else if (saveState() === 'success') {
+              <i class="bi bi-check2" aria-hidden="true"></i>
+              <span>Cài đặt đã được cập nhật.</span>
+            } @else {
+              <i class="bi bi-shield-check" aria-hidden="true"></i>
+              <span>Cài đặt chỉ áp dụng cho tài khoản của bạn.</span>
+            }
+          </div>
+
+          <div class="preferences-actions">
+            <button
+              type="button"
+              class="secondary-action"
+              (click)="resetNotificationDefaults()"
+              [disabled]="isLoading() || isSaving()"
             >
-          </span>
-          <input
-            type="checkbox"
-            [checked]="notificationSettings().newActivityAlert"
-            [disabled]="isLoading() || isSaving()"
-            (change)="updateNotif('newActivityAlert', $event)"
-          />
-        </label>
-
-        <label class="setting-row">
-          <span class="setting-copy">
-            <span class="setting-title">Nhắc lịch hoạt động</span>
-            <span class="setting-description"
-              >Nhận nhắc nhở trước thời gian diễn ra hoạt động.</span
+              <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+              <span>Khôi phục mặc định</span>
+            </button>
+            <button
+              type="button"
+              class="primary-action"
+              (click)="savePreferences()"
+              [disabled]="isLoading() || isSaving()"
             >
-          </span>
-          <input
-            type="checkbox"
-            [checked]="notificationSettings().reminderAlert"
-            [disabled]="isLoading() || isSaving()"
-            (change)="updateNotif('reminderAlert', $event)"
-          />
-        </label>
+              @if (isSaving()) {
+                <span class="spinner" aria-hidden="true"></span>
+                <span>Đang lưu...</span>
+              } @else {
+                <i class="bi bi-check2" aria-hidden="true"></i>
+                <span>Lưu thay đổi</span>
+              }
+            </button>
+          </div>
+        </footer>
+      </section>
 
-        <label class="setting-row setting-row--input">
-          <span class="setting-copy">
-            <span class="setting-title">Số ngày nhắc trước</span>
-            <span class="setting-description">Mặc định nhắc trước 1 ngày.</span>
-          </span>
-          <input
-            type="number"
-            min="1"
-            max="14"
-            step="1"
-            inputmode="numeric"
-            [value]="notificationSettings().reminderDaysBefore"
-            [disabled]="isLoading() || isSaving() || !notificationSettings().reminderAlert"
-            (input)="updateReminderDays($event)"
-          />
-        </label>
-      </div>
-    </section>
+      <aside class="preferences-guide" aria-labelledby="preferences-guide-title">
+        <div class="preferences-guide__icon" aria-hidden="true">
+          <i class="bi bi-info-lg"></i>
+        </div>
+        <p class="panel-kicker">Lưu ý</p>
+        <h2 id="preferences-guide-title">Giữ nhịp hoạt động</h2>
+        <p class="preferences-guide__intro">
+          Bật nhắc lịch để không bỏ lỡ thời gian điểm danh và các cập nhật quan trọng.
+        </p>
 
-    <div class="preferences-actions">
-      <button
-        type="button"
-        class="secondary-action"
-        (click)="resetNotificationDefaults()"
-        [disabled]="isLoading() || isSaving()"
-      >
-        Khôi phục mặc định
-      </button>
-      <button
-        type="button"
-        class="primary-action"
-        (click)="savePreferences()"
-        [disabled]="isLoading() || isSaving()"
-      >
-        @if (isSaving()) {
-          <span class="spinner" aria-hidden="true"></span>
-          <span>Đang lưu...</span>
-        } @else {
-          <i class="bi bi-check2" aria-hidden="true"></i>
-          <span>Lưu thay đổi</span>
-        }
-      </button>
+        <ul class="preferences-guide__list">
+          <li>
+            <i class="bi bi-check2" aria-hidden="true"></i>
+            <span>Thông báo hoạt động giúp bạn theo dõi cơ hội mới.</span>
+          </li>
+          <li>
+            <i class="bi bi-check2" aria-hidden="true"></i>
+            <span>Nhắc lịch chỉ áp dụng với hoạt động bạn đã đăng ký.</span>
+          </li>
+          <li>
+            <i class="bi bi-check2" aria-hidden="true"></i>
+            <span>Bạn có thể thay đổi lựa chọn bất cứ lúc nào.</span>
+          </li>
+        </ul>
+      </aside>
     </div>
   </div>
 </div>
