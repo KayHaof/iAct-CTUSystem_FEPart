@@ -7,7 +7,7 @@
   signal,
 } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of, Observable } from 'rxjs';
@@ -73,7 +73,6 @@ export class ActivityCreateComponent implements OnInit {
   private userService = inject(UserService);
   private categoryService = inject(CategoryService);
   private locationService = inject(LocationService);
-  http = inject(HttpClient);
 
   isEditMode = signal<boolean>(false);
   activityId = signal<number | null>(null);
@@ -140,7 +139,6 @@ export class ActivityCreateComponent implements OnInit {
   selectedOrganizer = signal<OrganizerOption | null>(null);
   isSearchingOrganizer = signal<boolean>(false);
   searchOrganizerError = signal<string | null>(null);
-  isGeneratingAI = signal<boolean>(false);
   isSearchingMainLocation = signal<boolean>(false);
   availableLocations = signal<LocationResponse[]>([]);
   isSearchingLocations = signal<Record<number, boolean>>({});
@@ -1241,32 +1239,6 @@ export class ActivityCreateComponent implements OnInit {
     }
   }
 
-  generateWithAI(): void {
-    const title = this.activityForm.get('title')?.value;
-    if (!title) {
-      this.alertService.warning('Vui lòng nhập tên hoạt động trước khi tạo nội dung bằng AI.');
-      return;
-    }
-    this.isGeneratingAI.set(true);
-    const prompt = `Tạo nội dung chi tiết cho hoạt động: "${title}". Bao gồm mục đích, lợi ích, lịch trình và yêu cầu tham gia.`;
-    this.http
-      .post<
-        ApiResponse<string>
-      >('http://localhost:8080/activity/api/v1/activities/ai-generate', { prompt })
-      .subscribe({
-        next: (res) => {
-          this.isGeneratingAI.set(false);
-          if (res.data) {
-            this.activityForm.patchValue({ content: res.data });
-            this.alertService.success('Đã tạo nội dung bằng AI.');
-          }
-        },
-        error: () => {
-          this.isGeneratingAI.set(false);
-          this.alertService.error('Không thể tạo nội dung bằng AI. Vui lòng thử lại.');
-        },
-      });
-  }
   getStatusBadgeLabel(): string {
     switch (this.currentStatus()) {
       case 0:

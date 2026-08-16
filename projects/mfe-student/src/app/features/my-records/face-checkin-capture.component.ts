@@ -38,7 +38,7 @@ export interface FaceCheckInActivity {
   location?: string;
 }
 
-type CapturePhase = 'LOADING' | 'SETUP' | 'RUNNING' | 'SUBMITTING' | 'RESULT';
+type CapturePhase = 'LOADING' | 'SETUP' | 'RUNNING' | 'COUNTDOWN' | 'SUBMITTING' | 'RESULT';
 
 @Component({
   selector: 'app-face-checkin-capture',
@@ -74,6 +74,7 @@ export class FaceCheckinCaptureComponent implements AfterViewInit, OnDestroy {
   isCameraReady = signal(false);
   isModelReady = signal(false);
   canRetry = signal(true);
+  countdownSeconds = signal(0);
 
   canStart = computed(
     () =>
@@ -97,6 +98,7 @@ export class FaceCheckinCaptureComponent implements AfterViewInit, OnDestroy {
   private mediaStream: MediaStream | null = null;
   private faceLandmarker: FaceLandmarkerInstance | null = null;
   private animationFrameId: number | null = null;
+  private countdownIntervalId: number | null = null;
   private hasSubmittedCurrentRun = false;
   private latestFaceLandmarks: NormalizedLandmark[] | null = null;
 
@@ -105,6 +107,7 @@ export class FaceCheckinCaptureComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopCaptureCountdown();
     this.stopDetectionLoop();
     this.stopCamera();
     this.faceLandmarker?.close?.();
@@ -137,6 +140,7 @@ export class FaceCheckinCaptureComponent implements AfterViewInit, OnDestroy {
     }
 
     this.hasSubmittedCurrentRun = false;
+    this.stopCaptureCountdown();
     this.canRetry.set(true);
     this.resultMessage.set('');
     this.resultDetail.set('');
@@ -153,6 +157,7 @@ export class FaceCheckinCaptureComponent implements AfterViewInit, OnDestroy {
     }
 
     this.phase.set('SETUP');
+    this.stopCaptureCountdown();
     this.challenges.set([]);
     this.faceFrameProgress.set(0);
     this.resultMessage.set('');
@@ -255,7 +260,9 @@ export class FaceCheckinCaptureComponent implements AfterViewInit, OnDestroy {
 
     const frame = this.livenessService.evaluateFaceFrame(landmarks);
     this.faceFrameProgress.set(frame.progress);
-    this.guideMessage.set(frame.message);
+    if (this.phase() !== 'COUNTDOWN') {
+      this.guideMessage.set(frame.message);
+    }
 
     if (this.phase() !== 'RUNNING' || !frame.ready || this.hasSubmittedCurrentRun) {
       return;
@@ -266,8 +273,43 @@ export class FaceCheckinCaptureComponent implements AfterViewInit, OnDestroy {
 
     if (this.challenges().length > 0 && this.challenges().every((task) => task.status === 'done')) {
       this.hasSubmittedCurrentRun = true;
-      void this.captureAndSubmit();
+      this.startCaptureCountdown();
     }
+  }
+
+  private startCaptureCountdown(): void {
+    this.stopCaptureCountdown();
+    this.phase.set('COUNTDOWN');
+    this.isSubmitting.set(false);
+    this.countdownSeconds.set(5);
+    this.guideMessage.set('Đã hoàn thành thử thách. Đưa mặt về giữa khung, ảnh sẽ được chụp sau 5 giây.');
+
+    this.countdownIntervalId = window.setInterval(() => {
+      if (!this.latestFaceLandmarks?.length || this.faceFrameProgress() < 88) {
+        this.countdownSeconds.set(5);
+        this.guideMessage.set('Mặt chưa nằm đúng khung. Canh lại khuôn mặt, hệ thống sẽ đếm ngược lại.');
+        return;
+      }
+
+      const nextValue = this.countdownSeconds() - 1;
+      this.countdownSeconds.set(Math.max(nextValue, 0));
+
+      if (nextValue > 0) {
+        this.guideMessage.set(`Giữ mặt ổn định trong khung. Chụp sau ${nextValue} giây.`);
+        return;
+      }
+
+      this.stopCaptureCountdown();
+      void this.captureAndSubmit();
+    }, 1000);
+  }
+
+  private stopCaptureCountdown(): void {
+    if (this.countdownIntervalId !== null) {
+      window.clearInterval(this.countdownIntervalId);
+      this.countdownIntervalId = null;
+    }
+    this.countdownSeconds.set(0);
   }
 
   private async captureAndSubmit(): Promise<void> {
@@ -316,7 +358,7 @@ export class FaceCheckinCaptureComponent implements AfterViewInit, OnDestroy {
   }
 
   private handleFaceCheckInResponse(response?: FaceCheckInResponse): void {
-    const verified = response?.verified === true;
+    const verified = this.isVerifiedResponse(response);
     this.phase.set('RESULT');
     this.resultSuccess.set(verified);
     this.resultMessage.set(
@@ -344,6 +386,21 @@ export class FaceCheckinCaptureComponent implements AfterViewInit, OnDestroy {
       }
       this.alertService.error(response?.message || 'Bạn đã hết lượt xác thực tự động.');
     }
+  }
+
+  private isVerifiedResponse(response?: FaceCheckInResponse): boolean {
+    if (!response) {
+      return false;
+    }
+    if (response.verified === true || response.faceMatched === true) {
+      return true;
+    }
+    if ((response.decision || '').toUpperCase() === 'MATCH') {
+      return true;
+    }
+    const distance = Number(response.distance);
+    const threshold = Number(response.threshold);
+    return Number.isFinite(distance) && Number.isFinite(threshold) && distance <= threshold;
   }
 
   private buildResultDetail(response?: FaceCheckInResponse): string {

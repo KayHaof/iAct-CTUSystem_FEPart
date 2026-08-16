@@ -334,6 +334,18 @@ export class MyRecordsComponent implements OnInit {
       this.currentTab.set(targetTab);
     }
 
+    const targetSession = this.pendingFaceScheduleId
+      ? (target.attendanceSessions || []).find((session) => session.scheduleId === this.pendingFaceScheduleId)
+      : undefined;
+    if (targetSession) {
+      if (!this.canOpenFaceForSession(target, targetSession)) {
+        this.alertService.error('Hoạt động này chưa sẵn sàng để xác minh khuôn mặt.');
+        return;
+      }
+      this.openFaceForSession(target, targetSession);
+      return;
+    }
+
     if (!this.canOpenFace(target)) {
       this.alertService.error('Hoạt động này chưa sẵn sàng để xác minh khuôn mặt.');
       return;
@@ -758,6 +770,7 @@ export class MyRecordsComponent implements OnInit {
       !activity ||
       activity.status === 1 ||
       activity.status === 2 ||
+      this.isCurrentFaceSessionVerified(activity) ||
       activity.isMissed ||
       this.isActivityOverdue(activity)
     ) {
@@ -783,10 +796,10 @@ export class MyRecordsComponent implements OnInit {
       .trim();
   }
 
-  private resolveCurrentScheduleId(activity: StudentRegistrationDto): number | undefined {
+  private resolveCurrentScheduleId(activity: StudentRegistrationDto | UiActivityRecord): number | undefined {
     const sessions = activity.attendanceSessions || [];
     const checkedInSession = sessions.find((session) => this.isAttendanceSessionCheckedInOnly(session));
-    const checkedOutSession = sessions.find((session) => this.isAttendanceSessionCheckedOut(session));
+    const checkedOutSession = sessions.find((session) => this.isAttendanceSessionReadyForFaceVerification(session));
 
     if (activity.nextAction === 'FACE_VERIFY') {
       return checkedOutSession?.scheduleId ?? activity.scheduleId;
@@ -803,7 +816,7 @@ export class MyRecordsComponent implements OnInit {
     return activity.scheduleId;
   }
 
-  private isAttendanceSessionCheckedInOnly(session: AttendanceSessionRecord): boolean {
+  isAttendanceSessionCheckedInOnly(session: AttendanceSessionRecord): boolean {
     return (
       session.attendanceStatus === 'CHECKED_IN' ||
       session.status === 1 ||
@@ -811,11 +824,52 @@ export class MyRecordsComponent implements OnInit {
     );
   }
 
-  private isAttendanceSessionCheckedOut(session: AttendanceSessionRecord): boolean {
+  isAttendanceSessionWaitingForCheckIn(session: AttendanceSessionRecord): boolean {
+    return (
+      session.attendanceStatus === 'NOT_CHECKED_IN' ||
+      session.status === 0 ||
+      (!session.checkinTime && !this.isAttendanceSessionFaceVerified(session) && !this.isAttendanceSessionAbsent(session))
+    );
+  }
+
+  isAttendanceSessionCheckedOut(session: AttendanceSessionRecord): boolean {
     return (
       session.attendanceStatus === 'CHECKED_OUT' ||
       session.status === 2 ||
       (!!session.checkinTime && !!session.checkoutTime)
+    );
+  }
+
+  isAttendanceSessionReadyForFaceVerification(session: AttendanceSessionRecord): boolean {
+    return (
+      !this.isAttendanceSessionFaceVerified(session) &&
+      !this.isAttendanceSessionAbsent(session) &&
+      this.isAttendanceSessionCheckedOut(session)
+    );
+  }
+
+  isAttendanceSessionFaceVerified(session: AttendanceSessionRecord): boolean {
+    return session.attendanceStatus === 'FACE_VERIFIED' || session.status === 3;
+  }
+
+  isAttendanceSessionAbsent(session: AttendanceSessionRecord): boolean {
+    return session.attendanceStatus === 'ABSENT' || session.status === 4;
+  }
+
+  private isCurrentFaceSessionVerified(activity: UiActivityRecord): boolean {
+    if (activity.attendanceStatus === 'FACE_VERIFIED') {
+      return true;
+    }
+
+    const scheduleId = this.resolveCurrentScheduleId(activity);
+    if (!scheduleId) {
+      return activity.registeredSessionCount
+        ? (activity.faceVerifiedSessionCount ?? 0) >= activity.registeredSessionCount
+        : (activity.faceVerifiedSessionCount ?? 0) > 0;
+    }
+
+    return (activity.attendanceSessions || []).some(
+      (session) => session.scheduleId === scheduleId && this.isAttendanceSessionFaceVerified(session),
     );
   }
 
@@ -824,8 +878,116 @@ export class MyRecordsComponent implements OnInit {
       !!activity &&
       !this.isFaceVerificationExhausted(activity) &&
       !this.isActivityOverdue(activity) &&
-      (activity.nextAction === 'FACE_VERIFY' || activity.attendanceStatus === 'CHECKED_OUT')
+      (
+        activity.nextAction === 'FACE_VERIFY' ||
+        activity.attendanceStatus === 'CHECKED_OUT' ||
+        (activity.attendanceSessions || []).some((session) => this.isAttendanceSessionReadyForFaceVerification(session))
+      )
     );
+  }
+
+  hasSessionTimeline(activity: UiActivityRecord | null | undefined): boolean {
+    return !!activity && ((activity.registeredSessionCount ?? 0) > 1 || (activity.attendanceSessions?.length ?? 0) > 1);
+  }
+
+  getDisplaySessions(activity: UiActivityRecord): AttendanceSessionRecord[] {
+    return [...(activity.attendanceSessions || [])].sort((left, right) => {
+      const leftTime = left.scheduleStartTime ? new Date(left.scheduleStartTime).getTime() : Number.MAX_SAFE_INTEGER;
+      const rightTime = right.scheduleStartTime ? new Date(right.scheduleStartTime).getTime() : Number.MAX_SAFE_INTEGER;
+      if (leftTime !== rightTime) {
+        return leftTime - rightTime;
+      }
+      return (left.scheduleId ?? left.id ?? 0) - (right.scheduleId ?? right.id ?? 0);
+    });
+  }
+
+  getSessionTitle(session: AttendanceSessionRecord, index: number): string {
+    return session.scheduleTitle || `Buổi ${index + 1}`;
+  }
+
+  getSessionStatusLabel(session: AttendanceSessionRecord): string {
+    if (this.isAttendanceSessionAbsent(session)) {
+      return 'Vắng';
+    }
+    if (this.isAttendanceSessionFaceVerified(session)) {
+      return 'Đã xác minh';
+    }
+    if (this.isAttendanceSessionCheckedOut(session)) {
+      return 'Cần xác minh';
+    }
+    if (this.isAttendanceSessionCheckedInOnly(session)) {
+      return 'Cần check-out';
+    }
+    return 'Cần check-in';
+  }
+
+  getSessionPassiveActionLabel(session: AttendanceSessionRecord): string {
+    if (this.isAttendanceSessionAbsent(session)) {
+      return 'Đã vắng';
+    }
+    if (this.isAttendanceSessionFaceVerified(session)) {
+      return 'Hoàn tất';
+    }
+    if (this.isSessionBeforeStart(session)) {
+      return 'Chưa đến giờ';
+    }
+    if (this.isSessionAfterEnd(session)) {
+      return 'Quá hạn';
+    }
+    return 'Chờ xử lý';
+  }
+
+  isSessionCurrent(activity: UiActivityRecord, session: AttendanceSessionRecord): boolean {
+    return !!session.scheduleId && this.resolveCurrentScheduleId(activity) === session.scheduleId;
+  }
+
+  canOpenQrForSession(activity: UiActivityRecord, session: AttendanceSessionRecord): boolean {
+    const canCheckIn = this.isAttendanceSessionWaitingForCheckIn(session)
+      && !this.isSessionBeforeStart(session)
+      && !this.isSessionAfterEnd(session);
+    const canCheckOut = this.isAttendanceSessionCheckedInOnly(session);
+
+    return (
+      !this.isCancelledRecord(activity) &&
+      !this.isActivityOverdue(activity) &&
+      !this.isAttendanceSessionFaceVerified(session) &&
+      !this.isAttendanceSessionAbsent(session) &&
+      (canCheckIn || canCheckOut)
+    );
+  }
+
+  canOpenFaceForSession(activity: UiActivityRecord, session: AttendanceSessionRecord): boolean {
+    return (
+      !this.isCancelledRecord(activity) &&
+      !this.isActivityOverdue(activity) &&
+      !this.isFaceVerificationExhausted(activity) &&
+      this.isAttendanceSessionReadyForFaceVerification(session)
+    );
+  }
+
+  openFaceForSession(activity: UiActivityRecord, session: AttendanceSessionRecord): void {
+    if (!this.canOpenFaceForSession(activity, session)) {
+      this.alertService.error('Buổi này chưa sẵn sàng để xác minh khuôn mặt.');
+      return;
+    }
+
+    this.openModal(
+      {
+        ...activity,
+        scheduleId: session.scheduleId ?? activity.scheduleId,
+        attendanceStatus: session.attendanceStatus ?? activity.attendanceStatus,
+        nextAction: 'FACE_VERIFY',
+      },
+      'FACE',
+    );
+  }
+
+  private isSessionBeforeStart(session: AttendanceSessionRecord): boolean {
+    return !!session.scheduleStartTime && new Date() < new Date(session.scheduleStartTime);
+  }
+
+  private isSessionAfterEnd(session: AttendanceSessionRecord): boolean {
+    return !!session.scheduleEndTime && new Date() > new Date(session.scheduleEndTime);
   }
 
   openComplaint(activity: UiActivityRecord): void {
@@ -888,6 +1050,11 @@ export class MyRecordsComponent implements OnInit {
   }
 
   onFaceCheckInExhausted(response: FaceCheckInResponse) {
+    if (this.isFaceCheckInMatched(response)) {
+      this.onFaceCheckInCompleted();
+      return;
+    }
+
     const activity = this.selectedActivity();
     if (!activity) {
       return;
@@ -912,6 +1079,21 @@ export class MyRecordsComponent implements OnInit {
     this.activities.update((items) =>
       items.map((item) => (item.id === exhaustedActivity.id ? { ...item, ...exhaustedActivity } : item)),
     );
+  }
+
+  private isFaceCheckInMatched(response: FaceCheckInResponse | null | undefined): boolean {
+    if (!response) {
+      return false;
+    }
+    if (response.verified === true || response.faceMatched === true) {
+      return true;
+    }
+    if ((response.decision || '').toUpperCase() === 'MATCH') {
+      return true;
+    }
+    const distance = Number(response.distance);
+    const threshold = Number(response.threshold);
+    return Number.isFinite(distance) && Number.isFinite(threshold) && distance <= threshold;
   }
 
   submitProofData() {

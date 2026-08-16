@@ -158,7 +158,7 @@ export interface RawRegistrationDto {
 }
 
 export interface AttendanceSessionRecord {
-  id: number;
+  id?: number;
   registrationId: number;
   scheduleId?: number;
   scheduleTitle?: string;

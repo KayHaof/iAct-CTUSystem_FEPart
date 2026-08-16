@@ -423,6 +423,19 @@
   color: #334155;
 }
 
+.face-checkin__countdown-dot {
+  align-items: center;
+  background: rgb(255 255 255 / 18%);
+  border: 1px solid rgb(255 255 255 / 32%);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.78rem;
+  height: 1.45rem;
+  justify-content: center;
+  line-height: 1;
+  min-width: 1.45rem;
+}
+
 .spin {
   animation: spin 0.85s linear infinite;
   display: inline-block;

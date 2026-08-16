@@ -183,32 +183,31 @@
               </small>
             </div>
 
-            <div class="activity-record__cell">
+            <div class="activity-record__cell" [class.activity-record__cell--sessions-only]="hasSessionTimeline(act)">
               <span class="mobile-label">Xác thực</span>
-              <span
-                class="status-pill"
-                [class.status-pill--success]="isCompletedRecord(act)"
-                [class.status-pill--warning]="!isCompletedRecord(act) && !isNeedsProcessing(act) && !isActivityOverdue(act) && !isFaceVerificationExhausted(act) && !isCancelledRecord(act)"
-                [class.status-pill--danger]="isFaceVerificationExhausted(act) || isNeedsProcessing(act) || (isActivityOverdue(act) && !isNeedsProcessing(act))"
-                [class.status-pill--muted]="isCancelledRecord(act)"
-              >
-                {{ getAttendanceLabel(act) }}
-              </span>
-              @if (act.attendedAt) {
-                <small>Check-in: {{ act.attendedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
-              }
-              @if (act.checkoutAt) {
-                <small>Check-out: {{ act.checkoutAt | date: 'dd/MM/yyyy HH:mm' }}</small>
-              }
-              @if ((act.registeredSessionCount || 0) > 1) {
-                <small>
-                  Đã xác thực {{ act.faceVerifiedSessionCount || 0 }}/{{ act.registeredSessionCount }} buổi
-                </small>
-              }
-              @if ((act.absentSessionCount || 0) > 0) {
-                <small class="activity-record__note activity-record__note--danger">
-                  Vắng {{ act.absentSessionCount }} buổi
-                </small>
+              @if (hasSessionTimeline(act)) {
+                <small class="activity-record__session-hint">Theo từng buổi</small>
+              } @else {
+                <span
+                  class="status-pill"
+                  [class.status-pill--success]="isCompletedRecord(act)"
+                  [class.status-pill--warning]="!isCompletedRecord(act) && !isNeedsProcessing(act) && !isActivityOverdue(act) && !isFaceVerificationExhausted(act) && !isCancelledRecord(act)"
+                  [class.status-pill--danger]="isFaceVerificationExhausted(act) || isNeedsProcessing(act) || (isActivityOverdue(act) && !isNeedsProcessing(act))"
+                  [class.status-pill--muted]="isCancelledRecord(act)"
+                >
+                  {{ getAttendanceLabel(act) }}
+                </span>
+                @if (act.attendedAt) {
+                  <small>Check-in: {{ act.attendedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+                }
+                @if (act.checkoutAt) {
+                  <small>Check-out: {{ act.checkoutAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+                }
+                @if ((act.absentSessionCount || 0) > 0) {
+                  <small class="activity-record__note activity-record__note--danger">
+                    Vắng {{ act.absentSessionCount }} buổi
+                  </small>
+                }
               }
             </div>
 
@@ -306,6 +305,73 @@
                 </a>
               }
             </div>
+
+            @if (hasSessionTimeline(act)) {
+              <div class="activity-record__sessions" aria-label="Danh sách buổi đã đăng ký">
+                @for (session of getDisplaySessions(act); track session.scheduleId || session.id || $index) {
+                  <div
+                    class="session-row"
+                    [class.session-row--active]="isSessionCurrent(act, session)"
+                    [class.session-row--done]="isAttendanceSessionFaceVerified(session)"
+                    [class.session-row--danger]="isAttendanceSessionAbsent(session)"
+                  >
+                    <div class="session-row__time">
+                      <span>{{ getSessionTitle(session, $index) }}</span>
+                      <strong>
+                        {{
+                          session.scheduleStartTime
+                            ? (session.scheduleStartTime | date: 'dd/MM/yyyy HH:mm')
+                            : 'Chưa có thời gian'
+                        }}
+                      </strong>
+                    </div>
+                    <div class="session-row__state">
+                      <span
+                        class="status-pill"
+                        [class.status-pill--success]="isAttendanceSessionFaceVerified(session)"
+                        [class.status-pill--info]="isAttendanceSessionCheckedOut(session) && !isAttendanceSessionFaceVerified(session)"
+                        [class.status-pill--warning]="isAttendanceSessionCheckedInOnly(session) || isAttendanceSessionWaitingForCheckIn(session)"
+                        [class.status-pill--danger]="isAttendanceSessionAbsent(session)"
+                      >
+                        {{ getSessionStatusLabel(session) }}
+                      </span>
+                      @if (session.checkinTime) {
+                        <small>In {{ session.checkinTime | date: 'HH:mm' }}</small>
+                      }
+                      @if (session.checkoutTime) {
+                        <small>Out {{ session.checkoutTime | date: 'HH:mm' }}</small>
+                      }
+                    </div>
+                    <div class="session-row__actions">
+                      @if (canOpenQrForSession(act, session)) {
+                        <a
+                          class="session-action session-action--primary"
+                          [routerLink]="['/qr-checkin']"
+                          [queryParams]="{ activityId: act.activityId, scheduleId: session.scheduleId }"
+                        >
+                          <i class="bi bi-qr-code-scan" aria-hidden="true"></i>
+                          {{ isAttendanceSessionCheckedInOnly(session) ? 'Check-out' : 'Check-in' }}
+                        </a>
+                      } @else if (canOpenFaceForSession(act, session)) {
+                        <button
+                          type="button"
+                          class="session-action session-action--primary"
+                          (click)="openFaceForSession(act, session)"
+                        >
+                          <i class="bi bi-person-bounding-box" aria-hidden="true"></i>
+                          Xác minh
+                        </button>
+                      } @else {
+                        <span class="session-action session-action--muted">
+                          <i class="bi bi-check2" aria-hidden="true"></i>
+                          {{ getSessionPassiveActionLabel(session) }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
           </article>
         } @empty {
           <div class="records-empty">

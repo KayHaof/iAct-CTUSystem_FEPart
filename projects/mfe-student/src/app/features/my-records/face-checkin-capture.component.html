@@ -39,6 +39,10 @@
         <span class="face-checkin__pulse face-checkin__pulse--active"></span>
         <strong>{{ activeChallenge()?.title || 'Hoàn tất thử thách' }}</strong>
         <p>{{ activeChallenge()?.instruction || guideMessage() }}</p>
+      } @else if (phase() === 'COUNTDOWN') {
+        <span class="face-checkin__pulse face-checkin__pulse--active"></span>
+        <strong>Chuẩn bị chụp sau {{ countdownSeconds() }} giây</strong>
+        <p>{{ guideMessage() }}</p>
       } @else if (phase() === 'SUBMITTING') {
         <span class="face-checkin__pulse face-checkin__pulse--active"></span>
         <strong>Đang gửi ảnh live</strong>
@@ -151,6 +155,11 @@
       } @else if (phase() === 'RUNNING') {
         <button type="button" class="face-checkin__button face-checkin__button--primary" disabled>
           Còn {{ remainingChallengeCount() }} thử thách
+        </button>
+      } @else if (phase() === 'COUNTDOWN') {
+        <button type="button" class="face-checkin__button face-checkin__button--primary" disabled>
+          <span class="face-checkin__countdown-dot">{{ countdownSeconds() }}</span>
+          Sắp chụp ảnh
         </button>
       } @else if (phase() === 'SUBMITTING') {
         <button type="button" class="face-checkin__button face-checkin__button--primary" disabled>

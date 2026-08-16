@@ -244,6 +244,7 @@ export class QrCheckinComponent implements OnInit {
     verifyCode: string,
   ): Promise<{ candidate: QrCandidate; response: AttendanceApiResponse }> {
     let lastError: unknown = null;
+    const coords = await this.getCurrentLocation().catch(() => null);
 
     for (const candidate of candidates) {
       const request: CheckInRequest = {
@@ -251,6 +252,8 @@ export class QrCheckinComponent implements OnInit {
         scheduleId: candidate.scheduleId,
         method: 1,
         verifyCode,
+        latitude: coords?.latitude,
+        longitude: coords?.longitude,
       };
 
       try {
@@ -394,10 +397,24 @@ export class QrCheckinComponent implements OnInit {
     session: NonNullable<QrRegistrationRecord['attendanceSessions']>[number],
   ): boolean {
     return (
-      session.attendanceStatus === 'CHECKED_OUT' ||
-      session.status === 2 ||
-      (!!session.checkinTime && !!session.checkoutTime)
+      !this.isSessionFaceVerified(session) &&
+      !this.isSessionAbsent(session) &&
+      (session.attendanceStatus === 'CHECKED_OUT' ||
+        session.status === 2 ||
+        (!!session.checkinTime && !!session.checkoutTime))
     );
+  }
+
+  private isSessionFaceVerified(
+    session: NonNullable<QrRegistrationRecord['attendanceSessions']>[number],
+  ): boolean {
+    return session.attendanceStatus === 'FACE_VERIFIED' || session.status === 3;
+  }
+
+  private isSessionAbsent(
+    session: NonNullable<QrRegistrationRecord['attendanceSessions']>[number],
+  ): boolean {
+    return session.attendanceStatus === 'ABSENT' || session.status === 4;
   }
 
   private canUseQr(record: QrRegistrationRecord): boolean {
@@ -678,5 +695,24 @@ export class QrCheckinComponent implements OnInit {
     }
 
     return '';
+  }
+
+  private getCurrentLocation(): Promise<{ latitude: number; longitude: number }> {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not available.'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) =>
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          }),
+        reject,
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 },
+      );
+    });
   }
 }
